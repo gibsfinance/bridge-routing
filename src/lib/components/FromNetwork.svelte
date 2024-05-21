@@ -6,7 +6,7 @@
   import type { VisualChain } from '$lib/stores/auth/types'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import type { Asset } from '$lib/stores/utils'
-  import { createEventDispatcher, onMount } from 'svelte'
+  import { onMount } from 'svelte'
   import { publicClient } from '$lib/stores/auth/store'
   import { get } from 'svelte/store'
   import { amountToBridge } from '$lib/stores/bridge-settings'
@@ -68,25 +68,25 @@
   $: amountToBridge.set(value ? parseEther(value) : 0n)
 </script>
 
-<div class="bg-slate-100 py-2 px-3 rounded-t-lg">
-  <NetworkSummary
-    {network}
-    {asset}
-    {balance}
-    showMax
-    on:max-balance={() => {
-      value = formatUnits(balance, asset.decimals)
-    }}
-  />
-</div>
-<div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
-  <input
-    class="bg-transparent leading-8 outline-none px-4 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow"
-    placeholder="0.0"
-    bind:value
-    on:change={runValidation}
-  />
-  <span class="tooltip leading-8 py-2 px-3 flex flex-row" data-tip={asset.name}
-    ><NetworkImage network={networkOrigination} />{asset.symbol}</span
-  >
+<div class="shadow-md rounded-lg">
+  <div class="bg-slate-100 py-2 px-3 rounded-t-lg">
+    <NetworkSummary
+      {network}
+      {asset}
+      {balance}
+      showMax
+      on:max-balance={() => {
+        value = formatUnits(balance, asset.decimals)
+      }} />
+  </div>
+  <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
+    <input
+      class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-2xl"
+      placeholder="0.0"
+      bind:value
+      on:change={runValidation} />
+    <span class="tooltip leading-8 py-2 px-3 flex flex-row" data-tip={asset.name}>
+      <NetworkImage network={networkOrigination} />{asset.symbol}
+    </span>
+  </div>
 </div>

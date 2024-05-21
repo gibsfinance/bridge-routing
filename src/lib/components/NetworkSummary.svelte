@@ -5,7 +5,6 @@
   import { createEventDispatcher } from 'svelte'
   import type { Asset } from '$lib/stores/utils'
   export let balance = 0n
-  // export let ticker = ''
   export let asset!: Asset
   export let network!: VisualChain
   export let showMax = false
@@ -20,10 +19,14 @@
 <div class="flex flex-row justify-between">
   <div class="flex flex-row">
     <NetworkImage {network} />
-    <span class="leading-8 ml-2">{network.name}</span>
+    <span class="leading-8 ml-1">{network.name}</span>
   </div>
   <div class="flex flex-row">
-    <div class="text-xs leading-8 mx-2 tooltip" data-tip={asset.name}>
+    <div
+      class="text-xs leading-8 tooltip"
+      class:mx-2={showMax}
+      class:ml-2={!showMax}
+      data-tip={asset.name}>
       {balance == 0n ? '0.0' : formatEther(balance)}
       {asset.symbol}
     </div>
@@ -33,8 +36,7 @@
           class="uppercase rounded-md text-xs leading-6 px-2"
           class:bg-purple-600={!disableMax}
           class:bg-purple-400={disableMax}
-          on:click={maxOutBalance}>max</button
-        >
+          on:click={maxOutBalance}>max</button>
       </div>
     {/if}
   </div>

@@ -5,12 +5,22 @@
 
 <BluryImage max_height="300px" image_url="/src/lib/images/bridge.jpeg">
   <h1
-    class="text-white font-italiana z-10 absolute top-0 bottom-0 left-0 right-0 m-auto text-center leading-10 text-8xl content-center"
-  >
+    class="text-white font-italiana z-10 absolute top-0 bottom-0 left-0 right-0 m-auto text-center leading-10 text-8xl content-center">
     Bridge
   </h1>
 </BluryImage>
 
-<div class="container m-auto max-w-md">
+<div class="container m-auto max-w-lg">
   <Bridge />
+  <ul class="gap-4 flex flex-col my-4">
+    <li class="flex">
+      This UI uses the bridge contracts directly, so all of the same security assumptions are
+      present
+    </li>
+    <li>The only difference is that the final router contract on Ethereum has been swapped out</li>
+    <li>
+      This modified implementation allows the runner's actions to be measured and creates an
+      economic incentive to deliver native tokens
+    </li>
+  </ul>
 </div>

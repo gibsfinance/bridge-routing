@@ -30,6 +30,5 @@
   {value}<input
     class="bg-transparent absolute w-full h-full text-slate-950 text-right top-0 left-0 focus:outline-none"
     bind:value
-    on:input={changeFromEvent}
-  />
+    on:input={changeFromEvent} />
 </div>

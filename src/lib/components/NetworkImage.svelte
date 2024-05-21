@@ -9,5 +9,4 @@
   class="network-icon min-w-8"
   style:height={`${height}px`}
   src={network.icon}
-  alt={network.alt}
-/>
+  alt={network.alt} />

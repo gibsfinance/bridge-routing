@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation'
+  import gibs from '$lib/images/1FAF0.svg'
 
   const gotoHome = async () => {
     await goto('/')
@@ -17,8 +18,12 @@
         tabindex="-1"
         on:keypress={gotoHome}
         on:click={gotoHome}
-        class="link leading-8 pr-2 text-white font-italiana uppercase">🫰 Gibs</span
-      >
+        class="link leading-8 pr-2 text-white font-italiana uppercase flex flex-row">
+        <img
+          src={gibs}
+          alt="a yellow hand with index finger and thub rubbing together"
+          style="height: 32px" /> Gibs
+      </span>
       <div>
         <ul>
           <li>
