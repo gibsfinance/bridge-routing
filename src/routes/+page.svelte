@@ -1,4 +1,20 @@
 <script lang="ts">
+  import Welcome from '$lib/components/Welcome.svelte'
+</script>
+
+<svelte:head>
+  <title>Home</title>
+  <meta name="description" content="Gibs" />
+</svelte:head>
+
+<Welcome />
+
+<div class="container px-2 py-10 m-auto text-xl">
+  <!-- <p class="text-center">Find the money that people wanted to give you</p> -->
+  <!-- <p class="text-center">Preserve your privacy when bridging</p> -->
+</div>
+
+<!-- <script lang="ts">
 	import { chainsMetadata } from '$lib/stores/auth/constants';
 	import { useAuth } from '$lib/stores/auth/methods';
 	import { accountENS, walletAccount, activeChain } from '$lib/stores/auth/store';
@@ -48,4 +64,4 @@
 			</div>
 		{/if}
 	</div>
-</div>
+</div> -->

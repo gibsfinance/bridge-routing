@@ -1,0 +1,41 @@
+<script lang="ts">
+  import type { VisualChain } from '$lib/stores/auth/types'
+  import { formatEther } from 'viem'
+  import NetworkImage from './NetworkImage.svelte'
+  import { createEventDispatcher } from 'svelte'
+  import type { Asset } from '$lib/stores/utils'
+  export let balance = 0n
+  // export let ticker = ''
+  export let asset!: Asset
+  export let network!: VisualChain
+  export let showMax = false
+  $: disableMax = balance === 0n
+  const dispatch = createEventDispatcher()
+  const maxOutBalance = () => {
+    if (disableMax) return
+    dispatch('max-balance')
+  }
+</script>
+
+<div class="flex flex-row justify-between">
+  <div class="flex flex-row">
+    <NetworkImage {network} />
+    <span class="leading-8 ml-2">{network.name}</span>
+  </div>
+  <div class="flex flex-row">
+    <div class="text-xs leading-8 mx-2 tooltip" data-tip={asset.name}>
+      {balance == 0n ? '0.0' : formatEther(balance)}
+      {asset.symbol}
+    </div>
+    {#if showMax}
+      <div class="text-white leading-8">
+        <button
+          class="uppercase rounded-md text-xs leading-6 px-2"
+          class:bg-purple-600={!disableMax}
+          class:bg-purple-400={disableMax}
+          on:click={maxOutBalance}>max</button
+        >
+      </div>
+    {/if}
+  </div>
+</div>
