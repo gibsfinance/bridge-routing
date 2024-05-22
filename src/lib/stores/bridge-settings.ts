@@ -45,7 +45,7 @@ export const estimatedGas = writable(0n)
 /** the block.baseFeePerGas on the latest block */
 export const latestBaseFeePerGas = writable(0n)
 /** the first recipient of the tokens (router) */
-export const receiver = writable('0x47525293647C3725D911Cc0f6E000D2E831c4219' as viem.Hex)
+export const router = writable('0x47525293647C3725D911Cc0f6E000D2E831c4219' as viem.Hex)
 /** the final destination of the tokens (user's wallet or other named address) */
 export const destination = writable(viem.zeroAddress as viem.Hex)
 /** whether or not to unwrap the tokens to their native value */
@@ -75,14 +75,14 @@ export const amountToBridge = writable(0n)
 export const limit = writable(0n)
 /** a ratio x/1 ether of how much the user would like to pay on top of network fees */
 export const incentiveFee = writable(0n)
-/** where the user's transaction will start on the home network */
-export const to = writable(viem.zeroAddress as viem.Hex)
 /** the address of the bridge proxy contract on home */
 export const bridgeAddress = writable('0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef' as viem.Hex)
 /** the abi for the bridge */
 export const inputBridgeAbi = viem.parseAbi([
-  // 'function relayTokensAndCall(address _receiver, bytes calldata _data) external',
   'function relayTokensAndCall(address token, address _receiver, uint256 _value, bytes memory _data) external',
+])
+export const erc677abi = viem.parseAbi([
+  'function transferAndCall(address, uint256, bytes calldata) external',
 ])
 export const outputRouterAbi = viem.parseAbi([
   'function onTokenBridged(address _token, uint256 _value, bytes memory _data) external payable',
@@ -148,16 +148,26 @@ export const feeManagerStructEncoded = derived(
  * the full calldata defined in the home bridge's _data prop
  * to be used to call on the foreign router
  */
+export const foreignData = derived(
+  [router, feeManagerStructEncoded],
+  ([$router, $feeManagerStructEncoded]) => {
+    return viem.concatHex([
+      $router,
+      $feeManagerStructEncoded,
+    ])
+  },
+)
+
 export const calldata = derived(
-  [amountAfterBridgeFee, feeManagerStructEncoded],
-  ([$amountAfterBridgeFee, $feeManagerStructEncoded]) => {
+  [bridgeAddress, foreignData, amountToBridge],
+  ([$bridgeAddress, $foreignData, $amountToBridge]) => {
     return viem.encodeFunctionData({
-      abi: outputRouterAbi,
-      functionName: 'onTokenBridged',
+      abi: erc677abi,
+      functionName: 'transferAndCall',
       args: [
-        assets.ETH.output.address,
-        $amountAfterBridgeFee < 0n ? 0n : $amountAfterBridgeFee,
-        $feeManagerStructEncoded,
+        $bridgeAddress,
+        $amountToBridge,
+        $foreignData,
       ],
     })
   },

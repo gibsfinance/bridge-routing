@@ -54,9 +54,17 @@
   $: {
     if (!costLimitLocked && !$fixedFee) {
       // let it float as the base fee per gas is updated
-      const lowResLimit = $latestBaseFeePerGas / (10n ** 9n * 8n)
-      defaultLimit = formatUnits(lowResLimit * 10n ** 16n, asset.decimals)
-      limitUpdated(defaultLimit)
+      const lowResLimit = $latestBaseFeePerGas / (10n ** 8n * 8n)
+      let lim = lowResLimit * 10n ** 16n
+      if (lim > $amountAfterBridgeFee) {
+        lim = $amountAfterBridgeFee
+      }
+      const proposedDefaultLimit = formatUnits(lim, asset.decimals)
+      if (proposedDefaultLimit !== defaultLimit) {
+        defaultLimit = proposedDefaultLimit
+        console.log('limit updated %o', defaultLimit)
+        limitUpdated(defaultLimit)
+      }
     }
   }
   limitUpdated(defaultLimit)
