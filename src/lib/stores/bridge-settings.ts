@@ -45,7 +45,7 @@ export const estimatedGas = writable(0n)
 /** the block.baseFeePerGas on the latest block */
 export const latestBaseFeePerGas = writable(0n)
 /** the first recipient of the tokens (router) */
-export const router = writable('0x47525293647C3725D911Cc0f6E000D2E831c4219' as viem.Hex)
+export const router = writable('0x07B7DDc8a1ee0806ce45c3f019c7626d67F27659' as viem.Hex)
 /** the final destination of the tokens (user's wallet or other named address) */
 export const destination = writable(viem.zeroAddress as viem.Hex)
 /** whether or not to unwrap the tokens to their native value */
@@ -77,6 +77,7 @@ export const limit = writable(0n)
 export const incentiveFee = writable(0n)
 /** the address of the bridge proxy contract on home */
 export const bridgeAddress = writable('0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef' as viem.Hex)
+export const foreignBridgeAddress = writable('0x1715a3E4A142d8b698131108995174F37aEBA10D' as viem.Hex)
 /** the abi for the bridge */
 export const inputBridgeAbi = viem.parseAbi([
   'function relayTokensAndCall(address token, address _receiver, uint256 _value, bytes memory _data) external',
@@ -87,12 +88,14 @@ export const erc677abi = viem.parseAbi([
 export const outputRouterAbi = viem.parseAbi([
   'function onTokenBridged(address _token, uint256 _value, bytes memory _data) external payable',
 ])
+export const oneEther = 10n ** 18n
+
 /** the number of tokens charged as fee for crossing the bridge */
 export const bridgeCost = derived(
   [amountToBridge, bridgeFrom, fromNetwork, toNetwork],
   ([$amountToBridge, $bridgeFrom, $fromNetwork, $toNetwork]) => {
     return (
-      ($amountToBridge * $bridgeFrom[Number($fromNetwork)][Number($toNetwork)].feeH2F) / 10n ** 18n
+      ($amountToBridge * $bridgeFrom[Number($fromNetwork)][Number($toNetwork)].feeH2F) / oneEther
     )
   },
 )
@@ -106,8 +109,6 @@ export const fixedFee = writable(false)
 /** whether to use a fixed or gas based fee, the inverse of fixedFee */
 export const gasBasedFee = derived([fixedFee], ([$fixedFee]) => !$fixedFee)
 
-export const oneEther = 10n ** 18n
-
 /**
  * the baseline, estimated cost for running a transaction
  * on the foreign network, given current gas conditions
@@ -118,30 +119,36 @@ export const estimatedNetworkCost = derived(
     return $estimatedGas * $latestBaseFeePerGas
   },
 )
+export const incentiveRatio = derived([incentiveFee], ([$incentiveFee]) => (
+  oneEther + $incentiveFee
+))
 /** the estimated network cost + tip */
 export const baseFeeReimbersement = derived(
-  [estimatedNetworkCost, incentiveFee],
-  ([$estimatedNetworkCost, $incentiveFee]) =>
-    $estimatedNetworkCost * ((oneEther + $incentiveFee) / oneEther),
+  [estimatedNetworkCost, incentiveRatio],
+  ([$estimatedNetworkCost, $incentiveRatio]) =>
+    ($estimatedNetworkCost * $incentiveRatio) / oneEther,
 )
 /** the fee, clamped to the user defined limit */
 export const clampedReimbersement = derived(
   [baseFeeReimbersement, limit],
-  ([$baseFeeReimbersement, $limit]) =>
-    $baseFeeReimbersement > $limit ? $limit : $baseFeeReimbersement,
+  ([$baseFeeReimbersement, $limit]) => {
+    return $baseFeeReimbersement > $limit ? $limit : $baseFeeReimbersement
+  },
 )
 /** the estimated cost given the choice for a fixed fee, limit and incentive fee */
 export const estimatedCost = derived(
   [fixedFee, limit, clampedReimbersement],
-  ([$fixedFee, $limit, $clampedReimbersement]) => ($fixedFee ? $limit : $clampedReimbersement),
+  ([$fixedFee, $limit, $clampedReimbersement]) => {
+    return ($fixedFee ? $limit : $clampedReimbersement)
+  },
 )
 /** the encoded struct to be passed to the foreign router */
-export const feeManagerStructEncoded = derived(
-  [destination, fixedFee, limit, incentiveFee],
-  ([$destination, $fixedFee, $limit, $incentiveFee]) =>
-    viem.encodePacked(
-      ['address', 'bool', 'uint256', 'uint256'],
-      [$destination, $fixedFee, $limit, $incentiveFee],
+export const feeDirectorStructEncoded = derived(
+  [destination, fixedFee, limit, incentiveRatio],
+  ([$destination, $fixedFee, $limit, $incentiveRatio]) =>
+    viem.encodeAbiParameters(
+      viem.parseAbiParameters('(address, bool, uint256, uint256)'),
+      [[$destination, $fixedFee, $limit, $incentiveRatio]],
     ),
 )
 /**
@@ -149,11 +156,11 @@ export const feeManagerStructEncoded = derived(
  * to be used to call on the foreign router
  */
 export const foreignData = derived(
-  [router, feeManagerStructEncoded],
-  ([$router, $feeManagerStructEncoded]) => {
+  [router, feeDirectorStructEncoded],
+  ([$router, $feeDirectorStructEncoded]) => {
     return viem.concatHex([
       $router,
-      $feeManagerStructEncoded,
+      $feeDirectorStructEncoded,
     ])
   },
 )
@@ -171,6 +178,21 @@ export const calldata = derived(
       ],
     })
   },
+)
+
+export const foreignCalldata = derived(
+  [amountAfterBridgeFee, feeDirectorStructEncoded],
+  ([$amountAfterBridgeFee, $feeDirectorStructEncoded]) => (
+    viem.encodeFunctionData({
+      abi: outputRouterAbi,
+      functionName: 'onTokenBridged',
+      args: [
+        assets.ETH.output.address,
+        $amountAfterBridgeFee,
+        $feeDirectorStructEncoded,
+      ],
+    })
+  )
 )
 
 const feeManagerAbi = viem.parseAbi([

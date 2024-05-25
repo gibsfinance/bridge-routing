@@ -1,7 +1,6 @@
 <script lang="ts">
-  // import '../app.css';
-  // import './styles.css';
   import '$lib/styles/global.css'
+  // import 'iconify-icon'
   import Nav from '$lib/components/Nav.svelte'
 
   import AuthProvider from '$lib/stores/auth/AuthProvider.svelte'

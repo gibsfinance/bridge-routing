@@ -3,7 +3,8 @@ import type { ChainsMetadata } from './types'
 import { Chains } from './types'
 
 /**
- *
+ * all of the chains that are enabled in this dapp
+ * and their corresponding useful metadata
  */
 export const chainsMetadata = {
   [Chains.PLS]: {
@@ -26,5 +27,4 @@ export const chainsMetadata = {
       },
     },
   },
-  // [Chains.OP]: optimism,
 } as ChainsMetadata

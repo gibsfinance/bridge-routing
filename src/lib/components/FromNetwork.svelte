@@ -15,21 +15,36 @@
   export let asset!: Asset
   $: networkOrigination = chainsMetadata[asset.networkOrigination]
   let value = ''
+  let prev = ''
   let balance = 0n
   const decimals = 18
   const runValidation = () => {
-    let v!: bigint
+    let v: bigint | undefined = undefined
+    // let addingZero = false
+    // let trailingZeros = 0
     try {
+      if (value === '') {
+        amountToBridge.set(0n)
+        return
+      }
       v = parseUnits(value, decimals)
     } catch (err) {
-      console.log('failed during parse', value)
-      value = ''
+      console.log(err, v)
     }
-    if (v < 0n) {
-      console.log('value less than 0', value)
-      value = ''
+    if (v && v < 0n) {
+      v = undefined
     }
-    value = formatUnits(v, decimals)
+    const split = value.split('.')
+    if (
+      typeof v === 'bigint' &&
+      split.length <= 2 &&
+      (split.length === 1 || split[1].length <= decimals)
+    ) {
+      amountToBridge.set(v)
+      prev = value
+    } else {
+      value = prev
+    }
   }
   const getBalance = async () => {
     const account = get(walletAccount)
@@ -56,7 +71,8 @@
     return get(publicClient).watchContractEvent({
       address: asset.address,
       abi: erc20Abi,
-      poll: true,
+      eventName: 'Transfer',
+      onError: (error) => console.log(error),
       onLogs: async (logs) => {
         const transfer = logs.filter((l) => l.eventName === 'Transfer')
         if (transfer.length) {
@@ -65,7 +81,7 @@
       },
     })
   })
-  $: amountToBridge.set(value ? parseEther(value) : 0n)
+  // $: amountToBridge.set(value ? parseEther(value) : 0n)
 </script>
 
 <div class="shadow-md rounded-lg">
@@ -84,7 +100,7 @@
       class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-2xl"
       placeholder="0.0"
       bind:value
-      on:change={runValidation} />
+      on:input={runValidation} />
     <span class="tooltip leading-8 py-2 px-3 flex flex-row" data-tip={asset.name}>
       <NetworkImage network={networkOrigination} />{asset.symbol}
     </span>

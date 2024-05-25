@@ -1,6 +1,7 @@
 <script>
   import BluryImage from '$lib/components/BluryImage.svelte'
   import Bridge from '$lib/components/Bridge.svelte'
+  import Info from '$lib/components/Info.svelte'
 </script>
 
 <BluryImage max_height="300px" image_url="/src/lib/images/bridge.jpeg">
@@ -12,15 +13,5 @@
 
 <div class="container m-auto max-w-lg">
   <Bridge />
-  <ul class="gap-4 flex flex-col my-4">
-    <li class="flex">
-      This UI uses the bridge contracts directly, so all of the same security assumptions are
-      present
-    </li>
-    <li>The only difference is that the final router contract on Ethereum has been swapped out</li>
-    <li>
-      This modified implementation allows the runner's actions to be measured and creates an
-      economic incentive to deliver native tokens
-    </li>
-  </ul>
+  <Info />
 </div>

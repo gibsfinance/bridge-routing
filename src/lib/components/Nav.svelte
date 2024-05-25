@@ -1,6 +1,18 @@
 <script lang="ts">
   import { goto } from '$app/navigation'
   import gibs from '$lib/images/1FAF0.svg'
+  import { onMount } from 'svelte'
+  import Icon from '@iconify/svelte'
+
+  let bridgeUrl = ''
+
+  onMount(() => {
+    fetch('https://bridge.pulsechain.com/version.json')
+      .then((res) => res.json())
+      .then((res) => {
+        bridgeUrl = res.ipfs_gateways[0]
+      })
+  })
 
   const gotoHome = async () => {
     await goto('/')
@@ -25,7 +37,16 @@
           style="height: 32px" /> Gibs
       </span>
       <div>
-        <ul>
+        <ul class="flex flex-row">
+          <li>
+            <a
+              class="h-8 w-8 py-1 px-2 text-white flex items-center"
+              href="{bridgeUrl}/#/transactions"
+              target="_blank"
+              ><button>
+                <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
+              </button></a>
+          </li>
           <li>
             <button class="link" on:keypress={gotoNativeDelivery} on:click={gotoNativeDelivery}>
               🌁

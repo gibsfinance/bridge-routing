@@ -14,6 +14,7 @@
     gasBasedFee,
     fixedFee,
     estimatedCost,
+    estimatedNetworkCost,
   } from '$lib/stores/bridge-settings'
   import { type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
@@ -31,16 +32,15 @@
   })
   export let asset!: Asset
   onMount(() => {
+    estimatedGas.set(270_000n)
     return publicClient.watchBlocks({
       emitOnBegin: true,
       onBlock: (block) => {
-        latestBaseFeePerGas.set(block.baseFeePerGas as bigint)
+        latestBaseFeePerGas.update(() => block.baseFeePerGas as bigint)
       },
     })
   })
   $: loadFeeFor(originationNetwork.id, destinationNetwork.id)
-  estimatedGas.set(270_000n)
-  $: deliveredAmount = $amountAfterBridgeFee - $estimatedCost
   const limitUpdated = (lim: string) => {
     limit.set(parseUnits(lim, 18))
   }
@@ -51,6 +51,8 @@
   incentiveFeeUpdated(defaultIncFee)
   let defaultLimit = '0.01'
   let costLimitLocked = false
+  // only happens once
+  // limitUpdated(defaultLimit)
   $: {
     if (!costLimitLocked && !$fixedFee) {
       // let it float as the base fee per gas is updated
@@ -62,12 +64,10 @@
       const proposedDefaultLimit = formatUnits(lim, asset.decimals)
       if (proposedDefaultLimit !== defaultLimit) {
         defaultLimit = proposedDefaultLimit
-        console.log('limit updated %o', defaultLimit)
         limitUpdated(defaultLimit)
       }
     }
   }
-  limitUpdated(defaultLimit)
   let balance = 0n
   const focusOnInputChild = (e: any) => {
     e.currentTarget.querySelector('input')?.focus()
@@ -146,9 +146,13 @@
         <button class="flex mr-2" on:click={() => showToolbox('settings')}>⚙️</button>
         <button class="flex" on:click={() => showToolbox('details')}>📐</button>
       </div>
-      <span class="tooltip text-2xl leading-10" data-tip="Estimated tokens to be delivered">
+      <span
+        class="tooltip text-2xl leading-10"
+        data-tip="Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee fluctuates on ethereum">
         {#if !$fixedFee}~
-        {/if}{humanReadableNumber(deliveredAmount > 0n ? deliveredAmount : 0n)}
+        {/if}{humanReadableNumber(
+          $amountAfterBridgeFee - $estimatedCost > 0n ? $amountAfterBridgeFee - $estimatedCost : 0n,
+        )}
         {asset.symbol}</span>
     </div>
   </div>
