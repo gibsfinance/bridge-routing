@@ -32,7 +32,7 @@
   })
   export let asset!: Asset
   onMount(() => {
-    estimatedGas.set(270_000n)
+    estimatedGas.set(315_000n)
     return publicClient.watchBlocks({
       emitOnBegin: true,
       onBlock: (block) => {

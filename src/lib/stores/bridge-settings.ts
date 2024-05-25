@@ -45,7 +45,7 @@ export const estimatedGas = writable(0n)
 /** the block.baseFeePerGas on the latest block */
 export const latestBaseFeePerGas = writable(0n)
 /** the first recipient of the tokens (router) */
-export const router = writable('0x07B7DDc8a1ee0806ce45c3f019c7626d67F27659' as viem.Hex)
+export const router = writable('0x5f542C3ce02a56586a91A7DE80deBF29947836eD' as viem.Hex)
 /** the final destination of the tokens (user's wallet or other named address) */
 export const destination = writable(viem.zeroAddress as viem.Hex)
 /** whether or not to unwrap the tokens to their native value */
