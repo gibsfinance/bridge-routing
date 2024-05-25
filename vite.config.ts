@@ -26,8 +26,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      crypto: 'crypto-browserify',
-      stream: 'stream-browserify',
+      // crypto: 'crypto-browserify',
+      // stream: 'stream-browserify',
       assert: 'assert',
     },
   },
