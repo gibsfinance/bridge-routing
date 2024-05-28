@@ -2,7 +2,7 @@
   import { createEventDispatcher, onMount } from 'svelte'
   import { formatUnits, parseUnits } from 'viem'
   import NetworkSummary from './NetworkSummary.svelte'
-  import { humanReadableNumber, type Asset } from '$lib/stores/utils'
+  import { decimalValidation, humanReadableNumber, type Asset } from '$lib/stores/utils'
   import {
     bridgeFrom,
     limit,
@@ -14,7 +14,6 @@
     gasBasedFee,
     fixedFee,
     estimatedCost,
-    estimatedNetworkCost,
   } from '$lib/stores/bridge-settings'
   import { type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
@@ -49,15 +48,15 @@
   }
   const defaultIncFee = '10'
   incentiveFeeUpdated(defaultIncFee)
-  let defaultLimit = '0.01'
+  let defaultLimit = '0.001'
   let costLimitLocked = false
   // only happens once
-  // limitUpdated(defaultLimit)
+  limitUpdated(defaultLimit)
   $: {
     if (!costLimitLocked && !$fixedFee) {
       // let it float as the base fee per gas is updated
       const lowResLimit = $latestBaseFeePerGas / (10n ** 8n * 8n)
-      let lim = lowResLimit * 10n ** 16n
+      let lim = lowResLimit * 10n ** 15n
       if (lim > $amountAfterBridgeFee) {
         lim = $amountAfterBridgeFee
       }
@@ -111,7 +110,7 @@
         on:click={focusOnInputChild}>
         ⛽ +<SmallInput
           value={defaultIncFee}
-          validate={(v) => parseUnits(v, 18)}
+          validate={(v) => decimalValidation(v, 18)}
           on:update={(e) => incentiveFeeUpdated(e.detail.value)} />%</button>
     </div>
   </div>
@@ -132,11 +131,11 @@
         on:click={focusOnInputChild}>
         &lt;= <SmallInput
           value={defaultLimit}
-          validate={(v) => parseUnits(v, 18)}
+          validate={(v) => decimalValidation(v, 18)}
           on:update={(e) => {
             if (e.detail.fromInput) costLimitLocked = true
             limitUpdated(e.detail.value)
-          }} />&nbsp;ETH</button>
+          }} />&nbsp;{asset.symbol}</button>
       <Warning
         show={!$fixedFee && $limit < $estimatedCost * 2n}
         tooltip="The fee limit is close to or below the current network cost. Consider increasing the limit to allow for gas cost fluctuations" />

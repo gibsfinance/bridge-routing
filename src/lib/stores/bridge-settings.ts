@@ -102,7 +102,9 @@ export const bridgeCost = derived(
 /** the number of tokens available after they have crossed the bridge */
 export const amountAfterBridgeFee = derived(
   [amountToBridge, bridgeCost],
-  ([$amountToBridge, $bridgeCost]) => $amountToBridge - $bridgeCost,
+  ([$amountToBridge, $bridgeCost]) => {
+    return $amountToBridge - $bridgeCost
+  },
 )
 /** whether to use a fixed or gas based fee */
 export const fixedFee = writable(false)
