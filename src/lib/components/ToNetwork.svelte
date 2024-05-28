@@ -118,6 +118,8 @@
   <div class="bg-slate-100 mt-[1px] py-1 relative">
     <div class="flex flex-row px-3 leading-8 justify-between tooltip">
       <button
+        class="tooltip"
+        data-tip="Allows cost limit to float with the destination chain's base fee. While unlocked the number in the ui may change. Once a transaction is sent, the number in that transaction's calldata is fixed"
         on:click={() => {
           costLimitLocked = !costLimitLocked
         }}>
