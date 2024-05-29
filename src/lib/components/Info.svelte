@@ -29,6 +29,18 @@
     <button class="border-2 rounded-full h-8 w-8 mr-2 flex justify-center items-center"
       ><Icon icon="fe:github-alt" height="1.5em" width="1.5em" /></button>
   </a>
+  <a
+    href="https://etherscan.io/address/0x5f542C3ce02a56586a91A7DE80deBF29947836eD#code"
+    target="_blank">
+    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center">
+      <Icon icon="mdi:ethereum" height="1.5em" width="1.5em" />
+    </button>
+  </a>
+  <a href="https://x.com/gibsfinance" target="_blank">
+    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center">
+      <Icon icon="ri:twitter-fill" height="1.25em" width="1.25em" />
+    </button>
+  </a>
 </div>
 <dialog id="bridge-info-modal" class="modal">
   <div class="modal-box text-slate-50">

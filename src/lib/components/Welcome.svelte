@@ -1,6 +1,6 @@
 <script>
   import BluryImage from './BluryImage.svelte'
-  import payMe from '$lib/images/pay-me.gif'
+  import payMe from '$lib/images/pay-me.png'
 </script>
 
 <BluryImage max_height="600px" image_url={payMe}>
