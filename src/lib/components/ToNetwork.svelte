@@ -55,7 +55,7 @@
   $: {
     if (!costLimitLocked && !$fixedFee) {
       // let it float as the base fee per gas is updated
-      const lowResLimit = $latestBaseFeePerGas / (10n ** 8n * 8n)
+      const lowResLimit = $latestBaseFeePerGas / (10n ** 8n * 5n)
       let lim = lowResLimit * 10n ** 15n
       if (lim > $amountAfterBridgeFee) {
         lim = $amountAfterBridgeFee
