@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BridgeExplainer from '$lib/components/BridgeExplainer.svelte'
   import Welcome from '$lib/components/Welcome.svelte'
 </script>
 
@@ -9,6 +10,4 @@
 
 <Welcome />
 
-<div class="container px-2 py-10 m-auto text-xl">
-  <p class="text-center">Emojis only, or GTFO</p>
-</div>
+<BridgeExplainer />
