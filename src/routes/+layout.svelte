@@ -1,6 +1,5 @@
 <script lang="ts">
   import '$lib/styles/global.css'
-  // import 'iconify-icon'
   import Nav from '$lib/components/Nav.svelte'
 
   import AuthProvider from '$lib/stores/auth/AuthProvider.svelte'
