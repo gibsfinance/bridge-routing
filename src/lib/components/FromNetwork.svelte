@@ -11,6 +11,7 @@
   import { get, writable } from 'svelte/store'
   import { amountToBridge } from '$lib/stores/bridge-settings'
   import * as validatableStore from '$lib/stores/validatable'
+  import AssetWithNetwork from './AssetWithNetwork.svelte'
 
   export let network!: VisualChain
   export let asset!: Asset
@@ -78,7 +79,7 @@
         val.set($value)
       }} />
     <span class="tooltip leading-8 py-2 px-3 flex flex-row" data-tip={asset.name}>
-      <NetworkImage network={networkOrigination} />{asset.symbol}
+      <AssetWithNetwork {asset} />{asset.symbol}
     </span>
   </div>
 </div>

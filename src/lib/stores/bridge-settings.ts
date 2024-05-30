@@ -29,6 +29,7 @@ export const assets = {
       address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
       decimals: 18,
       networkOrigination: Chains.ETH,
+      hostedNetwork: Chains.PLS,
     },
     output: {
       symbol: 'WETH',
@@ -36,6 +37,7 @@ export const assets = {
       address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
       decimals: 18,
       networkOrigination: Chains.ETH,
+      hostedNetwork: Chains.ETH,
     },
   },
 } as const

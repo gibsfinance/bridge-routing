@@ -1,6 +1,7 @@
 import { mainnet, pulsechain } from 'viem/chains'
 import type { ChainsMetadata } from './types'
 import { Chains } from './types'
+import ethNetworkUrl from '$lib/images/networks/0x1.svg'
 
 /**
  * all of the chains that are enabled in this dapp
@@ -19,7 +20,7 @@ export const chainsMetadata = {
   },
   [Chains.ETH]: {
     ...mainnet,
-    icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png',
+    icon: ethNetworkUrl,
     alt: 'two pyramids joined on one side',
     rpcUrls: {
       default: {

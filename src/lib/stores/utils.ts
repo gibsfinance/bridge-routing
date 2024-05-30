@@ -10,6 +10,7 @@ export type Asset = {
   address: Hex
   decimals: number
   networkOrigination: keyof typeof chainsMetadata
+  hostedNetwork: keyof typeof chainsMetadata
 }
 
 export const decimalValidation = (v: string, decimals = 18) => {
