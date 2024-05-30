@@ -32,9 +32,8 @@
       <p class="mt-8 text-left">
         This approach mitigates potential vulnerabilities associated with custodial services,
         providing users with confidence in the security of their assets. Bridge trustlessly,
-        quickly, and maintain your privacy without permission with <a
-          href="bridge"
-          class="underline">gibs.finance/bridge</a
+        quickly, and maintain your privacy without permission on <a href="bridge" class="underline"
+          >gibs.finance/bridge</a
         >.
       </p>
     </div>
