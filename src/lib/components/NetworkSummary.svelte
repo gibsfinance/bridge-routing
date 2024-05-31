@@ -4,6 +4,7 @@
   import NetworkImage from './NetworkImage.svelte'
   import { createEventDispatcher } from 'svelte'
   import type { Asset } from '$lib/stores/utils'
+  import Loading from './Loading.svelte'
   export let balance = 0n
   export let asset!: Asset
   export let network!: VisualChain
@@ -23,11 +24,11 @@
   </div>
   <div class="flex flex-row">
     <div
-      class="text-xs leading-8 tooltip"
+      class="text-xs leading-8 tooltip flex items-end self-end"
       class:mx-2={showMax}
       class:ml-2={!showMax}
       data-tip={asset.name}>
-      {balance == 0n ? '0.0' : formatEther(balance)}
+      <Loading>{balance == 0n ? '0.0' : formatEther(balance)}</Loading>
       {asset.symbol}
     </div>
     {#if showMax}

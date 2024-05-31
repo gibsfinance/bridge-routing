@@ -2,20 +2,17 @@
   import NetworkSummary from './NetworkSummary.svelte'
   import { walletAccount } from '$lib/stores/auth/store'
   import { erc20Abi, formatUnits, parseUnits } from 'viem'
-  import NetworkImage from './NetworkImage.svelte'
   import type { VisualChain } from '$lib/stores/auth/types'
-  import { chainsMetadata } from '$lib/stores/auth/constants'
   import { decimalValidation, type Asset } from '$lib/stores/utils'
-  import { onMount } from 'svelte'
   import { publicClient } from '$lib/stores/auth/store'
   import { get, writable } from 'svelte/store'
   import { amountToBridge } from '$lib/stores/bridge-settings'
   import * as validatableStore from '$lib/stores/validatable'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
+  import { loading } from '$lib/stores/loading'
 
   export let network!: VisualChain
   export let asset!: Asset
-  $: networkOrigination = chainsMetadata[asset.networkOrigination]
   let value = validatableStore.create('', (v) => decimalValidation(v, asset.decimals))
   const val = writable('')
   value.subscribe((v) => {
@@ -40,22 +37,32 @@
       balance = res || 0n
     })
 
-  onMount(() => {
-    getBalance().then((res) => {
-      balance = res || 0n
-    })
-    return get(publicClient).watchContractEvent({
-      address: asset.address,
-      abi: erc20Abi,
-      eventName: 'Transfer',
-      onLogs: async (logs) => {
-        const transfer = logs.filter((l) => l.eventName === 'Transfer')
-        if (transfer.length) {
-          balance = (await getBalance()) || 0n
-        }
-      },
-    })
-  })
+  let unwind!: () => void
+  const doUnwind = () => {
+    loading.increment('balance')
+    balance = 0n
+    unwind?.()
+  }
+  $: {
+    doUnwind()
+    if ($publicClient) {
+      getBalance().then((res) => {
+        balance = res || 0n
+        loading.decrement('balance')
+      })
+      unwind = $publicClient.watchContractEvent({
+        address: asset.address,
+        abi: erc20Abi,
+        eventName: 'Transfer',
+        onLogs: async (logs) => {
+          const transfer = logs.filter((l) => l.eventName === 'Transfer')
+          if (transfer.length) {
+            balance = (await getBalance()) || 0n
+          }
+        },
+      })
+    }
+  }
 </script>
 
 <div class="shadow-md rounded-lg">
@@ -79,7 +86,8 @@
         val.set($value)
       }} />
     <span class="tooltip leading-8 py-2 px-3 flex flex-row" data-tip={asset.name}>
-      <AssetWithNetwork {asset} />{asset.symbol}
+      <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
+      <span class="ml-2">{asset.symbol}</span>
     </span>
   </div>
 </div>

@@ -4,13 +4,12 @@
   import Version from './Version.svelte'
   import ConnectAndBridge from './ConnectAndBridge.svelte'
   import NetworkDirection from './NetworkDirection.svelte'
-  import { Chains } from '$lib/stores/auth/types'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import Settings from './Settings.svelte'
   import Details from './Details.svelte'
   import { assetIn, assetOut } from '$lib/stores/bridge-settings'
-  let originationNetwork = chainsMetadata[Chains.PLS]
-  let destinationNetwork = chainsMetadata[Chains.ETH]
+  $: originationNetwork = chainsMetadata[$assetIn.hostedNetwork]
+  $: destinationNetwork = chainsMetadata[$assetOut.hostedNetwork]
   let dropdowns: Record<string, boolean> = {}
   const toggleDropdowns = (e: CustomEvent) => {
     for (const k of Object.keys(dropdowns)) {

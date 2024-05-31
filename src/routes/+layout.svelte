@@ -19,9 +19,9 @@
 </svelte:head>
 
 <AuthProvider>
-  <div class="app bg-slate-50">
+  <div class="app bg-slate-950">
     <Nav />
-    <main class="flex flex-col box-border w-full h-fit">
+    <main class="flex flex-col box-border w-full h-fit bg-slate-50 mt-10">
       <slot />
     </main>
   </div>

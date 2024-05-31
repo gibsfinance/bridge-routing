@@ -22,8 +22,8 @@
   }
 </script>
 
-<div class="h-10 -mb-10 z-20">
-  <nav class="fixed h-10 leading-8 px-2 flex flex-row right-0 left-0 shadow-inner">
+<div class="h-10 -mb-10 z-40 flex">
+  <nav class="fixed h-10 leading-8 px-2 flex flex-row right-0 left-0 shadow-inner bg-slate-950">
     <div class="max-w-5xl m-auto w-full flex justify-between">
       <span
         role="button"

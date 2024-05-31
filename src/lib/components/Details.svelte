@@ -15,7 +15,9 @@
 
   export let originationNetwork!: VisualChain
   export let destinationNetwork!: VisualChain
-  $: bridgeFee = $bridgeFrom[originationNetwork.id][destinationNetwork.id].feeH2F
+  $: bridgeFee = $bridgeFrom
+    .get(originationNetwork.chainId)!
+    .get(destinationNetwork.chainId)!.feeH2F
   const oneEther = 10n ** 18n
   $: afterBridge = $amountToBridge - ($amountToBridge * bridgeFee) / oneEther
   $: estimated = afterBridge - $estimatedCost

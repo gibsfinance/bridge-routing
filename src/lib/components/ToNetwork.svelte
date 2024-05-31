@@ -3,43 +3,58 @@
   import { formatUnits, parseUnits } from 'viem'
   import NetworkSummary from './NetworkSummary.svelte'
   import { decimalValidation, humanReadableNumber, type Asset } from '$lib/stores/utils'
+  import { loading } from '$lib/stores/loading'
+  import Loading from '$lib/components/Loading.svelte'
   import {
     bridgeFrom,
     limit,
     loadFeeFor,
     incentiveFee,
-    estimatedGas,
     latestBaseFeePerGas,
     amountAfterBridgeFee,
     gasBasedFee,
     fixedFee,
+    foreignSupportsEIP1559,
     estimatedCost,
   } from '$lib/stores/bridge-settings'
-  import { type VisualChain } from '$lib/stores/auth/types'
+  import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
   import SmallInput from './SmallInput.svelte'
   import Warning from './Warning.svelte'
   export let originationNetwork!: VisualChain
   export let destinationNetwork!: VisualChain
+  export let asset!: Asset
   const dispatch = createEventDispatcher()
   const showToolbox = (type: string) => {
     dispatch('toggle', type)
   }
-  const publicClient = createPublicClient({
+  $: publicClient = createPublicClient({
     chain: destinationNetwork,
     transport: http(),
   })
-  export let asset!: Asset
-  onMount(() => {
-    estimatedGas.set(315_000n)
-    return publicClient.watchBlocks({
+  let unwatch!: () => void
+  let waitingForFirstGas = true
+  const doUnwatch = () => {
+    loading.increment('gas')
+    waitingForFirstGas = true
+    unwatch?.()
+  }
+  $: if (publicClient) {
+    doUnwatch()
+    unwatch = publicClient.watchBlocks({
       emitOnBegin: true,
-      onBlock: (block) => {
-        latestBaseFeePerGas.update(() => block.baseFeePerGas as bigint)
+      onBlock: async (block) => {
+        let perGas = block.baseFeePerGas
+        if (!perGas) {
+          perGas = await publicClient.getGasPrice()
+        }
+        latestBaseFeePerGas.update(() => perGas)
+        loading.decrement('gas')
       },
     })
-  })
-  $: loadFeeFor(originationNetwork.id, destinationNetwork.id)
+  }
+  onMount(() => () => doUnwatch())
+  $: loadFeeFor(originationNetwork.chainId, destinationNetwork.chainId)
   const limitUpdated = (lim: string) => {
     limit.set(parseUnits(lim, 18))
   }
@@ -74,6 +89,9 @@
   const toggleFixedFee = () => {
     fixedFee.update(($ff) => !$ff)
   }
+  $: bridgeFee = humanReadableNumber(
+    $bridgeFrom.get(originationNetwork.chainId)!.get(destinationNetwork.chainId)!.feeH2F * 100n,
+  )
 </script>
 
 <div class="shadow-md rounded-lg">
@@ -83,10 +101,10 @@
   <div class="bg-slate-100 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <span>Bridge Fee</span>
-      <span class="cursor-not-allowed tooltip" data-tip="Fee set on the bridge">
-        {humanReadableNumber(
-          $bridgeFrom[originationNetwork.id][destinationNetwork.id].feeH2F * 100n,
-        )}%
+      <span
+        class="cursor-not-allowed tooltip flex items-end self-end"
+        data-tip="Fee set on the bridge">
+        <Loading>{bridgeFee}</Loading>%
       </span>
     </div>
   </div>
@@ -99,13 +117,14 @@
           class="toggle toggle-sm [--tglbg:white] border-purple-600 bg-purple-600 hover:bg-purple-400 disabled:bg-purple-600 disabled:opacity-100 my-1.5"
           checked={$gasBasedFee}
           on:change={toggleFixedFee} />
-        <button class="px-1" on:click={toggleFixedFee}>Base</button>
+        <button class="px-1" on:click={toggleFixedFee}
+          >{destinationNetwork.chainId === Chains.BNB ? 'Gas' : 'Base'}</button>
       </span>
       <button
         class="flex flex-row strike tooltip"
         data-tip={$fixedFee
           ? 'Fee uses fixed value defined in cost limit'
-          : 'Percentage of gas * base fee to allocate to the transaction runner for performing this action'}
+          : `Percentage of gas used * ${$foreignSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action`}
         class:line-through={!$gasBasedFee}
         on:click={focusOnInputChild}>
         ⛽ +<SmallInput

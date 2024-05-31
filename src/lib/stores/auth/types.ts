@@ -6,10 +6,12 @@ import type { Chain } from 'viem/chains'
 export enum Chains {
   PLS = '0x171',
   ETH = '0x1',
+  BNB = '0x38',
   // OP = '0xa',
 }
 
 export type VisualChain = Chain & {
+  chainId: Chains;
   icon: string
   alt: string
 }

@@ -132,8 +132,10 @@
 <div>
   {#if $walletAccount}
     <button
-      class="p-2 bg-purple-600 text-white w-full rounded-lg hover:bg-purple-500 active:bg-purple-500"
-      class:opacity-70={disabled}
+      class="p-2 text-white w-full rounded-lg active:bg-purple-500"
+      class:hover:bg-purple-500={!disabled}
+      class:bg-purple-600={!disabled}
+      class:bg-purple-400={disabled}
       class:cursor-not-allowed={disabled}
       class:shadow-md={!disabled}
       on:click={initiateBridge}>Bridge</button>
