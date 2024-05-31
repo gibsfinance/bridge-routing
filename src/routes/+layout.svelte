@@ -11,9 +11,9 @@
 </script>
 
 <svelte:head>
-  {#each preloadImageUrls as image}
+  <!-- {#each preloadImageUrls as image}
     <link rel="preload" as="image" href={image} />
-  {/each}
+  {/each} -->
   <meta name="robots" content="noindex nofollow" />
   <html lang="en" />
 </svelte:head>

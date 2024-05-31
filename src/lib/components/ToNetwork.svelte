@@ -16,6 +16,7 @@
     fixedFee,
     foreignSupportsEIP1559,
     estimatedCost,
+    baseFeeReimbersement,
   } from '$lib/stores/bridge-settings'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
@@ -47,6 +48,10 @@
         let perGas = block.baseFeePerGas
         if (!perGas) {
           perGas = await publicClient.getGasPrice()
+          const minGWei = 2_500_000_000n
+          if (perGas < minGWei) {
+            perGas = minGWei
+          }
         }
         latestBaseFeePerGas.update(() => perGas)
         loading.decrement('gas')
@@ -92,6 +97,7 @@
   $: bridgeFee = humanReadableNumber(
     $bridgeFrom.get(originationNetwork.chainId)!.get(destinationNetwork.chainId)!.feeH2F * 100n,
   )
+  // $: console.log($limit, $estimatedCost, $limit < $estimatedCost * 2n)
 </script>
 
 <div class="shadow-md rounded-lg">
@@ -154,9 +160,9 @@
           on:update={(e) => {
             if (e.detail.fromInput) costLimitLocked = true
             limitUpdated(e.detail.value)
-          }} />&nbsp;{asset.symbol}</button>
+          }} />&nbsp;{asset.native?.symbol || asset.symbol}</button>
       <Warning
-        show={!$fixedFee && $limit < $estimatedCost * 2n}
+        show={$fixedFee ? $limit < $baseFeeReimbersement * 2n : $limit < $estimatedCost * 2n}
         tooltip="The fee limit is close to or below the current network cost. Consider increasing the limit to allow for gas cost fluctuations" />
     </div>
   </div>
@@ -173,7 +179,7 @@
         {/if}{humanReadableNumber(
           $amountAfterBridgeFee - $estimatedCost > 0n ? $amountAfterBridgeFee - $estimatedCost : 0n,
         )}
-        {asset.symbol}</span>
+        {asset.native?.symbol || asset.symbol}</span>
     </div>
   </div>
 </div>

@@ -59,10 +59,10 @@ export const assets = {
       decimals: 18,
       networkOrigination: Chains.ETH,
       hostedNetwork: Chains.ETH,
-    },
-    native: {
-      symbol: 'ETH',
-      name: 'Ether',
+      native: {
+        symbol: 'ETH',
+        name: 'Ether',
+      },
     },
   },
   BNB: {
@@ -71,7 +71,7 @@ export const assets = {
     foreignBridge: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
     router: '0x47525293647C3725D911Cc0f6E000D2E831c4219',
     input: {
-      symbol: 'BNB',
+      symbol: 'WBNB',
       name: 'Wrapped BNB from BSC (Tokens Express)',
       address: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
       decimals: 18,
@@ -79,16 +79,16 @@ export const assets = {
       hostedNetwork: Chains.PLS,
     },
     output: {
-      symbol: 'BNB',
-      name: 'BNB',
+      symbol: 'WBNB',
+      name: 'Wrapped BNB',
       address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
       decimals: 18,
       networkOrigination: Chains.BNB,
       hostedNetwork: Chains.BNB,
-    },
-    native: {
-      symbol: 'BNB',
-      name: 'BNB',
+      native: {
+        symbol: 'BNB',
+        name: 'BNB',
+      },
     },
   },
 } as const
@@ -115,16 +115,8 @@ export const unwrap = writable(true)
 /** the asset going into the home bridge */
 export const assetIn = derived([bridgeKey], ([$bridgeKey]) => assets[$bridgeKey].input)
 /** the asset coming out on the other side of the bridge (foreign) */
-export const assetOut = derived([bridgeKey, unwrap], ([$bridgeKey, $unwrap]) => {
-  if ($unwrap) {
-    return {
-      ...assets[$bridgeKey].output,
-      ...assets[$bridgeKey].native,
-      address: viem.zeroAddress,
-    }
-  } else {
-    return assets[$bridgeKey].output
-  }
+export const assetOut = derived([bridgeKey], ([$bridgeKey]) => {
+  return assets[$bridgeKey].output
 })
 /** the direction of the bridge crossing */
 export const fromNetwork = derived([bridgeKey], ([$bridgeKey]) =>
@@ -194,8 +186,10 @@ export const incentiveRatio = derived([incentiveFee], ([$incentiveFee]) => oneEt
 /** the estimated network cost + tip */
 export const baseFeeReimbersement = derived(
   [estimatedNetworkCost, incentiveRatio],
-  ([$estimatedNetworkCost, $incentiveRatio]) =>
-    ($estimatedNetworkCost * $incentiveRatio) / oneEther,
+  ([$estimatedNetworkCost, $incentiveRatio]) => {
+    console.log($estimatedNetworkCost)
+    return ($estimatedNetworkCost * $incentiveRatio) / oneEther
+  }
 )
 /** the fee, clamped to the user defined limit */
 export const clampedReimbersement = derived(

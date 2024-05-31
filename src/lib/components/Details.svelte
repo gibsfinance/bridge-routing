@@ -43,7 +43,7 @@
       <span>⛽</span>
       <span>
         {humanReadableNumber($estimatedNetworkCost, asset.decimals)}
-        {asset.symbol}</span>
+        {asset.native?.symbol || asset.symbol}</span>
     </span>
   </div>
   <div class="bg-slate-100 mt-[1px] py-2 px-4 justify-between flex flex-row relative">
@@ -56,7 +56,7 @@
           ⛽&nbsp;+&nbsp;{formatUnits($incentiveFee * 100n, 18)}%{/if}</span>
       <span>
         {humanReadableNumber($estimatedCost, asset.decimals)}
-        {asset.symbol}</span>
+        {asset.native?.symbol || asset.symbol}</span>
     </span>
     <Warning
       show={$estimatedCost < $estimatedNetworkCost}
@@ -68,7 +68,7 @@
       <span class="w-32">Delivered</span>
       <span>
         {humanReadableNumber(minimumDelivered < 0n ? 0n : minimumDelivered, asset.decimals)}
-        {asset.symbol}</span>
+        {asset.native?.symbol || asset.symbol}</span>
       <Warning
         show={minimumDelivered < ($amountToBridge / 10n) * 9n}
         tooltip="Many of your tokens are being lost to fees, try increasing the number of input tokens or decreasing the fee limits" />
@@ -78,7 +78,7 @@
       <span class="w-32">Estimated Delivery</span>
       <span>
         ~ {humanReadableNumber(estimated < 0n ? 0n : estimated, asset.decimals)}
-        {asset.symbol}</span>
+        {asset.native?.symbol || asset.symbol}</span>
     </div>
     <div
       class="bg-slate-100 mt-[1px] py-2 px-4 rounded-b-lg justify-between flex flex-row relative">
@@ -87,7 +87,7 @@
         <span>&gt;=</span>
         <span>
           {humanReadableNumber(minimumDelivered < 0n ? 0n : minimumDelivered, asset.decimals)}
-          {asset.symbol}</span>
+          {asset.native?.symbol || asset.symbol}</span>
       </span>
       <Warning
         show={minimumDelivered < ($amountToBridge / 10n) * 9n}
