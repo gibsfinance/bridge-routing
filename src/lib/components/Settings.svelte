@@ -28,9 +28,6 @@
       }
     }
   }
-  const updateTo = (e: CustomEvent) => {
-    bridgeAddress.set(e.detail.value)
-  }
 </script>
 
 <div class="my-2 text-sm shadow-sm rounded-lg">
@@ -51,9 +48,10 @@
       disabled
       bind:checked={$unwrap} />
   </div>
-  <div class="bg-slate-100 mt-[1px] py-2 px-4 justify-between flex flex-row">
+  <div
+    class="bg-slate-100 mt-[1px] py-2 px-4 justify-between flex flex-row disabled cursor-not-allowed">
     <span>To (Bridge)</span>
-    <SmallInput bind:value={$bridgeAddress} on:update={updateTo} />
+    <span>{$bridgeAddress}</span>
   </div>
   <div class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-4 justify-between flex flex-row">
     <span>Calldata</span>

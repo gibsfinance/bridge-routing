@@ -11,22 +11,32 @@ type Settings = {
   feeF2H: bigint
 }
 
-type BridgeFrom = Record<Chains, Record<Chains, Settings>>
-
-export const bridgeFrom = writable(new Map<Chains, Map<Chains, Settings>>([
-  [Chains.PLS, new Map<Chains, Settings>([
-    [Chains.ETH, {
-      bridge: '0xba86ca0aeca30247f9e2fd8736879997bcd01dc4',
-      feeH2F: 0n,
-      feeF2H: 0n,
-    }],
-    [Chains.BNB, {
-      bridge: '0xbb00578b4eb6a14081797463ec57ab00a973edba',
-      feeH2F: 0n,
-      feeF2H: 0n,
-    }],
-  ])],
-]))
+// should probably be merged with the "assets" object below
+export const bridgeFrom = writable(
+  new Map<Chains, Map<Chains, Settings>>([
+    [
+      Chains.PLS,
+      new Map<Chains, Settings>([
+        [
+          Chains.ETH,
+          {
+            bridge: '0xba86ca0aeca30247f9e2fd8736879997bcd01dc4',
+            feeH2F: 0n,
+            feeF2H: 0n,
+          },
+        ],
+        [
+          Chains.BNB,
+          {
+            bridge: '0xbb00578b4eb6a14081797463ec57ab00a973edba',
+            feeH2F: 0n,
+            feeF2H: 0n,
+          },
+        ],
+      ]),
+    ],
+  ]),
+)
 
 export const assets = {
   ETH: {
@@ -87,13 +97,11 @@ type BridgeKey = keyof typeof assets
 
 export const bridgeKeys = Object.keys(assets) as BridgeKey[]
 
-export const bridgeKey = derived([page], ([$page]) => (
-  $page.params.route as BridgeKey
-))
+export const bridgeKey = derived([page], ([$page]) => $page.params.route as BridgeKey)
 
-export const foreignSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) => (
-  $bridgeKey === 'BNB' ? false : true
-))
+export const foreignSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) =>
+  $bridgeKey === 'BNB' ? false : true,
+)
 /** the estimated gas that will be consumed by running the foreign transaction */
 export const estimatedGas = writable(315_000n)
 /** the block.baseFeePerGas on the latest block */
@@ -119,12 +127,12 @@ export const assetOut = derived([bridgeKey, unwrap], ([$bridgeKey, $unwrap]) => 
   }
 })
 /** the direction of the bridge crossing */
-export const fromNetwork = derived([bridgeKey], ([$bridgeKey]) => (
-  $bridgeKey === 'ETH' ? Chains.PLS : Chains.PLS
-))
-export const toNetwork = derived([bridgeKey], ([$bridgeKey]) => (
-  $bridgeKey === 'ETH' ? Chains.ETH : Chains.BNB
-))
+export const fromNetwork = derived([bridgeKey], ([$bridgeKey]) =>
+  $bridgeKey === 'ETH' ? Chains.PLS : Chains.PLS,
+)
+export const toNetwork = derived([bridgeKey], ([$bridgeKey]) =>
+  $bridgeKey === 'ETH' ? Chains.ETH : Chains.BNB,
+)
 
 /** the number of tokens to push into the bridge (before fees) */
 export const amountToBridge = writable(0n)
@@ -133,8 +141,14 @@ export const limit = writable(0n)
 /** a ratio (1+x)/1 ether of how much the user would like to pay on top of network fees */
 export const incentiveFee = writable(0n)
 /** the address of the bridge proxy contract on home */
-export const bridgeAddress = derived([bridgeKey], ([$bridgeKey]) => assets[$bridgeKey].homeBridge as viem.Hex)
-export const foreignBridgeAddress = derived([bridgeKey], ([$bridgeKey]) => assets[$bridgeKey].foreignBridge as viem.Hex)
+export const bridgeAddress = derived(
+  [bridgeKey],
+  ([$bridgeKey]) => assets[$bridgeKey].homeBridge as viem.Hex,
+)
+export const foreignBridgeAddress = derived(
+  [bridgeKey],
+  ([$bridgeKey]) => assets[$bridgeKey].foreignBridge as viem.Hex,
+)
 /** the abi for the bridge */
 export const inputBridgeAbi = viem.parseAbi([
   'function relayTokensAndCall(address token, address _receiver, uint256 _value, bytes memory _data) external',
@@ -151,9 +165,7 @@ export const oneEther = 10n ** 18n
 export const bridgeCost = derived(
   [amountToBridge, bridgeFrom, fromNetwork, toNetwork],
   ([$amountToBridge, $bridgeFrom, $fromNetwork, $toNetwork]) => {
-    return (
-      ($amountToBridge * $bridgeFrom.get($fromNetwork)!.get($toNetwork)!.feeH2F) / oneEther
-    )
+    return ($amountToBridge * $bridgeFrom.get($fromNetwork)!.get($toNetwork)!.feeH2F) / oneEther
   },
 )
 /** the number of tokens available after they have crossed the bridge */
@@ -178,9 +190,7 @@ export const estimatedNetworkCost = derived(
     return $estimatedGas * $latestBaseFeePerGas
   },
 )
-export const incentiveRatio = derived([incentiveFee], ([$incentiveFee]) => (
-  oneEther + $incentiveFee
-))
+export const incentiveRatio = derived([incentiveFee], ([$incentiveFee]) => oneEther + $incentiveFee)
 /** the estimated network cost + tip */
 export const baseFeeReimbersement = derived(
   [estimatedNetworkCost, incentiveRatio],
@@ -198,17 +208,16 @@ export const clampedReimbersement = derived(
 export const estimatedCost = derived(
   [fixedFee, limit, clampedReimbersement],
   ([$fixedFee, $limit, $clampedReimbersement]) => {
-    return ($fixedFee ? $limit : $clampedReimbersement)
+    return $fixedFee ? $limit : $clampedReimbersement
   },
 )
 /** the encoded struct to be passed to the foreign router */
 export const feeDirectorStructEncoded = derived(
   [destination, fixedFee, limit, incentiveRatio],
   ([$destination, $fixedFee, $limit, $incentiveRatio]) =>
-    viem.encodeAbiParameters(
-      viem.parseAbiParameters('(address, bool, uint256, uint256)'),
-      [[$destination, $fixedFee, $limit, $incentiveRatio]],
-    ),
+    viem.encodeAbiParameters(viem.parseAbiParameters('(address, bool, uint256, uint256)'), [
+      [$destination, $fixedFee, $limit, $incentiveRatio],
+    ]),
 )
 /**
  * the full calldata defined in the home bridge's _data prop
@@ -217,10 +226,7 @@ export const feeDirectorStructEncoded = derived(
 export const foreignData = derived(
   [router, feeDirectorStructEncoded],
   ([$router, $feeDirectorStructEncoded]) => {
-    return viem.concatHex([
-      $router,
-      $feeDirectorStructEncoded,
-    ])
+    return viem.concatHex([$router, $feeDirectorStructEncoded])
   },
 )
 /**
@@ -235,28 +241,19 @@ export const calldata = derived(
     return viem.encodeFunctionData({
       abi: erc677abi,
       functionName: 'transferAndCall',
-      args: [
-        $bridgeAddress,
-        $amountToBridge,
-        $foreignData,
-      ],
+      args: [$bridgeAddress, $amountToBridge, $foreignData],
     })
   },
 )
 
 export const foreignCalldata = derived(
   [bridgeKey, amountAfterBridgeFee, feeDirectorStructEncoded],
-  ([$bridgeKey, $amountAfterBridgeFee, $feeDirectorStructEncoded]) => (
+  ([$bridgeKey, $amountAfterBridgeFee, $feeDirectorStructEncoded]) =>
     viem.encodeFunctionData({
       abi: outputRouterAbi,
       functionName: 'onTokenBridged',
-      args: [
-        assets[$bridgeKey].output.address,
-        $amountAfterBridgeFee,
-        $feeDirectorStructEncoded,
-      ],
-    })
-  )
+      args: [assets[$bridgeKey].output.address, $amountAfterBridgeFee, $feeDirectorStructEncoded],
+    }),
 )
 
 const feeManagerAbi = viem.parseAbi([

@@ -11,7 +11,7 @@ export enum Chains {
 }
 
 export type VisualChain = Chain & {
-  chainId: Chains;
+  chainId: Chains
   icon: string
   alt: string
 }

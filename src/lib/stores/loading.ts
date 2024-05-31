@@ -1,11 +1,11 @@
-import { get, writable } from "svelte/store";
+import { writable } from 'svelte/store'
 
 const loadingCounter = writable({
   total: 0,
   categories: {} as Record<string, number>,
   get resolved() {
     return this.total === 0
-  }
+  },
 })
 
 export const loading = {

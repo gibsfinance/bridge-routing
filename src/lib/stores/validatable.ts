@@ -1,31 +1,32 @@
-import { get, writable, type Writable } from "svelte/store"
+import { get, writable, type Writable } from 'svelte/store'
 
 export interface ValidatableWritable extends Writable<string> {
   rollback: () => void
 }
 
-export const create = ($val = '', validation = (v: string): any => v) => {
+export const validatable = <T>($val: T, validation = (v: T): T | undefined => v) => {
   let prev = $val
   const val = writable($val)
   const { subscribe, set, update } = val
-  const doValidation = (v: string) => {
+  const doValidation = (v: T) => {
     try {
       return validation(v)
-    } catch (err) { }
+    } catch (err) {
+      return undefined
+    }
   }
   const rollback = () => {
     set(prev)
   }
   return {
     subscribe,
-    set: (v: string) => {
+    set: (v: T) => {
       const nextVal = doValidation(v)
-      if (typeof nextVal === 'string') {
+      if (typeof nextVal === 'undefined') {
+        return set(get(val))
+      } else {
         prev = get(val)
         return set(v)
-      } else {
-        console.log('invalid %o -> %o', get(val), v)
-        return set(get(val))
       }
     },
     update: (fn: Parameters<typeof update>[0]) => {

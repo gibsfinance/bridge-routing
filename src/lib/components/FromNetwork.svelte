@@ -7,13 +7,13 @@
   import { publicClient } from '$lib/stores/auth/store'
   import { get, writable } from 'svelte/store'
   import { amountToBridge } from '$lib/stores/bridge-settings'
-  import * as validatableStore from '$lib/stores/validatable'
+  import { validatable } from '$lib/stores/validatable'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { loading } from '$lib/stores/loading'
 
   export let network!: VisualChain
   export let asset!: Asset
-  let value = validatableStore.create('', (v) => decimalValidation(v, asset.decimals))
+  let value = validatable('', (v) => decimalValidation(v, asset.decimals))
   const val = writable('')
   value.subscribe((v) => {
     amountToBridge.set(v ? parseUnits(v, asset.decimals) : 0n)

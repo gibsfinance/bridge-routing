@@ -1,12 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
-  import * as validatableStore from '$lib/stores/validatable'
+  import { validatable } from '$lib/stores/validatable'
   import type { FormEventHandler } from 'svelte/elements'
 
   const dispatch = createEventDispatcher()
   export let validate = (v: string): any => v
   export let value = ''
-  let val = validatableStore.create(value, validate)
+  let val = validatable(value, validate)
   const changeFromEvent: FormEventHandler<HTMLInputElement> = (e) => {
     val.set(e.currentTarget.value)
     _updateValue($val, true)

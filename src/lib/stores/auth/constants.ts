@@ -35,7 +35,7 @@ export const chainsMetadata = {
     ...bsc,
     name: 'Binance Smart Chain',
     chainId: Chains.BNB,
-    icon: 'https://assets-global.website-files.com/62dff643ff6976f1cd6116a8/6366dc6d892c11737831a4bd_binance-smart-chain.png',
+    icon: bnbNetworkUrl,
     alt: 'a gold cube with slits in the middle of each side',
     rpcUrls: {
       default: {
