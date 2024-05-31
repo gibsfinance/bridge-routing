@@ -74,10 +74,9 @@
   }
 
   onMount(() => {
-    const { unsubscribe } = onboard.state.select('wallets').subscribe(OnWalletsStateChange)
-
+    const sub = onboard.state.select('wallets').subscribe(OnWalletsStateChange)
     return () => {
-      unsubscribe()
+      sub?.unsubscribe()
     }
   })
 

@@ -9,6 +9,7 @@
   export let asset!: Asset
   export let network!: VisualChain
   export let showMax = false
+  export let native = false
   $: disableMax = balance === 0n
   const dispatch = createEventDispatcher()
   const maxOutBalance = () => {
@@ -28,8 +29,9 @@
       class:mx-2={showMax}
       class:ml-2={!showMax}
       data-tip={asset.name}>
-      <Loading>{balance == 0n ? '0.0' : formatEther(balance)}</Loading>
-      {asset.symbol}
+      <Loading>{balance == 0n ? '0.0' : formatEther(balance)}</Loading>&nbsp;{native
+        ? asset.native?.symbol || asset.symbol
+        : asset.symbol}
     </div>
     {#if showMax}
       <div class="text-white leading-8">

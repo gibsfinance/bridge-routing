@@ -19,9 +19,11 @@
     })
   }
   $: $val && _updateValue($val)
+  let className = ''
+  export { className as class }
 </script>
 
-<div class="flex flex-row relative text-transparent pl-1 text-center min-w-6">
+<div class="flex flex-row relative text-transparent pl-1 text-center min-w-6 {className}">
   {value}<input
     class="bg-transparent absolute w-full h-full text-slate-950 text-right top-0 left-0 focus:outline-none"
     bind:value

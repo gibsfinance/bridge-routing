@@ -187,7 +187,6 @@ export const incentiveRatio = derived([incentiveFee], ([$incentiveFee]) => oneEt
 export const baseFeeReimbersement = derived(
   [estimatedNetworkCost, incentiveRatio],
   ([$estimatedNetworkCost, $incentiveRatio]) => {
-    console.log($estimatedNetworkCost)
     return ($estimatedNetworkCost * $incentiveRatio) / oneEther
   }
 )

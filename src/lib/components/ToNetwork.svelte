@@ -102,7 +102,7 @@
 
 <div class="shadow-md rounded-lg">
   <div class="bg-slate-100 py-2 px-3 rounded-t-lg">
-    <NetworkSummary network={destinationNetwork} {asset} {balance} />
+    <NetworkSummary network={destinationNetwork} {asset} {balance} native />
   </div>
   <div class="bg-slate-100 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
@@ -149,18 +149,20 @@
         }}>
         Cost Limit&nbsp;{#if costLimitLocked || $fixedFee}🔒{:else}🔓{/if}</button>
       <button
-        class="tooltip flex flex-row"
+        class="tooltip flex flex-row items-end self-end"
         data-tip={$fixedFee
           ? 'The fixed fee to tip if the validator does the work'
           : 'The max you are willing to tip to the address delivering native eth'}
         on:click={focusOnInputChild}>
-        &lt;= <SmallInput
-          value={defaultLimit}
-          validate={(v) => decimalValidation(v, 18)}
-          on:update={(e) => {
-            if (e.detail.fromInput) costLimitLocked = true
-            limitUpdated(e.detail.value)
-          }} />&nbsp;{asset.native?.symbol || asset.symbol}</button>
+        &lt;=&nbsp;<Loading>
+          <SmallInput
+            value={defaultLimit}
+            validate={(v) => decimalValidation(v, 18)}
+            on:update={(e) => {
+              if (e.detail.fromInput) costLimitLocked = true
+              limitUpdated(e.detail.value)
+            }} />
+        </Loading>&nbsp;{asset.native?.symbol || asset.symbol}</button>
       <Warning
         show={$fixedFee ? $limit < $baseFeeReimbersement * 2n : $limit < $estimatedCost * 2n}
         tooltip="The fee limit is close to or below the current network cost. Consider increasing the limit to allow for gas cost fluctuations" />
@@ -173,13 +175,15 @@
         <button class="flex" on:click={() => showToolbox('details')}>📐</button>
       </div>
       <span
-        class="tooltip text-2xl leading-10"
+        class="tooltip text-2xl leading-10 flex items-end self-end"
         data-tip="Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee fluctuates on ethereum">
-        {#if !$fixedFee}~
-        {/if}{humanReadableNumber(
-          $amountAfterBridgeFee - $estimatedCost > 0n ? $amountAfterBridgeFee - $estimatedCost : 0n,
-        )}
-        {asset.native?.symbol || asset.symbol}</span>
+        {#if !$fixedFee}~&nbsp;{/if}<Loading>
+          {humanReadableNumber(
+            $amountAfterBridgeFee - $estimatedCost > 0n
+              ? $amountAfterBridgeFee - $estimatedCost
+              : 0n,
+          )}</Loading
+        >&nbsp;{asset.native?.symbol || asset.symbol}</span>
     </div>
   </div>
 </div>
