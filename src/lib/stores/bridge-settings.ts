@@ -144,9 +144,13 @@ export const foreignBridgeAddress = derived(
 /** the abi for the bridge */
 export const inputBridgeAbi = viem.parseAbi([
   'function relayTokensAndCall(address token, address _receiver, uint256 _value, bytes memory _data) external',
+  'function minPerTx(address token) external view returns(uint256)',
 ])
 export const erc677abi = viem.parseAbi([
   'function transferAndCall(address, uint256, bytes calldata) external',
+])
+export const erc677abiBNB = viem.parseAbi([
+  'function transferAndCall(address, uint256, bytes calldata, address sender) external',
 ])
 export const outputRouterAbi = viem.parseAbi([
   'function onTokenBridged(address _token, uint256 _value, bytes memory _data) external payable',

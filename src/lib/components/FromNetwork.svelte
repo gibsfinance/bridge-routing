@@ -6,10 +6,11 @@
   import { decimalValidation, type Asset } from '$lib/stores/utils'
   import { publicClient } from '$lib/stores/auth/store'
   import { get, writable } from 'svelte/store'
-  import { amountToBridge } from '$lib/stores/bridge-settings'
+  import { amountToBridge, assets, bridgeKey, inputBridgeAbi } from '$lib/stores/bridge-settings'
   import { validatable } from '$lib/stores/validatable'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { loading } from '$lib/stores/loading'
+  import Warning from './Warning.svelte'
 
   export let network!: VisualChain
   export let asset!: Asset
@@ -25,6 +26,7 @@
     if (!account) {
       return null
     }
+    loading.increment('balance')
     return get(publicClient).readContract({
       abi: erc20Abi,
       functionName: 'balanceOf',
@@ -32,23 +34,41 @@
       address: asset.address,
     })
   }
+  const getMinAmount = async () => {
+    return $publicClient.readContract({
+      abi: inputBridgeAbi,
+      functionName: 'minPerTx',
+      args: [assets[$bridgeKey].input.address],
+      address: assets[$bridgeKey].homeBridge,
+    })
+  }
+
   $: $walletAccount &&
     getBalance().then((res) => {
+      loading.decrement('balance')
       balance = res || 0n
     })
 
   let unwind!: () => void
   const doUnwind = () => {
     loading.increment('balance')
+    loading.increment('minAmount')
     balance = 0n
     unwind?.()
   }
+  const minInput = writable(0n)
+  const focused = writable(false)
   $: {
     doUnwind()
     if ($publicClient) {
       getBalance().then((res) => {
         balance = res || 0n
         loading.decrement('balance')
+      })
+      // assume that the min amount will not change while the page is loaded
+      getMinAmount().then((res) => {
+        minInput.set(res)
+        loading.decrement('minAmount')
       })
       unwind = $publicClient.watchContractEvent({
         address: asset.address,
@@ -74,17 +94,27 @@
       showMax
       on:max-balance={() => {
         value.set(formatUnits(balance, asset.decimals))
+        val.set($value)
       }} />
   </div>
   <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
-    <input
-      class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-2xl"
-      placeholder="0.0"
-      bind:value={$val}
-      on:input={(e) => {
-        value.set(e.currentTarget.value)
-        val.set($value)
-      }} />
+    <span class="flex flex-grow relative">
+      <input
+        class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-2xl"
+        placeholder="0.0"
+        bind:value={$val}
+        on:focus={() => focused.set(true)}
+        on:blur={() => focused.set(false)}
+        on:input={(e) => {
+          value.set(e.currentTarget.value)
+          val.set($value)
+        }} />
+      <Warning
+        show={!!$value && parseUnits($value, asset.decimals) < $minInput}
+        disabled={$focused}
+        position="left"
+        tooltip="Input is too low, must be at least {formatUnits($minInput, asset.decimals)}" />
+    </span>
     <span class="tooltip leading-8 py-2 px-3 flex flex-row" data-tip={asset.name}>
       <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
       <span class="ml-2">{asset.symbol}</span>

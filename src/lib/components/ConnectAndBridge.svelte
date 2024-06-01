@@ -10,12 +10,15 @@
     amountToBridge,
     assets,
     foreignData,
-    router,
-    outputRouterAbi,
-    amountAfterBridgeFee,
-    foreignBridgeAddress,
-    foreignCalldata,
-    feeDirectorStructEncoded,
+    bridgeKey,
+    erc677abiBNB,
+    // feeDirectorStructEncoded,
+    // router,
+    // outputRouterAbi,
+    // amountAfterBridgeFee,
+    // foreignBridgeAddress,
+    // foreignCalldata,
+    // bridgeKey,
   } from '$lib/stores/bridge-settings'
   import { getContract, type Hex } from 'viem'
 
@@ -25,7 +28,6 @@
 
   const initiateBridge = async () => {
     // const foreignClient = clientFromChain(Chains.ETH).extend((client) => ({
-    //   // ...
     //   async traceCall(args: viem.CallParameters) {
     //     return client.request({
     //       method: 'debug_traceCall' as unknown as any,
@@ -41,7 +43,6 @@
     //       ],
     //     })
     //   },
-    //   // ...
     // }))
     // try {
     //   const trace = await foreignClient.traceCall({
@@ -57,7 +58,7 @@
     //         balance: 100n * 10n ** 18n,
     //       },
     //       {
-    //         address: assets.ETH.output.address,
+    //         address: assets[$bridgeKey].output.address,
     //         stateDiff: [
     //           {
     //             slot: viem.keccak256(
@@ -107,20 +108,28 @@
     //   console.log(err)
     //   throw err
     // }
-    // console.log($feeDirectorStructEncoded)
-    const token = getContract({
-      abi: erc677abi,
-      address: assets.ETH.input.address,
-      client: $walletClient!,
-    })
-    const txHash = await token.write.transferAndCall(
-      [$bridgeAddress, $amountToBridge, $foreignData],
-      {
-        account: $walletAccount as Hex,
-        type: 'eip1559',
-        chain: chainsMetadata[Chains.PLS],
-      },
-    )
+    const txHash = await ($bridgeKey === 'BNB'
+      ? getContract({
+          abi: erc677abiBNB,
+          address: assets[$bridgeKey].input.address,
+          client: $walletClient!,
+        }).write.transferAndCall(
+          [$bridgeAddress, $amountToBridge, $foreignData, $walletAccount as Hex],
+          {
+            account: $walletAccount as Hex,
+            type: 'eip1559',
+            chain: chainsMetadata[Chains.PLS],
+          },
+        )
+      : getContract({
+          abi: erc677abi,
+          address: assets[$bridgeKey].input.address,
+          client: $walletClient!,
+        }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData], {
+          account: $walletAccount as Hex,
+          type: 'eip1559',
+          chain: chainsMetadata[Chains.PLS],
+        }))
     console.log(txHash)
     const receipt = await clientFromChain(Chains.PLS).waitForTransactionReceipt({
       hash: txHash,

@@ -20,9 +20,9 @@
       toAsset={assets[$bridgeKey].output} />
     <Icon icon="mingcute:down-fill" height="1.25em" width="1.25em" class="flex" />
   </summary>
-  <ul class="dropdown-content z-[1] menu p-0 -mt-12 ml-5 shadow bg-slate-50 w-fit" tabindex="-1">
+  <ul class="dropdown-content z-[1] p-0 -mt-12 ml-5 shadow bg-slate-50 w-fit" tabindex="-1">
     {#each reorderedBridgeKeys as key}
-      <li>
+      <li class="hover:bg-slate-200 h-14 items-center flex justify-around">
         <button
           class="px-2"
           on:click={async () => {
