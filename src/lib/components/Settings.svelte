@@ -50,7 +50,7 @@
       editOnLeft
       value={account || zeroAddress}
       on:update={updateDestination}
-      class="font-mono text-xs md:text-sm" />
+      class="font-mono text-xs md:text-sm mr-auto md:mr-0" />
     <Warning
       show={!(isAddress(account || '') && account?.length === 42 && account !== zeroAddress)}
       tooltip="address is not valid" />

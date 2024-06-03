@@ -21,7 +21,7 @@
   }
 </script>
 
-<div class="bg-slate-200 p-4 rounded-lg shadow-inner text-slate-950 my-8">
+<div class="bg-slate-200 p-3 md:p-4 rounded-lg shadow-inner text-slate-950 my-8">
   <FromNetwork network={originationNetwork} asset={$assetIn} />
   <NetworkDirection />
   <ToNetwork {originationNetwork} {destinationNetwork} on:toggle={toggleDropdowns} asset={$assetOut} />
