@@ -5,7 +5,7 @@
   import type { VisualChain } from '$lib/stores/auth/types'
   import { decimalValidation, type Asset } from '$lib/stores/utils'
   import { publicClient } from '$lib/stores/auth/store'
-  import { get, writable } from 'svelte/store'
+  import { writable } from 'svelte/store'
   import { amountToBridge, assets, bridgeKey, inputBridgeAbi } from '$lib/stores/bridge-settings'
   import { validatable } from '$lib/stores/validatable'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
@@ -22,15 +22,14 @@
   amountToBridge.set(0n)
   let balance = 0n
   const getBalance = async () => {
-    const account = get(walletAccount)
-    if (!account) {
+    if (!$walletAccount) {
       return null
     }
     loading.increment('balance')
-    return get(publicClient).readContract({
+    return $publicClient.readContract({
       abi: erc20Abi,
       functionName: 'balanceOf',
-      args: [account],
+      args: [$walletAccount],
       address: asset.address,
     })
   }

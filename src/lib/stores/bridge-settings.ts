@@ -99,9 +99,7 @@ export const bridgeKeys = Object.keys(assets) as BridgeKey[]
 
 export const bridgeKey = derived([page], ([$page]) => $page.params.route as BridgeKey)
 
-export const foreignSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) =>
-  $bridgeKey === 'BNB' ? false : true,
-)
+export const foreignSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === 'BNB' ? false : true))
 /** the estimated gas that will be consumed by running the foreign transaction */
 export const estimatedGas = writable(315_000n)
 /** the block.baseFeePerGas on the latest block */
@@ -119,12 +117,8 @@ export const assetOut = derived([bridgeKey], ([$bridgeKey]) => {
   return assets[$bridgeKey].output
 })
 /** the direction of the bridge crossing */
-export const fromNetwork = derived([bridgeKey], ([$bridgeKey]) =>
-  $bridgeKey === 'ETH' ? Chains.PLS : Chains.PLS,
-)
-export const toNetwork = derived([bridgeKey], ([$bridgeKey]) =>
-  $bridgeKey === 'ETH' ? Chains.ETH : Chains.BNB,
-)
+export const fromNetwork = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === 'ETH' ? Chains.PLS : Chains.PLS))
+export const toNetwork = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === 'ETH' ? Chains.ETH : Chains.BNB))
 
 /** the number of tokens to push into the bridge (before fees) */
 export const amountToBridge = writable(0n)
@@ -133,22 +127,14 @@ export const limit = writable(0n)
 /** a ratio (1+x)/1 ether of how much the user would like to pay on top of network fees */
 export const incentiveFee = writable(0n)
 /** the address of the bridge proxy contract on home */
-export const bridgeAddress = derived(
-  [bridgeKey],
-  ([$bridgeKey]) => assets[$bridgeKey].homeBridge as viem.Hex,
-)
-export const foreignBridgeAddress = derived(
-  [bridgeKey],
-  ([$bridgeKey]) => assets[$bridgeKey].foreignBridge as viem.Hex,
-)
+export const bridgeAddress = derived([bridgeKey], ([$bridgeKey]) => assets[$bridgeKey].homeBridge as viem.Hex)
+export const foreignBridgeAddress = derived([bridgeKey], ([$bridgeKey]) => assets[$bridgeKey].foreignBridge as viem.Hex)
 /** the abi for the bridge */
 export const inputBridgeAbi = viem.parseAbi([
   'function relayTokensAndCall(address token, address _receiver, uint256 _value, bytes memory _data) external',
   'function minPerTx(address token) external view returns(uint256)',
 ])
-export const erc677abi = viem.parseAbi([
-  'function transferAndCall(address, uint256, bytes calldata) external',
-])
+export const erc677abi = viem.parseAbi(['function transferAndCall(address, uint256, bytes calldata) external'])
 export const erc677abiBNB = viem.parseAbi([
   'function transferAndCall(address, uint256, bytes calldata, address sender) external',
 ])
@@ -165,12 +151,9 @@ export const bridgeCost = derived(
   },
 )
 /** the number of tokens available after they have crossed the bridge */
-export const amountAfterBridgeFee = derived(
-  [amountToBridge, bridgeCost],
-  ([$amountToBridge, $bridgeCost]) => {
-    return $amountToBridge - $bridgeCost
-  },
-)
+export const amountAfterBridgeFee = derived([amountToBridge, bridgeCost], ([$amountToBridge, $bridgeCost]) => {
+  return $amountToBridge - $bridgeCost
+})
 /** whether to use a fixed or gas based fee */
 export const fixedFee = writable(false)
 /** whether to use a fixed or gas based fee, the inverse of fixedFee */
@@ -192,15 +175,12 @@ export const baseFeeReimbersement = derived(
   [estimatedNetworkCost, incentiveRatio],
   ([$estimatedNetworkCost, $incentiveRatio]) => {
     return ($estimatedNetworkCost * $incentiveRatio) / oneEther
-  }
-)
-/** the fee, clamped to the user defined limit */
-export const clampedReimbersement = derived(
-  [baseFeeReimbersement, limit],
-  ([$baseFeeReimbersement, $limit]) => {
-    return $baseFeeReimbersement > $limit ? $limit : $baseFeeReimbersement
   },
 )
+/** the fee, clamped to the user defined limit */
+export const clampedReimbersement = derived([baseFeeReimbersement, limit], ([$baseFeeReimbersement, $limit]) => {
+  return $baseFeeReimbersement > $limit ? $limit : $baseFeeReimbersement
+})
 /** the estimated cost given the choice for a fixed fee, limit and incentive fee */
 export const estimatedCost = derived(
   [fixedFee, limit, clampedReimbersement],
@@ -215,18 +195,15 @@ export const feeDirectorStructEncoded = derived(
     return viem.encodeAbiParameters(viem.parseAbiParameters('(address, bool, uint256, uint256)'), [
       [$destination, $fixedFee, $limit, $incentiveRatio],
     ])
-  }
+  },
 )
 /**
  * the full calldata defined in the home bridge's _data prop
  * to be used to call on the foreign router
  */
-export const foreignData = derived(
-  [router, feeDirectorStructEncoded],
-  ([$router, $feeDirectorStructEncoded]) => {
-    return viem.concatHex([$router, $feeDirectorStructEncoded])
-  },
-)
+export const foreignData = derived([router, feeDirectorStructEncoded], ([$router, $feeDirectorStructEncoded]) => {
+  return viem.concatHex([$router, $feeDirectorStructEncoded])
+})
 /**
  * the calldata that will be signed over by the user's wallet
  * this calldata transfers to the bridge address and the user's amount that they wish tob bridge before fees

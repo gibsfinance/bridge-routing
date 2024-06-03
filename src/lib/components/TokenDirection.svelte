@@ -13,8 +13,7 @@
 <div class="flex flex-row justify-center justify-items-center leading-10 px-2">
   <AssetWithNetwork asset={fromAsset} />
   <img height="42" width="42" src={bridgeUrl} alt="a suspension bridge" class="opacity-80" />
-  <span
-    class="leading-10 justify-items-center flex flex-col-reverse content-stretch justify-around">
+  <span class="leading-10 justify-items-center flex flex-col-reverse content-stretch justify-around">
     <BridgerIcon {provider} />
   </span>
   <img height="42" width="42" src={bridgeUrl} alt="a suspension bridge" class="opacity-80" />

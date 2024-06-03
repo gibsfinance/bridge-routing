@@ -6,9 +6,7 @@
   "trailingComma": "all",
   "htmlWhitespaceSensitivity": "ignore",
   "printWidth": 120,
-  "plugins": [
-    "prettier-plugin-svelte"
-  ],
+  "plugins": ["prettier-plugin-svelte"],
   "overrides": [
     {
       "files": "*.svelte",

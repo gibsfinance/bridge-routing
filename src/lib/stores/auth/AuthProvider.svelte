@@ -1,9 +1,5 @@
 <script lang="ts">
-  import Onboard, {
-    type ConnectOptions,
-    type DisconnectOptions,
-    type WalletState,
-  } from '@web3-onboard/core'
+  import Onboard, { type ConnectOptions, type DisconnectOptions, type WalletState } from '@web3-onboard/core'
   import { chainsMetadata } from './constants'
   import injectedWallet from '@web3-onboard/injected-wallets'
   import { Chains } from './types'
@@ -11,7 +7,7 @@
   import { CONTEXT_KEY } from './methods'
   import { activeChain, walletClient } from './store'
   import type { ChainWithDecimalId } from '@web3-onboard/common'
-  import { createWalletClient, custom, type WatchBlockNumberReturnType } from 'viem'
+  import { createWalletClient, custom } from 'viem'
   import gibsIcon from '$lib/images/1FAF0.svg'
 
   const chains = [Chains.PLS].map((key) => {

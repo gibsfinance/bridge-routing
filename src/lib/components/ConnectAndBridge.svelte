@@ -20,13 +20,15 @@
     // foreignCalldata,
     // bridgeKey,
   } from '$lib/stores/bridge-settings'
-  import { getContract, type Hex } from 'viem'
+  import { getContract, zeroHash, type Hex } from 'viem'
   import Loading from './Loading.svelte'
   // import { loading } from '$lib/stores/loading'
 
   $: disabled = BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n
 
   const { connect } = useAuth()
+  let txHash: Hex | undefined
+  // txHash = zeroHash
 
   const initiateBridge = async () => {
     // const foreignClient = clientFromChain(Chains.ETH).extend((client) => ({
@@ -110,7 +112,7 @@
     //   console.log(err)
     //   throw err
     // }
-    const txHash = await ($bridgeKey === 'BNB'
+    txHash = await ($bridgeKey === 'BNB'
       ? getContract({
           abi: erc677abiBNB,
           address: assets[$bridgeKey].input.address,
@@ -130,12 +132,19 @@
           chain: chainsMetadata[Chains.PLS],
         }))
     console.log(txHash)
+    ;((hash: Hex) =>
+      setTimeout(() => {
+        if (hash !== txHash) {
+          return
+        }
+        txHash = undefined
+        console.log('set to undefined')
+      }, 10_000))(txHash)
     const receipt = await clientFromChain(Chains.PLS).waitForTransactionReceipt({
       hash: txHash,
     })
     console.log(receipt)
   }
-  // loading.increment()
 </script>
 
 <div>
@@ -158,3 +167,12 @@
     </button>
   {/if}
 </div>
+{#if txHash}
+  <div class="toast">
+    <div class="alert alert-info bg-purple-400 text-slate-100">
+      <a href="{chainsMetadata[Chains.PLS].blockExplorers?.default.url}/tx/{txHash}" class="underline" target="_blank">
+        Transaction Submitted: {txHash.slice(0, 6)}...{txHash.slice(-4)}
+      </a>
+    </div>
+  </div>
+{/if}

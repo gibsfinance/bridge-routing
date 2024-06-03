@@ -1,10 +1,12 @@
-import { get, type Writable } from "svelte/store"
+import { get, type Writable } from 'svelte/store'
 import { normalize } from 'viem/ens'
 
-import { writable } from "svelte/store"
-import { getAddress, isAddress, zeroAddress, type Hex, type PublicClient } from "viem"
-import { Chains } from "./auth/types"
-import { clientFromChain } from "./auth/store"
+import { writable } from 'svelte/store'
+import { getAddress, isAddress, zeroAddress, type Hex, type PublicClient } from 'viem'
+import { Chains } from './auth/types'
+import { clientFromChain } from './auth/store'
+
+type ChainKey = keyof typeof Chains
 
 export const ensToAddress = async (publicClient: PublicClient, ens: string) => {
   return publicClient.getEnsAddress({
@@ -13,7 +15,7 @@ export const ensToAddress = async (publicClient: PublicClient, ens: string) => {
 }
 
 export const isEns = (val: string) => {
-  return val.toLowerCase().match(/\w+\.(pls|eth|bnb)/ig)
+  return val.toLowerCase().match(/\w+\.(pls|eth|bnb)/gi)
 }
 
 export const ensTld = (some: string) => {
@@ -27,22 +29,20 @@ type Entry = {
   identifier?: number
 }
 
-type ChainKey = keyof typeof Chains
-
 export const ens = (target: ChainKey): Writable<Entry> => {
   const input = writable<Entry>({
     address: zeroAddress,
     ens: null,
   })
+  let i = 0
   const trigger = async (identifier: number) => {
     i++
     const { address, ens } = get(input)
     if (ens) {
       const tld = ensTld(ens)
-      const addr = await clientFromChain(Chains[tld])
-        .getEnsAddress({
-          name: ens,
-        })
+      const addr = await clientFromChain(Chains[tld]).getEnsAddress({
+        name: ens,
+      })
       const latest = get(input)
       if (latest.identifier !== identifier) {
         return
@@ -54,10 +54,9 @@ export const ens = (target: ChainKey): Writable<Entry> => {
       })
     } else {
       const addr = address as Hex
-      const ens = await clientFromChain(Chains[target])
-        .getEnsName({
-          address: addr,
-        })
+      const ens = await clientFromChain(Chains[target]).getEnsName({
+        address: addr,
+      })
       const latest = get(input)
       if (latest.identifier !== identifier) {
         return
@@ -69,7 +68,6 @@ export const ens = (target: ChainKey): Writable<Entry> => {
       })
     }
   }
-  let i = 0
   const set = ({ address, ens }: Entry) => {
     if (address && isAddress(address)) {
       input.set({
