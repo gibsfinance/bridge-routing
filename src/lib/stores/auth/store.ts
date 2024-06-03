@@ -63,6 +63,7 @@ export const accountENS = derived([walletAccount], ([$walletAccount], set) => {
 })
 
 export const ensToAddress = async (publicClient: PublicClient, ens: string) => {
+  if (!publicClient.chain?.contracts?.ensRegistry) return null
   return publicClient.getEnsAddress({
     name: normalize(ens),
   })

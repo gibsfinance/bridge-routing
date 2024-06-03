@@ -211,10 +211,11 @@ export const estimatedCost = derived(
 /** the encoded struct to be passed to the foreign router */
 export const feeDirectorStructEncoded = derived(
   [destination, fixedFee, limit, incentiveRatio],
-  ([$destination, $fixedFee, $limit, $incentiveRatio]) =>
-    viem.encodeAbiParameters(viem.parseAbiParameters('(address, bool, uint256, uint256)'), [
+  ([$destination, $fixedFee, $limit, $incentiveRatio]) => {
+    return viem.encodeAbiParameters(viem.parseAbiParameters('(address, bool, uint256, uint256)'), [
       [$destination, $fixedFee, $limit, $incentiveRatio],
-    ]),
+    ])
+  }
 )
 /**
  * the full calldata defined in the home bridge's _data prop

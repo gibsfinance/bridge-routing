@@ -19,6 +19,16 @@ export const chainsMetadata = {
         http: ['https://rpc-pulsechain.g4mm4.io'],
       },
     },
+    contracts: {
+      ...pulsechain.contracts,
+      ensRegistry: {
+        address: '0xbd5133993FCDED5945c5539D9f032261F0d13170',
+      },
+      ensUniversalResolver: {
+        address: '0x6644e794F5aFfb8abcfea0e71d5624D013BA2dBA',
+        blockCreated: 19_400_582,
+      },
+    },
   },
   [Chains.ETH]: {
     ...mainnet,

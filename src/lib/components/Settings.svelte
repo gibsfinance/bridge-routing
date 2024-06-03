@@ -6,28 +6,32 @@
   import { Chains } from '$lib/stores/auth/types'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import Warning from './Warning.svelte'
+  import { ensTld, isEns } from '$lib/stores/ens'
+  import { normalize } from 'viem/ens'
   $: account = $walletAccount
   let lastDestination: string = zeroAddress
   const updateDestination = async (e: CustomEvent) => {
     let addr = e.detail.value
     lastDestination = addr
-
-    if (addr === 'me') {
+    if (addr === 'me' && $walletAccount) {
       account = $walletAccount
     }
     if (isAddress(addr)) {
       destination.set(addr)
+      account = addr
       return
     }
-    if (addr.includes('.eth')) {
+    if (isEns(addr)) {
+      const tld = ensTld(addr)
+      const normalized = normalize(addr)
       const publicClient = createPublicClient({
-        chain: chainsMetadata[Chains.ETH],
+        chain: chainsMetadata[Chains[tld]],
         transport: http(),
       })
-      const resolved = await ensToAddress(publicClient, addr)
+      const resolved = await ensToAddress(publicClient, normalized)
       if (resolved) {
         account = resolved
-        destination.set(addr)
+        destination.set(resolved)
       }
     }
   }
@@ -38,11 +42,10 @@
     <span>Destination</span>
     <SmallInput value={account || zeroAddress} on:update={updateDestination} class="font-mono" />
     <Warning
-      show={!(isAddress(lastDestination) && lastDestination.length === 42)}
+      show={!(isAddress(account || '') && account?.length === 42 && account !== zeroAddress)}
       tooltip="address is not valid" />
   </div>
-  <div
-    class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row disabled cursor-not-allowed">
+  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row disabled cursor-not-allowed">
     <span>Router</span>
     <span class="font-mono">{$router}</span>
   </div>
@@ -54,8 +57,7 @@
       disabled
       bind:checked={$unwrap} />
   </div>
-  <div
-    class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row disabled cursor-not-allowed">
+  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row disabled cursor-not-allowed">
     <span>To (Bridge)</span>
     <span class="font-mono">{$bridgeAddress}</span>
   </div>
@@ -66,6 +68,8 @@
       id="calldata"
       disabled
       class="bg-transparent outline-none resize-none flex flex-grow px-2 cursor-not-allowed font-mono"
-      rows="5">{$calldata}</textarea>
+      rows="5">
+      {$calldata}
+    </textarea>
   </div>
 </div>
