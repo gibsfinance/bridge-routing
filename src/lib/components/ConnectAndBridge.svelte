@@ -21,6 +21,8 @@
     // bridgeKey,
   } from '$lib/stores/bridge-settings'
   import { getContract, type Hex } from 'viem'
+  import Loading from './Loading.svelte'
+  import { loading } from '$lib/stores/loading'
 
   $: disabled = BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n
 
@@ -113,14 +115,11 @@
           abi: erc677abiBNB,
           address: assets[$bridgeKey].input.address,
           client: $walletClient!,
-        }).write.transferAndCall(
-          [$bridgeAddress, $amountToBridge, $foreignData, $walletAccount as Hex],
-          {
-            account: $walletAccount as Hex,
-            type: 'eip1559',
-            chain: chainsMetadata[Chains.PLS],
-          },
-        )
+        }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData, $walletAccount as Hex], {
+          account: $walletAccount as Hex,
+          type: 'eip1559',
+          chain: chainsMetadata[Chains.PLS],
+        })
       : getContract({
           abi: erc677abi,
           address: assets[$bridgeKey].input.address,
@@ -136,21 +135,26 @@
     })
     console.log(receipt)
   }
+  // loading.increment()
 </script>
 
 <div>
   {#if $walletAccount}
     <button
-      class="p-2 text-white w-full rounded-lg active:bg-purple-500"
+      class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-around"
       class:hover:bg-purple-500={!disabled}
       class:bg-purple-600={!disabled}
       class:bg-purple-400={disabled}
       class:cursor-not-allowed={disabled}
       class:shadow-md={!disabled}
-      on:click={initiateBridge}>Bridge</button>
+      on:click={initiateBridge}>
+      <Loading class="my-[10px]">Bridge</Loading>
+    </button>
   {:else}
     <button
       class="p-2 bg-purple-600 text-white w-full rounded-lg hover:bg-purple-500 active:bg-purple-500"
-      on:click={() => connect()}>Connect</button>
+      on:click={() => connect()}>
+      Connect
+    </button>
   {/if}
 </div>

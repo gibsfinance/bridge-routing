@@ -5,6 +5,6 @@
   const isLocal = $page.url.host.includes('localhost')
 </script>
 
-<span class="block text-center w-full font-mono font-thin text-sm my-2">
+<span class="flex text-center font-mono font-thin">
   v{appVersion}@{isLocal ? 'local' : env.version}
 </span>

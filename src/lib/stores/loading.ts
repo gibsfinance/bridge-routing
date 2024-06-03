@@ -6,6 +6,11 @@ const loadingCounter = writable({
   get resolved() {
     return this.total === 0
   },
+  isResolved(key?: string | string[]) {
+    if (!key) return this.resolved
+    if (Array.isArray(key)) key.reduce((total, k) => total + (this.categories[k] || 0), 0) === 0
+    return !this.categories[key as string]
+  }
 })
 
 export const loading = {

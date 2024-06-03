@@ -6,6 +6,9 @@ export default {
       fontFamily: {
         italiana: ['Italiana', 'sans-serif'],
       },
+      // fontSize: {
+      //   fontSize: [],
+      // },
     },
   },
   plugins: [require('daisyui')],

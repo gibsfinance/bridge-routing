@@ -29,7 +29,7 @@
       class:mx-2={showMax}
       class:ml-2={!showMax}
       data-tip={asset.name}>
-      <Loading>{balance == 0n ? '0.0' : formatEther(balance)}</Loading>&nbsp;{native
+      <Loading key={['balance', 'minAmount']}>{balance == 0n ? '0.0' : formatEther(balance)}</Loading>&nbsp;{native
         ? asset.native?.symbol || asset.symbol
         : asset.symbol}
     </div>
@@ -39,7 +39,9 @@
           class="uppercase rounded-md text-xs leading-6 px-2"
           class:bg-purple-600={!disableMax}
           class:bg-purple-400={disableMax}
-          on:click={maxOutBalance}>max</button>
+          on:click={maxOutBalance}>
+          max
+        </button>
       </div>
     {/if}
   </div>

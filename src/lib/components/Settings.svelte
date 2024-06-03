@@ -8,6 +8,7 @@
   import Warning from './Warning.svelte'
   import { ensTld, isEns } from '$lib/stores/ens'
   import { normalize } from 'viem/ens'
+  import { loading } from '$lib/stores/loading'
   $: account = $walletAccount
   let lastDestination: string = zeroAddress
   const updateDestination = async (e: CustomEvent) => {
@@ -28,11 +29,16 @@
         chain: chainsMetadata[Chains[tld]],
         transport: http(),
       })
-      const resolved = await ensToAddress(publicClient, normalized)
+      loading.increment('ens')
+      const resolved = await ensToAddress(publicClient, normalized).catch((err) => {
+        console.log(err)
+        return null
+      })
       if (resolved) {
         account = resolved
         destination.set(resolved)
       }
+      loading.decrement('ens')
     }
   }
 </script>
@@ -40,7 +46,7 @@
 <div class="my-2 text-sm shadow-sm rounded-lg">
   <div class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-row relative">
     <span>Destination</span>
-    <SmallInput value={account || zeroAddress} on:update={updateDestination} class="font-mono" />
+    <SmallInput editOnLeft value={account || zeroAddress} on:update={updateDestination} class="font-mono" />
     <Warning
       show={!(isAddress(account || '') && account?.length === 42 && account !== zeroAddress)}
       tooltip="address is not valid" />

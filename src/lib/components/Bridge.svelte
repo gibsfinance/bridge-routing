@@ -24,20 +24,15 @@
 <div class="bg-slate-200 p-4 rounded-lg shadow-inner text-slate-950 my-8">
   <FromNetwork network={originationNetwork} asset={$assetIn} />
   <NetworkDirection />
-  <ToNetwork
-    {originationNetwork}
-    {destinationNetwork}
-    on:toggle={toggleDropdowns}
-    asset={$assetOut} />
+  <ToNetwork {originationNetwork} {destinationNetwork} on:toggle={toggleDropdowns} asset={$assetOut} />
   {#if dropdowns.settings}
     <Settings />
   {/if}
   {#if dropdowns.details}
     <Details asset={$assetOut} {originationNetwork} {destinationNetwork} />
   {/if}
-  <Version />
-  <ConnectAndBridge />
-  <div class="mt-3 text-center font-thin text-slate-500 text-sm">
-    Estimated to completion is 30 minutes
+  <!-- <Version /> -->
+  <div class="mt-3">
+    <ConnectAndBridge />
   </div>
 </div>

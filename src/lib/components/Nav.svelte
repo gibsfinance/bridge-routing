@@ -3,6 +3,7 @@
   import gibs from '$lib/images/1FAF0.svg'
   import { onMount } from 'svelte'
   import Icon from '@iconify/svelte'
+  import Loading from './Loading.svelte'
 
   let bridgeUrl = ''
 
@@ -31,26 +32,21 @@
         on:keypress={gotoHome}
         on:click={gotoHome}
         class="link leading-8 pr-2 text-white font-italiana uppercase flex flex-row">
-        <img
-          src={gibs}
-          alt="a yellow hand with index finger and thub rubbing together"
-          style="height: 32px" /> Gibs
+        <img src={gibs} alt="a yellow hand with index finger and thub rubbing together" class="size-8" />
+        <span>Gibs&nbsp;</span>
+        <Loading />
       </span>
       <div>
         <ul class="flex flex-row">
           <li>
-            <a
-              class="h-8 w-8 py-1 px-2 text-white flex items-center"
-              href="{bridgeUrl}/#/transactions"
-              target="_blank"
-              ><button>
+            <a class="h-8 w-8 py-1 px-2 text-white flex items-center" href="{bridgeUrl}/#/transactions" target="_blank">
+              <button>
                 <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
-              </button></a>
+              </button>
+            </a>
           </li>
           <li>
-            <button class="link" on:keypress={gotoNativeDelivery} on:click={gotoNativeDelivery}>
-              🌁
-            </button>
+            <button class="link" on:keypress={gotoNativeDelivery} on:click={gotoNativeDelivery}>🌁</button>
           </li>
         </ul>
         <div id="onboard-container"></div>

@@ -13,7 +13,7 @@
     <div class="container px-2 py-10 m-auto text-xl text-center">
       <!-- <img src={futureBridge} class="float-right max-w-96" alt="" /> -->
       <p class="mt-8 text-left">
-        Introducing "Native Delivery" for PulseChain to EVM Omnibridges. With a minimal implementations, and commitment
+        Introducing "Token Delivery" for PulseChain to EVM Omnibridges. With a minimal implementations, and commitment
         to security, <a href="bridge" class="underline">gibs.finance/bridge</a>
         simplifies bridging to Ethereum while supporting user privacy.
       </p>

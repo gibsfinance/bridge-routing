@@ -107,10 +107,8 @@
   <div class="bg-slate-100 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <span>Bridge Fee</span>
-      <span
-        class="cursor-not-allowed tooltip flex items-end self-end"
-        data-tip="Fee set on the bridge">
-        <Loading>{bridgeFee}</Loading>%
+      <span class="cursor-not-allowed tooltip flex items-end self-end" data-tip="Fee set on the bridge">
+        <Loading key="fee">{bridgeFee}</Loading>%
       </span>
     </div>
   </div>
@@ -123,8 +121,9 @@
           class="toggle toggle-sm [--tglbg:white] border-purple-600 bg-purple-600 hover:bg-purple-400 disabled:bg-purple-600 disabled:opacity-100 my-1.5"
           checked={$gasBasedFee}
           on:change={toggleFixedFee} />
-        <button class="px-1" on:click={toggleFixedFee}
-          >{destinationNetwork.chainId === Chains.BNB ? 'Gas' : 'Base'}</button>
+        <button class="px-1" on:click={toggleFixedFee}>
+          {destinationNetwork.chainId === Chains.BNB ? 'Gas' : 'Base'}
+        </button>
       </span>
       <button
         class="flex flex-row strike tooltip"
@@ -135,8 +134,10 @@
         on:click={focusOnInputChild}>
         ⛽ +<SmallInput
           value={defaultIncFee}
+          suffix="%"
           validate={(v) => decimalValidation(v, 18)}
-          on:update={(e) => incentiveFeeUpdated(e.detail.value)} />%</button>
+          on:update={(e) => incentiveFeeUpdated(e.detail.value)} />
+      </button>
     </div>
   </div>
   <div class="bg-slate-100 mt-[1px] py-1 relative">
@@ -147,22 +148,25 @@
         on:click={() => {
           costLimitLocked = !costLimitLocked
         }}>
-        Cost Limit&nbsp;{#if costLimitLocked || $fixedFee}🔒{:else}🔓{/if}</button>
+        Cost Limit&nbsp;{#if costLimitLocked || $fixedFee}🔒{:else}🔓{/if}
+      </button>
       <button
         class="tooltip flex flex-row items-end self-end"
         data-tip={$fixedFee
           ? 'The fixed fee to tip if the validator does the work'
           : 'The max you are willing to tip to the address delivering native eth'}
         on:click={focusOnInputChild}>
-        &lt;=&nbsp;<Loading>
+        &lt;=&nbsp;<Loading key="gas">
           <SmallInput
             value={defaultLimit}
+            suffix={asset.native?.symbol || asset.symbol}
             validate={(v) => decimalValidation(v, 18)}
             on:update={(e) => {
               if (e.detail.fromInput) costLimitLocked = true
               limitUpdated(e.detail.value)
             }} />
-        </Loading>&nbsp;{asset.native?.symbol || asset.symbol}</button>
+        </Loading>
+      </button>
       <Warning
         show={$fixedFee ? $limit < $baseFeeReimbersement * 2n : $limit < $estimatedCost * 2n}
         tooltip="The fee limit is close to or below the current network cost. Consider increasing the limit to allow for gas cost fluctuations" />
@@ -179,11 +183,10 @@
         data-tip="Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee fluctuates on ethereum">
         {#if !$fixedFee}~&nbsp;{/if}<Loading>
           {humanReadableNumber(
-            $amountAfterBridgeFee - $estimatedCost > 0n
-              ? $amountAfterBridgeFee - $estimatedCost
-              : 0n,
-          )}</Loading
-        >&nbsp;{asset.native?.symbol || asset.symbol}</span>
+            $amountAfterBridgeFee - $estimatedCost > 0n ? $amountAfterBridgeFee - $estimatedCost : 0n,
+          )}
+        </Loading>&nbsp;{asset.native?.symbol || asset.symbol}
+      </span>
     </div>
   </div>
 </div>
