@@ -18,7 +18,7 @@
 <div class="container m-auto max-w-lg flex flex-col">
   <TokenDirectionDropdown />
   <Bridge />
-  <div class="flex flex-row mb-8 leading-8 text-slate-400">
+  <div class="flex flex-row mb-8 leading-8 text-slate-400 md:px-0 px-4">
     <span class="flex hover:text-slate-500">
       <Info />
     </span>
