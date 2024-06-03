@@ -4,6 +4,7 @@
   import { onMount } from 'svelte'
   import Icon from '@iconify/svelte'
   import Loading from './Loading.svelte'
+  import { page } from '$app/stores'
 
   let bridgeUrl = ''
 
@@ -45,9 +46,11 @@
               </button>
             </a>
           </li>
-          <li>
-            <button class="link" on:keypress={gotoNativeDelivery} on:click={gotoNativeDelivery}>🌁</button>
-          </li>
+          {#if !$page.route.id?.includes('/bridge/')}
+            <li>
+              <button class="link" on:keypress={gotoNativeDelivery} on:click={gotoNativeDelivery}>🌁</button>
+            </li>
+          {/if}
         </ul>
         <div id="onboard-container"></div>
       </div>
