@@ -13,7 +13,7 @@
 </script>
 
 <details class="dropdown flex flex-grow justify-center mt-8 mx-auto" bind:this={dropdown}>
-  <summary class="flex flex-row justify-items-center items-center space-x-2 ml-7">
+  <summary class="flex flex-row justify-items-center items-center space-x-2 ml-7 select-none">
     <TokenDirection
       provider={assets[$bridgeKey].provider}
       fromAsset={assets[$bridgeKey].input}
@@ -31,10 +31,7 @@
             })
             dropdown.open = false
           }}>
-          <TokenDirection
-            provider={assets[key].provider}
-            fromAsset={assets[key].input}
-            toAsset={assets[key].output} />
+          <TokenDirection provider={assets[key].provider} fromAsset={assets[key].input} toAsset={assets[key].output} />
         </button>
       </li>
     {/each}
