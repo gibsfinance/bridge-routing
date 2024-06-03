@@ -98,9 +98,9 @@
       }} />
   </div>
   <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
-    <span class="flex flex-grow relative">
+    <span class="flex flex-grow relative max-w-[70%]">
       <input
-        class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-2xl"
+        class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-2xl w-full"
         placeholder="0.0"
         bind:value={$val}
         on:focus={() => focused.set(true)}
@@ -115,7 +115,7 @@
         position="left"
         tooltip="Input is too low, must be at least {formatUnits($minInput, asset.decimals)}" />
     </span>
-    <span class="tooltip leading-8 py-2 px-3 flex flex-row" data-tip={asset.name}>
+    <span class="tooltip tooltip-left leading-8 py-2 px-3 flex flex-row" data-tip={asset.name}>
       <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
       <span class="ml-2">{asset.symbol}</span>
     </span>

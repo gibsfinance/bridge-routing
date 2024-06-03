@@ -1,6 +1,6 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import * as viem from 'viem'
+  // import * as viem from 'viem'
   import { useAuth } from '$lib/stores/auth/methods'
   import { clientFromChain, walletClient, walletAccount } from '$lib/stores/auth/store'
   import { Chains } from '$lib/stores/auth/types'
@@ -22,7 +22,7 @@
   } from '$lib/stores/bridge-settings'
   import { getContract, type Hex } from 'viem'
   import Loading from './Loading.svelte'
-  import { loading } from '$lib/stores/loading'
+  // import { loading } from '$lib/stores/loading'
 
   $: disabled = BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n
 

@@ -7,7 +7,7 @@
   import bridge from '$lib/images/bridge.jpeg'
   import futureBridge from '$lib/images/future-bridge.webp'
   import fingers from '$lib/images/1FAF0.svg'
-  const preloadImageUrls = [payMe, bridge, futureBridge, fingers]
+  // const preloadImageUrls = [payMe, bridge, futureBridge, fingers]
 </script>
 
 <svelte:head>
@@ -32,5 +32,11 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+  }
+  :global(.tooltip.tooltip-top.tooltip-left-toward-center::before) {
+    @apply -translate-x-0 right-0 left-auto;
+  }
+  :global(.tooltip.tooltip-top.tooltip-right-toward-center::before) {
+    @apply -translate-x-0 left-0 right-auto;
   }
 </style>

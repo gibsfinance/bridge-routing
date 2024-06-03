@@ -25,10 +25,10 @@
   </div>
   <div class="flex flex-row">
     <div
-      class="text-xs leading-8 tooltip flex items-end self-end"
+      class="text-xs leading-8 tooltip tooltip-left flex items-end self-end"
       class:mx-2={showMax}
       class:ml-2={!showMax}
-      data-tip={asset.name}>
+      data-tip={native ? asset.native?.name || asset.name : asset.name}>
       <Loading key={['balance', 'minAmount']}>{balance == 0n ? '0.0' : formatEther(balance)}</Loading>&nbsp;{native
         ? asset.native?.symbol || asset.symbol
         : asset.symbol}

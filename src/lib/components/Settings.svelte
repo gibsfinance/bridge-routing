@@ -44,16 +44,20 @@
 </script>
 
 <div class="my-2 text-sm shadow-sm rounded-lg">
-  <div class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-row relative">
+  <div class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-col md:flex-row relative">
     <span>Destination</span>
-    <SmallInput editOnLeft value={account || zeroAddress} on:update={updateDestination} class="font-mono" />
+    <SmallInput
+      editOnLeft
+      value={account || zeroAddress}
+      on:update={updateDestination}
+      class="font-mono text-xs md:text-sm" />
     <Warning
       show={!(isAddress(account || '') && account?.length === 42 && account !== zeroAddress)}
       tooltip="address is not valid" />
   </div>
-  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row disabled cursor-not-allowed">
+  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed">
     <span>Router</span>
-    <span class="font-mono">{$router}</span>
+    <span class="font-mono text-xs md:text-sm">{$router}</span>
   </div>
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row">
     <span>Unwrap</span>
@@ -63,17 +67,17 @@
       disabled
       bind:checked={$unwrap} />
   </div>
-  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row disabled cursor-not-allowed">
+  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed">
     <span>To (Bridge)</span>
-    <span class="font-mono">{$bridgeAddress}</span>
+    <span class="font-mono text-xs md:text-sm">{$bridgeAddress}</span>
   </div>
-  <div class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-row">
+  <div class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row">
     <span>Calldata</span>
     <textarea
       name="calldata"
       id="calldata"
       disabled
-      class="bg-transparent outline-none resize-none flex flex-grow px-2 cursor-not-allowed font-mono"
+      class="bg-transparent outline-none resize-none flex flex-grow cursor-not-allowed font-mono text-xs md:text-sm md:px-2"
       rows="5">
       {$calldata}
     </textarea>

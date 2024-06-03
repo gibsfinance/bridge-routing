@@ -107,7 +107,9 @@
   <div class="bg-slate-100 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <span>Bridge Fee</span>
-      <span class="cursor-not-allowed tooltip flex items-end self-end" data-tip="Fee set on the bridge">
+      <span
+        class="cursor-not-allowed tooltip tooltip-top tooltip-left-toward-center flex items-end self-end"
+        data-tip="Fee set on the bridge">
         <Loading key="fee">{bridgeFee}</Loading>%
       </span>
     </div>
@@ -126,7 +128,7 @@
         </button>
       </span>
       <button
-        class="flex flex-row strike tooltip"
+        class="flex flex-row strike tooltip tooltip-top tooltip-left-toward-center"
         data-tip={$fixedFee
           ? 'Fee uses fixed value defined in cost limit'
           : `Percentage of gas used * ${$foreignSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action`}
@@ -141,9 +143,9 @@
     </div>
   </div>
   <div class="bg-slate-100 mt-[1px] py-1 relative">
-    <div class="flex flex-row px-3 leading-8 justify-between tooltip">
+    <div class="flex flex-row px-3 leading-8 justify-between">
       <button
-        class="tooltip"
+        class="tooltip tooltip-top tooltip-right-toward-center"
         data-tip="Allows cost limit to float with the destination chain's base fee. While unlocked the number in the ui may change. Once a transaction is sent, the number in that transaction's calldata is fixed"
         on:click={() => {
           costLimitLocked = !costLimitLocked
@@ -151,7 +153,7 @@
         Cost Limit&nbsp;{#if costLimitLocked || $fixedFee}🔒{:else}🔓{/if}
       </button>
       <button
-        class="tooltip flex flex-row items-end self-end"
+        class="tooltip tooltip-top tooltip-left-toward-center flex flex-row items-end self-end"
         data-tip={$fixedFee
           ? 'The fixed fee to tip if the validator does the work'
           : 'The max you are willing to tip to the address delivering native eth'}
@@ -179,7 +181,7 @@
         <button class="flex" on:click={() => showToolbox('details')}>📐</button>
       </div>
       <span
-        class="tooltip text-2xl leading-10 flex items-end self-end"
+        class="tooltip text-2xl leading-10 flex items-end self-end tooltip-top tooltip-left-toward-center"
         data-tip="Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee fluctuates on ethereum">
         {#if !$fixedFee}~&nbsp;{/if}<Loading>
           {humanReadableNumber(
