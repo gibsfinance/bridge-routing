@@ -97,7 +97,6 @@
   $: bridgeFee = humanReadableNumber(
     $bridgeFrom.get(originationNetwork.chainId)!.get(destinationNetwork.chainId)!.feeH2F * 100n,
   )
-  // $: console.log($limit, $baseFeeReimbersement, $limit < $baseFeeReimbersement * 2n, $estimatedCost)
 </script>
 
 <div class="shadow-md rounded-lg">
@@ -173,7 +172,7 @@
         </Loading>
       </button>
       <Warning
-        show={$limit < $baseFeeReimbersement * 2n}
+        show={$amountAfterBridgeFee < 0n && $limit < $baseFeeReimbersement * 2n}
         tooltip="The fee limit is close to or below the current network cost. Consider increasing the limit to allow for gas cost fluctuations" />
     </div>
   </div>
