@@ -17,9 +17,8 @@
   })
 </script>
 
-<span class="inline">
-  <a class="underline" target="_blank" href="https://{domain}{path}">{domain}</a>
-  <a href={directUrl + path} target="_blank">
-    <Icon icon="gis:direct" class="inline mx-1" height="2em" width="2em" />
-  </a>
+<span class="inline whitespace-pre">
+  <a class="underline" target="_blank" href="https://{domain}{path}">{domain}</a><a
+    href={directUrl + path}
+    target="_blank"><Icon icon="gis:direct" class="inline mx-1" height="2em" width="2em" /></a>
 </span>
