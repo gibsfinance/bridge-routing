@@ -50,7 +50,6 @@
 
   let unwind!: () => void
   const doUnwind = () => {
-    loading.increment('balance')
     loading.increment('minAmount')
     balance = 0n
     unwind?.()
@@ -61,8 +60,8 @@
     doUnwind()
     if ($publicClient) {
       getBalance().then((res) => {
-        balance = res || 0n
         loading.decrement('balance')
+        balance = res || 0n
       })
       // assume that the min amount will not change while the page is loaded
       getMinAmount().then((res) => {

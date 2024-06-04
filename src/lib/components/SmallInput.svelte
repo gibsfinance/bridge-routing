@@ -26,7 +26,6 @@
   export { className as class }
   let input!: HTMLInputElement
   const focusOnInput = () => {
-    console.log(input)
     input.focus()
     input.setSelectionRange(0, input.value.length)
   }
