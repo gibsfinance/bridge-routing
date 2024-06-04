@@ -30,6 +30,13 @@
       logo: gibsIcon,
       icon: gibsIcon,
     },
+    // containerElements: '',
+    notify: {
+      enabled: true,
+      transactionHandler: (txInfo) => {
+        console.log(txInfo)
+      },
+    },
     accountCenter: {
       desktop: {
         enabled: true,
@@ -71,8 +78,12 @@
 
   onMount(() => {
     const sub = onboard.state.select('wallets').subscribe(OnWalletsStateChange)
+    // const subNotifications = onboard.state.select('notifications').subscribe((update) => {
+    //   console.log('tx notification', update)
+    // })
     return () => {
       sub?.unsubscribe()
+      // subNotifications?.unsubscribe()
     }
   })
 

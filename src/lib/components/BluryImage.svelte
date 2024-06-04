@@ -3,7 +3,7 @@
   export let min_height = 'auto'
   export let height = 'auto'
   export let blur = '9px'
-  export let size = '1.5em'
+  export let size = '1em'
   export let rect = 'inset(0)'
   export let opacity = '1'
 </script>
@@ -22,7 +22,7 @@
 
 <style lang="postcss">
   .img {
-    border: solid 1.5em rgba(0, 0, 0, 0.45);
+    border: solid var(--size) rgba(0, 0, 0, 0.45);
     background-position: 50% center;
     background-size: cover;
     background-origin: border-box;
