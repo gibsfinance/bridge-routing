@@ -4,11 +4,12 @@
   import bridgeImage from '$lib/images/bridge.jpeg'
   import TokenDirectionDropdown from '$lib/components/TokenDirectionDropdown.svelte'
   import BridgeFooter from '$lib/components/BridgeFooter.svelte'
+  import { windowStore } from '$lib/stores/window'
 </script>
 
-<BlurryImage height="300px" image_url={bridgeImage}>
+<BlurryImage height="{$windowStore.innerWidth >= 768 ? 300 : 100}px" image_url={bridgeImage}>
   <h1
-    class="text-white font-italiana z-10 absolute top-0 bottom-0 left-0 right-0 m-auto text-center text-6xl md:text-8xl content-center capitalize">
+    class="text-white font-italiana z-10 absolute top-0 bottom-0 left-0 right-0 m-auto text-center text-5xl md:text-8xl content-center capitalize">
     token delivery
   </h1>
 </BlurryImage>

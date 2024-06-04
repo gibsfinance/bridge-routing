@@ -1,4 +1,4 @@
 <svelte:head>
-  <title>Bridge</title>
+  <title>Token Delivery</title>
 </svelte:head>
 <slot />

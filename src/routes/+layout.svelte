@@ -3,10 +3,10 @@
   import Nav from '$lib/components/Nav.svelte'
 
   import AuthProvider from '$lib/stores/auth/AuthProvider.svelte'
-  import payMe from '$lib/images/pay-me.png'
-  import bridge from '$lib/images/bridge.jpeg'
-  import futureBridge from '$lib/images/future-bridge.webp'
-  import fingers from '$lib/images/1FAF0.svg'
+  // import payMe from '$lib/images/pay-me.png'
+  // import bridge from '$lib/images/bridge.jpeg'
+  // import futureBridge from '$lib/images/future-bridge.webp'
+  // import fingers from '$lib/images/1FAF0.svg'
   // const preloadImageUrls = [payMe, bridge, futureBridge, fingers]
 </script>
 
@@ -17,6 +17,8 @@
   <meta name="robots" content="noindex nofollow" />
   <html lang="en" />
 </svelte:head>
+
+<!-- <svelte:window on:resize={updateWindow} /> -->
 
 <AuthProvider>
   <div class="app bg-slate-950">
