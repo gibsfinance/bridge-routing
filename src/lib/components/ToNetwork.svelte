@@ -58,7 +58,7 @@
       },
     })
   }
-  onMount(() => () => doUnwatch())
+  onMount(() => () => unwatch?.())
   $: loadFeeFor(originationNetwork.chainId, destinationNetwork.chainId)
   const limitUpdated = (lim: string) => {
     limit.set(parseUnits(lim, 18))

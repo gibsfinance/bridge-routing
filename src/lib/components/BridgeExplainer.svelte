@@ -4,7 +4,7 @@
 </script>
 
 <div class="container px-2 py-10 text-center m-auto text-slate-950">
-  <h3 class="text-5xl font-italiana">Native Delivery</h3>
+  <h3 class="text-5xl font-italiana">Token Delivery</h3>
   <h4 class="text-2xl mt-4">protect your privacy, keep custody of your tokens</h4>
 </div>
 
