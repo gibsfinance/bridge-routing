@@ -34,10 +34,8 @@
     transport: http(),
   })
   let unwatch!: () => void
-  let waitingForFirstGas = true
   const doUnwatch = () => {
     loading.increment('gas')
-    waitingForFirstGas = true
     unwatch?.()
   }
   $: if (publicClient) {
