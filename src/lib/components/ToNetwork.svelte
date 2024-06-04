@@ -179,7 +179,7 @@
         <button class="flex" on:click={() => showToolbox('details')}>📐</button>
       </div>
       <span
-        class="tooltip text-2xl leading-10 flex items-end self-end tooltip-top tooltip-left-toward-center"
+        class="tooltip text-xl sm:text-2xl leading-10 flex items-end self-end tooltip-top tooltip-left-toward-center"
         data-tip="Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee fluctuates on ethereum">
         {#if !$fixedFee}~&nbsp;{/if}<Loading>
           {humanReadableNumber(

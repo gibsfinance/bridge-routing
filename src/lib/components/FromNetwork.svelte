@@ -99,7 +99,7 @@
   <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
     <span class="flex flex-grow relative max-w-[70%]">
       <input
-        class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-2xl w-full"
+        class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-xl sm:text-2xl w-full"
         placeholder="0.0"
         bind:value={$val}
         on:focus={() => focused.set(true)}
