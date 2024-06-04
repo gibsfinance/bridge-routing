@@ -17,6 +17,7 @@
     foreignSupportsEIP1559,
     estimatedCost,
     baseFeeReimbersement,
+    incentiveRatio,
   } from '$lib/stores/bridge-settings'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
@@ -96,7 +97,7 @@
   $: bridgeFee = humanReadableNumber(
     $bridgeFrom.get(originationNetwork.chainId)!.get(destinationNetwork.chainId)!.feeH2F * 100n,
   )
-  // $: console.log($limit, $estimatedCost, $limit < $estimatedCost * 2n)
+  // $: console.log($limit, $baseFeeReimbersement, $limit < $baseFeeReimbersement * 2n, $estimatedCost)
 </script>
 
 <div class="shadow-md rounded-lg">
@@ -113,7 +114,7 @@
       </span>
     </div>
   </div>
-  <div class="bg-slate-100 mt-[1px] py-1">
+  <div class="bg-slate-100 mt-[1px] py-1 relative">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <span class="leading-8 flex flex-row align-middle">
         <button class="pr-1" on:click={toggleFixedFee}>Fixed</button>
@@ -140,6 +141,9 @@
           on:update={(e) => incentiveFeeUpdated(e.detail.value)} />
       </button>
     </div>
+    <Warning
+      show={!$fixedFee && $incentiveRatio < 10n ** 18n + 5n * 10n ** 16n}
+      tooltip="A gas based fee of this amount may cause the executor to ignore your transaction" />
   </div>
   <div class="bg-slate-100 mt-[1px] py-1 relative">
     <div class="flex flex-row px-3 leading-8 justify-between">
@@ -169,7 +173,7 @@
         </Loading>
       </button>
       <Warning
-        show={$fixedFee ? $limit < $baseFeeReimbersement * 2n : $limit < $estimatedCost * 2n}
+        show={$limit < $baseFeeReimbersement * 2n}
         tooltip="The fee limit is close to or below the current network cost. Consider increasing the limit to allow for gas cost fluctuations" />
     </div>
   </div>
