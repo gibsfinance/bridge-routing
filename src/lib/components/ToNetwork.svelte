@@ -35,6 +35,7 @@
   })
   let unwatch!: () => void
   const doUnwatch = () => {
+    loading.decrement('gas')
     loading.increment('gas')
     unwatch?.()
   }
