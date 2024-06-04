@@ -6,12 +6,13 @@
   export let size = '1em'
   export let rect = 'inset(0)'
   export let opacity = '1'
+  export let brightness = '100%'
 </script>
 
 <div class="h-content relative">
   <div
     class="img"
-    style="--blur: {blur}; --size: {size}; --rect: {rect}; --opacity: {opacity}; min-height: {min_height}; height: {height}; background-image: url({image_url})">
+    style="--blur: {blur}; --size: {size}; --brightness: {brightness}; --rect: {rect}; --opacity: {opacity}; min-height: {min_height}; height: {height}; background-image: url({image_url})">
     <div class="z-30 relative flex justify-center w-full">
       <slot />
     </div>
@@ -40,9 +41,9 @@
       border-color: transparent;
       background: inherit;
       background-clip: border-box;
-      /* opacity: var(--opacity); */
-      -webkit-filter: blur(var(--blur));
-      filter: blur(var(--blur));
+      opacity: var(--opacity);
+      -webkit-filter: blur(var(--blur)) brightness(var(--brightness));
+      filter: blur(var(--blur)) brightness(var(--brightness));
       clip: rect(0 100% 100% 0);
       -webkit-clip-path: var(--rect);
       clip-path: var(--rect);

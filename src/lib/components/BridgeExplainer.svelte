@@ -1,5 +1,5 @@
 <script lang="ts">
-  import BluryImage from './BluryImage.svelte'
+  import BlurryImage from './BlurryImage.svelte'
   import futureBridge from '$lib/images/future-bridge.webp'
   import VersionedLink from './VersionedLink.svelte'
 </script>
@@ -9,7 +9,7 @@
   <h4 class="text-2xl mt-4">protect your privacy, keep custody of your tokens</h4>
 </div>
 
-<BluryImage image_url={futureBridge} blur="6px" min_height="auto">
+<BlurryImage image_url={futureBridge} blur="9px" brightness="75%" min_height="auto">
   <div class="text-white">
     <div class="container m-auto text-xl text-center drop-shadow-lg md:max-w-3xl">
       <!-- <img src={futureBridge} class="float-right max-w-96" alt="" /> -->
@@ -36,4 +36,4 @@
       </p>
     </div>
   </div>
-</BluryImage>
+</BlurryImage>
