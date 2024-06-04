@@ -2,6 +2,7 @@
   import Onboard, {
     type ConnectOptions,
     type DisconnectOptions,
+    type PreflightNotificationsOptions,
     type WalletState,
   } from '@web3-onboard/core'
   import { chainsMetadata } from './constants'
@@ -11,7 +12,7 @@
   import { CONTEXT_KEY } from './methods'
   import { activeChain, walletClient } from './store'
   import type { ChainWithDecimalId } from '@web3-onboard/common'
-  import { createWalletClient, custom, type WatchBlockNumberReturnType } from 'viem'
+  import { createWalletClient, custom, type Hex } from 'viem'
   import gibsIcon from '$lib/images/1FAF0.svg'
 
   const chains = [Chains.PLS].map((key) => {
@@ -34,13 +35,32 @@
       logo: gibsIcon,
       icon: gibsIcon,
     },
+    // containerElements: '',
+    // notify: {
+    //   mobile: {
+    //     enabled: true,
+    //     transactionHandler: (txInfo) => {
+    //       console.log(txInfo)
+    //     },
+    //     position: 'bottomRight',
+    //   },
+    //   desktop: {
+    //     enabled: true,
+    //     transactionHandler: (txInfo) => {
+    //       console.log(txInfo)
+    //     },
+    //     position: 'bottomRight',
+    //   },
+    // },
     accountCenter: {
       desktop: {
         enabled: true,
+        minimal: true,
         position: 'bottomRight',
       },
       mobile: {
         enabled: true,
+        minimal: true,
         position: 'bottomRight',
       },
     },
@@ -74,10 +94,13 @@
   }
 
   onMount(() => {
-    const { unsubscribe } = onboard.state.select('wallets').subscribe(OnWalletsStateChange)
-
+    const sub = onboard.state.select('wallets').subscribe(OnWalletsStateChange)
+    // const subNotifications = onboard.state.select('notifications').subscribe((update) => {
+    //   console.log('tx notification', update)
+    // })
     return () => {
-      unsubscribe()
+      sub?.unsubscribe()
+      // subNotifications?.unsubscribe()
     }
   })
 
@@ -101,7 +124,16 @@
     await onboard.setChain({ chainId: chain })
   }
 
-  setContext(CONTEXT_KEY, { connect, disconnect, switchChain })
+  // const sendTransaction = async (args: PreflightNotificationsOptions) => {
+  //   return await onboard.state.actions.preflightNotifications(args)
+  // }
+
+  setContext(CONTEXT_KEY, {
+    connect,
+    disconnect,
+    switchChain,
+    // sendTransaction,
+  })
 </script>
 
 <slot />

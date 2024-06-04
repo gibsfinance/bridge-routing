@@ -1,7 +1,6 @@
 {
-  "name": "sveltekit-evm-bootstrap",
-  "version": "1.0.0",
-  "private": true,
+  "name": "gibsfinance",
+  "version": "0.1.0",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -20,6 +19,7 @@
     "@sveltejs/kit": "^2.5.8",
     "@sveltejs/vite-plugin-svelte": "^3.1.0",
     "@types/eslint": "^8.56.10",
+    "@types/lodash": "^4.17.4",
     "@typescript-eslint/eslint-plugin": "^7.9.0",
     "@typescript-eslint/parser": "^7.9.0",
     "@web3-onboard/common": "^2.3.4",
@@ -52,6 +52,7 @@
     "@web3-onboard/gas": "^2.1.8",
     "@web3-onboard/injected-wallets": "^2.8.5",
     "@web3-onboard/sequence": "^2.0.8",
-    "js-sha3": "^0.9.3"
+    "js-sha3": "^0.9.3",
+    "lodash": "^4.17.21"
   }
 }

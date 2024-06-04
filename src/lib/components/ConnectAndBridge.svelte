@@ -1,6 +1,6 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import * as viem from 'viem'
+  // import * as viem from 'viem'
   import { useAuth } from '$lib/stores/auth/methods'
   import { clientFromChain, walletClient, walletAccount } from '$lib/stores/auth/store'
   import { Chains } from '$lib/stores/auth/types'
@@ -10,22 +10,28 @@
     amountToBridge,
     assets,
     foreignData,
-    router,
-    outputRouterAbi,
-    amountAfterBridgeFee,
-    foreignBridgeAddress,
-    foreignCalldata,
-    feeDirectorStructEncoded,
+    bridgeKey,
+    erc677abiBNB,
+    // feeDirectorStructEncoded,
+    // router,
+    // outputRouterAbi,
+    // amountAfterBridgeFee,
+    // foreignBridgeAddress,
+    // foreignCalldata,
+    // bridgeKey,
   } from '$lib/stores/bridge-settings'
   import { getContract, type Hex } from 'viem'
+  import Loading from './Loading.svelte'
+  // import { loading } from '$lib/stores/loading'
 
   $: disabled = BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n
 
   const { connect } = useAuth()
+  let txHash: Hex | undefined
+  // txHash = zeroHash
 
   const initiateBridge = async () => {
     // const foreignClient = clientFromChain(Chains.ETH).extend((client) => ({
-    //   // ...
     //   async traceCall(args: viem.CallParameters) {
     //     return client.request({
     //       method: 'debug_traceCall' as unknown as any,
@@ -41,7 +47,6 @@
     //       ],
     //     })
     //   },
-    //   // ...
     // }))
     // try {
     //   const trace = await foreignClient.traceCall({
@@ -57,7 +62,7 @@
     //         balance: 100n * 10n ** 18n,
     //       },
     //       {
-    //         address: assets.ETH.output.address,
+    //         address: assets[$bridgeKey].output.address,
     //         stateDiff: [
     //           {
     //             slot: viem.keccak256(
@@ -107,21 +112,62 @@
     //   console.log(err)
     //   throw err
     // }
-    // console.log($feeDirectorStructEncoded)
-    const token = getContract({
-      abi: erc677abi,
-      address: assets.ETH.input.address,
-      client: $walletClient!,
-    })
-    const txHash = await token.write.transferAndCall(
-      [$bridgeAddress, $amountToBridge, $foreignData],
-      {
-        account: $walletAccount as Hex,
-        type: 'eip1559',
-        chain: chainsMetadata[Chains.PLS],
-      },
-    )
-    console.log(txHash)
+    // const to = assets[$bridgeKey].input.address
+    console.log('inside send transaction')
+    txHash = await ($bridgeKey === 'BNB'
+      ? getContract({
+          abi: erc677abiBNB,
+          address: assets[$bridgeKey].input.address,
+          client: $walletClient!,
+        }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData, $walletAccount as Hex], {
+          account: $walletAccount as Hex,
+          type: 'eip1559',
+          chain: chainsMetadata[Chains.PLS],
+        })
+      : getContract({
+          abi: erc677abi,
+          address: assets[$bridgeKey].input.address,
+          client: $walletClient!,
+        }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData], {
+          account: $walletAccount as Hex,
+          type: 'eip1559',
+          chain: chainsMetadata[Chains.PLS],
+        }))
+    // txHash = await sendTransaction({
+    //   sendTransaction: async () => {
+    //     console.log('inside send transaction')
+    //     return await ($bridgeKey === 'BNB'
+    //       ? getContract({
+    //           abi: erc677abiBNB,
+    //           address: assets[$bridgeKey].input.address,
+    //           client: $walletClient!,
+    //         }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData, $walletAccount as Hex], {
+    //           account: $walletAccount as Hex,
+    //           type: 'eip1559',
+    //           chain: chainsMetadata[Chains.PLS],
+    //         })
+    //       : getContract({
+    //           abi: erc677abi,
+    //           address: assets[$bridgeKey].input.address,
+    //           client: $walletClient!,
+    //         }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData], {
+    //           account: $walletAccount as Hex,
+    //           type: 'eip1559',
+    //           chain: chainsMetadata[Chains.PLS],
+    //         }))
+    //   },
+    //   txDetails: { to, value: '0' },
+    // })
+    if (!txHash) {
+      return
+    }
+    ;((hash: Hex) =>
+      setTimeout(() => {
+        if (hash !== txHash) {
+          return
+        }
+        txHash = undefined
+      }, 20_000))(txHash)
     const receipt = await clientFromChain(Chains.PLS).waitForTransactionReceipt({
       hash: txHash,
     })
@@ -132,14 +178,29 @@
 <div>
   {#if $walletAccount}
     <button
-      class="p-2 bg-purple-600 text-white w-full rounded-lg hover:bg-purple-500 active:bg-purple-500"
-      class:opacity-70={disabled}
+      class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-around"
+      class:hover:bg-purple-500={!disabled}
+      class:bg-purple-600={!disabled}
+      class:bg-purple-400={disabled}
       class:cursor-not-allowed={disabled}
       class:shadow-md={!disabled}
-      on:click={initiateBridge}>Bridge</button>
+      on:click={initiateBridge}>
+      <Loading class="my-[10px]">Bridge</Loading>
+    </button>
   {:else}
     <button
       class="p-2 bg-purple-600 text-white w-full rounded-lg hover:bg-purple-500 active:bg-purple-500"
-      on:click={() => connect()}>Connect</button>
+      on:click={() => connect()}>
+      Connect
+    </button>
   {/if}
 </div>
+{#if txHash}
+  <div class="toast mb-16">
+    <div class="alert alert-info bg-purple-400 text-slate-100">
+      <a href="{chainsMetadata[Chains.PLS].blockExplorers?.default.url}/tx/{txHash}" class="underline" target="_blank">
+        Submitted: {txHash.slice(0, 6)}...{txHash.slice(-4)}
+      </a>
+    </div>
+  </div>
+{/if}

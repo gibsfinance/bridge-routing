@@ -5,8 +5,4 @@
   export let height = 32
 </script>
 
-<img
-  class="network-icon min-w-8"
-  style:height={`${height}px`}
-  src={network.icon}
-  alt={network.alt} />
+<img class="network-icon min-w-8" style:height={`${height}px`} src={network.icon} alt={network.alt} />

@@ -11,6 +11,10 @@ export type Asset = {
   decimals: number
   networkOrigination: keyof typeof chainsMetadata
   hostedNetwork: keyof typeof chainsMetadata
+  native?: {
+    name: string
+    symbol: string
+  }
 }
 
 export const decimalValidation = (v: string, decimals = 18) => {

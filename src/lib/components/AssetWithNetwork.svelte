@@ -1,35 +1,38 @@
 <script lang="ts">
-  import { Chains } from '$lib/stores/auth/types'
   import type { Asset } from '$lib/stores/utils'
-  import { zeroAddress } from 'viem'
-  import ethNetworkUrl from '$lib/images/networks/0x1.svg'
+  import bnbToken from '$lib/images/tokens/bnb.svg'
+  import etherToken from '$lib/images/tokens/eth.svg'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
 
   export let asset!: Asset
+  export let tokenSize = 10
+  export let networkSize = 5
 
   const tokenMapping = new Map<string, string>([
-    [zeroAddress, 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png'],
-    [
-      '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
-      'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png',
-    ],
-  ])
-  const networkMapping = new Map<Chains, string>([
-    [
-      Chains.PLS,
-      'https://pulsex-tokens.s3.eu-west-2.amazonaws.com/0xA1077a294dDE1B09bB078844df40758a5D0f9a27.png',
-    ],
-    [Chains.ETH, ethNetworkUrl],
+    ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', etherToken],
+    ['0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C', etherToken],
+    ['0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', bnbToken],
+    ['0x518076CCE3729eF1a3877EA3647a26e278e764FE', bnbToken],
   ])
   $: url = tokenMapping.get(asset.address as string) || `lib/tokens/${asset.address}.png`
-  $: networkUrl = networkMapping.get(asset.hostedNetwork)
 </script>
 
-<!-- <a href=""> -->
-<button class="rounded-full h-10 w-10 bg-slate-200 shadow-inner relative">
-  <img src={url} alt="" />
+<span class="token-image-container relative" style="--token-size: {tokenSize};">
+  <img src={url} alt="" class="rounded-full overflow-hidden shadow-md" />
   <img
-    class="absolute -bottom-1 -right-1 h-5 w-5 bg-slate-100 rounded-full"
-    src={networkUrl}
-    alt="" />
-</button>
-<!-- </a> -->
+    class="network-image absolute -bottom-1 -right-1 bg-slate-100 rounded-full"
+    style="--network-size: {networkSize};"
+    src={chainsMetadata[asset.hostedNetwork].icon}
+    alt={chainsMetadata[asset.hostedNetwork].alt} />
+</span>
+
+<style lang="postcss">
+  .token-image-container {
+    height: calc(var(--token-size) * 4px);
+    width: calc(var(--token-size) * 4px);
+    .network-image {
+      height: calc(var(--network-size) * 4px);
+      width: calc(var(--network-size) * 4px);
+    }
+  }
+</style>
