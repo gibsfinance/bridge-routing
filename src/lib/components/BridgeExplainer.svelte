@@ -12,10 +12,9 @@
 <BlurryImage image_url={futureBridge} blur="9px" brightness="75%" min_height="auto">
   <div class="text-white">
     <div class="container m-auto text-xl text-center drop-shadow-lg md:max-w-3xl">
-      <!-- <img src={futureBridge} class="float-right max-w-96" alt="" /> -->
       <p class="text-left">
         Introducing "Token Delivery" for PulseChain to EVM Omnibridges. With a minimal implementations, and commitment
-        to security, <a href="bridge" class="underline">gibs.finance/bridge</a>
+        to security, <a href="delivery" class="underline">gibs.finance/delivery</a>
         simplifies bridging to Ethereum while supporting user privacy.
       </p>
       <p class="mt-4 sm:mt-8 text-left">
@@ -32,7 +31,7 @@
       <p class="mt-4 sm:mt-8 text-left">
         This approach mitigates potential vulnerabilities associated with custodial services, providing users with
         confidence in the security of their assets. Bridge trustlessly, quickly, and maintain your privacy without
-        permission on <a href="bridge" class="underline">gibs.finance/bridge.</a>
+        permission on <a href="delivery" class="underline">gibs.finance/delivery.</a>
       </p>
     </div>
   </div>

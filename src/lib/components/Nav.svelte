@@ -20,7 +20,7 @@
     await goto('/')
   }
   const gotoNativeDelivery = async () => {
-    await goto('/bridge')
+    await goto('/delivery')
   }
 </script>
 
