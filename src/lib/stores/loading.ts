@@ -21,7 +21,6 @@ export const loading = {
         l.categories[key] = (l.categories[key] || 0) + 1
       }
       l.total += 1
-      console.dir(l)
       return l
     })
   },
@@ -30,18 +29,15 @@ export const loading = {
       if (key) {
         const current = l.categories[key] || 0
         if (!current) {
-          console.dir(l)
           return l
         }
         l.categories[key] = (l.categories[key] || 0) - 1
       }
       l.total -= 1
-      console.dir(l)
       return l
     })
   },
   // resolved: (key?: string) => {
-  //   console.dir(get(loadingCounter).categories, get(loadingCounter).total)
   //   return key ? !get(loadingCounter).categories[key] : !get(loadingCounter).total
   // },
 }
