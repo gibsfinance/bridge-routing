@@ -46,7 +46,7 @@
               </button>
             </a>
           </li>
-          {#if !$page.route.id?.includes('/bridge/')}
+          {#if !$page.route.id?.includes('/delivery')}
             <li>
               <button class="link" on:keypress={gotoNativeDelivery} on:click={gotoNativeDelivery}>🌁</button>
             </li>
