@@ -11,7 +11,7 @@
 
 <BluryImage image_url={futureBridge} blur="6px" min_height="auto">
   <div class="text-white">
-    <div class="container px-2 py-2 m-auto text-xl text-center drop-shadow-lg md:max-w-3xl">
+    <div class="container m-auto text-xl text-center drop-shadow-lg md:max-w-3xl">
       <!-- <img src={futureBridge} class="float-right max-w-96" alt="" /> -->
       <p class="text-left">
         Introducing "Token Delivery" for PulseChain to EVM Omnibridges. With a minimal implementations, and commitment

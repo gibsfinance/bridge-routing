@@ -12,9 +12,7 @@
   <div
     class="img"
     style="--blur: {blur}; --size: {size}; --rect: {rect}; --opacity: {opacity}; min-height: {min_height}; height: {height}; background-image: url({image_url})">
-    <div
-      class="z-30 relative flex items-center justify-center justify-items-center"
-      style="height: -webkit-fill-available">
+    <div class="z-30 relative flex items-center justify-center justify-items-center">
       <slot />
     </div>
   </div>
@@ -29,6 +27,8 @@
     background-clip: padding-box;
     position: relative;
     font-size: 2em;
+    display: flex;
+    @apply flex justify-center;
 
     &:before {
       position: absolute;
