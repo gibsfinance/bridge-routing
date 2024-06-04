@@ -15,7 +15,6 @@ const w = readable({
     if (_.isEqual(current, $w)) {
       return
     }
-    console.log(current)
     set(current)
   }
   const resizeHandler = () => updateIfDifferent()
