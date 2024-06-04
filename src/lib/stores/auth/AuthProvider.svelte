@@ -36,22 +36,22 @@
       icon: gibsIcon,
     },
     // containerElements: '',
-    notify: {
-      mobile: {
-        enabled: true,
-        transactionHandler: (txInfo) => {
-          console.log(txInfo)
-        },
-        position: 'bottomRight',
-      },
-      desktop: {
-        enabled: true,
-        transactionHandler: (txInfo) => {
-          console.log(txInfo)
-        },
-        position: 'bottomRight',
-      },
-    },
+    // notify: {
+    //   mobile: {
+    //     enabled: true,
+    //     transactionHandler: (txInfo) => {
+    //       console.log(txInfo)
+    //     },
+    //     position: 'bottomRight',
+    //   },
+    //   desktop: {
+    //     enabled: true,
+    //     transactionHandler: (txInfo) => {
+    //       console.log(txInfo)
+    //     },
+    //     position: 'bottomRight',
+    //   },
+    // },
     accountCenter: {
       desktop: {
         enabled: true,
