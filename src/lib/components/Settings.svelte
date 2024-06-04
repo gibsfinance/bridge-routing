@@ -78,8 +78,6 @@
       id="calldata"
       disabled
       class="bg-transparent outline-none resize-none flex flex-grow cursor-not-allowed font-mono text-xs md:text-sm md:px-2"
-      rows="5">
-      {$calldata}
-    </textarea>
+      rows="5">{$calldata}</textarea>
   </div>
 </div>

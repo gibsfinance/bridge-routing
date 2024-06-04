@@ -1,5 +1,10 @@
 <script lang="ts">
-  import Onboard, { type ConnectOptions, type DisconnectOptions, type WalletState } from '@web3-onboard/core'
+  import Onboard, {
+    type ConnectOptions,
+    type DisconnectOptions,
+    type PreflightNotificationsOptions,
+    type WalletState,
+  } from '@web3-onboard/core'
   import { chainsMetadata } from './constants'
   import injectedWallet from '@web3-onboard/injected-wallets'
   import { Chains } from './types'
@@ -7,7 +12,7 @@
   import { CONTEXT_KEY } from './methods'
   import { activeChain, walletClient } from './store'
   import type { ChainWithDecimalId } from '@web3-onboard/common'
-  import { createWalletClient, custom } from 'viem'
+  import { createWalletClient, custom, type Hex } from 'viem'
   import gibsIcon from '$lib/images/1FAF0.svg'
 
   const chains = [Chains.PLS].map((key) => {
@@ -32,18 +37,30 @@
     },
     // containerElements: '',
     notify: {
-      enabled: true,
-      transactionHandler: (txInfo) => {
-        console.log(txInfo)
+      mobile: {
+        enabled: true,
+        transactionHandler: (txInfo) => {
+          console.log(txInfo)
+        },
+        position: 'bottomRight',
+      },
+      desktop: {
+        enabled: true,
+        transactionHandler: (txInfo) => {
+          console.log(txInfo)
+        },
+        position: 'bottomRight',
       },
     },
     accountCenter: {
       desktop: {
         enabled: true,
+        minimal: true,
         position: 'bottomRight',
       },
       mobile: {
         enabled: true,
+        minimal: true,
         position: 'bottomRight',
       },
     },
@@ -107,7 +124,16 @@
     await onboard.setChain({ chainId: chain })
   }
 
-  setContext(CONTEXT_KEY, { connect, disconnect, switchChain })
+  // const sendTransaction = async (args: PreflightNotificationsOptions) => {
+  //   return await onboard.state.actions.preflightNotifications(args)
+  // }
+
+  setContext(CONTEXT_KEY, {
+    connect,
+    disconnect,
+    switchChain,
+    // sendTransaction,
+  })
 </script>
 
 <slot />

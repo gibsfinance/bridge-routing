@@ -4,7 +4,7 @@
   "semi": false,
   "bracketSameLine": true,
   "trailingComma": "all",
-  "htmlWhitespaceSensitivity": "ignore",
+  "htmlWhitespaceSensitivity": "strict",
   "printWidth": 120,
   "plugins": ["prettier-plugin-svelte"],
   "overrides": [

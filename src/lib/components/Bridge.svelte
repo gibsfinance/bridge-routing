@@ -1,7 +1,6 @@
 <script lang="ts">
   import FromNetwork from './FromNetwork.svelte'
   import ToNetwork from './ToNetwork.svelte'
-  import Version from './Version.svelte'
   import ConnectAndBridge from './ConnectAndBridge.svelte'
   import NetworkDirection from './NetworkDirection.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
@@ -32,7 +31,7 @@
     <Details asset={$assetOut} {originationNetwork} {destinationNetwork} />
   {/if}
   <!-- <Version /> -->
-  <div class="mt-3">
+  <div class="mt-4">
     <ConnectAndBridge />
   </div>
 </div>

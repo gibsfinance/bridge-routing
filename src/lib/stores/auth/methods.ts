@@ -1,5 +1,7 @@
 import { getContext } from 'svelte'
 import type { Chains } from './types'
+// import type { Hex } from 'viem'
+// import type { PreflightNotificationsOptions } from '@web3-onboard/core'
 
 export const CONTEXT_KEY = 'AUTH_CONTEXT'
 
@@ -7,6 +9,7 @@ export interface AuthMethods {
   connect: () => Promise<void>
   disconnect: () => Promise<void>
   switchChain: (chain: Chains) => Promise<void>
+  // sendTransaction: (args: PreflightNotificationsOptions) => Promise<Hex>
 }
 
 export function useAuth() {

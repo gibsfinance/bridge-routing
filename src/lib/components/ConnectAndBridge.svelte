@@ -20,7 +20,7 @@
     // foreignCalldata,
     // bridgeKey,
   } from '$lib/stores/bridge-settings'
-  import { getContract, zeroHash, type Hex } from 'viem'
+  import { getContract, type Hex } from 'viem'
   import Loading from './Loading.svelte'
   // import { loading } from '$lib/stores/loading'
 
@@ -112,6 +112,8 @@
     //   console.log(err)
     //   throw err
     // }
+    // const to = assets[$bridgeKey].input.address
+    console.log('inside send transaction')
     txHash = await ($bridgeKey === 'BNB'
       ? getContract({
           abi: erc677abiBNB,
@@ -131,15 +133,41 @@
           type: 'eip1559',
           chain: chainsMetadata[Chains.PLS],
         }))
-    console.log(txHash)
+    // txHash = await sendTransaction({
+    //   sendTransaction: async () => {
+    //     console.log('inside send transaction')
+    //     return await ($bridgeKey === 'BNB'
+    //       ? getContract({
+    //           abi: erc677abiBNB,
+    //           address: assets[$bridgeKey].input.address,
+    //           client: $walletClient!,
+    //         }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData, $walletAccount as Hex], {
+    //           account: $walletAccount as Hex,
+    //           type: 'eip1559',
+    //           chain: chainsMetadata[Chains.PLS],
+    //         })
+    //       : getContract({
+    //           abi: erc677abi,
+    //           address: assets[$bridgeKey].input.address,
+    //           client: $walletClient!,
+    //         }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData], {
+    //           account: $walletAccount as Hex,
+    //           type: 'eip1559',
+    //           chain: chainsMetadata[Chains.PLS],
+    //         }))
+    //   },
+    //   txDetails: { to, value: '0' },
+    // })
+    if (!txHash) {
+      return
+    }
     ;((hash: Hex) =>
       setTimeout(() => {
         if (hash !== txHash) {
           return
         }
         txHash = undefined
-        console.log('set to undefined')
-      }, 10_000))(txHash)
+      }, 20_000))(txHash)
     const receipt = await clientFromChain(Chains.PLS).waitForTransactionReceipt({
       hash: txHash,
     })
@@ -168,10 +196,10 @@
   {/if}
 </div>
 {#if txHash}
-  <div class="toast">
+  <div class="toast mb-16">
     <div class="alert alert-info bg-purple-400 text-slate-100">
       <a href="{chainsMetadata[Chains.PLS].blockExplorers?.default.url}/tx/{txHash}" class="underline" target="_blank">
-        Transaction Submitted: {txHash.slice(0, 6)}...{txHash.slice(-4)}
+        Submitted: {txHash.slice(0, 6)}...{txHash.slice(-4)}
       </a>
     </div>
   </div>
