@@ -12,7 +12,7 @@
   <div
     class="img"
     style="--blur: {blur}; --size: {size}; --rect: {rect}; --opacity: {opacity}; min-height: {min_height}; height: {height}; background-image: url({image_url})">
-    <div class="z-30 relative flex items-center justify-center justify-items-center">
+    <div class="z-30 relative flex justify-center w-full">
       <slot />
     </div>
   </div>
