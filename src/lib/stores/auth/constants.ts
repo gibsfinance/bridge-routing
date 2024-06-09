@@ -49,7 +49,7 @@ export const chainsMetadata = {
     alt: 'a gold cube with slits in the middle of each side',
     rpcUrls: {
       default: {
-        http: ['https://binance.llamarpc.com'],
+        http: ['https://bsc-pokt.nodies.app'],
       },
     },
   },
