@@ -3,6 +3,7 @@
   import { chainsMetadata } from '$lib/stores/auth/constants'
 
   export let provider = 'pulsechain'
+  export let size = '28'
 
   type Setting = {
     src: string
@@ -28,4 +29,4 @@
   $: settings = providerInfo.get(provider)!
 </script>
 
-<img height="28" width="28" src={settings.src} alt={settings.alt} />
+<img height={size} width={size} src={settings.src} alt={settings.alt} />

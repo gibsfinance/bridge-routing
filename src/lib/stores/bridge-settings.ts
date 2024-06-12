@@ -1,7 +1,7 @@
 import { derived, get, writable } from 'svelte/store'
 import * as viem from 'viem'
 import { multicall } from './auth/store'
-import { Chains } from './auth/types'
+import { Chains, type DestinationChains } from './auth/types'
 import { loading } from './loading'
 import { page } from '$app/stores'
 
@@ -39,7 +39,7 @@ export const bridgeFrom = writable(
 )
 
 export const assets = {
-  ETH: {
+  [Chains.ETH]: {
     provider: 'pulsechain',
     homeBridge: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
     foreignBridge: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
@@ -65,7 +65,7 @@ export const assets = {
       },
     },
   },
-  BNB: {
+  [Chains.BNB]: {
     provider: 'tokensex',
     homeBridge: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
     foreignBridge: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
@@ -97,9 +97,9 @@ type BridgeKey = keyof typeof assets
 
 export const bridgeKeys = Object.keys(assets) as BridgeKey[]
 
-export const bridgeKey = derived([page], ([$page]) => $page.params.route as BridgeKey)
+export const bridgeKey = derived([page], ([$page]) => (Chains[$page.params.route as keyof typeof Chains] || Chains.ETH) as DestinationChains)
 
-export const foreignSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === 'BNB' ? false : true))
+export const foreignSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === Chains.BNB ? false : true))
 /** the estimated gas that will be consumed by running the foreign transaction */
 export const estimatedGas = writable(315_000n)
 /** the block.baseFeePerGas on the latest block */
@@ -117,8 +117,8 @@ export const assetOut = derived([bridgeKey], ([$bridgeKey]) => {
   return assets[$bridgeKey].output
 })
 /** the direction of the bridge crossing */
-export const fromNetwork = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === 'ETH' ? Chains.PLS : Chains.PLS))
-export const toNetwork = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === 'ETH' ? Chains.ETH : Chains.BNB))
+export const fromNetwork = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === Chains.ETH ? Chains.PLS : Chains.PLS))
+export const toNetwork = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === Chains.ETH ? Chains.ETH : Chains.BNB))
 
 /** the number of tokens to push into the bridge (before fees) */
 export const amountToBridge = writable(0n)
