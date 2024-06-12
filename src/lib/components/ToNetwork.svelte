@@ -23,6 +23,7 @@
   import { createPublicClient, http } from 'viem'
   import SmallInput from './SmallInput.svelte'
   import Warning from './Warning.svelte'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
   export let originationNetwork!: VisualChain
   export let destinationNetwork!: VisualChain
   export let asset!: Asset
@@ -97,11 +98,12 @@
   $: bridgeFee = humanReadableNumber(
     $bridgeFrom.get(originationNetwork.chainId)!.get(destinationNetwork.chainId)!.feeH2F * 100n,
   )
+  $: networkOptions = Object.keys(chainsMetadata).filter((cId): cId is Chains => cId !== Chains.PLS)
 </script>
 
 <div class="shadow-md rounded-lg">
   <div class="bg-slate-100 py-2 px-3 rounded-t-lg">
-    <NetworkSummary network={destinationNetwork} {asset} {balance} native />
+    <NetworkSummary network={destinationNetwork} {networkOptions} {asset} {balance} native />
   </div>
   <div class="bg-slate-100 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
@@ -183,7 +185,7 @@
         <button class="flex" on:click={() => showToolbox('details')}>📐</button>
       </div>
       <span
-        class="tooltip text-xl sm:text-2xl leading-10 flex items-end self-end tooltip-top tooltip-left-toward-center"
+        class="tooltip text-xl sm:text-2xl leading-10 flex items-center self-center tooltip-top tooltip-left-toward-center"
         data-tip="Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee fluctuates on ethereum">
         {#if !$fixedFee}~&nbsp;{/if}<Loading>
           {humanReadableNumber(

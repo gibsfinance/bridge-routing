@@ -1,1 +1,1 @@
-export const imageRoot = 'http://localhost:3456'
+export const imageRoot = 'https://gib.show'
