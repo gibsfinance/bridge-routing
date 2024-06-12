@@ -11,6 +11,7 @@
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { loading } from '$lib/stores/loading'
   import Warning from './Warning.svelte'
+  import Icon from '@iconify/svelte'
 
   export let network!: VisualChain
   export let asset!: Asset
@@ -81,6 +82,9 @@
       })
     }
   }
+  const openModal = () => {
+    console.log('open modal')
+  }
 </script>
 
 <div class="shadow-md rounded-lg">
@@ -113,9 +117,23 @@
         position="left"
         tooltip="Input is too low, must be at least {formatUnits($minInput, asset.decimals)}" />
     </span>
-    <span class="tooltip tooltip-left leading-8 py-2 px-3 flex flex-row" data-tip={asset.name}>
+
+    <button
+      class="tooltip tooltip-left leading-8 py-2 px-3 flex flex-row space-x-2 items-center open-modal-container"
+      data-tip={asset.name}
+      on:click={openModal}>
       <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
       <span class="ml-2">{asset.symbol}</span>
-    </span>
+      <Icon icon="mingcute:right-fill" height="1em" width="1em" class="flex icon transition-all" />
+    </button>
   </div>
 </div>
+
+<style lang="postcss">
+  /* .icon {
+    @apply transition-all;
+  } */
+  :global(.open-modal-container:hover .icon) {
+    @apply translate-x-1;
+  }
+</style>

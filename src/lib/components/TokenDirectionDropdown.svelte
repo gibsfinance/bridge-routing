@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import { goto } from '$app/navigation'
   import TokenDirection from '$lib/components/TokenDirection.svelte'
   import { assets, bridgeKey, bridgeKeys } from '$lib/stores/bridge-settings'
@@ -36,4 +36,4 @@
       </li>
     {/each}
   </ul>
-</details>
+</details> -->

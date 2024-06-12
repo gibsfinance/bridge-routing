@@ -18,7 +18,7 @@
 </BlurryImage>
 
 <div class="container m-auto max-w-lg flex flex-col">
-  <TokenDirectionDropdown />
+  <!-- <TokenDirectionDropdown /> -->
   <Bridge />
   <BridgeFooter />
 </div>

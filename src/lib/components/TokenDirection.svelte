@@ -1,9 +1,8 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import type { Asset } from '$lib/stores/utils'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
-  import BridgerIcon from './BridgerIcon.svelte'
+  import BridgerIcon from './ProviderIcon.svelte'
   import bridgeUrl from '$lib/images/bridge.svg'
-  import { assets, bridgeKey } from '$lib/stores/bridge-settings'
 
   export let fromAsset!: Asset
   export let toAsset!: Asset
@@ -18,4 +17,4 @@
   </span>
   <img height="42" width="42" src={bridgeUrl} alt="a suspension bridge" class="opacity-80" />
   <AssetWithNetwork asset={toAsset} />
-</div>
+</div> -->

@@ -10,6 +10,8 @@ export enum Chains {
   // OP = '0xa',
 }
 
+export type DestinationChains = Chains.ETH | Chains.BNB
+
 export type VisualChain = Chain & {
   chainId: Chains
   icon: string

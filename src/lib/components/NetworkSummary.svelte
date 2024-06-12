@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { VisualChain } from '$lib/stores/auth/types'
+  import type { Chains, VisualChain } from '$lib/stores/auth/types'
   import { formatEther } from 'viem'
   import NetworkImage from './NetworkImage.svelte'
   import { createEventDispatcher } from 'svelte'
@@ -8,6 +8,7 @@
   export let balance = 0n
   export let asset!: Asset
   export let network!: VisualChain
+  export let networkOptions: Chains[] = []
   export let showMax = false
   export let native = false
   $: disableMax = balance === 0n
@@ -20,8 +21,7 @@
 
 <div class="flex flex-row justify-between">
   <div class="flex flex-row">
-    <NetworkImage {network} />
-    <span class="leading-8 ml-1">{network.name}</span>
+    <NetworkImage {network} {networkOptions} />
   </div>
   <div class="flex flex-row">
     <div
