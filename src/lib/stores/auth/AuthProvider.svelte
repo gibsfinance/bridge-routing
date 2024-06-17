@@ -2,7 +2,7 @@
   import Onboard, {
     type ConnectOptions,
     type DisconnectOptions,
-    type PreflightNotificationsOptions,
+    // type PreflightNotificationsOptions,
     type WalletState,
   } from '@web3-onboard/core'
   import { chainsMetadata } from './constants'

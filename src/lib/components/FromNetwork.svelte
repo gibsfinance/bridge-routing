@@ -12,6 +12,7 @@
   import { loading } from '$lib/stores/loading'
   import Warning from './Warning.svelte'
   import Icon from '@iconify/svelte'
+  import * as modalStore from '$lib/stores/modal'
 
   export let network!: VisualChain
   export let asset!: Asset
@@ -83,7 +84,7 @@
     }
   }
   const openModal = () => {
-    console.log('open modal')
+    modalStore.type.set('choosetoken')
   }
 </script>
 

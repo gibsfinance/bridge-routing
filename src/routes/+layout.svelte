@@ -1,6 +1,7 @@
 <script lang="ts">
   import '$lib/styles/global.css'
   import Nav from '$lib/components/Nav.svelte'
+  import ModalLoader from '$lib/components/ModalLoader.svelte'
 
   import AuthProvider from '$lib/stores/auth/AuthProvider.svelte'
   // import payMe from '$lib/images/pay-me.png'
@@ -26,6 +27,7 @@
     <main class="flex flex-col box-border w-full h-fit bg-slate-50 mt-10">
       <slot />
     </main>
+    <ModalLoader />
   </div>
 </AuthProvider>
 

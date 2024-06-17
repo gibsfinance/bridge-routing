@@ -39,6 +39,7 @@
                 if (val === option) {
                   await goto(key, { noScroll: true })
                   dropdown.open = false
+                  return
                 }
               }
             }}>
