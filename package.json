@@ -1,6 +1,6 @@
 {
   "name": "gibsfinance",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -52,6 +52,7 @@
     "@web3-onboard/gas": "^2.1.8",
     "@web3-onboard/injected-wallets": "^2.8.5",
     "@web3-onboard/sequence": "^2.0.8",
+    "@web3-onboard/walletconnect": "^2.6.1",
     "js-sha3": "^0.9.3",
     "lodash": "^4.17.21"
   }

@@ -7,13 +7,19 @@
   } from '@web3-onboard/core'
   import { chainsMetadata } from './constants'
   import injectedWallet from '@web3-onboard/injected-wallets'
+  import walletConnectModule from '@web3-onboard/walletconnect'
   import { Chains } from './types'
   import { onMount, setContext } from 'svelte'
   import { CONTEXT_KEY } from './methods'
   import { activeChain, walletClient } from './store'
   import type { ChainWithDecimalId } from '@web3-onboard/common'
-  import { createWalletClient, custom, type Hex } from 'viem'
+  import { createWalletClient, custom } from 'viem'
   import gibsIcon from '$lib/images/1FAF0.svg'
+  const walletConnect = walletConnectModule({
+    projectId: '1f8a963aa1809cada8560d560360107d',
+    requiredChains: Object.values(Chains).map((cId) => Number(cId)),
+    dappUrl: 'https://gibs.finance',
+  })
 
   const chains = [Chains.PLS].map((key) => {
     const chain = chainsMetadata[key as Chains]
@@ -28,7 +34,7 @@
   })
   const onboard = Onboard({
     chains: chains,
-    wallets: [injectedWallet()],
+    wallets: [injectedWallet(), walletConnect],
     appMetadata: {
       name: 'Gibs',
       description: 'Get your tokens where they need to go',
