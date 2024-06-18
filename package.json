@@ -54,6 +54,7 @@
     "@web3-onboard/sequence": "^2.0.8",
     "@web3-onboard/walletconnect": "^2.6.1",
     "js-sha3": "^0.9.3",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "sveltekit-search-params": "^2.1.2"
   }
 }
