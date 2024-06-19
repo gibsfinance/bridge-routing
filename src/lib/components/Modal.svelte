@@ -1,32 +1,147 @@
 <script lang="ts">
+  import * as viem from 'viem'
   import { createEventDispatcher, onMount } from 'svelte'
   export let openOnMount: boolean = false
+  import TokenIcon from '$lib/components/TokenIcon.svelte'
   import * as modalStore from '$lib/stores/modal'
+  import { loading } from '$lib/stores/loading'
+  import Lazy from './Lazy.svelte'
+  import { getAddress, isAddress } from 'viem'
+  import Icon from '@iconify/svelte'
+  import { publicClient } from '$lib/stores/auth/store'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
+  import { Chains } from '$lib/stores/auth/types'
+  import { multicallErc20 } from '$lib/utils'
 
   const dispatch = createEventDispatcher()
   const submit = () => {
     dispatch('submit', {})
   }
   let modal!: HTMLDialogElement
+  loading.increment()
+  type Token = { address: string; name: string; symbol: string; decimals: number; logoURI: string }
+  type TokenList = {
+    tokens: Token[]
+  }
+  let tokens: Token[] = []
+  let temporaryTokens: Token[] = []
+  let custom!: Token
   onMount(() => {
-    if (!openOnMount) return
-    modal.showModal()
+    // load a test
+    const doClose = (e: Event) => {
+      console.log(e)
+      modalStore.type.set(null)
+    }
+    fetch('https://gib.show/list/piteas', {
+      credentials: 'omit',
+    })
+      .then(async (res) => (await res.json()) as TokenList)
+      .then(({ tokens: list }) => {
+        loading.decrement()
+        tokens = list
+        if (openOnMount) {
+          modal.showModal()
+        }
+        modal.addEventListener('close', doClose)
+      })
     return () => {
-      // console.log('modal removed')
+      modal?.removeEventListener('close', doClose)
+      modal = null
     }
   })
-  const tokens: { address: string; name: string; symbol: string; decimals: number; logoURI: string }[] = []
+  const addCustom = (newToken: Token) => {
+    console.log('add custom', newToken)
+  }
+  const selectToken = (token: Token) => {
+    console.log('selected', token)
+  }
+  let searchValue = ''
+  const getSubset = (val: string) => {
+    const lowerVal = val.toLowerCase()
+    const filter = isAddress(val)
+      ? ({ address }: Token) => {
+          return getAddress(address) === getAddress(val)
+        }
+      : ({ name, symbol }: Token) => {
+          return name.toLowerCase().includes(lowerVal) || symbol.toLowerCase().includes(lowerVal)
+        }
+    return tokens.filter(filter)
+  }
+
+  const loadViaMulticall = async (target: viem.Hex | null) => {
+    if (!target) {
+      throw new Error('no target')
+    }
+    const $chain = chainsMetadata[Chains.PLS]
+    const [name, symbol, decimals] = await multicallErc20({
+      chain: $chain,
+      client: $publicClient,
+      target,
+    })
+    custom = {
+      name,
+      symbol,
+      decimals,
+      address: target,
+      logoURI: '',
+    }
+    return custom
+  }
+  $: inputIsAddress = isAddress(searchValue)
+  $: searchValueHex = inputIsAddress ? (searchValue as viem.Hex) : null
+  $: subset = searchValue ? getSubset(searchValue) : tokens
 </script>
 
 <dialog id="choose-token-modal" class="modal" bind:this={modal}>
-  <div class="modal-box text-slate-50">
-    {#each tokens as token}{/each}
+  <div class="modal-box text-slate-50 max-h-full h-96 p-0 overflow-hidden flex flex-col">
+    <label class="input input-bordered flex flex-row items-center m-6 py-2 h-fit">
+      <input type="text" class="grow flex leading-6" placeholder="0x... or name/symbol" bind:value={searchValue} />
+      <Icon icon="ic:baseline-search" height="1.5em" width="1.5em" />
+    </label>
+    <ul class="overflow-y-scroll px-6 flex flex-col grow">
+      {#each subset as token}
+        <li class="flex">
+          <button class="flex flex-row grow py-2 cursor-pointer" on:click={() => selectToken(token)}>
+            <Lazy let:load>
+              <!-- might be a good idea to simply keep it loaded after first -->
+              <TokenIcon visible={load} src={token.logoURI} />
+            </Lazy>
+            <span class="pl-2 leading-8">{token.name}</span>
+          </button>
+        </li>
+      {/each}
+      <li class="flex">
+        <button
+          class="flex flex-row grow py-2 items-center leading-8"
+          class:cursor-pointer={inputIsAddress}
+          disabled={!inputIsAddress}
+          class:opacity-70={!inputIsAddress}
+          class:cursor-not-allowed={!inputIsAddress}
+          on:click={() => addCustom(custom)}>
+          <Icon icon="ic:baseline-add" height="1.5em" width="1.5em" />
+          <Icon class="ml-2" icon="ph:question" height="1.5em" width="1.5em" />
+          {#if inputIsAddress}
+            {#await loadViaMulticall(searchValueHex)}
+              <span class="flex flex-row items-center pl-2 leading-8"
+                ><Icon icon="svg-spinners:3-dots-scale" height="1.5em" width="1.5em" />&nbsp;</span>
+            {:then data}
+              <span class="pl-2 leading-8">{data.name} ({data.symbol})</span>
+            {:catch}
+              <span class="pl-2 leading-8">Unknown</span>
+            {/await}
+          {:else}
+            <span class="pl-2 leading-8">Unknown</span>
+          {/if}
+        </button>
+      </li>
+    </ul>
   </div>
   <form
     method="dialog"
     class="modal-backdrop"
     on:submit={() => {
-      // console.log('submission')
+      console.log('submission')
+      modalStore.type.set(null)
     }}>
     <button
       on:click={() => {

@@ -32,6 +32,12 @@ dependencies:
   lodash:
     specifier: ^4.17.21
     version: 4.17.21
+  svelte-lazy:
+    specifier: ^1.2.7
+    version: 1.2.7(svelte@4.2.17)
+  svelte-lazy-image:
+    specifier: ^0.5.1
+    version: 0.5.1
   sveltekit-search-params:
     specifier: ^2.1.2
     version: 2.1.2(@sveltejs/kit@2.5.8)(svelte@4.2.17)(vite@5.2.11)
@@ -1781,6 +1787,7 @@ packages:
     dependencies:
       is-glob: 4.0.3
       micromatch: 4.0.5
+      napi-wasm: 1.1.0
     dev: false
     bundledDependencies:
       - napi-wasm
@@ -4821,6 +4828,10 @@ packages:
     hasBin: true
     dev: false
 
+  /napi-wasm@1.1.0:
+    resolution: {integrity: sha512-lHwIAJbmLSjF9VDRm9GoVOy9AGp3aIvkjv+Kvz9h16QR3uSVYH78PNQUnT2U4X53mhlnV2M7wrhibQ3GHicDmg==}
+    dev: false
+
   /natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
     dev: true
@@ -5675,6 +5686,18 @@ packages:
       sade: 1.8.1
       svelte: 3.59.2
       tiny-glob: 0.2.9
+    dev: false
+
+  /svelte-lazy-image@0.5.1:
+    resolution: {integrity: sha512-BDwywMngYjrEtL73N2ZKYYnWlNBWSnw31y1Mb3kNeXVc/9iDir6Ew3bfuDtuEyi3evBFXF0jixkCMFuTseWjWQ==}
+    dev: false
+
+  /svelte-lazy@1.2.7(svelte@4.2.17):
+    resolution: {integrity: sha512-TvOP22pNsSKlCRsQIZ9mv1IAaEhSZFhezzhMO/kYuKUvX9VQALJvWHV5MOymn/pjeTeVuT4lE9g9y40uf0bNSw==}
+    peerDependencies:
+      svelte: ^3.0.0 || ^4.0.0
+    dependencies:
+      svelte: 4.2.17
     dev: false
 
   /svelte-preprocess@5.1.4(postcss@8.4.38)(svelte@4.2.17)(typescript@5.0.4):

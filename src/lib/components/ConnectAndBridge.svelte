@@ -114,7 +114,7 @@
     // }
     // const to = assets[$bridgeKey].input.address
     console.log('inside send transaction')
-    txHash = await ($bridgeKey === 'BNB'
+    txHash = await ($bridgeKey === Chains.BNB
       ? getContract({
           abi: erc677abiBNB,
           address: assets[$bridgeKey].input.address,
