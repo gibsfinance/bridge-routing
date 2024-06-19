@@ -1,1 +1,1 @@
-export const imageRoot = 'https://gibs.show'
+export const imageRoot = 'https://gib.show'
