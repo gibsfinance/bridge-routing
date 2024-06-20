@@ -11,7 +11,7 @@
   import { Chains } from './types'
   import { onMount, setContext } from 'svelte'
   import { CONTEXT_KEY } from './methods'
-  import { activeChain, walletClient } from './store'
+  import { activeChain, walletClient } from '$lib/stores/bridge-settings'
   import type { ChainWithDecimalId } from '@web3-onboard/common'
   import { createWalletClient, custom } from 'viem'
   import gibsIcon from '$lib/images/1FAF0.svg'

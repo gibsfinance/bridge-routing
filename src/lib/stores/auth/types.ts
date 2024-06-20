@@ -19,3 +19,8 @@ export type VisualChain = Chain & {
 }
 
 export type ChainsMetadata = Record<Chains, VisualChain>
+
+export enum Provider {
+  PULSECHAIN = 'pulsechain',
+  TOKENSEX = 'tokensex',
+}

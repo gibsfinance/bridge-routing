@@ -8,10 +8,12 @@
   export let alt = ''
   export let size = 32
   export let visible = false
+  let className = ''
+  export { className as class }
 </script>
 
 {#if !src || !visible}
-  <Icon icon="ph:question" height={size} width={size} />
+  <Icon icon="ph:question" height={size} width={size} class={className} />
 {:else}
-  <img {src} {alt} height={size} width={size} />
+  <img {src} {alt} height={size} width={size} class={className} />
 {/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { desiredAssetIn } from '$lib/stores/bridge-settings'
   import { type as modalType } from '$lib/stores/modal'
   import Modal from './Modal.svelte'
 </script>
@@ -7,6 +8,6 @@
   <Modal
     openOnMount
     on:submit={(e) => {
-      console.log(e.detail)
+      desiredAssetIn.set(e.detail)
     }} />
 {/if}

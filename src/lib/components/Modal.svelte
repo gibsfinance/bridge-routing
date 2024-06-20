@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Token, TokenList } from '$lib/types'
   import * as viem from 'viem'
   import { createEventDispatcher, onMount } from 'svelte'
   export let openOnMount: boolean = false
@@ -8,30 +9,32 @@
   import Lazy from './Lazy.svelte'
   import { getAddress, isAddress } from 'viem'
   import Icon from '@iconify/svelte'
-  import { publicClient } from '$lib/stores/auth/store'
+  import { publicClient } from '$lib/stores/bridge-settings'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { Chains } from '$lib/stores/auth/types'
   import { multicallErc20 } from '$lib/utils'
 
   const dispatch = createEventDispatcher()
-  const submit = () => {
-    dispatch('submit', {})
+  const submit = (token: Token) => {
+    dispatch('submit', token)
   }
-  let modal!: HTMLDialogElement
+  let modal: HTMLDialogElement | null = null
   loading.increment()
-  type Token = { address: string; name: string; symbol: string; decimals: number; logoURI: string }
-  type TokenList = {
-    tokens: Token[]
-  }
   let tokens: Token[] = []
   let temporaryTokens: Token[] = []
   let custom!: Token
   onMount(() => {
     // load a test
     const doClose = (e: Event) => {
-      console.log(e)
+      // console.log(e)
       modalStore.type.set(null)
     }
+    try {
+      const tokensSerialized = localStorage.getItem('tokens')
+      if (tokensSerialized) {
+        temporaryTokens = JSON.parse(tokensSerialized)
+      }
+    } catch (err) {}
     fetch('https://gib.show/list/piteas', {
       credentials: 'omit',
     })
@@ -40,20 +43,31 @@
         loading.decrement()
         tokens = list
         if (openOnMount) {
-          modal.showModal()
+          modal?.showModal()
         }
-        modal.addEventListener('close', doClose)
+        modal?.addEventListener('close', doClose)
       })
     return () => {
       modal?.removeEventListener('close', doClose)
       modal = null
     }
   })
+  const addEphemeralToken = (token: Token) => {
+    temporaryTokens = temporaryTokens.concat(token)
+    try {
+      localStorage.setItem('tokens', JSON.stringify(temporaryTokens))
+    } catch (err) {}
+  }
   const addCustom = (newToken: Token) => {
     console.log('add custom', newToken)
+    addEphemeralToken(newToken)
+    searchValue = ''
+    // use token as focus in bridge settings stores
   }
   const selectToken = (token: Token) => {
-    console.log('selected', token)
+    // console.log('selected', token)
+    submit(token)
+    modal?.close()
   }
   let searchValue = ''
   const getSubset = (val: string) => {
@@ -65,7 +79,7 @@
       : ({ name, symbol }: Token) => {
           return name.toLowerCase().includes(lowerVal) || symbol.toLowerCase().includes(lowerVal)
         }
-    return tokens.filter(filter)
+    return temporaryTokens.concat(tokens).filter(filter)
   }
 
   const loadViaMulticall = async (target: viem.Hex | null) => {
@@ -87,15 +101,24 @@
     }
     return custom
   }
+  $: subset = searchValue ? getSubset(searchValue) : temporaryTokens.concat(tokens)
   $: inputIsAddress = isAddress(searchValue)
+  $: addButtonDisabled = !inputIsAddress || !!subset.length
   $: searchValueHex = inputIsAddress ? (searchValue as viem.Hex) : null
-  $: subset = searchValue ? getSubset(searchValue) : tokens
 </script>
 
 <dialog id="choose-token-modal" class="modal" bind:this={modal}>
   <div class="modal-box text-slate-50 max-h-full h-96 p-0 overflow-hidden flex flex-col">
     <label class="input input-bordered flex flex-row items-center m-6 py-2 h-fit">
-      <input type="text" class="grow flex leading-6" placeholder="0x... or name/symbol" bind:value={searchValue} />
+      <input
+        type="text"
+        class="grow flex leading-6"
+        placeholder="0x... or name/symbol"
+        bind:value={searchValue}
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false" />
       <Icon icon="ic:baseline-search" height="1.5em" width="1.5em" />
     </label>
     <ul class="overflow-y-scroll px-6 flex flex-col grow">
@@ -113,14 +136,14 @@
       <li class="flex">
         <button
           class="flex flex-row grow py-2 items-center leading-8"
-          class:cursor-pointer={inputIsAddress}
-          disabled={!inputIsAddress}
-          class:opacity-70={!inputIsAddress}
-          class:cursor-not-allowed={!inputIsAddress}
+          class:cursor-pointer={!addButtonDisabled}
+          disabled={addButtonDisabled}
+          class:opacity-70={addButtonDisabled}
+          class:cursor-not-allowed={addButtonDisabled}
           on:click={() => addCustom(custom)}>
           <Icon icon="ic:baseline-add" height="1.5em" width="1.5em" />
-          <Icon class="ml-2" icon="ph:question" height="1.5em" width="1.5em" />
-          {#if inputIsAddress}
+          <Icon class="ml-2" icon="ph:question" height={32} width={32} />
+          {#if !addButtonDisabled}
             {#await loadViaMulticall(searchValueHex)}
               <span class="flex flex-row items-center pl-2 leading-8"
                 ><Icon icon="svg-spinners:3-dots-scale" height="1.5em" width="1.5em" />&nbsp;</span>
@@ -129,23 +152,15 @@
             {:catch}
               <span class="pl-2 leading-8">Unknown</span>
             {/await}
-          {:else}
-            <span class="pl-2 leading-8">Unknown</span>
           {/if}
+          <span class="pl-2 leading-8">&nbsp;</span>
         </button>
       </li>
     </ul>
   </div>
-  <form
-    method="dialog"
-    class="modal-backdrop"
-    on:submit={() => {
-      console.log('submission')
-      modalStore.type.set(null)
-    }}>
+  <form method="dialog" class="modal-backdrop">
     <button
       on:click={() => {
-        // console.log('clicked')
         modalStore.type.set(null)
       }}>close</button>
   </form>

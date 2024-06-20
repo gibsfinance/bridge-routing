@@ -11,6 +11,9 @@ dependencies:
   '@iconify/svelte':
     specifier: ^4.0.2
     version: 4.0.2(svelte@4.2.17)
+  '@square/svelte-store':
+    specifier: ^1.0.18
+    version: 1.0.18(svelte@4.2.17)
   '@web3-onboard/core':
     specifier: ^2.21.6
     version: 2.21.6
@@ -2006,6 +2009,15 @@ packages:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
     dev: true
 
+  /@square/svelte-store@1.0.18(svelte@4.2.17):
+    resolution: {integrity: sha512-BCiUhDlF2XSY6P+MLvJTA7mh15yAXcuNDtf/GTG0XWSjatW0+4wQv++uijz14L0Bc+KKAGXz4T6/9N+JrTfAAA==}
+    peerDependencies:
+      svelte: '>= 3.0.0 < 5.0.0'
+    dependencies:
+      cookie-storage: 6.1.0
+      svelte: 4.2.17
+    dev: false
+
   /@stablelib/aead@1.0.1:
     resolution: {integrity: sha512-q39ik6sxGHewqtO0nP4BuSe3db5G1fEJE8ukvngS2gLkBXyy6E7pLubhbYgnkDFv6V8cWaxcE4Xn0t6LWcJkyg==}
     dev: false
@@ -3333,6 +3345,10 @@ packages:
 
   /cookie-es@1.1.0:
     resolution: {integrity: sha512-L2rLOcK0wzWSfSDA33YR+PUHDG10a8px7rUHKWbGLP4YfbsMed2KFUw5fczvDPbT98DDe3LEzviswl810apTEw==}
+    dev: false
+
+  /cookie-storage@6.1.0:
+    resolution: {integrity: sha512-HeVqbVy8BjXhAAuFtL6MTG+witHoLbxfky2jgVh9FmxmyL6IKa9gSSyPNjevXCCCxPu6Tzd9J8+eXTRQzYU/cg==}
     dev: false
 
   /cookie@0.6.0:

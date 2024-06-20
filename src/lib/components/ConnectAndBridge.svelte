@@ -2,7 +2,7 @@
   import { chainsMetadata } from '$lib/stores/auth/constants'
   // import * as viem from 'viem'
   import { useAuth } from '$lib/stores/auth/methods'
-  import { clientFromChain, walletClient, walletAccount } from '$lib/stores/auth/store'
+  import { walletAccount } from '$lib/stores/auth/store'
   import { Chains } from '$lib/stores/auth/types'
   import {
     erc677abi,
@@ -12,13 +12,9 @@
     foreignData,
     bridgeKey,
     erc677abiBNB,
-    // feeDirectorStructEncoded,
-    // router,
-    // outputRouterAbi,
-    // amountAfterBridgeFee,
-    // foreignBridgeAddress,
-    // foreignCalldata,
-    // bridgeKey,
+    clientFromChain,
+    walletClient,
+    assetIn,
   } from '$lib/stores/bridge-settings'
   import { getContract, type Hex } from 'viem'
   import Loading from './Loading.svelte'
@@ -117,7 +113,7 @@
     txHash = await ($bridgeKey === Chains.BNB
       ? getContract({
           abi: erc677abiBNB,
-          address: assets[$bridgeKey].input.address,
+          address: $assetIn.address,
           client: $walletClient!,
         }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData, $walletAccount as Hex], {
           account: $walletAccount as Hex,
@@ -126,7 +122,7 @@
         })
       : getContract({
           abi: erc677abi,
-          address: assets[$bridgeKey].input.address,
+          address: $assetIn.address,
           client: $walletClient!,
         }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData], {
           account: $walletAccount as Hex,

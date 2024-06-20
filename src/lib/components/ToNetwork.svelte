@@ -1,8 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte'
-  import { formatUnits, parseUnits } from 'viem'
+  import { formatEther, formatUnits, parseEther, parseUnits } from 'viem'
   import NetworkSummary from './NetworkSummary.svelte'
-  import { decimalValidation, humanReadableNumber, type Asset } from '$lib/stores/utils'
+  import { decimalValidation, humanReadableNumber } from '$lib/stores/utils'
   import { loading } from '$lib/stores/loading'
   import Loading from '$lib/components/Loading.svelte'
   import {
@@ -18,15 +18,20 @@
     estimatedCost,
     baseFeeReimbersement,
     incentiveRatio,
+    unwrap,
+    priceCorrective,
+    oneEther,
   } from '$lib/stores/bridge-settings'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
   import SmallInput from './SmallInput.svelte'
   import Warning from './Warning.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
+  import * as utils from '$lib/utils'
+  import type { Token } from '$lib/types'
   export let originationNetwork!: VisualChain
   export let destinationNetwork!: VisualChain
-  export let asset!: Asset
+  export let asset!: Token
   const dispatch = createEventDispatcher()
   const showToolbox = (type: string) => {
     dispatch('toggle', type)
@@ -62,7 +67,7 @@
   onMount(() => () => unwatch?.())
   $: loadFeeFor(originationNetwork.chainId, destinationNetwork.chainId)
   const limitUpdated = (lim: string) => {
-    limit.set(parseUnits(lim, 18))
+    limit.set(parseUnits(lim, asset.decimals))
   }
   const incentiveFeeUpdated = (incFee: string) => {
     incentiveFee.set(parseUnits(incFee, 18) / 100n)
@@ -74,10 +79,11 @@
   // only happens once
   limitUpdated(defaultLimit)
   $: {
-    if (!costLimitLocked && !$fixedFee) {
+    if (!costLimitLocked && !$fixedFee && asset) {
       // let it float as the base fee per gas is updated
       const lowResLimit = $latestBaseFeePerGas / (10n ** 8n * 5n)
       let lim = lowResLimit * 10n ** 15n
+      lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset.decimals))
       if (lim > $amountAfterBridgeFee) {
         lim = $amountAfterBridgeFee
       }
@@ -103,7 +109,7 @@
 
 <div class="shadow-md rounded-lg">
   <div class="bg-slate-100 py-2 px-3 rounded-t-lg">
-    <NetworkSummary network={destinationNetwork} {networkOptions} {asset} {balance} native />
+    <NetworkSummary network={destinationNetwork} {networkOptions} {asset} {balance} unwrap={$unwrap} />
   </div>
   <div class="bg-slate-100 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
@@ -138,7 +144,7 @@
         ⛽ +<SmallInput
           value={defaultIncFee}
           suffix="%"
-          validate={(v) => decimalValidation(v, 18)}
+          validate={(v) => decimalValidation(v)}
           on:update={(e) => incentiveFeeUpdated(e.detail.value)} />
       </button>
     </div>
@@ -165,8 +171,8 @@
         &lt;=&nbsp;<Loading key="gas">
           <SmallInput
             value={defaultLimit}
-            suffix={asset.native?.symbol || asset.symbol}
-            validate={(v) => decimalValidation(v, 18)}
+            suffix={utils.nativeSymbol(asset)}
+            validate={(v) => decimalValidation(v, asset.decimals)}
             on:update={(e) => {
               if (e.detail.fromInput) costLimitLocked = true
               limitUpdated(e.detail.value)
@@ -190,8 +196,9 @@
         {#if !$fixedFee}~&nbsp;{/if}<Loading>
           {humanReadableNumber(
             $amountAfterBridgeFee - $estimatedCost > 0n ? $amountAfterBridgeFee - $estimatedCost : 0n,
+            asset.decimals,
           )}
-        </Loading>&nbsp;{asset.native?.symbol || asset.symbol}
+        </Loading>&nbsp;{utils.nativeSymbol(asset)}
       </span>
     </div>
   </div>

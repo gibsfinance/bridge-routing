@@ -6,9 +6,10 @@
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import Settings from './Settings.svelte'
   import Details from './Details.svelte'
-  import { assetIn, assetOut } from '$lib/stores/bridge-settings'
-  $: originationNetwork = chainsMetadata[$assetIn.hostedNetwork]
-  $: destinationNetwork = chainsMetadata[$assetOut.hostedNetwork]
+  import { assetIn, assetOut, bridgeKey } from '$lib/stores/bridge-settings'
+  import { Chains } from '$lib/stores/auth/types'
+  $: originationNetwork = chainsMetadata[Chains.PLS]
+  $: destinationNetwork = chainsMetadata[$bridgeKey]
   let dropdowns: Record<string, boolean> = {}
   const toggleDropdowns = (e: CustomEvent) => {
     for (const k of Object.keys(dropdowns)) {

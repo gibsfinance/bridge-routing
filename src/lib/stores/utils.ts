@@ -4,18 +4,6 @@ import type { chainsMetadata } from './auth/constants'
 export const humanReadableNumber = (num = 0n, decimals = 18) => {
   return num === 0n ? '0.0' : formatUnits(num, decimals)
 }
-export type Asset = {
-  symbol: string
-  name: string
-  address: Hex
-  decimals: number
-  networkOrigination: keyof typeof chainsMetadata
-  hostedNetwork: keyof typeof chainsMetadata
-  native?: {
-    name: string
-    symbol: string
-  }
-}
 
 export const decimalValidation = (v: string, decimals = 18) => {
   if (!v) {

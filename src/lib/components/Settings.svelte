@@ -2,7 +2,7 @@
   import SmallInput from './SmallInput.svelte'
   import { ensToAddress, walletAccount } from '$lib/stores/auth/store'
   import { createPublicClient, http, isAddress, zeroAddress } from 'viem'
-  import { router, unwrap, calldata, bridgeAddress, destination } from '$lib/stores/bridge-settings'
+  import { router, unwrapSetting as unwrap, calldata, bridgeAddress, destination } from '$lib/stores/bridge-settings'
   import { Chains } from '$lib/stores/auth/types'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import Warning from './Warning.svelte'

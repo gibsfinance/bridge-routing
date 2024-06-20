@@ -10,9 +10,11 @@
     amountToBridge,
     fixedFee,
   } from '$lib/stores/bridge-settings'
-  import { humanReadableNumber, type Asset } from '$lib/stores/utils'
+  import { humanReadableNumber } from '$lib/stores/utils'
+  import * as utils from '$lib/utils'
   import { formatUnits } from 'viem'
   import Loading from './Loading.svelte'
+  import type { Token } from '$lib/types'
 
   export let originationNetwork!: VisualChain
   export let destinationNetwork!: VisualChain
@@ -21,7 +23,7 @@
   $: afterBridge = $amountToBridge - ($amountToBridge * bridgeFee) / oneEther
   $: estimated = afterBridge - $estimatedCost
   $: minimumDelivered = afterBridge - $limit
-  export let asset!: Asset
+  export let asset!: Token
 </script>
 
 <div class="my-2 text-sm shadow-md rounded-lg">
@@ -45,7 +47,7 @@
       <span class="flex flex-row items-end self-end">
         <Loading>
           {humanReadableNumber($estimatedNetworkCost, asset.decimals)}
-        </Loading>&nbsp;{asset.native?.symbol || asset.symbol}
+        </Loading>&nbsp;{utils.nativeSymbol(asset)}
       </span>
     </span>
   </div>
@@ -57,11 +59,10 @@
     <span class="flex flex-row justify-between grow">
       <span>
         {#if !$fixedFee}
-          ⛽&nbsp;+&nbsp;{formatUnits($incentiveFee * 100n, 18)}%{/if}
+          ⛽&nbsp;+&nbsp;{formatUnits($incentiveFee * 100n, asset.decimals)}%{/if}
       </span>
       <span class="flex flex-row items-end self-end">
-        <Loading>{humanReadableNumber($estimatedCost, asset.decimals)}</Loading>&nbsp;{asset.native?.symbol ||
-          asset.symbol}
+        <Loading>{humanReadableNumber($estimatedCost, asset.decimals)}</Loading>&nbsp;{utils.nativeSymbol(asset)}
       </span>
     </span>
     <Warning
@@ -74,7 +75,7 @@
       <span class="flex flex-row items-end self-end">
         <Loading>
           {humanReadableNumber(minimumDelivered < 0n ? 0n : minimumDelivered, asset.decimals)}
-        </Loading>&nbsp;{asset.native?.symbol || asset.symbol}
+        </Loading>&nbsp;{utils.nativeSymbol(asset)}
       </span>
       <Warning
         show={minimumDelivered < ($amountToBridge / 10n) * 9n}
@@ -84,8 +85,8 @@
     <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row">
       <span class="w-32">Estimated Delivery</span>
       <span class="flex flex-row items-end self-end">
-        ~&nbsp;<Loading>{humanReadableNumber(estimated < 0n ? 0n : estimated, asset.decimals)}</Loading>&nbsp;{asset
-          .native?.symbol || asset.symbol}
+        ~&nbsp;<Loading>{humanReadableNumber(estimated < 0n ? 0n : estimated, asset.decimals)}</Loading
+        >&nbsp;{utils.nativeSymbol(asset)}
       </span>
     </div>
     <div class="bg-slate-100 mt-[1px] py-2 px-3 rounded-b-lg justify-between flex flex-row relative">
@@ -95,7 +96,7 @@
         <span class="flex flex-row items-end self-end">
           <Loading>
             {humanReadableNumber(minimumDelivered < 0n ? 0n : minimumDelivered, asset.decimals)}
-          </Loading>&nbsp;{asset.native?.symbol || asset.symbol}
+          </Loading>&nbsp;{utils.nativeSymbol(asset)}
         </span>
       </span>
       <Warning

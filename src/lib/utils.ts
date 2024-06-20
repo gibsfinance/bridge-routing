@@ -1,5 +1,5 @@
 import * as viem from 'viem'
-import * as types from '../types'
+import * as types from './types'
 
 type Erc20Metadata = [string, string, number]
 
@@ -38,11 +38,19 @@ export const multicallRead = async <T,>({
   }))
   const reads = await multicall.read.aggregate3([arg])
   return calls.map((call, i) =>
-    viem.decodeFunctionResult({
-      abi: call.abi || abi,
-      functionName: call.functionName,
-      data: reads[i].returnData,
-    }),
+    call.allowFailure
+      ? reads[i].success
+        ? viem.decodeFunctionResult({
+          abi: call.abi || abi,
+          functionName: call.functionName,
+          data: reads[i].returnData,
+        })
+        : reads[i].returnData
+      : viem.decodeFunctionResult({
+        abi: call.abi || abi,
+        functionName: call.functionName,
+        data: reads[i].returnData,
+      }),
   ) as T
 }
 
@@ -73,3 +81,9 @@ export const multicallErc20 = async ({
     })
   }
 }
+
+export const nativeSymbol = (asset: types.Token) =>
+  asset.symbol[0] === 'W' && asset.name.startsWith('Wrapped') ? asset.symbol.slice(1) : asset.symbol
+
+export const nativeName = (asset: types.Token) =>
+  asset.symbol[0] === 'W' && asset.name.startsWith('Wrapped') ? asset.name.split('Wrapped ').join('') : asset.name

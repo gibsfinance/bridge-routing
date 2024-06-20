@@ -3,14 +3,15 @@
   import { formatEther } from 'viem'
   import NetworkImage from './NetworkImage.svelte'
   import { createEventDispatcher } from 'svelte'
-  import type { Asset } from '$lib/stores/utils'
+  import * as utils from '$lib/utils'
   import Loading from './Loading.svelte'
+  import type { Token } from '$lib/types'
   export let balance = 0n
-  export let asset!: Asset
+  export let asset!: Token
   export let network!: VisualChain
   export let networkOptions: Chains[] = []
   export let showMax = false
-  export let native = false
+  export let unwrap = false
   $: disableMax = balance === 0n
   const dispatch = createEventDispatcher()
   const maxOutBalance = () => {
@@ -28,9 +29,9 @@
       class="text-xs leading-8 tooltip tooltip-left flex items-end self-end"
       class:mx-2={showMax}
       class:ml-2={!showMax}
-      data-tip={native ? asset.native?.name || asset.name : asset.name}>
-      <Loading key={['balance', 'minAmount']}>{balance == 0n ? '0.0' : formatEther(balance)}</Loading>&nbsp;{native
-        ? asset.native?.symbol || asset.symbol
+      data-tip={unwrap ? utils.nativeName(asset) : asset.name}>
+      <Loading key={['balance', 'minAmount']}>{balance == 0n ? '0.0' : formatEther(balance)}</Loading>&nbsp;{unwrap
+        ? utils.nativeSymbol(asset)
         : asset.symbol}
     </div>
     {#if showMax}

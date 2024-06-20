@@ -1,20 +1,15 @@
-import { derived, writable, type Readable } from 'svelte/store'
+import { derived, type Readable } from 'svelte/store'
 import {
   createPublicClient,
   type Address,
   type WalletClient,
   http,
-  getContract,
-  multicall3Abi,
   type PublicClient,
 } from 'viem'
 import { Chains } from './types'
 import { chainsMetadata } from './constants'
 import { normalize } from 'viem/ens'
-import { destination } from '../bridge-settings'
-
-export const activeChain = writable<Chains>(Chains.PLS)
-export const walletClient = writable<WalletClient | undefined>()
+import { destination, walletClient, activeChain } from '../bridge-settings'
 
 export const walletAccount = derived<[Readable<WalletClient | undefined>], Address | undefined>(
   [walletClient],
@@ -32,23 +27,6 @@ export const walletAccount = derived<[Readable<WalletClient | undefined>], Addre
     })
   },
 )
-
-export const clientFromChain = ($activeChain: Chains) => {
-  return createPublicClient({
-    chain: chainsMetadata[$activeChain],
-    transport: http(),
-  })
-}
-
-export const publicClient = derived(activeChain, clientFromChain)
-export const multicall = derived([activeChain, publicClient], ([$activeChain, $publicClient]) => {
-  const metadata = chainsMetadata[$activeChain]
-  return getContract({
-    abi: multicall3Abi,
-    client: $publicClient,
-    address: metadata.contracts!.multicall3!.address,
-  })
-})
 
 export const accountENS = derived([walletAccount], ([$walletAccount], set) => {
   if (!$walletAccount) return undefined

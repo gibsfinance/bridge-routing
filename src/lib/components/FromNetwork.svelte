@@ -3,19 +3,27 @@
   import { walletAccount } from '$lib/stores/auth/store'
   import { erc20Abi, formatUnits, parseUnits } from 'viem'
   import type { VisualChain } from '$lib/stores/auth/types'
-  import { decimalValidation, type Asset } from '$lib/stores/utils'
-  import { publicClient } from '$lib/stores/auth/store'
+  import { decimalValidation } from '$lib/stores/utils'
   import { writable } from 'svelte/store'
-  import { amountToBridge, assets, bridgeKey, inputBridgeAbi } from '$lib/stores/bridge-settings'
+  import {
+    amountToBridge,
+    assets,
+    assetIn,
+    // assetOut,
+    bridgeKey,
+    inputBridgeAbi,
+    publicClient,
+  } from '$lib/stores/bridge-settings'
   import { validatable } from '$lib/stores/validatable'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { loading } from '$lib/stores/loading'
   import Warning from './Warning.svelte'
   import Icon from '@iconify/svelte'
   import * as modalStore from '$lib/stores/modal'
+  import type { Token } from '$lib/types'
 
   export let network!: VisualChain
-  export let asset!: Asset
+  export let asset!: Token
   let value = validatable('', (v) => decimalValidation(v, asset.decimals))
   const val = writable('')
   value.subscribe((v) => {
@@ -39,7 +47,7 @@
     return $publicClient.readContract({
       abi: inputBridgeAbi,
       functionName: 'minPerTx',
-      args: [assets[$bridgeKey].input.address],
+      args: [$assetIn.address],
       address: assets[$bridgeKey].homeBridge,
     })
   }
