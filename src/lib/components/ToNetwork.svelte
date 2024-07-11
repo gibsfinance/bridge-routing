@@ -21,6 +21,7 @@
     unwrap,
     priceCorrective,
     oneEther,
+    amountToBridge,
   } from '$lib/stores/bridge-settings'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
@@ -77,7 +78,7 @@
   let defaultLimit = '0.001'
   let costLimitLocked = false
   // only happens once
-  limitUpdated(defaultLimit)
+  $: asset && limitUpdated(defaultLimit)
   $: {
     if (!costLimitLocked && !$fixedFee && asset) {
       // let it float as the base fee per gas is updated
@@ -105,6 +106,14 @@
     $bridgeFrom.get(originationNetwork.chainId)!.get(destinationNetwork.chainId)!.feeH2F * 100n,
   )
   $: networkOptions = Object.keys(chainsMetadata).filter((cId): cId is Chains => cId !== Chains.PLS)
+  $: decimals = asset.decimals
+  $: expectedAmountOut =
+    $amountToBridge &&
+    humanReadableNumber(
+      $amountAfterBridgeFee - $estimatedCost > 0n ? $amountAfterBridgeFee - $estimatedCost : 0n,
+      decimals,
+    )
+  $: console.log(expectedAmountOut, $amountToBridge)
 </script>
 
 <div class="shadow-md rounded-lg">
@@ -194,10 +203,7 @@
         class="tooltip text-xl sm:text-2xl leading-10 flex items-center self-center tooltip-top tooltip-left-toward-center"
         data-tip="Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee fluctuates on ethereum">
         {#if !$fixedFee}~&nbsp;{/if}<Loading>
-          {humanReadableNumber(
-            $amountAfterBridgeFee - $estimatedCost > 0n ? $amountAfterBridgeFee - $estimatedCost : 0n,
-            asset.decimals,
-          )}
+          {expectedAmountOut}
         </Loading>&nbsp;{utils.nativeSymbol(asset)}
       </span>
     </div>

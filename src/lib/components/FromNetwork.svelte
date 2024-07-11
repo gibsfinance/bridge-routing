@@ -26,9 +26,10 @@
   export let asset!: Token
   let value = validatable('', (v) => decimalValidation(v, asset.decimals))
   const val = writable('')
-  value.subscribe((v) => {
-    amountToBridge.set(v ? parseUnits(v, asset.decimals) : 0n)
-  })
+  $: {
+    const $v = $value
+    amountToBridge.set($v ? parseUnits($v, asset.decimals) : 0n)
+  }
   amountToBridge.set(0n)
   let balance = 0n
   const getBalance = async () => {
