@@ -7,7 +7,7 @@
   export { className as class }
 </script>
 
-{#if key ? $loading.isResolved(key) : $loading.resolved}
+{#if $loading.isResolved(key)}
   <slot />
 {:else}
   <span

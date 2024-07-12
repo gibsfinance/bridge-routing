@@ -254,7 +254,7 @@ export const assetOut = asyncDerived(
       }
     } else {
       // assumptions
-      console.log('assumptions hit', $assetIn)
+      // console.log('assumptions hit', $assetIn)
       return {
         ...$assetIn,
         address: viem.zeroAddress,
@@ -380,7 +380,7 @@ export const priceCorrective = derived(
         return set(last)
       }
       // failure
-      console.log('failed', $assetIn.address, hops)
+      // console.log('failed', $assetIn.address, hops)
     })
     return () => {
       cancelled = true
@@ -412,22 +412,15 @@ export const incentiveRatio = derived(
   ([$feeType, $incentiveFee]) => {
     if ($feeType === 'gas+%') {
       return oneEther + $incentiveFee
-      // } else if ($feeType === '%') {
-      //   return oneEther + $basisPointIncentiveFee
     }
     return 0n
   }
 )
 /** the estimated network cost + tip */
 export const baseFeeReimbersement = derived(
-  [estimatedNetworkCost, oneTokenInt, incentiveRatio],
-  ([$estimatedNetworkCost, $oneTokenInt, $incentiveRatio]) => {
-    let decimalOffset = 1n
-    if ($oneTokenInt !== oneEther) {
-      decimalOffset = oneEther / $oneTokenInt
-    }
-    // console.log(viem.formatUnits(($estimatedNetworkCost * $incentiveRatio) / (oneEther * decimalOffset), 6))
-    return ($estimatedNetworkCost * $incentiveRatio) / (oneEther * decimalOffset)
+  [estimatedNetworkCost, incentiveRatio],
+  ([$estimatedNetworkCost, $incentiveRatio]) => {
+    return $estimatedNetworkCost * $incentiveRatio / oneEther
   },
   0n,
 )
@@ -445,26 +438,34 @@ export const clampedReimbersement = derived(
 export const estimatedCost = derived(
   [feeType, limit, clampedReimbersement],
   ([$feeType, $limit, $clampedReimbersement]) => {
-    if ($feeType === 'gas+%') return $clampedReimbersement
-    return $limit
+    if ($feeType === 'fixed') {
+      return $limit
+    }
+    return $clampedReimbersement
   },
 )
-
+/** creates the settings param for the fee director struct */
 export const feeTypeSettings = derived(
   [feeType, unwrap],
   ([$feeType, $unwrap]) => {
     const th0 = $feeType === 'fixed' ? 1n : 0n
     const st1 = $unwrap ? 1n : 0n
     const nd2 = 1n // always exclude priority when you can
-    return (nd2 << 2n) | (st1 << 1n) || th0
+    return (nd2 << 2n) | (st1 << 1n) | th0
   },
 )
 /** the encoded struct to be passed to the foreign router */
 export const feeDirectorStructEncoded = derived(
   [destination, feeTypeSettings, limit, incentiveRatio],
   ([$destination, $feeTypeSettings, $limit, $incentiveRatio]) => {
-    return viem.encodeAbiParameters(viem.parseAbiParameters('(address, uint256, uint256, uint256)'), [
-      [$destination, $feeTypeSettings, $limit, $incentiveRatio],
+    const params = viem.parseAbiParameters('(address, uint256, uint256, uint256)')
+    return viem.encodeAbiParameters(params, [
+      [
+        $destination,
+        $feeTypeSettings,
+        $limit,
+        $incentiveRatio,
+      ],
     ])
   },
 )

@@ -11,4 +11,4 @@
 
 <Warning
   show={$amountAfterBridgeFee > 0n && $estimatedCost < ($estimatedNetworkCost * $desiredCompensationRatio) / oneEther}
-  tooltip="Network cost is higher than compensation. Validators may refuse to run tx under these conditions. Try other delivery fee types, increasing the amount bridged, or the fee for deliver" />
+  tooltip="Network cost is higher than estimated compensation. Executor may refuse to run. Try other delivery fee types, increasing the amount bridged, or the fee" />

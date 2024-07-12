@@ -8,7 +8,7 @@ const loadingCounter = writable({
   },
   isResolved(key?: string | string[]) {
     if (!key) return this.resolved
-    if (Array.isArray(key)) key.reduce((total, k) => total + (this.categories[k] || 0), 0) === 0
+    if (Array.isArray(key)) return key.reduce((total, k) => total + (this.categories[k] || 0), 0) === 0
     return !this.categories[key as string]
   },
 })
@@ -21,6 +21,7 @@ export const loading = {
         l.categories[key] = (l.categories[key] || 0) + 1
       }
       l.total += 1
+      // console.log(l)
       return l
     })
   },
@@ -34,10 +35,8 @@ export const loading = {
         l.categories[key] = (l.categories[key] || 0) - 1
       }
       l.total -= 1
+      // console.log(l)
       return l
     })
   },
-  // resolved: (key?: string) => {
-  //   return key ? !get(loadingCounter).categories[key] : !get(loadingCounter).total
-  // },
 }

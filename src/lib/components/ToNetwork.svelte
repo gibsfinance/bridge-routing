@@ -17,19 +17,15 @@
     amountAfterBridgeFee,
     foreignSupportsEIP1559,
     estimatedCost,
-    baseFeeReimbersement,
-    incentiveRatio,
     unwrap,
     priceCorrective,
     oneEther,
     amountToBridge,
     feeType,
-    // loggedCost,
   } from '$lib/stores/bridge-settings'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
   import SmallInput from './SmallInput.svelte'
-  import Warning from './Warning.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import * as utils from '$lib/utils'
   import type { Token } from '$lib/types'
@@ -88,8 +84,8 @@
   $: asset && limitUpdated(defaultLimit)
   $: {
     if ($feeType === 'fixed') {
-      defaultLimit = '0.01'
-      limitUpdated(defaultLimit)
+      // defaultLimit = '0.01'
+      // limitUpdated(defaultLimit)
     } else if ($feeType === '%' && asset) {
       let lim = 0n
       lim = ($amountAfterBridgeFee * $basisPointIncentiveFee) / oneEther
@@ -122,6 +118,7 @@
   )
   $: networkOptions = Object.keys(chainsMetadata).filter((cId): cId is Chains => cId !== Chains.PLS)
   $: decimals = asset.decimals
+  // $: console.log($estimatedCost, $amountAfterBridgeFee, decimals)
   $: expectedAmountOut =
     $amountToBridge &&
     humanReadableNumber(
@@ -130,9 +127,8 @@
     )
 </script>
 
-<!-- <div class="hidden">{$loggedCost}</div> -->
 <div class="shadow-md rounded-lg">
-  <div class="bg-slate-100 py-2 px-3 rounded-t-lg">
+  <div class="bg-slate-100 py-2 px-3 rounded-t-lg hover:z-10">
     <NetworkSummary network={destinationNetwork} {networkOptions} {asset} {balance} unwrap={$unwrap} />
   </div>
   <div class="bg-slate-100 mt-[1px] py-1">
@@ -145,7 +141,7 @@
       </span>
     </div>
   </div>
-  <div class="bg-slate-100 mt-[1px] py-1 relative">
+  <div class="bg-slate-100 mt-[1px] py-1 relative hover:z-10">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <span class="flex items-center">
         <span class="mr-1">Delivery Fee</span>
@@ -179,11 +175,8 @@
       </button>
     </div>
     <UndercompensatedWarning />
-    <!-- <Warning
-      show={$feeType === 'gas+%' && $incentiveRatio < 10n ** 18n + 5n * 10n ** 16n}
-      tooltip="A gas based fee of this amount may cause the executor to ignore your transaction" /> -->
   </div>
-  <div class="bg-slate-100 mt-[1px] py-1 relative">
+  <div class="bg-slate-100 mt-[1px] py-1 relative hover:z-10">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <button
         class="tooltip tooltip-top tooltip-right-toward-center"
@@ -199,23 +192,24 @@
           ? 'The fixed fee to tip if the validator does the work'
           : 'The max you are willing to tip to the address delivering native eth'}
         on:click={focusOnInputChild}>
-        &lt;=&nbsp;<Loading key="gas">
-          <SmallInput
-            value={defaultLimit}
-            suffix={utils.nativeSymbol(asset)}
-            validate={(v) => decimalValidation(v, asset.decimals)}
-            on:update={(e) => {
-              if (e.detail.fromInput) costLimitLocked = true
-              limitUpdated(e.detail.value)
-            }} />
+        <span class="flex" class:hidden={$feeType !== 'gas+%'}>&lt;=</span>&nbsp;<Loading key="gas">
+          {#if $feeType === '%'}
+            <span>{defaultLimit}</span>
+          {:else}
+            <SmallInput
+              value={defaultLimit}
+              suffix={utils.nativeSymbol(asset)}
+              validate={(v) => decimalValidation(v, asset.decimals)}
+              on:update={(e) => {
+                if (e.detail.fromInput) costLimitLocked = true
+                limitUpdated(e.detail.value)
+              }} />
+          {/if}
         </Loading>
       </button>
-      <Warning
-        show={$amountAfterBridgeFee < 0n && $limit < $baseFeeReimbersement * 2n}
-        tooltip="The fee limit is close to or below the current network cost. Consider increasing the limit to allow for gas cost fluctuations" />
     </div>
   </div>
-  <div class="rounded-b-lg bg-slate-100 mt-[1px] py-1">
+  <div class="rounded-b-lg bg-slate-100 mt-[1px] py-1 hover:z-10">
     <div class="flex flex-row px-3 leading-10 justify-between">
       <div class="flex flex-row">
         <button class="flex mr-2" on:click={() => showToolbox('settings')}>⚙️</button>
@@ -224,7 +218,7 @@
       <span
         class="tooltip text-xl sm:text-2xl leading-10 flex items-center self-center tooltip-top tooltip-left-toward-center"
         data-tip="Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee fluctuates on ethereum">
-        {#if $feeType === 'gas+%'}~&nbsp;{/if}<Loading>
+        {#if $feeType === 'gas+%'}~&nbsp;{/if}<Loading key="gas">
           {expectedAmountOut}
         </Loading>&nbsp;{utils.nativeSymbol(asset)}
       </span>
