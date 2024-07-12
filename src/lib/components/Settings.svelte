@@ -2,7 +2,15 @@
   import SmallInput from './SmallInput.svelte'
   import { ensToAddress, walletAccount } from '$lib/stores/auth/store'
   import { createPublicClient, http, isAddress, zeroAddress } from 'viem'
-  import { router, unwrapSetting as unwrap, calldata, bridgeAddress, destination } from '$lib/stores/bridge-settings'
+  import {
+    router,
+    unwrapSetting,
+    unwrap,
+    canChangeUnwrap,
+    calldata,
+    bridgeAddress,
+    destination,
+  } from '$lib/stores/bridge-settings'
   import { Chains } from '$lib/stores/auth/types'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import Warning from './Warning.svelte'
@@ -45,7 +53,7 @@
 
 <div class="my-2 text-sm shadow-sm rounded-lg">
   <div class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-col md:flex-row relative">
-    <span>Destination</span>
+    <span>Recipient</span>
     <SmallInput
       editOnLeft
       value={account || zeroAddress}
@@ -64,20 +72,23 @@
     <input
       type="checkbox"
       class="toggle toggle-sm [--tglbg:white] border-purple-600 bg-purple-600 hover:bg-purple-400 disabled:bg-purple-600 disabled:opacity-100"
-      disabled
-      bind:checked={$unwrap} />
+      disabled={!$canChangeUnwrap}
+      checked={$unwrap}
+      on:change={(e) => {
+        unwrapSetting.set(e.currentTarget.checked)
+      }} />
   </div>
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed">
     <span>To (Bridge)</span>
     <span class="font-mono text-xs md:text-sm">{$bridgeAddress}</span>
   </div>
   <div class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row">
-    <span>Calldata</span>
+    <span class="whitespace-pre">Data <span class="font-mono">(0x)</span></span>
     <textarea
       name="calldata"
       id="calldata"
       disabled
-      class="bg-transparent outline-none resize-none flex flex-grow cursor-not-allowed font-mono text-xs md:text-sm md:px-2"
-      rows="5">{$calldata}</textarea>
+      class="bg-transparent outline-none resize-none flex flex-grow cursor-not-allowed font-mono text-xs md:text-sm -mr-3 pr-3"
+      rows="5">{$calldata.slice(2)}</textarea>
   </div>
 </div>

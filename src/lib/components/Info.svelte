@@ -10,23 +10,23 @@
 <div class="flex flex-row">
   <button
     type="button"
-    class="border-2 rounded-full h-8 w-8 mr-2 flex justify-center items-center"
+    class="border-2 rounded-full h-8 w-8 mr-2 flex justify-center items-center hover:text-slate-500"
     on:click={openModal}>
     <Icon icon="entypo:info" />
   </button>
 
   <a href="https://github.com/gibsfinance" target="_blank" class="mr-2">
-    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center">
+    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="fe:github-alt" height="1.5em" width="1.5em" />
     </button>
   </a>
   <a href="https://etherscan.io/address/0x5f542C3ce02a56586a91A7DE80deBF29947836eD#code" target="_blank" class="mr-2">
-    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center">
+    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="mdi:ethereum" height="1.5em" width="1.5em" />
     </button>
   </a>
   <a href="https://x.com/gibsfinance" target="_blank" class="mr-2">
-    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center">
+    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="ri:twitter-fill" height="1.25em" width="1.25em" />
     </button>
   </a>
@@ -44,7 +44,7 @@
         <li>The only difference is that the final router contract on Ethereum has been swapped out.</li>
         <li>
           This modified implementation allows the runner's actions to be measured and creates an economic incentive to
-          deliver native tokens, maintaining privacy for the end user (you).
+          deliver tokens, maintaining privacy for the end user (you).
         </li>
         <li>
           If, for any reason, your transaction is not run in a timely manner, you can always use

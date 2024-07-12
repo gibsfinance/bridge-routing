@@ -22,6 +22,9 @@
   const gotoNativeDelivery = async () => {
     await goto('/delivery')
   }
+  const gotoTransactions = async () => {
+    window.location.href = `${bridgeUrl}/#/transactions`
+  }
 </script>
 
 <div class="h-10 -mb-10 z-40 flex">
@@ -34,17 +37,15 @@
         on:click={gotoHome}
         class="link leading-8 pr-2 text-white font-italiana uppercase flex flex-row">
         <img src={gibs} alt="a yellow hand with index finger and thub rubbing together" class="size-8" />
-        <span>Gibs&nbsp;</span>
+        <span class="leading-8">Gibs&nbsp;</span>
         <Loading />
       </span>
-      <div>
-        <ul class="flex flex-row">
+      <div class="items-center flex">
+        <ul class="flex flex-row items-center">
           <li>
-            <a class="h-8 w-8 py-1 px-2 text-white flex items-center" href="{bridgeUrl}/#/transactions" target="_blank">
-              <button>
-                <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
-              </button>
-            </a>
+            <button class="h-10 w-10 text-white flex items-center justify-center" on:click={gotoTransactions}>
+              <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
+            </button>
           </li>
           {#if !$page.route.id?.includes('/delivery')}
             <li>

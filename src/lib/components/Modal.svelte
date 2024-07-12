@@ -13,6 +13,7 @@
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { Chains } from '$lib/stores/auth/types'
   import { multicallErc20 } from '$lib/utils'
+  import { imageRoot } from '$lib/config'
 
   const dispatch = createEventDispatcher()
   const submit = (token: Token) => {
@@ -26,7 +27,6 @@
   onMount(() => {
     // load a test
     const doClose = (e: Event) => {
-      // console.log(e)
       modalStore.type.set(null)
     }
     try {
@@ -35,7 +35,7 @@
         temporaryTokens = JSON.parse(tokensSerialized)
       }
     } catch (err) {}
-    fetch('https://gib.show/list/piteas', {
+    fetch(`${imageRoot}/list/piteas`, {
       credentials: 'omit',
     })
       .then(async (res) => (await res.json()) as TokenList)
@@ -65,7 +65,6 @@
     // use token as focus in bridge settings stores
   }
   const selectToken = (token: Token) => {
-    // console.log('selected', token)
     submit(token)
     modal?.close()
   }

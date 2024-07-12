@@ -6,7 +6,7 @@
 
 <div class="flex flex-col sm:flex-row leading-8 text-slate-400 md:px-0 px-3 mb-20">
   <div class="flex flex-grow justify-between">
-    <span class="flex hover:text-slate-500">
+    <span class="flex">
       <Info />
     </span>
     <span class="flex sm:flex-grow sm:justify-center">

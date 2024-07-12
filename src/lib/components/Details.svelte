@@ -1,4 +1,5 @@
 <script lang="ts">
+  import UndercompensatedWarning from '$lib/components/warnings/Undercompensated.svelte'
   import type { VisualChain } from '$lib/stores/auth/types'
   import Warning from './Warning.svelte'
   import {
@@ -8,7 +9,8 @@
     estimatedCost,
     limit,
     amountToBridge,
-    fixedFee,
+    feeType,
+    desiredCompensationRatio,
   } from '$lib/stores/bridge-settings'
   import { humanReadableNumber } from '$lib/stores/utils'
   import * as utils from '$lib/utils'
@@ -53,23 +55,21 @@
   </div>
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative">
     <span class="w-32">
-      {#if !$fixedFee}Estimated
+      {#if $feeType === 'gas+%'}Estimated
       {/if}Cost
     </span>
     <span class="flex flex-row justify-between grow">
       <span>
-        {#if !$fixedFee}
+        {#if $feeType === 'gas+%'}
           ⛽&nbsp;+&nbsp;{formatUnits($incentiveFee * 100n, asset.decimals)}%{/if}
       </span>
       <span class="flex flex-row items-end self-end">
         <Loading>{humanReadableNumber($estimatedCost, asset.decimals)}</Loading>&nbsp;{utils.nativeSymbol(asset)}
       </span>
     </span>
-    <Warning
-      show={$estimatedCost < $estimatedNetworkCost}
-      tooltip="Network cost is higher than compensation. Validators may refuse to run tx under these conditions." />
+    <UndercompensatedWarning />
   </div>
-  {#if $fixedFee}
+  {#if $feeType !== 'gas+%'}
     <div class="bg-slate-100 mt-[1px] py-2 px-3 rounded-b-lg justify-between flex flex-row relative">
       <span class="w-32">Delivered</span>
       <span class="flex flex-row items-end self-end">
