@@ -9,7 +9,6 @@
   export let tokenSize = 10
   export let networkSize = 5
   $: originationChainId = getOriginationChainId(asset)
-  $: console.log(asset, originationChainId)
   $: chain = chainsMetadata[`0x${originationChainId.toString(16)}` as DestinationChains]
 </script>
 
