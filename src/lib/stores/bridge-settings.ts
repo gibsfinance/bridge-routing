@@ -86,7 +86,7 @@ export const destinationChains = {
     provider: 'pulsechain',
     homeBridge: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
     foreignBridge: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
-    router: '0x5f542C3ce02a56586a91A7DE80deBF29947836eD',
+    router: '0x5E839Db26618b31A7cFC027D20D6F8ecf302fCe2',
   },
   [Chains.BNB]: {
     provider: 'tokensex',
