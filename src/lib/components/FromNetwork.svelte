@@ -5,7 +5,14 @@
   import type { VisualChain } from '$lib/stores/auth/types'
   import { decimalValidation } from '$lib/stores/utils'
   import { writable } from 'svelte/store'
-  import { amountToBridge, assets, assetIn, bridgeKey, inputBridgeAbi, publicClient } from '$lib/stores/bridge-settings'
+  import {
+    amountToBridge,
+    destinationChains,
+    assetIn,
+    bridgeKey,
+    inputBridgeAbi,
+    publicClient,
+  } from '$lib/stores/bridge-settings'
   import { validatable } from '$lib/stores/validatable'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { loading } from '$lib/stores/loading'
@@ -45,7 +52,7 @@
       abi: inputBridgeAbi,
       functionName: 'minPerTx',
       args: [$assetIn.address],
-      address: assets[$bridgeKey].homeBridge,
+      address: destinationChains[$bridgeKey].homeBridge,
     })
   }
 

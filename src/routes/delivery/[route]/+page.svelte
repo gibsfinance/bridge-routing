@@ -2,7 +2,6 @@
   import BlurryImage from '$lib/components/BlurryImage.svelte'
   import Bridge from '$lib/components/Bridge.svelte'
   import bridgeImage from '$lib/images/bridge.jpeg'
-  import TokenDirectionDropdown from '$lib/components/TokenDirectionDropdown.svelte'
   import BridgeFooter from '$lib/components/BridgeFooter.svelte'
   import { windowStore } from '$lib/stores/window'
   $: large = $windowStore.innerHeight > 600 && $windowStore.innerWidth >= 768
@@ -18,7 +17,6 @@
 </BlurryImage>
 
 <div class="container m-auto max-w-lg flex flex-col">
-  <!-- <TokenDirectionDropdown /> -->
   <Bridge />
   <BridgeFooter />
 </div>

@@ -63,7 +63,25 @@ export const bridgeFrom = writable(
   ]),
 )
 
-export const assets = {
+export const uniV2Settings = {
+  [Chains.PLS]: {
+    router: '0x165C3410fC91EF562C50559f7d2289fEbed552d9',
+    wNative: '0xA1077a294dDE1B09bB078844df40758a5D0f9a27',
+  },
+  [Chains.ETH]: {
+    router: '0x7a250d5630b4cf539739df2c5dacb4c659f2488d',
+    wNative: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+  },
+  [Chains.BNB]: {
+    router: '0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F',
+    wNative: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+  },
+} as Record<Chains, {
+  router: viem.Hex;
+  wNative: viem.Hex;
+}>
+
+export const destinationChains = {
   [Chains.ETH]: {
     provider: 'pulsechain',
     homeBridge: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
@@ -97,18 +115,18 @@ const defaultAssetIn = {
   [Chains.BNB]: {
     symbol: 'WBNB',
     name: 'Wrapped BNB',
-    address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+    address: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
     decimals: 18,
     logoURI: `${imageRoot}/image/56/0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c`,
     chainId: 369,
   },
 } as Record<DestinationChains, Token>
 
-export const bridgeKeys = Object.keys(assets) as DestinationChains[]
+export const bridgeKeys = Object.keys(destinationChains) as DestinationChains[]
 
 export const bridgeKey = derived([page], ([$page]) => (Chains[$page.params.route as keyof typeof Chains] || Chains.ETH) as DestinationChains)
 
-export const provider = derived([bridgeKey], ([$bridgeKey]) => assets[$bridgeKey].provider)
+export const provider = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].provider)
 
 export const foreignSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === Chains.BNB ? false : true))
 /** the estimated gas that will be consumed by running the foreign transaction */
@@ -116,7 +134,7 @@ export const estimatedGas = writable(315_000n)
 /** the block.baseFeePerGas on the latest block */
 export const latestBaseFeePerGas = writable(0n)
 /** the first recipient of the tokens (router) */
-export const router = derived([bridgeKey], ([$bridgeKey]) => assets[$bridgeKey].router as viem.Hex)
+export const router = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].router as viem.Hex)
 /** the final destination of the tokens (user's wallet or other named address) */
 export const destination = writable(viem.zeroAddress as viem.Hex)
 /** whether or not to unwrap the tokens to their native value */
@@ -147,11 +165,12 @@ const fetchedAssetIn: Readable<Token | null> = derived([desiredAssetIn], ([$desi
   })
 })
 export const assetIn = derived([fetchedAssetIn, bridgeKey, desiredAssetIn], ([$fetchedAssetIn, $bridgeKey, $desiredAssetIn]) => {
+  // console.log($fetchedAssetIn, $desiredAssetIn, defaultAssetIn[$bridgeKey])
   return $fetchedAssetIn || $desiredAssetIn || defaultAssetIn[$bridgeKey]
 })
 /** the address of the bridge proxy contract on home */
-export const bridgeAddress = derived([bridgeKey], ([$bridgeKey]) => assets[$bridgeKey].homeBridge as viem.Hex)
-export const foreignBridgeAddress = derived([bridgeKey], ([$bridgeKey]) => assets[$bridgeKey].foreignBridge as viem.Hex)
+export const bridgeAddress = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].homeBridge as viem.Hex)
+export const foreignBridgeAddress = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].foreignBridge as viem.Hex)
 /** the abi for the bridge */
 export const inputBridgeAbi = viem.parseAbi([
   'function relayTokensAndCall(address token, address _receiver, uint256 _value, bytes memory _data) external',
@@ -209,7 +228,7 @@ export const assetOut = asyncDerived(
         client: clientFromChain($bridgeKey),
         chain: chainsMetadata[$bridgeKey],
         abi: inputBridgeAbi,
-        target: assets[$bridgeKey].foreignBridge,
+        target: destinationChains[$bridgeKey].foreignBridge,
         calls: [
           { functionName: 'bridgedTokenAddress', args },
           { functionName: 'nativeTokenAddress', args },
@@ -249,6 +268,7 @@ export const assetOut = asyncDerived(
   }, backupAssetIn)
 
 export const isNative = ($assetIn: Token) => {
+  // console.log(defaultAssetIn, $assetIn)
   return !!Object.values(defaultAssetIn).find(($defaultAssetIn) => (
     viem.getAddress($defaultAssetIn.address) === viem.getAddress($assetIn.address)
   ))
@@ -302,12 +322,12 @@ export const desiredCompensationRatio = derived(
   ([$assetIn, $bridgeKey, $feeType]) => (
     oneEther + (
       $feeType === 'gas+%'
-        ? viem.parseEther('0.05') // 5%
+        ? viem.parseEther('0.1') // 10%
         : viem.getAddress(defaultAssetIn[$bridgeKey].address) === viem.getAddress($assetIn.address)
           // the reason these numbers are so much higher is because they are not linked to the gas that will be spent
           // so in order to give the best user experience, it is best to give people a higher buffer
-          ? viem.parseEther('0.5') // 20%
-          : viem.parseEther('1') // 50%
+          ? viem.parseEther('0.5') // 50%
+          : viem.parseEther('1') // 100%
     )
   ))
 
@@ -320,6 +340,39 @@ const oneTokenInt = derived([assetIn], ([$assetIn]) => (
 ))
 
 let priceCorrectiveGuard = {}
+const readAmountOut = ({
+  $oneTokenInt, $assetInAddress, chain, $bridgeKey,
+}: {
+  $oneTokenInt: bigint;
+  $assetInAddress: viem.Hex;
+  chain: Chains;
+  $bridgeKey: DestinationChains;
+}) => (
+  multicallRead<[bigint[] | viem.Hex]>({
+    chain: chainsMetadata[chain],
+    client: clientFromChain(chain),
+    abi: pulsexAbi,
+    // pulsex router
+    target: uniV2Settings[chain].router,
+    calls: [{
+      functionName: 'getAmountsOut',
+      allowFailure: true,
+      args: [
+        // if 1 token goes into swap
+        $oneTokenInt,
+        [
+          // take the asset, go through wNative, then to wrapped native
+          $assetInAddress,
+          uniV2Settings[chain].wNative,
+        ].concat(
+          chain === Chains.PLS
+            ? [defaultAssetIn[$bridgeKey].address]
+            : []
+        ),
+      ]
+    }],
+  })
+)
 export const priceCorrective = derived(
   [assetIn, bridgeKey, oneTokenInt, assetOut, amountToBridge],
   ([$assetIn, $bridgeKey, $oneTokenInt, $assetOut, $amountToBridge], set) => {
@@ -328,7 +381,7 @@ export const priceCorrective = derived(
     let cancelled = false
     priceCorrectiveGuard = {}
     const pcg = priceCorrectiveGuard
-    if (isNative($assetOut)) {
+    if (isNative($assetIn)) {
       set(oneEther)
       return
     }
@@ -336,35 +389,32 @@ export const priceCorrective = derived(
     if (toBridge === 0n) {
       toBridge = viem.parseUnits('10', $assetIn.decimals)
     }
-    multicallRead<[bigint[] | viem.Hex]>({
-      chain: chainsMetadata[Chains.PLS],
-      client: clientFromChain(Chains.PLS),
-      abi: pulsexAbi,
-      // pulsex router
-      target: '0x165C3410fC91EF562C50559f7d2289fEbed552d9',
-      calls: [{
-        functionName: 'getAmountsOut',
-        allowFailure: true,
-        args: [
-          // if 1 token goes into swap
-          $oneTokenInt,
-          [
-            // take the asset, go through wNative, then to wrapped native
-            $assetIn.address,
-            '0xA1077a294dDE1B09bB078844df40758a5D0f9a27',
-            defaultAssetIn[$bridgeKey].address,
-          ],
-        ]
-      }],
-    }).then((result) => {
+    const lastFromResult = (result: [viem.Hex | bigint[]]) => {
       if (cancelled || priceCorrectiveGuard !== pcg) return
       const [hops] = result
       if (Array.isArray(hops)) {
         const last = hops[hops.length - 1]
-        return set(last)
+        return last
       }
-      // failure
-      // console.log('failed', $assetIn.address, hops)
+    }
+    readAmountOut({
+      $assetInAddress: $assetIn.address,
+      $oneTokenInt,
+      chain: Chains.PLS,
+      $bridgeKey,
+    }).then((result) => {
+      const last = lastFromResult(result)
+      if (last) {
+        return last
+      }
+      return readAmountOut({
+        $assetInAddress: $assetOut.address,
+        $oneTokenInt,
+        chain: $bridgeKey,
+        $bridgeKey,
+      }).then(lastFromResult)
+    }).then((res) => {
+      set(res || 0n)
     })
     return () => {
       cancelled = true
@@ -378,19 +428,13 @@ export const priceCorrective = derived(
 export const estimatedNetworkCost = derived(
   [estimatedGas, latestBaseFeePerGas, priceCorrective, oneTokenInt],
   ([$estimatedGas, $latestBaseFeePerGas, $priceCorrective, $oneTokenInt]) => {
+    // console.log($estimatedGas, $latestBaseFeePerGas, $oneTokenInt, $priceCorrective)
+    if (!$priceCorrective) {
+      return 0n
+    }
     return $estimatedGas * $latestBaseFeePerGas * $oneTokenInt / $priceCorrective
   },
 )
-// export const loggedCost = derived(
-//   [estimatedNetworkCost, assetIn, priceCorrective, latestBaseFeePerGas],
-//   ([$estimatedNetworkCost, $assetIn, $priceCorrective, $latestBaseFeePerGas]) => {
-//     console.log('with %o gwei, the network cost %s%s corrected %s',
-//       viem.formatGwei($latestBaseFeePerGas),
-//       viem.formatUnits($estimatedNetworkCost, $assetIn.decimals), $assetIn.symbol,
-//       $priceCorrective,
-//     )
-//     return 0n
-//   })
 export const incentiveRatio = derived(
   [feeType, incentiveFee],
   ([$feeType, $incentiveFee]) => {
@@ -633,7 +677,7 @@ export const getOriginationChainId = (asset: Token) => {
   }
   const bridgeKeyInfo = bridgeInfo[Number($bridgeKey)]
   if (bridgeKeyInfo) {
-    return viem.getAddress(assets[$bridgeKey].foreignBridge) === viem.getAddress(bridgeKeyInfo.originationBridgeAddress)
+    return viem.getAddress(destinationChains[$bridgeKey].foreignBridge) === viem.getAddress(bridgeKeyInfo.originationBridgeAddress)
       ? Number($bridgeKey)
       : Number(Chains.PLS)
   }
@@ -641,7 +685,7 @@ export const getOriginationChainId = (asset: Token) => {
   if (!info) {
     return asset.chainId
   }
-  return viem.getAddress(assets[$bridgeKey].homeBridge) === viem.getAddress(info.originationBridgeAddress)
+  return viem.getAddress(destinationChains[$bridgeKey].homeBridge) === viem.getAddress(info.originationBridgeAddress)
     ? Number($bridgeKey)
     : Number(Chains.PLS)
 }

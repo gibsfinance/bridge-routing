@@ -3,7 +3,7 @@
   import Icon from '@iconify/svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { assets, bridgeKey, bridgeKeys, desiredAssetIn } from '$lib/stores/bridge-settings'
+  import { destinationChains, bridgeKey, desiredAssetIn } from '$lib/stores/bridge-settings'
   import { goto } from '$app/navigation'
 
   let dropdown!: HTMLDetailsElement
@@ -19,13 +19,13 @@
     }
     return a > b ? 1 : -1
   })
-  const providerFromOption = (option: Chains) => assets[option as DestinationChains].provider
+  const providerFromOption = (option: Chains) => destinationChains[option as DestinationChains].provider
 </script>
 
 {#if reorderedBridgeKeys.length}
   <details class="dropdown static flex flex-grow justify-center" bind:this={dropdown}>
     <summary class="flex flex-row justify-items-center items-center space-x-2 select-none">
-      <StaticNetworkImage {network} {height} provider={assets[$bridgeKey].provider} />
+      <StaticNetworkImage {network} {height} provider={destinationChains[$bridgeKey].provider} />
       <span class="leading-8 ml-1">{network.name}</span>
       <Icon icon="mingcute:down-fill" height="1.25em" width="1.25em" class="flex" />
     </summary>

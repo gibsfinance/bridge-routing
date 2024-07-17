@@ -8,7 +8,7 @@
     erc677abi,
     bridgeAddress,
     amountToBridge,
-    assets,
+    destinationChains,
     foreignData,
     bridgeKey,
     erc677abiBNB,
