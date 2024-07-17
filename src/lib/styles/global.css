@@ -21,6 +21,7 @@
 
 .tooltip {
   --tooltip-tail: 0.25rem;
+  @apply max-w-none;
 }
 
 body {

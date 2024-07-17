@@ -183,53 +183,56 @@ export const getExtensions = (chainId: number, address: viem.Hex) => {
 
 /** the asset coming out on the other side of the bridge (foreign) */
 export const assetOut = asyncDerived(
-  [activeChain, bridgeAddress, assetIn, bridgeKey],
-  async ([$activeChain, $bridgeAddress, $assetIn, $bridgeKey]) => {
+  [bridgeAddress, assetIn, bridgeKey],
+  async ([$bridgeAddress, $assetIn, $bridgeKey]) => {
     const args = [$assetIn.address]
     const mappings = await multicallRead<viem.Hex[]>({
-      client: clientFromChain($activeChain),
-      chain: chainsMetadata[$activeChain],
+      client: clientFromChain(Chains.PLS),
+      chain: chainsMetadata[Chains.PLS],
       abi: inputBridgeAbi,
       target: $bridgeAddress,
       calls: [
-        { functionName: 'homeTokenAddress', args },
-        { functionName: 'foreignTokenAddress', args },
+        { functionName: 'bridgedTokenAddress', args },
+        { functionName: 'nativeTokenAddress', args },
       ],
     })
-    const [
-      homeTokenAddress, // foreign -> home
-      foreignTokenAddress, // home -> foreign
-      // this is a bridged token
-      // bridgedTokenAddress,
-      // nativeTokenAddress,
+    let [
+      foreignTokenAddress, // bridgedTokenAddress
+      nativeTokenAddress,
     ] = mappings
+    // console.log(nativeTokenAddress, foreignTokenAddress)
 
-    let res = backupAssetIn
-    if (homeTokenAddress !== viem.zeroAddress) {
-      // return backupAssetIn
-    } else if (foreignTokenAddress !== viem.zeroAddress) {
-      const [name, symbol, decimals] = await multicallRead<[string, string, number, viem.Hex]>({
+    if (foreignTokenAddress !== viem.zeroAddress) {
+      // if we are here, then we know that we are dealing with a native
+      // address, so we need to go to the foreign chain
+      const mappings = await multicallRead<viem.Hex[]>({
         client: clientFromChain($bridgeKey),
         chain: chainsMetadata[$bridgeKey],
-        abi: viem.erc20Abi,
+        abi: inputBridgeAbi,
+        target: assets[$bridgeKey].foreignBridge,
+        calls: [
+          { functionName: 'bridgedTokenAddress', args },
+          { functionName: 'nativeTokenAddress', args },
+        ],
+      })
+      foreignTokenAddress = mappings[0]
+      nativeTokenAddress = args[0]
+    } else if (nativeTokenAddress !== viem.zeroAddress) {
+      foreignTokenAddress = nativeTokenAddress
+    }
+
+    let res = backupAssetIn
+    if (foreignTokenAddress !== viem.zeroAddress) {
+      const [name, symbol, decimals] = await multicallErc20({
+        client: clientFromChain($bridgeKey),
+        chain: chainsMetadata[$bridgeKey],
         target: foreignTokenAddress,
-        calls: [{
-          functionName: 'name',
-        }, {
-          functionName: 'symbol',
-        }, {
-          functionName: 'decimals',
-          // }, {
-          //   functionName: 'WETH',
-          //   target: assets[$bridgeKey].router,
-          //   abi: outputRouterAbi,
-        }],
       })
       res = {
         name, symbol, decimals,
         chainId: Number($bridgeKey),
         address: foreignTokenAddress,
-        logoURI: imageRoot + `/${Number($bridgeKey)}/${foreignTokenAddress}`,
+        logoURI: `${imageRoot}/image/${Number($bridgeKey)}/${foreignTokenAddress}`,
       } as Token
     } else {
       // assumptions
@@ -575,28 +578,35 @@ export const assetSources = (asset: Token) => {
   ].concat(bridgedImage).filter((str): str is string => !!str)
 }
 
-export const bridgableTokens = derived<Stores, Token[]>([provider], (() => {
-  const cache = new Map<string, Token[]>()
-  return ([$provider], set) => {
-    let tokens = cache.get($provider)
+export const bridgableTokens = derived<Stores, Token[]>([], (() => {
+  let tokens: null | Promise<Token[]> = null
+  return ([], set) => {
+    // let tokens = cache.get($provider)
     if (tokens) {
-      set(tokens)
+      tokens.then((t) => set(t))
       return
     }
     loading.increment()
-    Promise.all([
-      fetch(`${imageRoot}/list/${$provider}-bridge/foreign?extensions=bridgeInfo&chainId=369`, {
+    tokens = Promise.all([
+      fetch(`${imageRoot}/list/pulsechain-bridge/foreign?extensions=bridgeInfo&chainId=369`, {
         credentials: 'omit',
       }),
-      fetch(`${imageRoot}/list/${$provider}-bridge/home?extensions=bridgeInfo&chainId=369`, {
+      fetch(`${imageRoot}/list/tokensex-bridge/foreign?extensions=bridgeInfo&chainId=369`, {
+        credentials: 'omit',
+      }),
+      fetch(`${imageRoot}/list/pulsechain-bridge/home?extensions=bridgeInfo&chainId=369`, {
+        credentials: 'omit',
+      }),
+      fetch(`${imageRoot}/list/tokensex-bridge/home?extensions=bridgeInfo&chainId=369`, {
         credentials: 'omit',
       }),
     ]).then(async (results) => {
       const responses = await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
       loading.decrement()
       const list = _(responses).map('tokens').flatten().value()
-      tokens = _.sortBy(list, 'name')
-      tokens.forEach((token) => {
+      const sortedList = _.sortBy(list, 'name')
+      // console.log(sortedList)
+      sortedList.forEach((token) => {
         // register on a central cache so that tokens that are gotten from onchain
         // still have all extensions
         registerExtensions(token.chainId, token.address, token.extensions)
@@ -604,8 +614,10 @@ export const bridgableTokens = derived<Stores, Token[]>([provider], (() => {
           token.logoURI = `${imageRoot}/image/${token.chainId}/${token.address}`
         }
       })
-      cache.set($provider, tokens)
-      set(tokens)
+      // cache.set($provider, tokens)
+      // tokens = Promise.resolve(sortedList)
+      set(sortedList)
+      return sortedList
     }).catch((err) => {
       loading.decrement()
       throw err
@@ -632,4 +644,8 @@ export const getOriginationChainId = (asset: Token) => {
   return viem.getAddress(assets[$bridgeKey].homeBridge) === viem.getAddress(info.originationBridgeAddress)
     ? Number($bridgeKey)
     : Number(Chains.PLS)
+}
+
+export const assetProvider = (asset: Token) => {
+  return asset.name.includes('(TokensExpress)') ? 'tokensex' : 'pulsechain'
 }

@@ -67,8 +67,12 @@
       ? ({ address }: Token) => {
           return getAddress(address) === getAddress(val)
         }
-      : ({ name, symbol }: Token) => {
-          return name.toLowerCase().includes(lowerVal) || symbol.toLowerCase().includes(lowerVal)
+      : ({ name, symbol, address }: Token) => {
+          return (
+            address.toLowerCase().includes(lowerVal) ||
+            name.toLowerCase().includes(lowerVal) ||
+            symbol.toLowerCase().includes(lowerVal)
+          )
         }
     return temporaryTokens.concat($bridgableTokens).filter(filter)
   }
@@ -115,8 +119,8 @@
     </label>
     <ul class="overflow-y-scroll px-6 flex flex-col grow">
       {#each subset as token}
-        <li class="flex">
-          <button class="flex flex-row grow py-2 cursor-pointer" on:click={() => selectToken(token)}>
+        <li class="flex tooltip tooltip-bottom my-2" data-tip={token.address}>
+          <button class="flex flex-row grow cursor-pointer" on:click={() => selectToken(token)}>
             <Lazy let:load>
               <!-- might be a good idea to simply keep it loaded after first -->
               <TokenIcon visible={load} sources={assetSources(token)} />
