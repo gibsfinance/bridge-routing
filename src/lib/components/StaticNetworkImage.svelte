@@ -10,7 +10,7 @@
 <div class="relative">
   <img class="network-icon min-w-8" style:height={`${height}px`} src={network.icon} alt={network.alt} />
   {#if provider}
-    <div class="absolute -bottom-1 -right-1 rounded-full">
+    <div class="absolute -bottom-1 -left-1 rounded-full">
       <ProviderIcon {provider} size="16" />
     </div>
   {/if}

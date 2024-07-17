@@ -1,5 +1,4 @@
 import { formatUnits, parseUnits, type Hex } from 'viem'
-import type { chainsMetadata } from './auth/constants'
 
 export const humanReadableNumber = (num = 0n, decimals = 18) => {
   return num === 0n ? '0.0' : formatUnits(num, decimals)

@@ -3,7 +3,7 @@
   import Icon from '@iconify/svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { assets, bridgeKey, bridgeKeys } from '$lib/stores/bridge-settings'
+  import { assets, bridgeKey, bridgeKeys, desiredAssetIn } from '$lib/stores/bridge-settings'
   import { goto } from '$app/navigation'
 
   let dropdown!: HTMLDetailsElement
@@ -38,6 +38,7 @@
               for (const [key, val] of Object.entries(Chains)) {
                 if (val === option) {
                   await goto(key, { noScroll: true })
+                  desiredAssetIn.set(null)
                   dropdown.open = false
                   return
                 }

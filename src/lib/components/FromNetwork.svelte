@@ -5,15 +5,7 @@
   import type { VisualChain } from '$lib/stores/auth/types'
   import { decimalValidation } from '$lib/stores/utils'
   import { writable } from 'svelte/store'
-  import {
-    amountToBridge,
-    assets,
-    assetIn,
-    // assetOut,
-    bridgeKey,
-    inputBridgeAbi,
-    publicClient,
-  } from '$lib/stores/bridge-settings'
+  import { amountToBridge, assets, assetIn, bridgeKey, inputBridgeAbi, publicClient } from '$lib/stores/bridge-settings'
   import { validatable } from '$lib/stores/validatable'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { loading } from '$lib/stores/loading'
@@ -26,6 +18,10 @@
   export let asset!: Token
   let value = validatable('', (v) => decimalValidation(v, asset.decimals))
   const val = writable('')
+  $: if (asset) {
+    value.set('')
+    val.set('')
+  }
   $: {
     const $v = $value
     amountToBridge.set($v ? parseUnits($v, asset.decimals) : 0n)
@@ -140,9 +136,6 @@
 </div>
 
 <style lang="postcss">
-  /* .icon {
-    @apply transition-all;
-  } */
   :global(.open-modal-container:hover .icon) {
     @apply translate-x-1;
   }

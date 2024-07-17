@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Token, TokenList } from '$lib/types'
+  import type { Token } from '$lib/types'
   import * as viem from 'viem'
   import { createEventDispatcher, onMount } from 'svelte'
   export let openOnMount: boolean = false
@@ -9,44 +9,36 @@
   import Lazy from './Lazy.svelte'
   import { getAddress, isAddress } from 'viem'
   import Icon from '@iconify/svelte'
-  import { publicClient } from '$lib/stores/bridge-settings'
+  import { publicClient, assetSources, bridgableTokens } from '$lib/stores/bridge-settings'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { Chains } from '$lib/stores/auth/types'
   import { multicallErc20 } from '$lib/utils'
-  import { imageRoot } from '$lib/config'
+  import _ from 'lodash'
 
   const dispatch = createEventDispatcher()
   const submit = (token: Token) => {
     dispatch('submit', token)
   }
   let modal: HTMLDialogElement | null = null
-  loading.increment()
-  let tokens: Token[] = []
+  // loading.increment()
+  // let tokens: Token[] = []
   let temporaryTokens: Token[] = []
   let custom!: Token
-  onMount(() => {
-    // load a test
-    const doClose = (e: Event) => {
-      modalStore.type.set(null)
+  const doClose = (e: Event) => {
+    modalStore.type.set(null)
+  }
+  // load a test
+  try {
+    const tokensSerialized = localStorage.getItem('tokens')
+    if (tokensSerialized) {
+      temporaryTokens = JSON.parse(tokensSerialized)
     }
-    try {
-      const tokensSerialized = localStorage.getItem('tokens')
-      if (tokensSerialized) {
-        temporaryTokens = JSON.parse(tokensSerialized)
-      }
-    } catch (err) {}
-    fetch(`${imageRoot}/list/piteas`, {
-      credentials: 'omit',
-    })
-      .then(async (res) => (await res.json()) as TokenList)
-      .then(({ tokens: list }) => {
-        loading.decrement()
-        tokens = list
-        if (openOnMount) {
-          modal?.showModal()
-        }
-        modal?.addEventListener('close', doClose)
-      })
+  } catch (err) {}
+  onMount(() => {
+    modal?.addEventListener('close', doClose)
+    if (openOnMount) {
+      modal?.showModal()
+    }
     return () => {
       modal?.removeEventListener('close', doClose)
       modal = null
@@ -78,7 +70,7 @@
       : ({ name, symbol }: Token) => {
           return name.toLowerCase().includes(lowerVal) || symbol.toLowerCase().includes(lowerVal)
         }
-    return temporaryTokens.concat(tokens).filter(filter)
+    return temporaryTokens.concat($bridgableTokens).filter(filter)
   }
 
   const loadViaMulticall = async (target: viem.Hex | null) => {
@@ -95,12 +87,13 @@
       name,
       symbol,
       decimals,
+      chainId: Number(Chains.PLS),
       address: target,
       logoURI: '',
     }
     return custom
   }
-  $: subset = searchValue ? getSubset(searchValue) : temporaryTokens.concat(tokens)
+  $: subset = searchValue ? getSubset(searchValue) : temporaryTokens.concat($bridgableTokens)
   $: inputIsAddress = isAddress(searchValue)
   $: addButtonDisabled = !inputIsAddress || !!subset.length
   $: searchValueHex = inputIsAddress ? (searchValue as viem.Hex) : null
@@ -126,7 +119,7 @@
           <button class="flex flex-row grow py-2 cursor-pointer" on:click={() => selectToken(token)}>
             <Lazy let:load>
               <!-- might be a good idea to simply keep it loaded after first -->
-              <TokenIcon visible={load} src={token.logoURI} />
+              <TokenIcon visible={load} sources={assetSources(token)} />
             </Lazy>
             <span class="pl-2 leading-8">{token.name}</span>
           </button>

@@ -1,14 +1,14 @@
-import { derived, get, writable, type Readable } from 'svelte/store'
+import { derived, get, writable, type Readable, type Stores } from 'svelte/store'
 import { derived as asyncDerived } from './async'
 import * as viem from 'viem'
-// import { multicall, publicClient } from './auth/store'
 import { Chains, Provider, type DestinationChains } from './auth/types'
 import { loading } from './loading'
 import { page } from '$app/stores'
-import type { Token } from '../types'
+import type { Extensions, Token, TokenList } from '../types'
 import { imageRoot } from '$lib/config'
 import { chainsMetadata } from './auth/constants'
 import { multicallErc20, multicallRead } from '$lib/utils'
+import _ from 'lodash'
 
 export const activeChain = writable<Chains>(Chains.PLS)
 export const walletClient = writable<viem.WalletClient | undefined>()
@@ -69,52 +69,12 @@ export const assets = {
     homeBridge: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
     foreignBridge: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
     router: '0x5f542C3ce02a56586a91A7DE80deBF29947836eD',
-    // input: {
-    //   symbol: 'WETH',
-    //   name: 'Wrapped Ether from Ethereum',
-    //   address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
-    //   decimals: 18,
-    //   networkOrigination: Chains.ETH,
-    //   hostedNetwork: Chains.PLS,
-    // },
-    // output: {
-    //   symbol: 'WETH',
-    //   name: 'Wrapped Ether',
-    //   address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    //   decimals: 18,
-    //   networkOrigination: Chains.ETH,
-    //   hostedNetwork: Chains.ETH,
-    //   native: {
-    //     symbol: 'ETH',
-    //     name: 'Ether',
-    //   },
-    // },
   },
   [Chains.BNB]: {
     provider: 'tokensex',
     homeBridge: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
     foreignBridge: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
     router: '0x47525293647C3725D911Cc0f6E000D2E831c4219',
-    // input: {
-    //   symbol: 'WBNB',
-    //   name: 'Wrapped BNB from BSC (Tokens Express)',
-    //   address: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
-    //   decimals: 18,
-    //   networkOrigination: Chains.BNB,
-    //   hostedNetwork: Chains.PLS,
-    // },
-    // output: {
-    //   symbol: 'WBNB',
-    //   name: 'Wrapped BNB',
-    //   address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
-    //   decimals: 18,
-    //   networkOrigination: Chains.BNB,
-    //   hostedNetwork: Chains.BNB,
-    //   native: {
-    //     symbol: 'BNB',
-    //     name: 'BNB',
-    //   },
-    // },
   },
 } as {
     [k in DestinationChains]: {
@@ -122,8 +82,6 @@ export const assets = {
       homeBridge: viem.Hex
       foreignBridge: viem.Hex
       router: viem.Hex
-      // input?: Token
-      // output?: Token
     }
   }
 
@@ -133,21 +91,24 @@ const defaultAssetIn = {
     name: 'Wrapped Ether from Ethereum',
     address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
     decimals: 18,
-    logoURI: imageRoot + '/1/0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
+    logoURI: `${imageRoot}/image/1/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2`,
+    chainId: 369,
   },
   [Chains.BNB]: {
     symbol: 'WBNB',
     name: 'Wrapped BNB',
     address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
     decimals: 18,
-    logoURI: imageRoot + '/56/0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+    logoURI: `${imageRoot}/image/56/0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c`,
+    chainId: 369,
   },
 } as Record<DestinationChains, Token>
-
 
 export const bridgeKeys = Object.keys(assets) as DestinationChains[]
 
 export const bridgeKey = derived([page], ([$page]) => (Chains[$page.params.route as keyof typeof Chains] || Chains.ETH) as DestinationChains)
+
+export const provider = derived([bridgeKey], ([$bridgeKey]) => assets[$bridgeKey].provider)
 
 export const foreignSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === Chains.BNB ? false : true))
 /** the estimated gas that will be consumed by running the foreign transaction */
@@ -162,21 +123,26 @@ export const destination = writable(viem.zeroAddress as viem.Hex)
 export const unwrapSetting = writable(true)
 /** the asset going into the home bridge */
 export const desiredAssetIn = writable<Token | null>(null)
-const fetchedAssetIn: Readable<Token | null> = derived([activeChain, desiredAssetIn], ([$activeChain, $desiredAssetIn], set) => {
+const fetchedAssetIn: Readable<Token | null> = derived([desiredAssetIn], ([$desiredAssetIn], set) => {
   set(null)
   if (!$desiredAssetIn) return
   const addr = $desiredAssetIn.address
   multicallErc20({
-    client: clientFromChain($activeChain),
+    client: clientFromChain(Chains.PLS),
     target: addr,
-    chain: chainsMetadata[$activeChain],
+    chain: chainsMetadata[Chains.PLS],
   }).then(([name, symbol, decimals]) => {
-    if ($desiredAssetIn !== get(desiredAssetIn)) return
+    if ($desiredAssetIn !== get(desiredAssetIn)) {
+      console.log('skip set')
+      return
+    }
     // console.log(name, symbol, decimals, $desiredAssetIn)
     set({
       name, symbol, decimals,
       address: addr,
-      logoURI: imageRoot + `/${Number($activeChain)}/${addr}`
+      chainId: Number(Chains.PLS),
+      logoURI: `${imageRoot}/image/${Number(Chains.PLS)}/${addr}`,
+      extensions: getExtensions(Number(Chains.PLS), addr),
     } as Token)
   })
 })
@@ -201,7 +167,20 @@ const backupAssetIn = {
   symbol: 'xxx',
   decimals: 18,
   logoURI: '',
+  chainId: 369,
 } as Token
+
+const extensions = new Map<string, Extensions>()
+
+export const registerExtensions = (chainId: number, address: viem.Hex, tokenExts: Extensions | undefined) => {
+  extensions.set(`${chainId}-${address}`, tokenExts as any)
+}
+
+export const getExtensions = (chainId: number, address: viem.Hex) => {
+  const key = `${chainId}-${address}`
+  return extensions.get(key)
+}
+
 /** the asset coming out on the other side of the bridge (foreign) */
 export const assetOut = asyncDerived(
   [activeChain, bridgeAddress, assetIn, bridgeKey],
@@ -215,8 +194,6 @@ export const assetOut = asyncDerived(
       calls: [
         { functionName: 'homeTokenAddress', args },
         { functionName: 'foreignTokenAddress', args },
-        // { functionName: 'bridgedTokenAddress', args },
-        // { functionName: 'nativeTokenAddress', args },
       ],
     })
     const [
@@ -227,10 +204,11 @@ export const assetOut = asyncDerived(
       // nativeTokenAddress,
     ] = mappings
 
+    let res = backupAssetIn
     if (homeTokenAddress !== viem.zeroAddress) {
-      return backupAssetIn
+      // return backupAssetIn
     } else if (foreignTokenAddress !== viem.zeroAddress) {
-      const [name, symbol, decimals, wNative] = await multicallRead<[string, string, number, viem.Hex]>({
+      const [name, symbol, decimals] = await multicallRead<[string, string, number, viem.Hex]>({
         client: clientFromChain($bridgeKey),
         chain: chainsMetadata[$bridgeKey],
         abi: viem.erc20Abi,
@@ -241,27 +219,30 @@ export const assetOut = asyncDerived(
           functionName: 'symbol',
         }, {
           functionName: 'decimals',
-        }, {
-          functionName: 'WETH',
-          target: assets[$bridgeKey].router,
-          abi: outputRouterAbi,
+          // }, {
+          //   functionName: 'WETH',
+          //   target: assets[$bridgeKey].router,
+          //   abi: outputRouterAbi,
         }],
       })
-      return {
+      res = {
         name, symbol, decimals,
+        chainId: Number($bridgeKey),
         address: foreignTokenAddress,
         logoURI: imageRoot + `/${Number($bridgeKey)}/${foreignTokenAddress}`,
-      }
+      } as Token
     } else {
       // assumptions
-      // console.log('assumptions hit', $assetIn)
-      return {
+      res = {
         ...$assetIn,
+        chainId: Number($bridgeKey),
         address: viem.zeroAddress,
         name: `${$assetIn.name} from Pulsechain`,
         symbol: `w${$assetIn.symbol}`,
-      }
+      } as Token
     }
+    res.extensions = getExtensions(res.chainId, res.address)
+    return res
   }, backupAssetIn)
 
 export const isNative = ($assetIn: Token) => {
@@ -322,8 +303,8 @@ export const desiredCompensationRatio = derived(
         : viem.getAddress(defaultAssetIn[$bridgeKey].address) === viem.getAddress($assetIn.address)
           // the reason these numbers are so much higher is because they are not linked to the gas that will be spent
           // so in order to give the best user experience, it is best to give people a higher buffer
-          ? viem.parseEther('0.2') // 20%
-          : viem.parseEther('0.5') // 50%
+          ? viem.parseEther('0.5') // 20%
+          : viem.parseEther('1') // 50%
     )
   ))
 
@@ -451,20 +432,22 @@ export const feeTypeSettings = derived(
     const th0 = $feeType === 'fixed' ? 1n : 0n
     const st1 = $unwrap ? 1n : 0n
     const nd2 = 1n // always exclude priority when you can
-    return (nd2 << 2n) | (st1 << 1n) | th0
+    const rd3 = $feeType === '%' ? 1n : 0n
+    return (rd3 << 3n) | (nd2 << 2n) | (st1 << 1n) | th0
   },
 )
+
 /** the encoded struct to be passed to the foreign router */
 export const feeDirectorStructEncoded = derived(
-  [destination, feeTypeSettings, limit, incentiveRatio],
-  ([$destination, $feeTypeSettings, $limit, $incentiveRatio]) => {
+  [destination, feeTypeSettings, limit, incentiveRatio, feeType, basisPointIncentiveFee],
+  ([$destination, $feeTypeSettings, $limit, $incentiveRatio, $feeType, $basisPointIncentiveFee]) => {
     const params = viem.parseAbiParameters('(address, uint256, uint256, uint256)')
     return viem.encodeAbiParameters(params, [
       [
         $destination,
         $feeTypeSettings,
         $limit,
-        $incentiveRatio,
+        $feeType === '%' ? $basisPointIncentiveFee : $incentiveRatio,
       ],
     ])
   },
@@ -574,4 +557,79 @@ export const loadFeeFor = async (fromId: Chains, toId: Chains) => {
   })
   loading.decrement('fee')
   return get(bridgeFrom).get(fromId)!.get(toId)!
+}
+
+export const assetSources = (asset: Token) => {
+  const bridgedImage = [...Object.entries(asset.extensions?.bridgeInfo || {}).map(([chainId, info]) => {
+    if (!info.tokenAddress) {
+      return null
+    }
+    return `${imageRoot}/image/${chainId}/${info.tokenAddress}`
+  })] as string[]
+  if (!asset.chainId) {
+    console.trace(asset)
+  }
+  return [
+    asset.logoURI,
+    // `${imageRoot}/image/fallback/7fc959085dc2b96734a6e51c82086cb6b65aa5fe4492fe974f4b0ab7ba02d480/${asset.chainId}/${asset.address}`,
+  ].concat(bridgedImage).filter((str): str is string => !!str)
+}
+
+export const bridgableTokens = derived<Stores, Token[]>([provider], (() => {
+  const cache = new Map<string, Token[]>()
+  return ([$provider], set) => {
+    let tokens = cache.get($provider)
+    if (tokens) {
+      set(tokens)
+      return
+    }
+    loading.increment()
+    Promise.all([
+      fetch(`${imageRoot}/list/${$provider}-bridge/foreign?extensions=bridgeInfo&chainId=369`, {
+        credentials: 'omit',
+      }),
+      fetch(`${imageRoot}/list/${$provider}-bridge/home?extensions=bridgeInfo&chainId=369`, {
+        credentials: 'omit',
+      }),
+    ]).then(async (results) => {
+      const responses = await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
+      loading.decrement()
+      const list = _(responses).map('tokens').flatten().value()
+      tokens = _.sortBy(list, 'name')
+      tokens.forEach((token) => {
+        // register on a central cache so that tokens that are gotten from onchain
+        // still have all extensions
+        registerExtensions(token.chainId, token.address, token.extensions)
+        if (!token.logoURI) {
+          token.logoURI = `${imageRoot}/image/${token.chainId}/${token.address}`
+        }
+      })
+      cache.set($provider, tokens)
+      set(tokens)
+    }).catch((err) => {
+      loading.decrement()
+      throw err
+    })
+  }
+})(), [] as Token[])
+
+export const getOriginationChainId = (asset: Token) => {
+  const bridgeInfo = asset.extensions?.bridgeInfo
+  const $bridgeKey = get(bridgeKey)
+  if (_.isEmpty(bridgeInfo)) {
+    return Number($bridgeKey)
+  }
+  const bridgeKeyInfo = bridgeInfo[Number($bridgeKey)]
+  if (bridgeKeyInfo) {
+    return viem.getAddress(assets[$bridgeKey].foreignBridge) === viem.getAddress(bridgeKeyInfo.originationBridgeAddress)
+      ? Number($bridgeKey)
+      : Number(Chains.PLS)
+  }
+  const info = bridgeInfo[Number(Chains.PLS)]
+  if (!info) {
+    return asset.chainId
+  }
+  return viem.getAddress(assets[$bridgeKey].homeBridge) === viem.getAddress(info.originationBridgeAddress)
+    ? Number($bridgeKey)
+    : Number(Chains.PLS)
 }

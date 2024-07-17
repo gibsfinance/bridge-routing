@@ -41,9 +41,6 @@ dependencies:
   svelte-lazy:
     specifier: ^1.2.7
     version: 1.2.7(svelte@4.2.17)
-  svelte-lazy-image:
-    specifier: ^0.5.1
-    version: 0.5.1
   sveltekit-search-params:
     specifier: ^2.1.2
     version: 2.1.2(@sveltejs/kit@2.5.8)(svelte@4.2.17)(vite@5.2.11)
@@ -5663,10 +5660,6 @@ packages:
       sade: 1.8.1
       svelte: 3.59.2
       tiny-glob: 0.2.9
-    dev: false
-
-  /svelte-lazy-image@0.5.1:
-    resolution: {integrity: sha512-BDwywMngYjrEtL73N2ZKYYnWlNBWSnw31y1Mb3kNeXVc/9iDir6Ew3bfuDtuEyi3evBFXF0jixkCMFuTseWjWQ==}
     dev: false
 
   /svelte-lazy@1.2.7(svelte@4.2.17):

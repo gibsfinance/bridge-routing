@@ -28,11 +28,11 @@
 </script>
 
 <div class="my-2 text-sm shadow-md rounded-lg">
-  <div class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-row">
+  <div class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-row hover:z-10">
     <span class="w-32">Amount In</span>
     <span>{humanReadableNumber($amountToBridge, asset.decimals)} {asset.symbol}</span>
   </div>
-  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row">
+  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10">
     <span class="w-32">Bridged</span>
     <span class="flex flex-row justify-between grow">
       <span>-{viem.formatEther(bridgeFee * 100n)}%</span>
@@ -41,7 +41,7 @@
       </span>
     </span>
   </div>
-  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row">
+  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10">
     <span class="w-32">Network</span>
     <span class="flex flex-row justify-between grow">
       <span>⛽</span>
@@ -52,7 +52,7 @@
       </span>
     </span>
   </div>
-  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative">
+  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
     <span class="w-32">
       {#if $feeType === 'gas+%'}Estimated
       {/if}Cost
@@ -71,7 +71,7 @@
     <UndercompensatedWarning />
   </div>
   {#if $feeType !== 'gas+%'}
-    <div class="bg-slate-100 mt-[1px] py-2 px-3 rounded-b-lg justify-between flex flex-row relative">
+    <div class="bg-slate-100 mt-[1px] py-2 px-3 rounded-b-lg justify-between flex flex-row relative hover:z-10">
       <span class="w-32">Delivered</span>
       <span class="flex flex-row items-end self-end">
         <Loading key="gas">
@@ -83,14 +83,14 @@
         tooltip="Many of your tokens are being lost to fees, try increasing the number of input tokens or decreasing the fee limits" />
     </div>
   {:else}
-    <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row">
+    <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10">
       <span class="w-32">Estimated Delivery</span>
       <span class="flex flex-row items-end self-end">
         ~&nbsp;<Loading key="gas">{humanReadableNumber(estimated < 0n ? 0n : estimated, asset.decimals)}</Loading
         >&nbsp;{utils.nativeSymbol(asset)}
       </span>
     </div>
-    <div class="bg-slate-100 mt-[1px] py-2 px-3 rounded-b-lg justify-between flex flex-row relative">
+    <div class="bg-slate-100 mt-[1px] py-2 px-3 rounded-b-lg justify-between flex flex-row relative hover:z-10">
       <span class="w-32">Minimum</span>
       <span class="flex flex-row justify-between grow">
         <span>&gt;=</span>

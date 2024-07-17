@@ -1,4 +1,4 @@
-import { derived as d, type Stores, type Readable, type StoresValues, type Unsubscriber, type Updater } from 'svelte/store'
+import { derived as d, type Stores, type StoresValues } from 'svelte/store'
 
 export const derived = <S extends Stores, T>(
   stores: S,

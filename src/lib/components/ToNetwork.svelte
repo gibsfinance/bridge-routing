@@ -43,11 +43,11 @@
   let unwatch!: () => void
   const doUnwatch = () => {
     loading.decrement('gas')
-    loading.increment('gas')
     unwatch?.()
   }
   $: if (publicClient) {
     doUnwatch()
+    loading.increment('gas')
     unwatch = publicClient.watchBlocks({
       emitOnBegin: true,
       onBlock: async (block) => {
@@ -118,7 +118,6 @@
   )
   $: networkOptions = Object.keys(chainsMetadata).filter((cId): cId is Chains => cId !== Chains.PLS)
   $: decimals = asset.decimals
-  // $: console.log($estimatedCost, $amountAfterBridgeFee, decimals)
   $: expectedAmountOut =
     $amountToBridge &&
     humanReadableNumber(
@@ -184,7 +183,7 @@
         on:click={() => {
           costLimitLocked = !costLimitLocked
         }}>
-        Cost Limit&nbsp;{#if costLimitLocked || $feeType !== 'gas+%'}🔒{:else}🔓{/if}
+        Cost&nbsp;{#if $feeType === 'gas+%'}Limit&nbsp;{#if costLimitLocked || $feeType !== 'gas+%'}🔒{:else}🔓{/if}{/if}
       </button>
       <button
         class="tooltip tooltip-top tooltip-left-toward-center flex flex-row items-end self-end"

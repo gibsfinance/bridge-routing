@@ -1,6 +1,6 @@
 {
   "name": "gibsfinance",
-  "version": "0.2.1",
+  "version": "0.3.1",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -58,7 +58,6 @@
     "js-sha3": "^0.9.3",
     "lodash": "^4.17.21",
     "svelte-lazy": "^1.2.7",
-    "svelte-lazy-image": "^0.5.1",
     "sveltekit-search-params": "^2.1.2"
   }
 }

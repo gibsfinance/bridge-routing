@@ -6,8 +6,9 @@
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import Settings from './Settings.svelte'
   import Details from './Details.svelte'
-  import { assetIn, assetOut, bridgeKey } from '$lib/stores/bridge-settings'
+  import { assetIn, assetOut, bridgableTokens, bridgeKey } from '$lib/stores/bridge-settings'
   import { Chains } from '$lib/stores/auth/types'
+  import { get } from 'svelte/store'
   $: originationNetwork = chainsMetadata[Chains.PLS]
   $: destinationNetwork = chainsMetadata[$bridgeKey]
   let dropdowns: Record<string, boolean> = {}
@@ -19,6 +20,7 @@
     }
     dropdowns[e.detail] = !dropdowns[e.detail]
   }
+  get(bridgableTokens)
 </script>
 
 <div class="bg-slate-200 p-3 md:p-4 rounded-lg shadow-inner text-slate-950 my-8">

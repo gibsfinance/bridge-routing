@@ -36,22 +36,30 @@ export const multicallRead = async <T,>({
     allowFailure: call.allowFailure || false,
     target: (call.target || target) as viem.Hex,
   }))
-  const reads = await multicall.read.aggregate3([arg])
-  return calls.map((call, i) =>
-    call.allowFailure
-      ? reads[i].success
-        ? viem.decodeFunctionResult({
+  let reads: null | Awaited<ReturnType<typeof multicall.read.aggregate3>> = null
+  try {
+    reads = await multicall.read.aggregate3([arg])
+    if (!reads) throw reads
+    const r = reads
+    return calls.map((call, i) =>
+      call.allowFailure
+        ? r[i].success
+          ? viem.decodeFunctionResult({
+            abi: call.abi || abi,
+            functionName: call.functionName,
+            data: r[i].returnData,
+          })
+          : r[i].returnData
+        : viem.decodeFunctionResult({
           abi: call.abi || abi,
           functionName: call.functionName,
-          data: reads[i].returnData,
-        })
-        : reads[i].returnData
-      : viem.decodeFunctionResult({
-        abi: call.abi || abi,
-        functionName: call.functionName,
-        data: reads[i].returnData,
-      }),
-  ) as T
+          data: r[i].returnData,
+        }),
+    ) as T
+  } catch (err) {
+    console.log(target, calls, reads)
+    throw err
+  }
 }
 
 export const multicallErc20 = async ({
