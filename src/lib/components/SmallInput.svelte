@@ -5,6 +5,7 @@
   import Icon from '@iconify/svelte'
   import { humanReadableNumber, stripNonNumber } from '$lib/stores/utils'
   import { parseUnits } from 'viem'
+  import _ from 'lodash'
 
   const dispatch = createEventDispatcher()
   export let isNumber = false
@@ -13,6 +14,7 @@
   export let suffix = ''
   export let editOnLeft = false
   let val = validatable(value, validate)
+  let lastValue = value
   const changeFromEvent: FormEventHandler<HTMLInputElement> = (e) => {
     let v = e.currentTarget.value
     v = isNumber ? stripNonNumber(v) : v
@@ -21,15 +23,28 @@
   }
   const _updateValue = (v: string, fromInput = false) => {
     if (isNumber) {
-      const decimals = v.split('.')[1]?.length || 0
-      const valAsInt = parseUnits(v, decimals)
-      value = humanReadableNumber(valAsInt, decimals)
-      dispatch('update', {
-        value: stripNonNumber(value),
-        fromInput,
-      })
+      const d = v.split('.')[1]?.length
+      // const decimals = v.split('.')[1]?.length || 0
+      const valAsInt = parseUnits(v, d || 0)
+      // console.log(v, value)
+      if (_.isNumber(d) && !d) {
+        return
+      }
+      if (valAsInt) {
+        value = humanReadableNumber(valAsInt, d || 0)
+        lastValue = value
+        dispatch('update', {
+          value: stripNonNumber(value),
+          fromInput,
+        })
+      } else if (v) {
+        lastValue = '0'
+      }
     } else {
       value = v
+      if (v) {
+        lastValue = value
+      }
       dispatch('update', {
         value,
         fromInput,
@@ -43,6 +58,12 @@
   const focusOnInput = () => {
     input.focus()
     input.setSelectionRange(0, input.value.length)
+  }
+  const ensureValue = () => {
+    if (!input.value) {
+      value = lastValue
+      // console.log('somehow revert', lastValue)
+    }
   }
 </script>
 
@@ -59,7 +80,8 @@
       bind:value
       spellcheck="false"
       bind:this={input}
-      on:input={changeFromEvent} />
+      on:input={changeFromEvent}
+      on:blur={ensureValue} />
   </div>
   {#if suffix}&nbsp;{suffix}&nbsp;{:else if !editOnLeft}&nbsp;{/if}
   {#if !editOnLeft}

@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 
 const loadingCounter = writable({
   total: 0,
@@ -12,6 +12,13 @@ const loadingCounter = writable({
     return !this.categories[key as string]
   },
 })
+
+setInterval(() => {
+  const c = get(loadingCounter)
+  if (!c.isResolved()) {
+    console.log(c)
+  }
+}, 4_000)
 
 export const loading = {
   ...loadingCounter,
