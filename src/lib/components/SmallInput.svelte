@@ -16,17 +16,7 @@
   let val = validatable(value, validate)
   let lastValue = value
   $: {
-    if (isNumber) {
-      let [i, d] = value.split('.')
-      if (i) {
-        i = numberWithCommas(i)
-      }
-      if (d) {
-        value = `${i}.${d}`
-      } else {
-        value = i
-      }
-    }
+    _updateValue(value, false)
   }
   const changeFromEvent: FormEventHandler<HTMLInputElement> = (e) => {
     let v = e.currentTarget.value
@@ -42,7 +32,11 @@
         return
       }
       if (valAsInt) {
-        value = humanReadableNumber(valAsInt, d || 0)
+        const next = humanReadableNumber(valAsInt, d || 0)
+        if (next === value) {
+          return
+        }
+        value = next
         lastValue = value
         dispatch('update', {
           value: stripNonNumber(value),
