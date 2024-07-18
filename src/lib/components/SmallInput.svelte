@@ -16,14 +16,16 @@
   let val = validatable(value, validate)
   let lastValue = value
   $: {
-    let [i, d] = value.split('.')
-    if (i) {
-      i = numberWithCommas(i)
-    }
-    if (d) {
-      value = `${i}.${d}`
-    } else {
-      value = i
+    if (isNumber) {
+      let [i, d] = value.split('.')
+      if (i) {
+        i = numberWithCommas(i)
+      }
+      if (d) {
+        value = `${i}.${d}`
+      } else {
+        value = i
+      }
     }
   }
   const changeFromEvent: FormEventHandler<HTMLInputElement> = (e) => {
