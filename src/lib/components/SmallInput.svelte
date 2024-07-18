@@ -3,7 +3,7 @@
   import { validatable } from '$lib/stores/validatable'
   import type { FormEventHandler } from 'svelte/elements'
   import Icon from '@iconify/svelte'
-  import { humanReadableNumber, stripNonNumber } from '$lib/stores/utils'
+  import { humanReadableNumber, numberWithCommas, stripNonNumber } from '$lib/stores/utils'
   import { parseUnits } from 'viem'
   import _ from 'lodash'
 
@@ -15,6 +15,17 @@
   export let editOnLeft = false
   let val = validatable(value, validate)
   let lastValue = value
+  $: {
+    let [i, d] = value.split('.')
+    if (i) {
+      i = numberWithCommas(i)
+    }
+    if (d) {
+      value = `${i}.${d}`
+    } else {
+      value = i
+    }
+  }
   const changeFromEvent: FormEventHandler<HTMLInputElement> = (e) => {
     let v = e.currentTarget.value
     v = isNumber ? stripNonNumber(v) : v
@@ -24,9 +35,7 @@
   const _updateValue = (v: string, fromInput = false) => {
     if (isNumber) {
       const d = v.split('.')[1]?.length
-      // const decimals = v.split('.')[1]?.length || 0
-      const valAsInt = parseUnits(v, d || 0)
-      // console.log(v, value)
+      const valAsInt = parseUnits(stripNonNumber(v), d || 0)
       if (_.isNumber(d) && !d) {
         return
       }
@@ -51,6 +60,9 @@
       })
     }
   }
+  $: if (_.isString($val)) {
+    _updateValue($val)
+  }
   $: $val && _updateValue($val)
   let className = ''
   export { className as class }
@@ -62,7 +74,6 @@
   const ensureValue = () => {
     if (!input.value) {
       value = lastValue
-      // console.log('somehow revert', lastValue)
     }
   }
 </script>
