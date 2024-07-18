@@ -36,12 +36,18 @@
       return null
     }
     loading.increment('balance')
-    return $publicClient.readContract({
-      abi: erc20Abi,
-      functionName: 'balanceOf',
-      args: [$walletAccount],
-      address: asset.address,
-    })
+    return $publicClient
+      .readContract({
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [$walletAccount],
+        address: asset.address,
+      })
+      .then((res) => {
+        loading.decrement('balance')
+        balance = res || 0n
+        return balance
+      })
   }
   const getMinAmount = async () => {
     return $publicClient.readContract({
@@ -52,11 +58,7 @@
     })
   }
 
-  $: $walletAccount &&
-    getBalance().then((res) => {
-      loading.decrement('balance')
-      balance = res || 0n
-    })
+  $: $walletAccount && getBalance()
 
   let unwind!: () => void
   const doUnwind = () => {
@@ -69,10 +71,7 @@
   $: {
     doUnwind()
     if ($publicClient) {
-      getBalance().then((res) => {
-        loading.decrement('balance')
-        balance = res || 0n
-      })
+      getBalance()
       // assume that the min amount will not change while the page is loaded
       getMinAmount().then((res) => {
         minInput.set(res)
@@ -85,7 +84,7 @@
         onLogs: async (logs) => {
           const transfer = logs.filter((l) => l.eventName === 'Transfer')
           if (transfer.length) {
-            balance = (await getBalance()) || 0n
+            await getBalance()
           }
         },
       })
