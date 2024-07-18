@@ -20,8 +20,6 @@
     dispatch('submit', token)
   }
   let modal: HTMLDialogElement | null = null
-  // loading.increment()
-  // let tokens: Token[] = []
   let temporaryTokens: Token[] = []
   let custom!: Token
   const doClose = (e: Event) => {

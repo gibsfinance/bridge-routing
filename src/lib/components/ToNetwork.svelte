@@ -1,10 +1,11 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte'
-  import { formatUnits, parseUnits } from 'viem'
+  import { formatEther, formatUnits, parseEther, parseUnits } from 'viem'
   import NetworkSummary from './NetworkSummary.svelte'
   import { decimalValidation, humanReadableNumber } from '$lib/stores/utils'
   import { loading } from '$lib/stores/loading'
   import Loading from '$lib/components/Loading.svelte'
+  import LockIcon from '$lib/components/LockIcon.svelte'
   import UndercompensatedWarning from '$lib/components/warnings/Undercompensated.svelte'
   import FeeTypeToggle from '$lib/components/FeeTypeToggle.svelte'
   import {
@@ -22,6 +23,9 @@
     oneEther,
     amountToBridge,
     feeType,
+    isNative,
+    estimatedNetworkCost,
+    incentiveRatio,
   } from '$lib/stores/bridge-settings'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
@@ -75,18 +79,42 @@
     if (!store) return
     store.set(val)
   }
-  const defaultIncFee = '10'
-  const defaultBasisPointIncFee = '0.2'
+  const getDefaultIncentiveFee = (asset: Token) => {
+    if (isNative(asset)) {
+      return '10'
+    }
+    return '50'
+  }
+  $: defaultIncFee = getDefaultIncentiveFee(asset)
   $: incentiveFeeUpdated($feeType === 'gas+%' ? defaultIncFee : defaultBasisPointIncFee)
   let defaultLimit = '0.001'
+  let defaultBasisPointIncFee = '0.2'
   let costLimitLocked = false
+  let deliveryFeeLocked = false
+  const scaledBasisPoint = parseEther('0.01')
   // only happens once
   $: asset && limitUpdated(defaultLimit)
   $: {
     if ($feeType === 'fixed') {
       // defaultLimit = '0.01'
       // limitUpdated(defaultLimit)
-    } else if ($feeType === '%' && asset) {
+    } else if (!deliveryFeeLocked && $feeType === '%' && asset) {
+      // if (lim > 0n) {
+      if ($amountAfterBridgeFee) {
+        const max = parseEther('2')
+        const min = parseEther('0.05')
+        const ratioOffset = $estimatedNetworkCost / ($amountAfterBridgeFee / 25_000n)
+        let target = min + scaledBasisPoint * ratioOffset
+        if (target > max) {
+          target = max
+        } else if (target < min) {
+          target = min
+        }
+        defaultBasisPointIncFee = formatUnits(target, 18)
+      } else {
+        defaultBasisPointIncFee = '2'
+      }
+      incentiveFeeUpdated(defaultBasisPointIncFee)
       let lim = 0n
       lim = ($amountAfterBridgeFee * $basisPointIncentiveFee) / oneEther
       const proposedDefaultLimit = formatUnits(lim, asset.decimals)
@@ -96,16 +124,18 @@
       }
     } else if (!costLimitLocked && $feeType === 'gas+%' && asset) {
       // let it float as the base fee per gas is updated
-      const lowResLimit = $latestBaseFeePerGas / (10n ** 8n * 5n)
+      const lowResLimit = ($latestBaseFeePerGas * $incentiveRatio) / (10n ** 8n * 10n * oneEther)
       let lim = lowResLimit * 10n ** 15n
-      lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset.decimals))
-      if (lim > $amountAfterBridgeFee) {
-        lim = $amountAfterBridgeFee
-      }
-      const proposedDefaultLimit = formatUnits(lim, asset.decimals)
-      if (proposedDefaultLimit !== defaultLimit) {
-        defaultLimit = proposedDefaultLimit
-        limitUpdated(defaultLimit)
+      if ($priceCorrective > 0n) {
+        lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset.decimals))
+        if (lim > $amountAfterBridgeFee) {
+          lim = $amountAfterBridgeFee
+        }
+        const proposedDefaultLimit = formatUnits(lim, asset.decimals)
+        if (proposedDefaultLimit !== defaultLimit) {
+          defaultLimit = proposedDefaultLimit
+          limitUpdated(defaultLimit)
+        }
       }
     }
   }
@@ -123,6 +153,7 @@
     humanReadableNumber(
       $amountAfterBridgeFee - $estimatedCost > 0n ? $amountAfterBridgeFee - $estimatedCost : 0n,
       decimals,
+      Math.floor(decimals / 3),
     )
 </script>
 
@@ -143,7 +174,7 @@
   <div class="bg-slate-100 mt-[1px] py-1 relative hover:z-10">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <span class="flex items-center">
-        <span class="mr-1">Delivery Fee</span>
+        <span class="mr-1">Delivery Fee</span>&nbsp;
         <FeeTypeToggle
           active={$feeType}
           options={[
@@ -153,7 +184,13 @@
           ]}
           on:change={(e) => {
             feeType.set(e.detail.key)
-          }} />
+          }} />{#if $feeType === '%'}<button
+            type="button"
+            class="flex px-1"
+            on:click={() => {
+              deliveryFeeLocked = !deliveryFeeLocked
+            }}><LockIcon locked={deliveryFeeLocked} /></button
+          >{/if}
       </span>
       <button
         class="flex flex-row strike tooltip tooltip-top tooltip-left-toward-center"
@@ -183,17 +220,18 @@
         on:click={() => {
           costLimitLocked = !costLimitLocked
         }}>
-        Cost&nbsp;{#if $feeType === 'gas+%'}Limit&nbsp;{#if costLimitLocked || $feeType !== 'gas+%'}🔒{:else}🔓{/if}{/if}
+        Cost&nbsp;{#if $feeType === 'gas+%'}Limit&nbsp;<LockIcon
+            locked={costLimitLocked || $feeType !== 'gas+%'} />{/if}
       </button>
       <button
         class="tooltip tooltip-top tooltip-left-toward-center flex flex-row items-end self-end"
         data-tip={$feeType === 'fixed'
           ? 'The fixed fee to tip if the validator does the work'
-          : 'The max you are willing to tip to the address delivering native eth'}
+          : 'The max you are willing to tip to the address'}
         on:click={focusOnInputChild}>
-        <span class="flex" class:hidden={$feeType !== 'gas+%'}>&lt;=</span>&nbsp;<Loading key="gas">
+        <Loading key="gas">
           {#if $feeType === '%'}
-            <span>{defaultLimit}</span>
+            <span>{humanReadableNumber(parseUnits(defaultLimit, asset.decimals), asset.decimals)}</span>
           {:else}
             <SmallInput
               value={defaultLimit}

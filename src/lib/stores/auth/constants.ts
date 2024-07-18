@@ -1,12 +1,8 @@
 import { mainnet, pulsechain, bsc } from 'viem/chains'
 import type { ChainsMetadata } from './types'
 import { Chains } from './types'
-import { imageRoot } from '$lib/config'
+import * as imageLinks from '$lib/stores/image-links'
 import bnbNetworkUrl from '$lib/images/networks/0x38.png'
-
-const icon = (chainId: number) => (
-  `${imageRoot}/image/${chainId}`
-)
 
 /**
  * all of the chains that are enabled in this dapp
@@ -16,7 +12,7 @@ export const chainsMetadata = {
   [Chains.PLS]: {
     ...pulsechain,
     chainId: Chains.PLS,
-    icon: icon(pulsechain.id),
+    icon: imageLinks.network(pulsechain.id),
     alt: 'a pink blue and purple hexagon with an ekg line running horizontally',
     // rpcUrls: {
     //   default: {
@@ -37,7 +33,7 @@ export const chainsMetadata = {
   [Chains.ETH]: {
     ...mainnet,
     chainId: Chains.ETH,
-    icon: icon(mainnet.id),
+    icon: imageLinks.network(mainnet.id),
     alt: 'two pyramids joined on one side',
     // rpcUrls: {
     //   default: {

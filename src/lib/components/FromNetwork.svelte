@@ -3,16 +3,11 @@
   import { walletAccount } from '$lib/stores/auth/store'
   import { erc20Abi, formatUnits, parseUnits } from 'viem'
   import type { VisualChain } from '$lib/stores/auth/types'
-  import { decimalValidation } from '$lib/stores/utils'
+  import { decimalValidation, humanReadableNumber, stripNonNumber } from '$lib/stores/utils'
   import { writable } from 'svelte/store'
-  import {
-    amountToBridge,
-    destinationChains,
-    assetIn,
-    bridgeKey,
-    inputBridgeAbi,
-    publicClient,
-  } from '$lib/stores/bridge-settings'
+  import { amountToBridge, assetIn, bridgeKey, publicClient } from '$lib/stores/bridge-settings'
+  import { destinationChains } from '$lib/stores/config'
+  import * as abis from '$lib/stores/abis'
   import { validatable } from '$lib/stores/validatable'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { loading } from '$lib/stores/loading'
@@ -20,6 +15,7 @@
   import Icon from '@iconify/svelte'
   import * as modalStore from '$lib/stores/modal'
   import type { Token } from '$lib/types'
+  import type { FormEventHandler } from 'svelte/elements'
 
   export let network!: VisualChain
   export let asset!: Token
@@ -49,7 +45,7 @@
   }
   const getMinAmount = async () => {
     return $publicClient.readContract({
-      abi: inputBridgeAbi,
+      abi: abis.inputBridge,
       functionName: 'minPerTx',
       args: [$assetIn.address],
       address: destinationChains[$bridgeKey].homeBridge,
@@ -98,6 +94,15 @@
   const openModal = () => {
     modalStore.type.set('choosetoken')
   }
+  const handleInput: FormEventHandler<HTMLInputElement> = (e) => {
+    const current = stripNonNumber(e.currentTarget.value)
+    value.set(current)
+    const valAsInt = parseUnits(current, asset.decimals)
+    if (!valAsInt) return
+    const valu = humanReadableNumber(valAsInt, asset.decimals)
+    val.set(valu)
+    e.currentTarget.value = valu
+  }
 </script>
 
 <div class="shadow-md rounded-lg">
@@ -108,8 +113,9 @@
       {balance}
       showMax
       on:max-balance={() => {
-        value.set(formatUnits(balance, asset.decimals))
-        val.set($value)
+        const updated = formatUnits(balance, asset.decimals)
+        value.set(updated)
+        val.set(updated)
       }} />
   </div>
   <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
@@ -117,13 +123,10 @@
       <input
         class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-xl sm:text-2xl w-full"
         placeholder="0.0"
-        bind:value={$val}
+        value={$val}
         on:focus={() => focused.set(true)}
         on:blur={() => focused.set(false)}
-        on:input={(e) => {
-          value.set(e.currentTarget.value)
-          val.set($value)
-        }} />
+        on:input={handleInput} />
       <Warning
         show={!!$value && parseUnits($value, asset.decimals) < $minInput}
         disabled={$focused}

@@ -3,7 +3,8 @@
   import Icon from '@iconify/svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { destinationChains, bridgeKey, desiredAssetIn } from '$lib/stores/bridge-settings'
+  import { bridgeKey, desiredAssetIn } from '$lib/stores/bridge-settings'
+  import { destinationChains } from '$lib/stores/config'
   import { goto } from '$app/navigation'
 
   let dropdown!: HTMLDetailsElement

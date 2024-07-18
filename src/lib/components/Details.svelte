@@ -6,6 +6,7 @@
   import {
     bridgeFrom,
     incentiveFee,
+    basisPointIncentiveFee,
     estimatedNetworkCost,
     estimatedCost,
     limit,
@@ -60,12 +61,15 @@
     <span class="flex flex-row justify-between grow">
       <span>
         {#if $feeType === 'gas+%'}
-          ⛽&nbsp;+&nbsp;{viem.formatEther($incentiveFee * 100n)}%{/if}
+          ⛽&nbsp;+&nbsp;{viem.formatEther($incentiveFee * 100n)}%
+        {:else if $feeType === '%'}
+          -{viem.formatEther($basisPointIncentiveFee * 100n)}%
+        {/if}
       </span>
       <span class="flex flex-row items-end self-end">
-        <Loading key="gas">{humanReadableNumber($estimatedCost, asset.decimals)}</Loading>&nbsp;{utils.nativeSymbol(
-          asset,
-        )}
+        <Loading key="gas">
+          {humanReadableNumber($feeType === '%' ? $limit : $estimatedCost, asset.decimals)}</Loading
+        >&nbsp;{utils.nativeSymbol(asset)}
       </span>
     </span>
     <UndercompensatedWarning />
@@ -90,7 +94,7 @@
         >&nbsp;{utils.nativeSymbol(asset)}
       </span>
     </div>
-    <div class="bg-slate-100 mt-[1px] py-2 px-3 rounded-b-lg justify-between flex flex-row relative hover:z-10">
+    <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
       <span class="w-32">Minimum</span>
       <span class="flex flex-row justify-between grow">
         <span>&gt;=</span>
@@ -105,4 +109,18 @@
         tooltip="Many of your tokens are being lost to fees, try increasing the number of input tokens or decreasing the fee limits" />
     </div>
   {/if}
+  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10 rounded-b-lg">
+    <span class="w-32">Equation</span>
+    <span class="flex flex-row justify-end grow">
+      <!-- <span class="flex flex-row items-end self-end font-mono">out&nbsp;=</span> -->
+      <span class="flex flex-row items-end self-end font-mono text-right">
+        (in-{viem.formatEther(
+          bridgeFee * 100n,
+        )}%)-{#if $feeType === 'fixed'}fixed=out{:else if $feeType === 'gas+%'}min(limit,base*{viem.formatEther(
+            $incentiveFee * 100n,
+          )}%)=out{:else if $feeType === '%'}{viem.formatEther($basisPointIncentiveFee * 100n)}%=out
+        {/if}
+      </span>
+    </span>
+  </div>
 </div>

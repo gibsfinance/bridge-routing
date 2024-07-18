@@ -14,8 +14,11 @@
   export let visible = false
   let className = ''
   export { className as class }
-  let src = sourceInput
+  $: if (sources) {
+    sourceInput = ''
+  }
   $: key = viem.keccak256(viem.concatBytes(sources.map((s) => viem.toBytes(viem.toHex(s)))))
+  let src = sourceInput
   $: src = sourceInput || cached.get(key) || ''
   $: if (!src && visible) {
     const val = cached.get(key)
@@ -47,7 +50,7 @@
 </script>
 
 {#if !src || !visible}
-  <div class="flex" data-url={src}>
+  <div class="flex" data-url={src} data-sources={JSON.stringify(sources)}>
     <Icon icon="ph:question" height={size} width={size} class={className} />
   </div>
 {:else}

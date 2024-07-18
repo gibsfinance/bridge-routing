@@ -3,6 +3,8 @@
   import { validatable } from '$lib/stores/validatable'
   import type { FormEventHandler } from 'svelte/elements'
   import Icon from '@iconify/svelte'
+  import { humanReadableNumber, stripNonNumber } from '$lib/stores/utils'
+  import { parseEther, parseUnits } from 'viem'
 
   const dispatch = createEventDispatcher()
   export let validate = (v: string): any => v
@@ -11,13 +13,16 @@
   export let editOnLeft = false
   let val = validatable(value, validate)
   const changeFromEvent: FormEventHandler<HTMLInputElement> = (e) => {
-    val.set(e.currentTarget.value)
-    _updateValue($val, true)
+    const v = stripNonNumber(e.currentTarget.value)
+    val.set(v)
+    _updateValue(v, true)
   }
   const _updateValue = (v: string, fromInput = false) => {
-    value = v
+    const decimals = v.split('.')[1]?.length || 0
+    const valAsInt = parseUnits(v, decimals)
+    value = humanReadableNumber(valAsInt, decimals)
     dispatch('update', {
-      value,
+      value: stripNonNumber(value),
       fromInput,
     })
   }

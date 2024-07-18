@@ -5,17 +5,19 @@
   import { walletAccount } from '$lib/stores/auth/store'
   import { Chains } from '$lib/stores/auth/types'
   import {
-    erc677abi,
+    // erc677abi,
     bridgeAddress,
     amountToBridge,
-    destinationChains,
+    // destinationChains,
     foreignData,
     bridgeKey,
-    erc677abiBNB,
+    // erc677abiBNB,
     clientFromChain,
     walletClient,
     assetIn,
   } from '$lib/stores/bridge-settings'
+  import { destinationChains } from '$lib/stores/config'
+  import * as abis from '$lib/stores/abis'
   import { getContract, type Hex } from 'viem'
   import Loading from './Loading.svelte'
   // import { loading } from '$lib/stores/loading'
@@ -112,7 +114,7 @@
     console.log('inside send transaction')
     txHash = await ($bridgeKey === Chains.BNB
       ? getContract({
-          abi: erc677abiBNB,
+          abi: abis.erc677BNB,
           address: $assetIn.address,
           client: $walletClient!,
         }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData, $walletAccount as Hex], {
@@ -121,7 +123,7 @@
           chain: chainsMetadata[Chains.PLS],
         })
       : getContract({
-          abi: erc677abi,
+          abi: abis.erc677,
           address: $assetIn.address,
           client: $walletClient!,
         }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData], {
