@@ -83,7 +83,7 @@
     <span class="font-mono text-xs md:text-sm">{$bridgeAddress}</span>
   </div>
   <div class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row">
-    <span class="whitespace-pre">Data <span class="font-mono">(0x)</span></span>
+    <span class="whitespace-pre">Data&nbsp;&nbsp;<span class="font-mono">0x</span></span>
     <textarea
       name="calldata"
       id="calldata"

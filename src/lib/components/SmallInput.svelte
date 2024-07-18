@@ -4,27 +4,37 @@
   import type { FormEventHandler } from 'svelte/elements'
   import Icon from '@iconify/svelte'
   import { humanReadableNumber, stripNonNumber } from '$lib/stores/utils'
-  import { parseEther, parseUnits } from 'viem'
+  import { parseUnits } from 'viem'
 
   const dispatch = createEventDispatcher()
+  export let isNumber = false
   export let validate = (v: string): any => v
   export let value = ''
   export let suffix = ''
   export let editOnLeft = false
   let val = validatable(value, validate)
   const changeFromEvent: FormEventHandler<HTMLInputElement> = (e) => {
-    const v = stripNonNumber(e.currentTarget.value)
+    let v = e.currentTarget.value
+    v = isNumber ? stripNonNumber(v) : v
     val.set(v)
     _updateValue(v, true)
   }
   const _updateValue = (v: string, fromInput = false) => {
-    const decimals = v.split('.')[1]?.length || 0
-    const valAsInt = parseUnits(v, decimals)
-    value = humanReadableNumber(valAsInt, decimals)
-    dispatch('update', {
-      value: stripNonNumber(value),
-      fromInput,
-    })
+    if (isNumber) {
+      const decimals = v.split('.')[1]?.length || 0
+      const valAsInt = parseUnits(v, decimals)
+      value = humanReadableNumber(valAsInt, decimals)
+      dispatch('update', {
+        value: stripNonNumber(value),
+        fromInput,
+      })
+    } else {
+      value = v
+      dispatch('update', {
+        value,
+        fromInput,
+      })
+    }
   }
   $: $val && _updateValue($val)
   let className = ''
@@ -47,6 +57,7 @@
     <input
       class="bg-transparent absolute w-full h-full text-slate-950 text-right top-0 left-0 focus:outline-none"
       bind:value
+      spellcheck="false"
       bind:this={input}
       on:input={changeFromEvent} />
   </div>

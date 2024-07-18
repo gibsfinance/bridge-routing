@@ -211,11 +211,12 @@
         on:click={focusOnInputChild}>
         {#if $feeType !== 'fixed'}
           <span class:hidden={$feeType !== 'gas+%'}>⛽&nbsp;+</span><SmallInput
+            isNumber
             value={$feeType === '%' ? defaultBasisPointIncFee : defaultIncFee}
             suffix="%"
             validate={(v) => decimalValidation(v)}
             on:update={(e) => {
-              if (!deliveryFeeLocked && $feeType === '%') deliveryFeeLocked = true
+              if (e.detail.fromInput) deliveryFeeLocked = true
               incentiveFeeUpdated(e.detail.value)
             }} />
         {/if}
@@ -245,6 +246,7 @@
             <span>{humanReadableNumber(parseUnits(defaultLimit, asset.decimals), asset.decimals)}</span>
           {:else}
             <SmallInput
+              isNumber
               value={defaultLimit}
               suffix={utils.nativeSymbol(asset)}
               validate={(v) => decimalValidation(v, asset.decimals)}
