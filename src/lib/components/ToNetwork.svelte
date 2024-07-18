@@ -122,6 +122,14 @@
         defaultLimit = proposedDefaultLimit
         limitUpdated(defaultLimit)
       }
+    } else if ($feeType === '%' && asset) {
+      let lim = 0n
+      lim = ($amountAfterBridgeFee * $basisPointIncentiveFee) / oneEther
+      const proposedDefaultLimit = formatUnits(lim, asset.decimals)
+      if (proposedDefaultLimit !== defaultLimit) {
+        defaultLimit = proposedDefaultLimit
+        limitUpdated(defaultLimit)
+      }
     } else if (!costLimitLocked && $feeType === 'gas+%' && asset) {
       // let it float as the base fee per gas is updated
       const lowResLimit = ($latestBaseFeePerGas * $incentiveRatio) / (10n ** 8n * 10n * oneEther)
@@ -206,7 +214,10 @@
             value={$feeType === '%' ? defaultBasisPointIncFee : defaultIncFee}
             suffix="%"
             validate={(v) => decimalValidation(v)}
-            on:update={(e) => incentiveFeeUpdated(e.detail.value)} />
+            on:update={(e) => {
+              if (!deliveryFeeLocked && $feeType === '%') deliveryFeeLocked = true
+              incentiveFeeUpdated(e.detail.value)
+            }} />
         {/if}
       </button>
     </div>
