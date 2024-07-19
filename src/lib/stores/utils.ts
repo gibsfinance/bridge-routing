@@ -4,8 +4,7 @@ export const humanReadableNumber = (num = 0n, decimals = 18, truncateLarge?: num
   const n = num === 0n ? '0.0' : formatUnits(num, decimals)
   if (truncateLarge !== undefined) {
     const [int, d] = n.split('.')
-    if (int.length > 4) {
-      // console.log('int %o', int)
+    if (decimals >= 15 ? int.length > 2 : int.length > 5) {
       return numberWithCommas(d && truncateLarge ? `${int}.${d.slice(0, truncateLarge)}` : int)
     }
   }

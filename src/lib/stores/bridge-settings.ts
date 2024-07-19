@@ -320,7 +320,7 @@ export const priceCorrective = derived(
     ]).then((results) => {
       const [outputToken, inputToken] = results.map(outputFromRouter)
       const res = outputToken && outputToken > 0n ? (
-        inputToken && outputToken < inputToken ? inputToken : outputToken
+        inputToken && inputToken > outputToken && inputToken / outputToken === 1n ? inputToken : outputToken
       ) : inputToken
       set(res || 0n)
     })
