@@ -46,7 +46,9 @@
     <span class="w-32">Network</span>
     <span class="flex flex-row justify-between grow">
       <span>⛽</span>
-      <span class="flex flex-row items-end self-end">
+      <span
+        class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center"
+        data-tip="the estimated cost to put this transaction on chain in terms of the token being bridged at current gas rates">
         <Loading key="gas">
           {humanReadableNumber($estimatedNetworkCost, asset.decimals)}
         </Loading>&nbsp;{utils.nativeSymbol(asset)}
@@ -66,7 +68,9 @@
           -{viem.formatEther($basisPointIncentiveFee * 100n)}%
         {/if}
       </span>
-      <span class="flex flex-row items-end self-end">
+      <span
+        class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center"
+        data-tip="cost as configured by the fee settings">
         <Loading key="gas">
           {humanReadableNumber($feeType === '%' ? $limit : $estimatedCost, asset.decimals)}</Loading
         >&nbsp;{utils.nativeSymbol(asset)}
