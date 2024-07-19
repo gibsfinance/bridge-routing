@@ -65,9 +65,12 @@
       ? ({ address }: Token) => {
           return getAddress(address) === getAddress(val)
         }
-      : ({ name, symbol, address }: Token) => {
+      : ({ name, symbol, address, extensions }: Token) => {
           return (
             address.toLowerCase().includes(lowerVal) ||
+            !!Object.values(extensions?.bridgeInfo || {}).find((info) => {
+              return info.tokenAddress.toLowerCase().includes(lowerVal)
+            }) ||
             name.toLowerCase().includes(lowerVal) ||
             symbol.toLowerCase().includes(lowerVal)
           )
