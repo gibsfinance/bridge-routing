@@ -88,7 +88,7 @@
   $: defaultIncFee = getDefaultIncentiveFee(asset)
   $: incentiveFeeUpdated($feeType === 'gas+%' ? defaultIncFee : defaultBasisPointIncFee)
   let defaultLimit = '0.001'
-  let defaultBasisPointIncFee = '0.2'
+  let defaultBasisPointIncFee = '10'
   let costLimitLocked = false
   let deliveryFeeLocked = false
   const scaledBasisPoint = parseEther('0.01')
@@ -101,7 +101,7 @@
     } else if (!deliveryFeeLocked && $feeType === '%' && asset) {
       // if (lim > 0n) {
       if ($amountAfterBridgeFee) {
-        const max = parseEther('2')
+        const max = parseEther('10')
         const min = parseEther('0.05')
         const ratioOffset = $estimatedNetworkCost / ($amountAfterBridgeFee / 25_000n)
         let target = min + scaledBasisPoint * ratioOffset
@@ -112,7 +112,7 @@
         }
         defaultBasisPointIncFee = formatUnits(target, 18)
       } else {
-        defaultBasisPointIncFee = '2'
+        defaultBasisPointIncFee = '10'
       }
       incentiveFeeUpdated(defaultBasisPointIncFee)
       let lim = 0n
