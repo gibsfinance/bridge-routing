@@ -532,7 +532,6 @@ export const assetSources = (asset: Token) => {
     console.trace(asset)
   }
   return _(bridgedImage.concat([asset.logoURI]))
-    // .concat(bridgedImage)
     .compact()
     .uniq()
     .value()
