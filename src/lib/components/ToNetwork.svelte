@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as input from '$lib/stores/input'
   import { createEventDispatcher, onMount } from 'svelte'
   import { formatEther, formatUnits, parseEther, parseUnits } from 'viem'
   import NetworkSummary from './NetworkSummary.svelte'
@@ -9,23 +10,26 @@
   import UndercompensatedWarning from '$lib/components/warnings/Undercompensated.svelte'
   import FeeTypeToggle from '$lib/components/FeeTypeToggle.svelte'
   import {
+    limitFromPercent,
     bridgeFrom,
     limit,
     loadFeeFor,
-    incentiveFee,
-    basisPointIncentiveFee,
+    priceCorrective,
+    // incentiveFee,
+    // basisPointIncentiveFee,
     latestBaseFeePerGas,
     amountAfterBridgeFee,
     foreignSupportsEIP1559,
     estimatedCost,
     unwrap,
-    priceCorrective,
-    oneEther,
     amountToBridge,
     feeType,
     isNative,
     estimatedNetworkCost,
-    incentiveRatio,
+    fee,
+    oneEther,
+    desiredExcessCompensationBasisPoints,
+    desiredExcessCompensationPercentage,
   } from '$lib/stores/bridge-settings'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
@@ -70,83 +74,147 @@
   }
   onMount(() => () => unwatch?.())
   $: loadFeeFor(originationNetwork.chainId, destinationNetwork.chainId)
-  const limitUpdated = (lim: string) => {
-    limit.set(parseUnits(lim, asset.decimals))
-  }
-  const incentiveFeeUpdated = (incFee: string) => {
-    const val = parseUnits(incFee, 18) / 100n
-    const store = $feeType === 'gas+%' ? incentiveFee : $feeType === '%' ? basisPointIncentiveFee : null
-    if (!store) return
-    store.set(val)
-  }
+  // const limitUpdated = (lim: string) => {
+  //   limit.set(parseUnits(lim, asset.decimals))
+  // }
+  // const incentiveFeeUpdated = (incFee: string) => {
+  //   const val = parseUnits(incFee, 18) / 100n
+  //   const store = $feeType === 'gas+%' || $feeType === '%' ? fee : null
+  //   if (!store) return
+  //   store.set(val)
+  // }
   const getDefaultIncentiveFee = (asset: Token) => {
     if (isNative(asset)) {
       return '10'
     }
     return '50'
   }
-  $: defaultIncFee = getDefaultIncentiveFee(asset)
-  $: incentiveFeeUpdated($feeType === 'gas+%' ? defaultIncFee : defaultBasisPointIncFee)
+  // $: defaultIncFee = getDefaultIncentiveFee(asset)
+  // $: incentiveFeeUpdated($feeType === 'gas+%' ? defaultIncFee : defaultBasisPointIncFee)
   let defaultLimit = '0.001'
   let defaultBasisPointIncFee = '10'
   let costLimitLocked = false
   let deliveryFeeLocked = false
   const scaledBasisPoint = parseEther('0.01')
   // only happens once
-  $: asset && limitUpdated(defaultLimit)
-  $: {
-    if ($feeType === 'fixed') {
-      // defaultLimit = '0.01'
-      // limitUpdated(defaultLimit)
-    } else if (!deliveryFeeLocked && $feeType === '%' && asset) {
-      // if (lim > 0n) {
-      if ($amountAfterBridgeFee) {
-        const max = parseEther('10')
-        const min = parseEther('0.05')
-        const ratioOffset = $estimatedNetworkCost / ($amountAfterBridgeFee / 25_000n)
-        let target = min + scaledBasisPoint * ratioOffset
-        if (target > max) {
-          target = max
-        } else if (target < min) {
-          target = min
-        }
-        defaultBasisPointIncFee = formatUnits(target, 18)
-      } else {
-        defaultBasisPointIncFee = '10'
+  // $: asset && limitUpdated(defaultLimit)
+  const defaultFee = '10'
+  let defaultGasTipPercentage = '10'
+  const max = parseEther('10')
+  const min = parseEther('0.05')
+  const percentFeeFromNetworkInputs = () => {
+    if (!$amountAfterBridgeFee) {
+      return 0n
+    }
+    const ratioOffset = $estimatedNetworkCost / ($amountAfterBridgeFee / 25_000n)
+    let target = min + scaledBasisPoint * ratioOffset
+    if (target > max) {
+      target = max
+    } else if (target < min) {
+      target = min
+    }
+    return formatUnits(target, 18)
+  }
+  const gasPercentFeeFromNetworkInputs = () => {
+    const decimals = 6n
+    const lowResLimit = ($latestBaseFeePerGas * ($fee + oneEther)) / (10n ** (11n - decimals) * 10n * oneEther)
+    let lim = lowResLimit * 10n ** (18n - decimals)
+    if ($priceCorrective > 0n) {
+      lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset.decimals))
+      if (lim > $amountAfterBridgeFee) {
+        lim = $amountAfterBridgeFee
       }
-      incentiveFeeUpdated(defaultBasisPointIncFee)
-      let lim = 0n
-      lim = ($amountAfterBridgeFee * $basisPointIncentiveFee) / oneEther
-      const proposedDefaultLimit = formatUnits(lim, asset.decimals)
-      if (proposedDefaultLimit !== defaultLimit) {
-        defaultLimit = proposedDefaultLimit
-        limitUpdated(defaultLimit)
+      return humanReadableNumber(lim, asset.decimals)
+    }
+  }
+  const reflowFees = () => {
+    if ($feeType === '%') {
+      if (!deliveryFeeLocked) {
+        input.fee.set(percentFeeFromNetworkInputs() || $desiredExcessCompensationPercentage)
       }
-    } else if ($feeType === '%' && asset) {
-      let lim = 0n
-      lim = ($amountAfterBridgeFee * $basisPointIncentiveFee) / oneEther
-      const proposedDefaultLimit = formatUnits(lim, asset.decimals)
-      if (proposedDefaultLimit !== defaultLimit) {
-        defaultLimit = proposedDefaultLimit
-        limitUpdated(defaultLimit)
-      }
-    } else if (!costLimitLocked && $feeType === 'gas+%' && asset) {
-      // let it float as the base fee per gas is updated
-      const lowResLimit = ($latestBaseFeePerGas * $incentiveRatio) / (10n ** 8n * 10n * oneEther)
-      let lim = lowResLimit * 10n ** 15n
-      if ($priceCorrective > 0n) {
-        lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset.decimals))
-        if (lim > $amountAfterBridgeFee) {
-          lim = $amountAfterBridgeFee
-        }
-        const proposedDefaultLimit = formatUnits(lim, asset.decimals)
-        if (proposedDefaultLimit !== defaultLimit) {
-          defaultLimit = proposedDefaultLimit
-          limitUpdated(defaultLimit)
+    } else if ($feeType === 'gas+%') {
+      // input.fee.set(defaultFee)
+    } else if ($feeType === 'fixed') {
+      // input.fee.set(defaultFee)
+    }
+    if ($feeType === 'gas+%' || $feeType === 'fixed') {
+      if (!costLimitLocked) {
+        const floatingLimit = gasPercentFeeFromNetworkInputs()
+        if (floatingLimit) {
+          input.limit.set(floatingLimit)
         }
       }
     }
   }
+  $: if (
+    (deliveryFeeLocked || !deliveryFeeLocked) &&
+    (costLimitLocked || !costLimitLocked) &&
+    ($amountToBridge || !$amountToBridge) &&
+    $latestBaseFeePerGas &&
+    $feeType &&
+    asset
+  ) {
+    reflowFees()
+  }
+  // $: {
+  //   if ($feeType === 'fixed') {
+  //     if (!costLimitLocked) {
+  //       defaultBasisPointIncFee = '10'
+  //       const proposedDefaultLimit = '0.01'
+  //       if (proposedDefaultLimit !== defaultLimit) {
+  //         defaultLimit = proposedDefaultLimit
+  //         limitUpdated(defaultLimit)
+  //       }
+  //     }
+  //   } else if (!deliveryFeeLocked && $feeType === '%' && asset) {
+  //     // if (lim > 0n) {
+  //     if ($amountAfterBridgeFee) {
+  //       const max = parseEther('10')
+  //       const min = parseEther('0.05')
+  //       const ratioOffset = $estimatedNetworkCost / ($amountAfterBridgeFee / 25_000n)
+  //       let target = min + scaledBasisPoint * ratioOffset
+  //       if (target > max) {
+  //         target = max
+  //       } else if (target < min) {
+  //         target = min
+  //       }
+  //       defaultBasisPointIncFee = formatUnits(target, 18)
+  //     } else {
+  //       defaultBasisPointIncFee = '10'
+  //     }
+  //     incentiveFeeUpdated(defaultBasisPointIncFee)
+  //     let lim = 0n
+  //     lim = ($amountAfterBridgeFee * $basisPointIncentiveFee) / oneEther
+  //     const proposedDefaultLimit = formatUnits(lim, asset.decimals)
+  //     if (proposedDefaultLimit !== defaultLimit) {
+  //       defaultLimit = proposedDefaultLimit
+  //       limitUpdated(defaultLimit)
+  //     }
+  //   } else if ($feeType === '%' && asset) {
+  //     let lim = 0n
+  //     lim = ($amountAfterBridgeFee * $basisPointIncentiveFee) / oneEther
+  //     const proposedDefaultLimit = formatUnits(lim, asset.decimals)
+  //     if (proposedDefaultLimit !== defaultLimit) {
+  //       defaultLimit = proposedDefaultLimit
+  //       limitUpdated(defaultLimit)
+  //     }
+  //   } else if (!costLimitLocked && $feeType === 'gas+%' && asset) {
+  //     // let it float as the base fee per gas is updated
+  //     const lowResLimit = ($latestBaseFeePerGas * $incentiveRatio) / (10n ** 8n * 10n * oneEther)
+  //     let lim = lowResLimit * 10n ** 15n
+  //     if ($priceCorrective > 0n) {
+  //       lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset.decimals))
+  //       if (lim > $amountAfterBridgeFee) {
+  //         lim = $amountAfterBridgeFee
+  //       }
+  //       const proposedDefaultLimit = formatUnits(lim, asset.decimals)
+  //       if (proposedDefaultLimit !== defaultLimit) {
+  //         defaultLimit = proposedDefaultLimit
+  //         limitUpdated(defaultLimit)
+  //       }
+  //     }
+  //   }
+  // }
   let balance = 0n
   const focusOnInputChild = (e: any) => {
     e.currentTarget.querySelector('input')?.focus()
@@ -192,6 +260,7 @@
           ]}
           on:change={(e) => {
             feeType.set(e.detail.key)
+            input.fee.set($desiredExcessCompensationPercentage)
           }} />{#if $feeType === '%'}<button
             type="button"
             class="flex px-1"
@@ -210,15 +279,13 @@
         class:line-through={$feeType === 'fixed'}
         on:click={focusOnInputChild}>
         {#if $feeType !== 'fixed'}
-          <span class:hidden={$feeType !== 'gas+%'}>⛽&nbsp;+</span><SmallInput
-            isNumber
-            value={$feeType === '%' ? defaultBasisPointIncFee : defaultIncFee}
-            suffix="%"
-            validate={(v) => decimalValidation(v)}
-            on:update={(e) => {
+          <span class:hidden={$feeType !== 'gas+%'}>⛽&nbsp;+</span><SmallInput value={input.fee} suffix="%" />
+          <!-- on:update={(e) => {
               if (e.detail.fromInput) deliveryFeeLocked = true
               incentiveFeeUpdated(e.detail.value)
-            }} />
+            }} /> -->
+          <!-- value={$feeType === '%' ? defaultBasisPointIncFee : defaultIncFee} -->
+          <!-- validate={(v) => decimalValidation(v)} -->
         {/if}
       </button>
     </div>
@@ -232,28 +299,23 @@
         on:click={() => {
           costLimitLocked = !costLimitLocked
         }}>
-        Cost&nbsp;{#if $feeType === 'gas+%'}Limit&nbsp;<LockIcon
-            locked={costLimitLocked || $feeType !== 'gas+%'} />{/if}
+        Cost&nbsp;{#if $feeType === 'gas+%' || $feeType === 'fixed'}Limit&nbsp;<LockIcon
+            locked={costLimitLocked} />{/if}
       </button>
       <button
         class="tooltip tooltip-top tooltip-left-toward-center flex flex-row items-end self-end"
-        data-tip={$feeType === 'fixed'
+        data-tip={$feeType === 'fixed' || $feeType === '%'
           ? 'The fixed fee to tip if the validator does the work'
           : 'The max you are willing to tip to the address'}
         on:click={focusOnInputChild}>
         <Loading key="gas">
           {#if $feeType === '%'}
-            <span>{humanReadableNumber(parseUnits(defaultLimit, asset.decimals), asset.decimals)}</span>
+            <span>{humanReadableNumber($limitFromPercent, asset.decimals)} {utils.nativeSymbol(asset)}</span>
           {:else}
-            <SmallInput
-              isNumber
-              value={defaultLimit}
-              suffix={utils.nativeSymbol(asset)}
-              validate={(v) => decimalValidation(v, asset.decimals)}
-              on:update={(e) => {
-                if (e.detail.fromInput) costLimitLocked = true
-                limitUpdated(e.detail.value)
-              }} />
+            <SmallInput value={input.limit} suffix={utils.nativeSymbol(asset)} />
+            <!-- isNumber -->
+            <!-- validate={(v) => decimalValidation(v, asset.decimals)} -->
+            <!-- value={defaultLimit} -->
           {/if}
         </Loading>
       </button>

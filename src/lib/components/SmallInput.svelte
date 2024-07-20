@@ -6,60 +6,62 @@
   import { humanReadableNumber, numberWithCommas, stripNonNumber } from '$lib/stores/utils'
   import { parseUnits } from 'viem'
   import _ from 'lodash'
+  import { writable } from 'svelte/store'
 
-  const dispatch = createEventDispatcher()
-  export let isNumber = false
-  export let validate = (v: string): any => v
-  export let value = ''
+  // const dispatch = createEventDispatcher()
+  // export let isNumber = false
+  // export let validate = (v: string): any => v
+  export let value = writable('')
   export let suffix = ''
   export let editOnLeft = false
-  let val = validatable(value, validate)
-  let lastValue = value
-  $: {
-    _updateValue(value, false)
-  }
+  // let val = validatable(value, validate)
+  // let lastValue = value
+  // $: {
+  //   _updateValue(value, false)
+  // }
   const changeFromEvent: FormEventHandler<HTMLInputElement> = (e) => {
-    let v = e.currentTarget.value
-    v = isNumber ? stripNonNumber(v) : v
-    val.set(v)
-    _updateValue(v, true)
+    value.set(e.currentTarget.value)
+    // v = isNumber ? stripNonNumber(v) : v
+    // val.set(v)
+    // _updateValue(v, true)
   }
-  const _updateValue = (v: string, fromInput = false) => {
-    if (isNumber) {
-      const d = v.split('.')[1]?.length
-      const valAsInt = parseUnits(stripNonNumber(v), d || 0)
-      if (_.isNumber(d) && !d) {
-        return
-      }
-      if (valAsInt) {
-        const next = humanReadableNumber(valAsInt, d || 0)
-        if (next === value) {
-          return
-        }
-        value = next
-        lastValue = value
-        dispatch('update', {
-          value: stripNonNumber(value),
-          fromInput,
-        })
-      } else if (v) {
-        lastValue = '0'
-      }
-    } else {
-      value = v
-      if (v) {
-        lastValue = value
-      }
-      dispatch('update', {
-        value,
-        fromInput,
-      })
-    }
-  }
-  $: if (_.isString($val)) {
-    _updateValue($val)
-  }
-  $: $val && _updateValue($val)
+  // const _updateValue = (v: string, fromInput = false) => {
+  //   if (isNumber) {
+  //     const d = v.split('.')[1]?.length
+  //     const valAsInt = parseUnits(stripNonNumber(v), d || 0)
+  //     if (_.isNumber(d) && !d) {
+  //       return
+  //     }
+  //     if (valAsInt) {
+  //       const next = humanReadableNumber(valAsInt, d || 0)
+  //       console.log(next, value)
+  //       if (next === value) {
+  //         return
+  //       }
+  //       value = next
+  //       lastValue = value
+  //       dispatch('update', {
+  //         value: stripNonNumber(value),
+  //         fromInput,
+  //       })
+  //     } else if (v) {
+  //       lastValue = '0'
+  //     }
+  //   } else {
+  //     value = v
+  //     if (v) {
+  //       lastValue = value
+  //     }
+  //     dispatch('update', {
+  //       value,
+  //       fromInput,
+  //     })
+  //   }
+  // }
+  // $: if (_.isString($val)) {
+  //   _updateValue($val)
+  // }
+  // $: $val && _updateValue($val)
   let className = ''
   export { className as class }
   let input!: HTMLInputElement
@@ -69,7 +71,7 @@
   }
   const ensureValue = () => {
     if (!input.value) {
-      value = lastValue
+      // value = lastValue
     }
   }
 </script>
@@ -81,10 +83,10 @@
     </button>
   {/if}
   <div class="flex flex-row relative text-transparent pl-1 text-center min-w-6 {className}">
-    {value}
+    {$value}
     <input
       class="bg-transparent absolute w-full h-full text-slate-950 text-right top-0 left-0 focus:outline-none"
-      bind:value
+      value={$value}
       spellcheck="false"
       bind:this={input}
       on:input={changeFromEvent}

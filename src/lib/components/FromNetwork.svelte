@@ -4,7 +4,7 @@
   import { erc20Abi, formatUnits, parseUnits } from 'viem'
   import type { VisualChain } from '$lib/stores/auth/types'
   import { decimalValidation, humanReadableNumber, stripNonNumber } from '$lib/stores/utils'
-  import { writable } from 'svelte/store'
+  import { writable, type Writable } from 'svelte/store'
   import { amountToBridge, assetIn, bridgeKey, publicClient } from '$lib/stores/bridge-settings'
   import { destinationChains } from '$lib/stores/config'
   import * as abis from '$lib/stores/abis'
@@ -19,17 +19,17 @@
 
   export let network!: VisualChain
   export let asset!: Token
-  let value = validatable('', (v) => decimalValidation(v, asset.decimals))
-  const val = writable('')
+  // let value = validatable('', (v) => decimalValidation(v, asset.decimals))
+  export let value!: Writable<string>
   $: if (asset) {
     value.set('')
-    val.set('')
+    // val.set('')
   }
-  $: {
-    const $v = $value
-    amountToBridge.set($v ? parseUnits($v, asset.decimals) : 0n)
-  }
-  amountToBridge.set(0n)
+  // $: {
+  //   const $v = $value
+  //   amountToBridge.set($v ? parseUnits($v, asset.decimals) : 0n)
+  // }
+  // amountToBridge.set(0n)
   let balance = 0n
   const getBalance = async () => {
     if (!$walletAccount) {
@@ -68,39 +68,31 @@
   }
   const minInput = writable(0n)
   const focused = writable(false)
-  $: {
+  $: if ($publicClient) {
     doUnwind()
-    if ($publicClient) {
-      getBalance()
-      // assume that the min amount will not change while the page is loaded
-      getMinAmount().then((res) => {
-        minInput.set(res)
-        loading.decrement('minAmount')
-      })
-      unwind = $publicClient.watchContractEvent({
-        address: asset.address,
-        abi: erc20Abi,
-        eventName: 'Transfer',
-        onLogs: async (logs) => {
-          const transfer = logs.filter((l) => l.eventName === 'Transfer')
-          if (transfer.length) {
-            await getBalance()
-          }
-        },
-      })
-    }
+    getBalance()
+    // assume that the min amount will not change while the page is loaded
+    getMinAmount().then((res) => {
+      minInput.set(res)
+      loading.decrement('minAmount')
+    })
+    unwind = $publicClient.watchContractEvent({
+      address: asset.address,
+      abi: erc20Abi,
+      eventName: 'Transfer',
+      onLogs: async (logs) => {
+        const transfer = logs.filter((l) => l.eventName === 'Transfer')
+        if (transfer.length) {
+          await getBalance()
+        }
+      },
+    })
   }
   const openModal = () => {
     modalStore.type.set('choosetoken')
   }
   const handleInput: FormEventHandler<HTMLInputElement> = (e) => {
-    const current = stripNonNumber(e.currentTarget.value)
-    value.set(current)
-    const valAsInt = parseUnits(current, asset.decimals)
-    if (!valAsInt) return
-    const valu = humanReadableNumber(valAsInt, asset.decimals)
-    val.set(valu)
-    e.currentTarget.value = valu
+    value.set(e.currentTarget.value)
   }
 </script>
 
@@ -114,7 +106,7 @@
       on:max-balance={() => {
         const updated = formatUnits(balance, asset.decimals)
         value.set(updated)
-        val.set(updated)
+        // val.set(updated)
       }} />
   </div>
   <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
@@ -122,12 +114,12 @@
       <input
         class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-xl sm:text-2xl w-full"
         placeholder="0.0"
-        value={$val}
+        value={$value}
         on:focus={() => focused.set(true)}
         on:blur={() => focused.set(false)}
         on:input={handleInput} />
       <Warning
-        show={!!$value && parseUnits($value, asset.decimals) < $minInput}
+        show={$amountToBridge < $minInput && $amountToBridge > 0n}
         disabled={$focused}
         position="left"
         tooltip="Input is too low, must be at least {formatUnits($minInput, asset.decimals)}" />

@@ -18,7 +18,6 @@
     sourceInput = ''
   }
   $: key = viem.keccak256(viem.concatBytes(sources.map((s) => viem.toBytes(viem.toHex(s)))))
-  let src = sourceInput
   $: src = sourceInput || cached.get(key) || ''
   $: if (!src && visible) {
     const val = cached.get(key)
@@ -34,6 +33,7 @@
                   // try next source
                   return
                 }
+                sourceInput = source
                 src = source
               })
               .catch((err) => {

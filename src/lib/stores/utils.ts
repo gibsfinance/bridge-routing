@@ -11,8 +11,12 @@ export const humanReadableNumber = (num = 0n, decimals = 18, truncateLarge?: num
   return numberWithCommas(n)
 }
 
-export const stripNonNumber = (n: string) => (
-  n.replace(/[^0-9.]/g, '')
+export const stripNonNumber = (n: string) => {
+  return n.replace(/[^0-9.]/g, '').split('.').slice(0, 2).join('.')
+}
+
+export const isZero = (n: string) => (
+  !n || !n.replace(/[0.]/g, '').length
 )
 
 export function numberWithCommas(x: string) {

@@ -4,27 +4,28 @@
   import type { VisualChain } from '$lib/stores/auth/types'
   import Warning from './Warning.svelte'
   import {
-    bridgeFrom,
-    incentiveFee,
-    basisPointIncentiveFee,
+    bridgeFee,
+    // incentiveFee,
+    // basisPointIncentiveFee,
+    fee,
     estimatedNetworkCost,
     estimatedCost,
     limit,
     amountToBridge,
     feeType,
+    limitFromPercent,
   } from '$lib/stores/bridge-settings'
   import { humanReadableNumber } from '$lib/stores/utils'
   import * as utils from '$lib/utils'
   import Loading from './Loading.svelte'
   import type { Token } from '$lib/types'
+  import * as input from '$lib/stores/input'
 
-  export let originationNetwork!: VisualChain
-  export let destinationNetwork!: VisualChain
-  $: bridgeFee = $bridgeFrom.get(originationNetwork.chainId)!.get(destinationNetwork.chainId)!.feeH2F
   const oneEther = 10n ** 18n
-  $: afterBridge = $amountToBridge - ($amountToBridge * bridgeFee) / oneEther
+  $: afterBridge = $amountToBridge - ($amountToBridge * $bridgeFee) / oneEther
   $: estimated = afterBridge - $estimatedCost
   $: minimumDelivered = afterBridge - $limit
+  const inputFee = input.fee
   export let asset!: Token
 </script>
 
@@ -36,7 +37,7 @@
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10">
     <span class="w-32">Bridged</span>
     <span class="flex flex-row justify-between grow">
-      <span>-{viem.formatEther(bridgeFee * 100n)}%</span>
+      <span>-{viem.formatEther($bridgeFee * 100n)}%</span>
       <span class="flex flex-row items-end self-end">
         <Loading key="gas">{humanReadableNumber(afterBridge, asset.decimals)}</Loading>&nbsp;{asset.symbol}
       </span>
@@ -63,23 +64,25 @@
     <span class="flex flex-row justify-between grow">
       <span>
         {#if $feeType === 'gas+%'}
-          ⛽&nbsp;+&nbsp;{viem.formatEther($incentiveFee * 100n)}%
+          ⛽&nbsp;+&nbsp;{$inputFee}%
         {:else if $feeType === '%'}
-          -{viem.formatEther($basisPointIncentiveFee * 100n)}%
+          -{$inputFee}%
         {/if}
       </span>
       <span
         class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center"
         data-tip="cost as configured by the fee settings">
-        <Loading key="gas">
-          {humanReadableNumber($feeType === '%' ? $limit : $estimatedCost, asset.decimals)}</Loading
-        >&nbsp;{utils.nativeSymbol(asset)}
+        {#if $feeType === '%'}
+          {humanReadableNumber($limitFromPercent, asset.decimals)}
+        {:else}<Loading key="gas">
+            {humanReadableNumber($estimatedCost, asset.decimals)}</Loading
+          >{/if}&nbsp;{utils.nativeSymbol(asset)}
       </span>
     </span>
     <UndercompensatedWarning />
   </div>
   {#if $feeType !== 'gas+%'}
-    <div class="bg-slate-100 mt-[1px] py-2 px-3 rounded-b-lg justify-between flex flex-row relative hover:z-10">
+    <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
       <span class="w-32">Delivered</span>
       <span class="flex flex-row items-end self-end">
         <Loading key="gas">
@@ -119,10 +122,8 @@
       <!-- <span class="flex flex-row items-end self-end font-mono">out&nbsp;=</span> -->
       <span class="flex flex-row items-end self-end font-mono text-right">
         (in-{viem.formatEther(
-          bridgeFee * 100n,
-        )}%)-{#if $feeType === 'fixed'}fixed=out{:else if $feeType === 'gas+%'}min(limit,base*{viem.formatEther(
-            $incentiveFee * 100n,
-          )}%)=out{:else if $feeType === '%'}{viem.formatEther($basisPointIncentiveFee * 100n)}%=out
+          $bridgeFee * 100n,
+        )}%)-{#if $feeType === 'fixed'}fixed=out{:else if $feeType === 'gas+%'}min(limit,base*{$inputFee}%)=out{:else if $feeType === '%'}{$inputFee}%=out
         {/if}
       </span>
     </span>

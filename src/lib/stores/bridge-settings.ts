@@ -1,4 +1,5 @@
 import { derived, get, writable, type Readable, type Stores } from 'svelte/store'
+import * as input from '$lib/stores/input'
 import { derived as asyncDerived } from './async'
 import * as viem from 'viem'
 import { Chains, type DestinationChains } from './auth/types'
@@ -12,6 +13,7 @@ import { uniV2Settings, destinationChains, defaultAssetIn, nativeAssetOut } from
 import * as abis from './abis'
 import { feeManagerMapping } from './fee-manager'
 import * as imageLinks from './image-links'
+import { humanReadableNumber, isZero, stripNonNumber } from './utils'
 
 export const activeChain = writable<Chains>(Chains.PLS)
 export const walletClient = writable<viem.WalletClient | undefined>()
@@ -38,6 +40,10 @@ export const bridgeFrom = writable(feeManagerMapping)
 export const bridgeKeys = Object.keys(destinationChains) as DestinationChains[]
 
 export const bridgeKey = derived([page], ([$page]) => (Chains[$page.params.route as keyof typeof Chains] || Chains.ETH) as DestinationChains)
+
+export const bridgeFee = derived([bridgeFrom, bridgeKey], ([$bridgeFrom, $bridgeKey]) => (
+  $bridgeFrom.get(Chains.PLS)!.get($bridgeKey)!.feeH2F
+))
 
 export const provider = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].provider)
 
@@ -85,7 +91,6 @@ const fetchedAssetIn: Readable<Token | null> = derived([desiredAssetIn, bridgeKe
   })
 })
 export const assetIn = derived([fetchedAssetIn, bridgeKey, desiredAssetIn], ([$fetchedAssetIn, $bridgeKey, $desiredAssetIn]) => {
-  // console.log($fetchedAssetIn, $desiredAssetIn, defaultAssetIn[$bridgeKey])
   return $fetchedAssetIn || $desiredAssetIn || defaultAssetIn[$bridgeKey]
 })
 /** the address of the bridge proxy contract on home */
@@ -198,49 +203,32 @@ export const unwrap = derived([unwrapSetting, canChangeUnwrap], ([$unwrapSetting
 export const fromNetwork = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === Chains.ETH ? Chains.PLS : Chains.PLS))
 export const toNetwork = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === Chains.ETH ? Chains.ETH : Chains.BNB))
 
-/** the number of tokens to push into the bridge (before fees) */
-export const amountToBridge = writable(0n)
-/** the maximum number of tokens that the user wishes to pay in fees */
-export const limit = writable(0n)
-/** a ratio (1+x)/1 ether of how much the user would like to pay on top of network fees */
-export const incentiveFee = writable(0n)
-/** a ratio (x/1 ether) of how much of the total number of tokens should be allocated toward fees */
-export const basisPointIncentiveFee = writable(0n)
-
 export const oneEther = 10n ** 18n
 
-/** the number of tokens charged as fee for crossing the bridge */
-export const bridgeCost = derived(
-  [amountToBridge, bridgeFrom, fromNetwork, toNetwork],
-  ([$amountToBridge, $bridgeFrom, $fromNetwork, $toNetwork]) => {
-    return ($amountToBridge * $bridgeFrom.get($fromNetwork)!.get($toNetwork)!.feeH2F) / oneEther
-  },
-)
-/** the number of tokens available after they have crossed the bridge */
-export const amountAfterBridgeFee = derived([amountToBridge, bridgeCost], ([$amountToBridge, $bridgeCost]) => {
-  return $amountToBridge - $bridgeCost
-})
 /** whether to use a fixed or gas based fee */
 export const feeType = writable('%')
 
+export const desiredExcessCompensationBasisPoints = derived([assetIn, feeType], ([$assetIn, $feeType]) => {
+  const native = isNative($assetIn)
+  return $feeType === '%'
+    ? 1_000n
+    : $feeType === 'gas+%'
+      ? native ? 1_000n : 5_000n
+      : native ? 5_000n : 10_000n
+})
+
 export const desiredCompensationRatio = derived(
-  [assetIn, feeType],
-  ([$assetIn, $feeType]) => {
-    const native = isNative($assetIn)
-    return oneEther + (
-      $feeType === 'gas+%'
-        ? (
-          native ? viem.parseEther('0.1') // 10%
-            : viem.parseEther('0.5')
-        )
-        : (
-          // the reason these numbers are so much higher is because they are decoupled from the gas that will be spent
-          // so in order to give the best user experience, it is best to give people a higher buffer
-          native ? viem.parseEther('0.5') // 50%
-            : viem.parseEther('1') // 100%
-        )
-    )
+  [desiredExcessCompensationBasisPoints],
+  ([$desiredExcessCompensationBasisPoints]) => {
+    return oneEther + ($desiredExcessCompensationBasisPoints * (oneEther / 10_000n))
   })
+
+export const desiredExcessCompensationPercentage = derived(
+  [desiredExcessCompensationBasisPoints],
+  ([$desiredExcessCompensationBasisPoints]) => (
+    viem.formatUnits($desiredExcessCompensationBasisPoints, 2)
+  )
+)
 
 const oneTokenInt = derived([assetIn], ([$assetIn]) => (
   10n ** BigInt($assetIn.decimals)
@@ -280,6 +268,11 @@ const readAmountOut = ({
     }],
   })
 )
+/** the number of tokens to push into the bridge (before fees) */
+export const amountToBridge = derived([input.amountIn, assetIn], ([$amountIn, $assetIn]) => {
+  if (isZero($amountIn)) return 0n
+  return viem.parseUnits(stripNonNumber($amountIn), $assetIn.decimals)
+})
 export const priceCorrective = derived(
   [assetIn, bridgeKey, oneTokenInt, assetOut, amountToBridge],
   ([$assetIn, $bridgeKey, $oneTokenInt, $assetOut, $amountToBridge], set) => {
@@ -342,38 +335,58 @@ export const estimatedNetworkCost = derived(
     return $estimatedGas * $latestBaseFeePerGas * $oneTokenInt / $priceCorrective
   },
 )
-export const incentiveRatio = derived(
-  [feeType, incentiveFee],
-  ([$feeType, $incentiveFee]) => {
-    if ($feeType === 'gas+%') {
-      return oneEther + $incentiveFee
-    }
-    return 0n
-  }
+/** the maximum number of tokens that the user wishes to pay in fees */
+export const limit = derived([input.limit, assetIn], ([$limit, $assetIn]) => {
+  if (isZero($limit)) return 0n
+  return viem.parseUnits(stripNonNumber($limit), $assetIn.decimals)
+})
+export const fee = derived([input.fee], ([$fee]) => {
+  if (isZero($fee)) return 0n
+  return viem.parseUnits(stripNonNumber($fee), 18) / 100n
+})
+
+/** the number of tokens charged as fee for crossing the bridge */
+export const bridgeCost = derived(
+  [amountToBridge, bridgeFrom, fromNetwork, toNetwork],
+  ([$amountToBridge, $bridgeFrom, $fromNetwork, $toNetwork]) => {
+    return ($amountToBridge * $bridgeFrom.get($fromNetwork)!.get($toNetwork)!.feeH2F) / oneEther
+  },
 )
+/** the number of tokens available after they have crossed the bridge */
+export const amountAfterBridgeFee = derived([amountToBridge, bridgeCost], ([$amountToBridge, $bridgeCost]) => {
+  return $amountToBridge - $bridgeCost
+})
+
+export const limitFromPercent = derived([fee, amountAfterBridgeFee], ([$fee, $amountAfterBridgeFee]) => {
+  // console.log($fee, $amountAfterBridgeFee)
+  return $amountAfterBridgeFee * $fee / oneEther
+})
+
 /** the estimated network cost + tip */
 export const baseFeeReimbersement = derived(
-  [estimatedNetworkCost, incentiveRatio],
-  ([$estimatedNetworkCost, $incentiveRatio]) => {
-    return $estimatedNetworkCost * $incentiveRatio / oneEther
+  [estimatedNetworkCost, fee],
+  ([$estimatedNetworkCost, $fee]) => {
+    return $estimatedNetworkCost * (oneEther + $fee) / oneEther
   },
   0n,
 )
 /** the fee, clamped to the user defined limit */
 export const clampedReimbersement = derived(
-  [baseFeeReimbersement, limit, feeType, amountAfterBridgeFee, basisPointIncentiveFee],
-  ([$baseFeeReimbersement, $limit, $feeType, $amountAfterBridgeFee, $basisPointIncentiveFee]) => {
+  [baseFeeReimbersement, limit, feeType, limitFromPercent],
+  ([$baseFeeReimbersement, $limit, $feeType, $limitFromPercent]) => {
     if ($feeType === '%') {
-      // console.log(viem.formatEther($amountAfterBridgeFee * $basisPointIncentiveFee / oneEther))
-      return $amountAfterBridgeFee * $basisPointIncentiveFee / oneEther
+      return $limitFromPercent
     }
     return $baseFeeReimbersement > $limit ? $limit : $baseFeeReimbersement
   },
 )
 /** the estimated cost given the choice for a fixed fee, limit and incentive fee */
 export const estimatedCost = derived(
-  [feeType, limit, clampedReimbersement],
-  ([$feeType, $limit, $clampedReimbersement]) => {
+  [feeType, limit, limitFromPercent, clampedReimbersement],
+  ([$feeType, $limit, $limitFromPercent, $clampedReimbersement]) => {
+    if ($feeType === '%') {
+      return $limitFromPercent
+    }
     if ($feeType === 'fixed') {
       return $limit
     }
@@ -388,24 +401,19 @@ export const feeTypeSettings = derived(
     const st1 = $unwrap ? 1n : 0n
     const nd2 = 1n // always exclude priority when you can
     const rd3 = $feeType === '%' ? 1n : 0n
-    // const baseFeeMultiplier = $priceCorrective << 16n >> 8n
-    // const intBasis = BigInt($assetOut.decimals) << 248n
-    // return intBasis | baseFeeMultiplier |
     return (rd3 << 3n) | (nd2 << 2n) | (st1 << 1n) | th0
   },
 )
 
 /** the encoded struct to be passed to the foreign router */
 export const feeDirectorStructEncoded = derived(
-  [estimatedGas, latestBaseFeePerGas, destination, feeTypeSettings, limit, incentiveRatio, feeType, basisPointIncentiveFee, assetOut, priceCorrective],
-  ([$estimatedGas, $latestBaseFeePerGas, $destination, $feeTypeSettings, $limit, $incentiveRatio, $feeType, $basisPointIncentiveFee, $assetOut, $priceCorrective]) => {
-    let multiplier = $incentiveRatio
+  [destination, feeTypeSettings, limit, fee, feeType, assetOut, priceCorrective],
+  ([$destination, $feeTypeSettings, $limit, $fee, $feeType, $assetOut, $priceCorrective]) => {
+    let multiplier = 0n
     if ($feeType === 'gas+%' && $priceCorrective > 0n) {
-      multiplier = $incentiveRatio * (10n ** BigInt($assetOut.decimals)) / $priceCorrective
-      // console.log($assetOut.decimals, $estimatedGas, $latestBaseFeePerGas)
-      // console.log(viem.formatUnits($estimatedGas * $latestBaseFeePerGas * multiplier / oneEther, $assetOut.decimals))
+      multiplier = (oneEther + $fee) * (10n ** BigInt($assetOut.decimals)) / $priceCorrective
     } else if ($feeType === '%') {
-      multiplier = $basisPointIncentiveFee
+      multiplier = $fee
     }
     return viem.encodeAbiParameters(abis.feeDeliveryStruct, [
       [

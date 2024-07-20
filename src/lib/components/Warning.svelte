@@ -7,7 +7,7 @@
 
 {#if show}
   <div
-    class="absolute h-6 w-6 top-0 -translate-x-1/2 -translate-y-1/2 tooltip font-black text-white rounded-md leading-6 text-sm"
+    class="absolute h-6 w-6 top-0 -translate-x-1/2 -translate-y-1/2 tooltip font-black text-white rounded-md leading-6 text-sm z-20"
     class:positioned-left={position === 'left'}
     class:positioned-right={position === 'right'}
     class:tooltip-left={position === 'right'}
