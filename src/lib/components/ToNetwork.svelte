@@ -225,11 +225,11 @@
         on:click={focusOnInputChild}>
         <Loading key="gas">
           {#if $feeType === input.FeeType.PERCENT}
-            <span>{humanReadableNumber($limitFromPercent, asset.decimals)} {utils.nativeSymbol(asset)}</span>
+            <span>{humanReadableNumber($limitFromPercent, asset.decimals)} {utils.nativeSymbol(asset, $unwrap)}</span>
           {:else}
             <SmallInput
               value={input.limit}
-              suffix={utils.nativeSymbol(asset)}
+              suffix={utils.nativeSymbol(asset, $unwrap)}
               on:input={() => {
                 costLimitLocked = true
               }} />
@@ -249,7 +249,7 @@
         data-tip="Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee fluctuates on ethereum">
         {#if $feeType === input.FeeType.GAS_TIP}~&nbsp;{/if}<Loading key="gas">
           {expectedAmountOut}
-        </Loading>&nbsp;{utils.nativeSymbol(asset)}
+        </Loading>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
       </span>
     </div>
   </div>

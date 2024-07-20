@@ -15,8 +15,7 @@
   import Loading from './Loading.svelte'
   import type { Token } from '$lib/types'
   import * as input from '$lib/stores/input'
-  const feeType = input.feeType
-  const inputFee = input.fee
+  const { unwrap, feeType, fee: inputFee } = input
   const oneEther = 10n ** 18n
   $: afterBridge = $amountToBridge - ($amountToBridge * $bridgeFee) / oneEther
   $: estimated = afterBridge - $estimatedCost
@@ -47,7 +46,7 @@
         data-tip="the estimated cost to put this transaction on chain in terms of the token being bridged at current gas rates">
         <Loading key="gas">
           {humanReadableNumber($estimatedNetworkCost, asset.decimals)}
-        </Loading>&nbsp;{utils.nativeSymbol(asset)}
+        </Loading>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
       </span>
     </span>
   </div>
@@ -71,7 +70,7 @@
           {humanReadableNumber($limitFromPercent, asset.decimals)}
         {:else}<Loading key="gas">
             {humanReadableNumber($estimatedCost, asset.decimals)}</Loading
-          >{/if}&nbsp;{utils.nativeSymbol(asset)}
+          >{/if}&nbsp;{utils.nativeSymbol(asset, $unwrap)}
       </span>
     </span>
     <UndercompensatedWarning />
@@ -82,7 +81,7 @@
       <span class="flex flex-row items-end self-end">
         <Loading key="gas">
           {humanReadableNumber(minimumDelivered < 0n ? 0n : minimumDelivered, asset.decimals)}
-        </Loading>&nbsp;{utils.nativeSymbol(asset)}
+        </Loading>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
       </span>
       <Warning
         show={minimumDelivered < ($amountToBridge / 10n) * 9n}
@@ -93,7 +92,7 @@
       <span class="w-32">Estimated Delivery</span>
       <span class="flex flex-row items-end self-end">
         ~&nbsp;<Loading key="gas">{humanReadableNumber(estimated < 0n ? 0n : estimated, asset.decimals)}</Loading
-        >&nbsp;{utils.nativeSymbol(asset)}
+        >&nbsp;{utils.nativeSymbol(asset, $unwrap)}
       </span>
     </div>
     <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
@@ -103,7 +102,7 @@
         <span class="flex flex-row items-end self-end">
           <Loading key="gas">
             {humanReadableNumber(minimumDelivered < 0n ? 0n : minimumDelivered, asset.decimals)}
-          </Loading>&nbsp;{utils.nativeSymbol(asset)}
+          </Loading>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
         </span>
       </span>
       <Warning

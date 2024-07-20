@@ -30,9 +30,8 @@
       class:mx-2={showMax}
       class:ml-2={!showMax}
       data-tip={unwrap ? utils.nativeName(asset) : asset.name}>
-      <Loading key={['balance', 'minAmount']}>{balance == 0n ? '0.0' : formatEther(balance)}</Loading>&nbsp;{unwrap
-        ? utils.nativeSymbol(asset)
-        : asset.symbol}
+      <Loading key={['balance', 'minAmount']}>{balance == 0n ? '0.0' : formatEther(balance)}</Loading
+      >&nbsp;{utils.nativeSymbol(asset, unwrap)}
     </div>
     {#if showMax}
       <div class="text-white leading-8">

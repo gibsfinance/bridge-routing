@@ -2,15 +2,7 @@
   import SmallInput from './SmallInput.svelte'
   import { ensToAddress, walletAccount } from '$lib/stores/auth/store'
   import { createPublicClient, http, isAddress, zeroAddress } from 'viem'
-  import {
-    router,
-    // unwrapSetting,
-    unwrap,
-    canChangeUnwrap,
-    calldata,
-    bridgeAddress,
-    // destination,
-  } from '$lib/stores/bridge-settings'
+  import { router, unwrap, canChangeUnwrap, calldata, bridgeAddress } from '$lib/stores/bridge-settings'
   import * as input from '$lib/stores/input'
   import { Chains } from '$lib/stores/auth/types'
   import { chainsMetadata } from '$lib/stores/auth/constants'
@@ -19,19 +11,13 @@
   import { normalize } from 'viem/ens'
   import { loading } from '$lib/stores/loading'
   const recipient = input.recipient
-  // $: account = $walletAccount
-  // let lastDestination: string = zeroAddress
   const updateDestination = async (e: CustomEvent) => {
     let addr = e.detail.value
-    // lastDestination = addr
-    // console.log(addr, $walletAccount)
     if (addr === 'me' && $walletAccount) {
-      // account = $walletAccount
       recipient.set($walletAccount)
     }
     if (isAddress(addr)) {
       recipient.set(addr)
-      // account = addr
       return
     }
     if (isEns(addr)) {
@@ -47,7 +33,6 @@
         return null
       })
       if (resolved) {
-        // account = resolved
         recipient.set(resolved)
       }
       loading.decrement('ens')

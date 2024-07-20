@@ -1,5 +1,6 @@
 import * as viem from 'viem'
 import * as types from './types'
+import type { defaultAssetIn } from './stores/config'
 
 type Erc20Metadata = [string, string, number]
 
@@ -90,8 +91,8 @@ export const multicallErc20 = async ({
   }
 }
 
-export const nativeSymbol = (asset: types.Token) =>
-  asset.symbol[0] === 'W' && asset.name.startsWith('Wrapped') ? asset.symbol.slice(1) : asset.symbol
+export const nativeSymbol = (asset: types.Token, unwrap = false) =>
+  unwrap && asset.symbol[0] === 'W' && asset.name.startsWith('Wrapped') ? asset.symbol.slice(1) : asset.symbol
 
-export const nativeName = (asset: types.Token) =>
-  asset.symbol[0] === 'W' && asset.name.startsWith('Wrapped') ? asset.name.split('Wrapped ').join('') : asset.name
+export const nativeName = (asset: types.Token, unwrap = false) =>
+  unwrap && asset.symbol[0] === 'W' && asset.name.startsWith('Wrapped') ? asset.name.split('Wrapped ').join('') : asset.name
