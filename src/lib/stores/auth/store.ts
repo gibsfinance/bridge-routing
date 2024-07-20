@@ -1,15 +1,16 @@
 import { derived, type Readable } from 'svelte/store'
 import {
   createPublicClient,
+  http,
   type Address,
   type WalletClient,
-  http,
   type PublicClient,
 } from 'viem'
 import { Chains } from './types'
 import { chainsMetadata } from './constants'
 import { normalize } from 'viem/ens'
-import { destination, walletClient, activeChain } from '../bridge-settings'
+import { walletClient } from '../bridge-settings'
+import * as input from '../input'
 
 export const walletAccount = derived<[Readable<WalletClient | undefined>], Address | undefined>(
   [walletClient],
@@ -19,17 +20,19 @@ export const walletAccount = derived<[Readable<WalletClient | undefined>], Addre
       return undefined
     }
 
-    $walletClient?.requestAddresses().then((accounts) => {
+    $walletClient?.requestAddresses().then(async (accounts) => {
       const [account] = accounts
 
       set(account)
-      destination.set(account)
+      input.recipient.set(account)
     })
   },
 )
 
 export const accountENS = derived([walletAccount], ([$walletAccount], set) => {
-  if (!$walletAccount) return undefined
+  if (!$walletAccount) {
+    return undefined
+  }
 
   /** ENS resolver exists just on the mainnet  */
   const ethPublicClient = createPublicClient({
@@ -41,7 +44,9 @@ export const accountENS = derived([walletAccount], ([$walletAccount], set) => {
 })
 
 export const ensToAddress = async (publicClient: PublicClient, ens: string) => {
-  if (!publicClient.chain?.contracts?.ensRegistry) return null
+  if (!publicClient.chain?.contracts?.ensRegistry) {
+    return null
+  }
   return publicClient.getEnsAddress({
     name: normalize(ens),
   })

@@ -1,67 +1,20 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
-  import { validatable } from '$lib/stores/validatable'
   import type { FormEventHandler } from 'svelte/elements'
   import Icon from '@iconify/svelte'
-  import { humanReadableNumber, numberWithCommas, stripNonNumber } from '$lib/stores/utils'
-  import { parseUnits } from 'viem'
   import _ from 'lodash'
   import { writable } from 'svelte/store'
+  import { createEventDispatcher } from 'svelte'
 
-  // const dispatch = createEventDispatcher()
-  // export let isNumber = false
-  // export let validate = (v: string): any => v
+  const dispatch = createEventDispatcher()
   export let value = writable('')
   export let suffix = ''
   export let editOnLeft = false
-  // let val = validatable(value, validate)
-  // let lastValue = value
-  // $: {
-  //   _updateValue(value, false)
-  // }
   const changeFromEvent: FormEventHandler<HTMLInputElement> = (e) => {
     value.set(e.currentTarget.value)
-    // v = isNumber ? stripNonNumber(v) : v
-    // val.set(v)
-    // _updateValue(v, true)
+    dispatch('input', {
+      value: e.currentTarget.value,
+    })
   }
-  // const _updateValue = (v: string, fromInput = false) => {
-  //   if (isNumber) {
-  //     const d = v.split('.')[1]?.length
-  //     const valAsInt = parseUnits(stripNonNumber(v), d || 0)
-  //     if (_.isNumber(d) && !d) {
-  //       return
-  //     }
-  //     if (valAsInt) {
-  //       const next = humanReadableNumber(valAsInt, d || 0)
-  //       console.log(next, value)
-  //       if (next === value) {
-  //         return
-  //       }
-  //       value = next
-  //       lastValue = value
-  //       dispatch('update', {
-  //         value: stripNonNumber(value),
-  //         fromInput,
-  //       })
-  //     } else if (v) {
-  //       lastValue = '0'
-  //     }
-  //   } else {
-  //     value = v
-  //     if (v) {
-  //       lastValue = value
-  //     }
-  //     dispatch('update', {
-  //       value,
-  //       fromInput,
-  //     })
-  //   }
-  // }
-  // $: if (_.isString($val)) {
-  //   _updateValue($val)
-  // }
-  // $: $val && _updateValue($val)
   let className = ''
   export { className as class }
   let input!: HTMLInputElement
@@ -71,7 +24,6 @@
   }
   const ensureValue = () => {
     if (!input.value) {
-      // value = lastValue
     }
   }
 </script>

@@ -1,13 +1,19 @@
 import { formatUnits, parseUnits } from 'viem'
 
-export const humanReadableNumber = (num = 0n, decimals = 18, truncateLarge?: number) => {
-  const n = num === 0n ? '0.0' : formatUnits(num, decimals)
-  if (truncateLarge !== undefined) {
-    const [int, d] = n.split('.')
-    if (decimals >= 15 ? int.length > 2 : int.length > 5) {
-      return numberWithCommas(d && truncateLarge ? `${int}.${d.slice(0, truncateLarge)}` : int)
-    }
+export const humanReadableNumber = (num = 0n, decimals = 18) => {
+  let n = num === 0n ? '0.0' : formatUnits(num, decimals)
+  const len = Math.min(n.length, 20)
+  n = n.slice(0, len)
+  // this line should only be hit when non zero values are passed
+  if (n[n.length - 1] === '.') {
+    n = n.slice(0, n.length - 1)
   }
+  // if (truncateLarge !== undefined) {
+  //   const [int, d] = n.split('.')
+  //   if (decimals >= 15 ? int.length > 2 : int.length > 5) {
+  //     return numberWithCommas(d && truncateLarge ? `${int}.${d.slice(0, truncateLarge)}` : int)
+  //   }
+  // }
   return numberWithCommas(n)
 }
 

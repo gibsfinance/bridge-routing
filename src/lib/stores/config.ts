@@ -1,5 +1,4 @@
 import * as viem from 'viem'
-import { imageRoot } from "$lib/config";
 import type { Token } from "$lib/types";
 import { Chains, Provider, type DestinationChains } from "./auth/types";
 import * as imageLinks from './image-links'

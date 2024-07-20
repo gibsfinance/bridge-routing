@@ -14,11 +14,11 @@ export const chainsMetadata = {
     chainId: Chains.PLS,
     icon: imageLinks.network(pulsechain.id),
     alt: 'a pink blue and purple hexagon with an ekg line running horizontally',
-    // rpcUrls: {
-    //   default: {
-    //     http: ['https://rpc-pulsechain.g4mm4.io'],
-    //   },
-    // },
+    rpcUrls: {
+      default: {
+        http: ['https://rpc-pulsechain.g4mm4.io'],
+      },
+    },
     contracts: {
       ...pulsechain.contracts,
       ensRegistry: {
@@ -35,11 +35,11 @@ export const chainsMetadata = {
     chainId: Chains.ETH,
     icon: imageLinks.network(mainnet.id),
     alt: 'two pyramids joined on one side',
-    // rpcUrls: {
-    //   default: {
-    //     http: ['https://rpc-ethereum.g4mm4.io'],
-    //   },
-    // },
+    rpcUrls: {
+      default: {
+        http: ['https://rpc-ethereum.g4mm4.io'],
+      },
+    },
   },
   [Chains.BNB]: {
     ...bsc,

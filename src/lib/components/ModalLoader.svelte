@@ -1,10 +1,9 @@
 <script lang="ts">
   import * as input from '$lib/stores/input'
   import {
-    amountToBridge,
-    desiredAssetIn,
+    // desiredAssetIn,
     isNative,
-    unwrapSetting,
+    // unwrapSetting,
     desiredExcessCompensationBasisPoints,
   } from '$lib/stores/bridge-settings'
   import { type as modalType } from '$lib/stores/modal'
@@ -13,13 +12,12 @@
   import * as imageLinks from '$lib/stores/image-links'
   import { formatUnits } from 'viem'
   const chooseTokenSubmit = (e: CustomEvent<Token>) => {
-    desiredAssetIn.set({
+    input.assetIn.set({
       ...e.detail,
       logoURI: e.detail.logoURI || imageLinks.image(e.detail),
     })
     const native = isNative(e.detail)
-    unwrapSetting.set(native)
-    console.log($desiredExcessCompensationBasisPoints)
+    input.unwrap.set(native)
     input.fee.set(formatUnits($desiredExcessCompensationBasisPoints, 2))
   }
 </script>

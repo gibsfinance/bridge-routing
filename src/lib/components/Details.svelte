@@ -1,18 +1,13 @@
 <script lang="ts">
   import * as viem from 'viem'
   import UndercompensatedWarning from '$lib/components/warnings/Undercompensated.svelte'
-  import type { VisualChain } from '$lib/stores/auth/types'
   import Warning from './Warning.svelte'
   import {
     bridgeFee,
-    // incentiveFee,
-    // basisPointIncentiveFee,
-    fee,
     estimatedNetworkCost,
     estimatedCost,
     limit,
     amountToBridge,
-    feeType,
     limitFromPercent,
   } from '$lib/stores/bridge-settings'
   import { humanReadableNumber } from '$lib/stores/utils'
@@ -20,12 +15,12 @@
   import Loading from './Loading.svelte'
   import type { Token } from '$lib/types'
   import * as input from '$lib/stores/input'
-
+  const feeType = input.feeType
+  const inputFee = input.fee
   const oneEther = 10n ** 18n
   $: afterBridge = $amountToBridge - ($amountToBridge * $bridgeFee) / oneEther
   $: estimated = afterBridge - $estimatedCost
   $: minimumDelivered = afterBridge - $limit
-  const inputFee = input.fee
   export let asset!: Token
 </script>
 
@@ -65,14 +60,14 @@
       <span>
         {#if $feeType === 'gas+%'}
           ⛽&nbsp;+&nbsp;{$inputFee}%
-        {:else if $feeType === '%'}
+        {:else if $feeType === input.FeeType.PERCENT}
           -{$inputFee}%
         {/if}
       </span>
       <span
         class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center"
         data-tip="cost as configured by the fee settings">
-        {#if $feeType === '%'}
+        {#if $feeType === input.FeeType.PERCENT}
           {humanReadableNumber($limitFromPercent, asset.decimals)}
         {:else}<Loading key="gas">
             {humanReadableNumber($estimatedCost, asset.decimals)}</Loading
@@ -123,7 +118,7 @@
       <span class="flex flex-row items-end self-end font-mono text-right">
         (in-{viem.formatEther(
           $bridgeFee * 100n,
-        )}%)-{#if $feeType === 'fixed'}fixed=out{:else if $feeType === 'gas+%'}min(limit,base*{$inputFee}%)=out{:else if $feeType === '%'}{$inputFee}%=out
+        )}%)-{#if $feeType === input.FeeType.FIXED}fixed=out{:else if $feeType === input.FeeType.GAS_TIP}min(limit,base*{$inputFee}%)=out{:else if $feeType === input.FeeType.PERCENT}{$inputFee}%=out
         {/if}
       </span>
     </span>

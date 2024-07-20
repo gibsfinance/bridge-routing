@@ -7,7 +7,6 @@
     estimatedNetworkCost,
     oneEther,
   } from '$lib/stores/bridge-settings'
-  $: console.log($amountAfterBridgeFee, $estimatedCost, ($estimatedNetworkCost * $desiredCompensationRatio) / oneEther)
 </script>
 
 {#if $amountAfterBridgeFee}

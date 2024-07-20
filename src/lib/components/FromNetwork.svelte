@@ -1,14 +1,13 @@
 <script lang="ts">
   import NetworkSummary from './NetworkSummary.svelte'
   import { walletAccount } from '$lib/stores/auth/store'
-  import { erc20Abi, formatUnits, parseUnits } from 'viem'
+  import { erc20Abi, formatUnits } from 'viem'
   import type { VisualChain } from '$lib/stores/auth/types'
-  import { decimalValidation, humanReadableNumber, stripNonNumber } from '$lib/stores/utils'
   import { writable, type Writable } from 'svelte/store'
-  import { amountToBridge, assetIn, bridgeKey, publicClient } from '$lib/stores/bridge-settings'
+  import { amountToBridge, assetIn, publicClient } from '$lib/stores/bridge-settings'
+  import { bridgeKey } from '$lib/stores/input'
   import { destinationChains } from '$lib/stores/config'
   import * as abis from '$lib/stores/abis'
-  import { validatable } from '$lib/stores/validatable'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { loading } from '$lib/stores/loading'
   import Warning from './Warning.svelte'
@@ -19,17 +18,10 @@
 
   export let network!: VisualChain
   export let asset!: Token
-  // let value = validatable('', (v) => decimalValidation(v, asset.decimals))
   export let value!: Writable<string>
   $: if (asset) {
     value.set('')
-    // val.set('')
   }
-  // $: {
-  //   const $v = $value
-  //   amountToBridge.set($v ? parseUnits($v, asset.decimals) : 0n)
-  // }
-  // amountToBridge.set(0n)
   let balance = 0n
   const getBalance = async () => {
     if (!$walletAccount) {

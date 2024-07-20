@@ -4,16 +4,15 @@ import { derived as asyncDerived } from './async'
 import * as viem from 'viem'
 import { Chains, type DestinationChains } from './auth/types'
 import { loading } from './loading'
-import { page } from '$app/stores'
 import type { Extensions, Token, TokenList } from '../types'
 import { chainsMetadata } from './auth/constants'
 import { multicallErc20, multicallRead } from '$lib/utils'
+import { bridgeFrom, bridgeKey } from '$lib/stores/input'
 import _ from 'lodash'
 import { uniV2Settings, destinationChains, defaultAssetIn, nativeAssetOut } from './config'
 import * as abis from './abis'
-import { feeManagerMapping } from './fee-manager'
 import * as imageLinks from './image-links'
-import { humanReadableNumber, isZero, stripNonNumber } from './utils'
+import { isZero, stripNonNumber } from './utils'
 
 export const activeChain = writable<Chains>(Chains.PLS)
 export const walletClient = writable<viem.WalletClient | undefined>()
@@ -35,12 +34,6 @@ export const multicall = derived([activeChain, publicClient], ([$activeChain, $p
   })
 })
 
-export const bridgeFrom = writable(feeManagerMapping)
-
-export const bridgeKeys = Object.keys(destinationChains) as DestinationChains[]
-
-export const bridgeKey = derived([page], ([$page]) => (Chains[$page.params.route as keyof typeof Chains] || Chains.ETH) as DestinationChains)
-
 export const bridgeFee = derived([bridgeFrom, bridgeKey], ([$bridgeFrom, $bridgeKey]) => (
   $bridgeFrom.get(Chains.PLS)!.get($bridgeKey)!.feeH2F
 ))
@@ -54,13 +47,10 @@ export const estimatedGas = writable(400_000n)
 export const latestBaseFeePerGas = writable(0n)
 /** the first recipient of the tokens (router) */
 export const router = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].router as viem.Hex)
-/** the final destination of the tokens (user's wallet or other named address) */
-export const destination = writable(viem.zeroAddress as viem.Hex)
-/** whether or not to unwrap the tokens to their native value */
-export const unwrapSetting = writable(true)
-/** the asset going into the home bridge */
-export const desiredAssetIn = writable<Token | null>(null)
-const fetchedAssetIn: Readable<Token | null> = derived([desiredAssetIn, bridgeKey], ([$desiredAssetIn, $bridgeKey], set) => {
+// /** the final destination of the tokens (user's wallet or other named address) */
+// export const destination = writable(viem.zeroAddress as viem.Hex)
+
+const fetchedAssetIn: Readable<Token | null> = derived([input.assetIn, bridgeKey], ([$desiredAssetIn, $bridgeKey], set) => {
   if (!$desiredAssetIn) {
     set(null)
     return
@@ -76,7 +66,7 @@ const fetchedAssetIn: Readable<Token | null> = derived([desiredAssetIn, bridgeKe
     target: addr,
     chain: chainsMetadata[Chains.PLS],
   }).then(([name, symbol, decimals]) => {
-    if ($desiredAssetIn !== get(desiredAssetIn)) {
+    if ($desiredAssetIn !== get(input.assetIn)) {
       console.log('skip set')
       return
     }
@@ -90,7 +80,7 @@ const fetchedAssetIn: Readable<Token | null> = derived([desiredAssetIn, bridgeKe
     set(tkn)
   })
 })
-export const assetIn = derived([fetchedAssetIn, bridgeKey, desiredAssetIn], ([$fetchedAssetIn, $bridgeKey, $desiredAssetIn]) => {
+export const assetIn = derived([fetchedAssetIn, bridgeKey, input.assetIn], ([$fetchedAssetIn, $bridgeKey, $desiredAssetIn]) => {
   return $fetchedAssetIn || $desiredAssetIn || defaultAssetIn[$bridgeKey]
 })
 /** the address of the bridge proxy contract on home */
@@ -134,7 +124,6 @@ export const assetOut = asyncDerived(
       foreignTokenAddress, // bridgedTokenAddress
       nativeTokenAddress,
     ] = mappings
-    // console.log(nativeTokenAddress, foreignTokenAddress)
 
     if (foreignTokenAddress !== viem.zeroAddress) {
       // if we are here, then we know that we are dealing with a native
@@ -157,11 +146,15 @@ export const assetOut = asyncDerived(
 
     let res = backupAssetIn
     if (foreignTokenAddress !== viem.zeroAddress) {
-      const [name, symbol, decimals] = await multicallErc20({
+      const r = await multicallErc20({
         client: clientFromChain($bridgeKey),
         chain: chainsMetadata[$bridgeKey],
         target: foreignTokenAddress,
-      })
+      }).catch(() => null)
+      if (!r) {
+        return backupAssetIn
+      }
+      const [name, symbol, decimals] = r
       res = {
         name, symbol, decimals,
         chainId: Number($bridgeKey),
@@ -196,7 +189,7 @@ export const isNative = ($asset: Token) => {
 export const canChangeUnwrap = derived([assetIn], ([$assetIn]) => (
   isNative($assetIn)
 ))
-export const unwrap = derived([unwrapSetting, canChangeUnwrap], ([$unwrapSetting, $canChangeUnwrap]) => {
+export const unwrap = derived([input.unwrap, canChangeUnwrap], ([$unwrapSetting, $canChangeUnwrap]) => {
   return $canChangeUnwrap && $unwrapSetting
 })
 /** the direction of the bridge crossing */
@@ -205,14 +198,11 @@ export const toNetwork = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === 
 
 export const oneEther = 10n ** 18n
 
-/** whether to use a fixed or gas based fee */
-export const feeType = writable('%')
-
-export const desiredExcessCompensationBasisPoints = derived([assetIn, feeType], ([$assetIn, $feeType]) => {
+export const desiredExcessCompensationBasisPoints = derived([assetIn, input.feeType], ([$assetIn, $feeType]) => {
   const native = isNative($assetIn)
-  return $feeType === '%'
+  return $feeType === input.FeeType.PERCENT
     ? 1_000n
-    : $feeType === 'gas+%'
+    : $feeType === input.FeeType.GAS_TIP
       ? native ? 1_000n : 5_000n
       : native ? 5_000n : 10_000n
 })
@@ -372,9 +362,9 @@ export const baseFeeReimbersement = derived(
 )
 /** the fee, clamped to the user defined limit */
 export const clampedReimbersement = derived(
-  [baseFeeReimbersement, limit, feeType, limitFromPercent],
+  [baseFeeReimbersement, limit, input.feeType, limitFromPercent],
   ([$baseFeeReimbersement, $limit, $feeType, $limitFromPercent]) => {
-    if ($feeType === '%') {
+    if ($feeType === input.FeeType.PERCENT) {
       return $limitFromPercent
     }
     return $baseFeeReimbersement > $limit ? $limit : $baseFeeReimbersement
@@ -382,12 +372,13 @@ export const clampedReimbersement = derived(
 )
 /** the estimated cost given the choice for a fixed fee, limit and incentive fee */
 export const estimatedCost = derived(
-  [feeType, limit, limitFromPercent, clampedReimbersement],
+  [input.feeType, limit, limitFromPercent, clampedReimbersement],
   ([$feeType, $limit, $limitFromPercent, $clampedReimbersement]) => {
-    if ($feeType === '%') {
+    // console.log($feeType, $limitFromPercent, $limit, $clampedReimbersement)
+    if ($feeType === input.FeeType.PERCENT) {
       return $limitFromPercent
     }
-    if ($feeType === 'fixed') {
+    if ($feeType === input.FeeType.FIXED) {
       return $limit
     }
     return $clampedReimbersement
@@ -395,29 +386,32 @@ export const estimatedCost = derived(
 )
 /** creates the settings param for the fee director struct */
 export const feeTypeSettings = derived(
-  [feeType, unwrap],
+  [input.feeType, unwrap],
   ([$feeType, $unwrap]) => {
-    const th0 = $feeType === 'fixed' ? 1n : 0n
+    const th0 = $feeType === input.FeeType.FIXED ? 1n : 0n
     const st1 = $unwrap ? 1n : 0n
     const nd2 = 1n // always exclude priority when you can
-    const rd3 = $feeType === '%' ? 1n : 0n
+    const rd3 = $feeType === input.FeeType.PERCENT ? 1n : 0n
     return (rd3 << 3n) | (nd2 << 2n) | (st1 << 1n) | th0
   },
 )
 
 /** the encoded struct to be passed to the foreign router */
 export const feeDirectorStructEncoded = derived(
-  [destination, feeTypeSettings, limit, fee, feeType, assetOut, priceCorrective],
-  ([$destination, $feeTypeSettings, $limit, $fee, $feeType, $assetOut, $priceCorrective]) => {
+  [input.recipient, feeTypeSettings, limit, fee, input.feeType, assetOut, priceCorrective],
+  ([$recipient, $feeTypeSettings, $limit, $fee, $feeType, $assetOut, $priceCorrective]) => {
     let multiplier = 0n
-    if ($feeType === 'gas+%' && $priceCorrective > 0n) {
+    if ($feeType === input.FeeType.GAS_TIP && $priceCorrective > 0n) {
       multiplier = (oneEther + $fee) * (10n ** BigInt($assetOut.decimals)) / $priceCorrective
-    } else if ($feeType === '%') {
+    } else if ($feeType === input.FeeType.PERCENT) {
       multiplier = $fee
+    }
+    if (!viem.isAddress($recipient)) {
+      return '0x'
     }
     return viem.encodeAbiParameters(abis.feeDeliveryStruct, [
       [
-        $destination,
+        $recipient,
         $feeTypeSettings,
         $limit,
         multiplier,

@@ -4,30 +4,34 @@
   import { createPublicClient, http, isAddress, zeroAddress } from 'viem'
   import {
     router,
-    unwrapSetting,
+    // unwrapSetting,
     unwrap,
     canChangeUnwrap,
     calldata,
     bridgeAddress,
-    destination,
+    // destination,
   } from '$lib/stores/bridge-settings'
+  import * as input from '$lib/stores/input'
   import { Chains } from '$lib/stores/auth/types'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import Warning from './Warning.svelte'
   import { ensTld, isEns } from '$lib/stores/ens'
   import { normalize } from 'viem/ens'
   import { loading } from '$lib/stores/loading'
-  $: account = $walletAccount
-  let lastDestination: string = zeroAddress
+  const recipient = input.recipient
+  // $: account = $walletAccount
+  // let lastDestination: string = zeroAddress
   const updateDestination = async (e: CustomEvent) => {
     let addr = e.detail.value
-    lastDestination = addr
+    // lastDestination = addr
+    // console.log(addr, $walletAccount)
     if (addr === 'me' && $walletAccount) {
-      account = $walletAccount
+      // account = $walletAccount
+      recipient.set($walletAccount)
     }
     if (isAddress(addr)) {
-      destination.set(addr)
-      account = addr
+      recipient.set(addr)
+      // account = addr
       return
     }
     if (isEns(addr)) {
@@ -43,8 +47,8 @@
         return null
       })
       if (resolved) {
-        account = resolved
-        destination.set(resolved)
+        // account = resolved
+        recipient.set(resolved)
       }
       loading.decrement('ens')
     }
@@ -56,11 +60,11 @@
     <span>Recipient</span>
     <SmallInput
       editOnLeft
-      value={account || zeroAddress}
-      on:update={updateDestination}
+      value={recipient}
+      on:input={updateDestination}
       class="font-mono text-xs md:text-sm mr-auto md:mr-0" />
     <Warning
-      show={!(isAddress(account || '') && account?.length === 42 && account !== zeroAddress)}
+      show={!(isAddress($recipient || '') && $recipient?.length === 42 && $recipient !== zeroAddress)}
       tooltip="address is not valid" />
   </div>
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed">
@@ -75,7 +79,7 @@
       disabled={!$canChangeUnwrap}
       checked={$unwrap}
       on:change={(e) => {
-        unwrapSetting.set(e.currentTarget.checked)
+        input.unwrap.set(e.currentTarget.checked)
       }} />
   </div>
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed">
