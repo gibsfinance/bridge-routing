@@ -15,10 +15,17 @@
   const markFailure = markLoaded(false)
 </script>
 
-<div class="flex" data-url={src}>
+<div class="grid grid-cols-1 grid-rows-1 relative" data-url={src}>
   {#if src && visible && loaded !== false}
-    <img on:load={markSuccess} on:error={markFailure} {src} {alt} height={size} width={size} class={className} />
-  {:else if !loaded}
-    <Icon icon="ph:question" height={size} width={size} class={className} />
+    <img
+      on:load={markSuccess}
+      on:error={markFailure}
+      {src}
+      {alt}
+      height={size}
+      width={size}
+      class={className}
+      class:absolute={true} />
   {/if}
+  <Icon icon="ph:question" height={size} width={size} class={`${className} ${!loaded ? '' : 'invisible'}`} />
 </div>
