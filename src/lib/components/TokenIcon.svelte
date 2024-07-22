@@ -1,8 +1,7 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
   import _ from 'lodash'
-  let sourceInput = ''
-  export { sourceInput as src }
+  export let src = ''
   export let alt = ''
   export let size = 32
   export let visible = false
@@ -16,16 +15,9 @@
   const markFailure = markLoaded(false)
 </script>
 
-<div class="flex" data-url={sourceInput}>
-  {#if sourceInput && visible && loaded !== false}
-    <img
-      on:load={markSuccess}
-      on:error={markFailure}
-      src={sourceInput}
-      {alt}
-      height={size}
-      width={size}
-      class={className} />
+<div class="flex" data-url={src}>
+  {#if src && visible && loaded !== false}
+    <img on:load={markSuccess} on:error={markFailure} {src} {alt} height={size} width={size} class={className} />
   {:else if !loaded}
     <Icon icon="ph:question" height={size} width={size} class={className} />
   {/if}
