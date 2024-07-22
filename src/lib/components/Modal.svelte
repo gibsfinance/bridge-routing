@@ -1,37 +1,33 @@
 <script lang="ts">
+  import * as customTokens from '$lib/stores/custom-tokens'
   import type { Token } from '$lib/types'
   import * as viem from 'viem'
   import { createEventDispatcher, onMount } from 'svelte'
   export let openOnMount: boolean = false
   import TokenIcon from '$lib/components/TokenIcon.svelte'
   import * as modalStore from '$lib/stores/modal'
-  import { loading } from '$lib/stores/loading'
   import Lazy from './Lazy.svelte'
   import { getAddress, isAddress } from 'viem'
   import Icon from '@iconify/svelte'
-  import { publicClient, assetSources, bridgableTokens } from '$lib/stores/bridge-settings'
+  import { assetSources } from '$lib/stores/bridge-settings'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { Chains } from '$lib/stores/auth/types'
   import { multicallErc20 } from '$lib/utils'
+  import * as input from '$lib/stores/input'
   import _ from 'lodash'
+
+  const { bridgeKey, bridgeClient, bridgableTokens, publicClient } = input
 
   const dispatch = createEventDispatcher()
   const submit = (token: Token) => {
     dispatch('submit', token)
   }
   let modal: HTMLDialogElement | null = null
-  let temporaryTokens: Token[] = []
+  // let temporaryTokens: Token[] = []
   let custom!: Token
   const doClose = (e: Event) => {
     modalStore.type.set(null)
   }
-  // load a test
-  try {
-    const tokensSerialized = localStorage.getItem('tokens')
-    if (tokensSerialized) {
-      temporaryTokens = JSON.parse(tokensSerialized)
-    }
-  } catch (err) {}
   onMount(() => {
     modal?.addEventListener('close', doClose)
     if (openOnMount) {
@@ -42,15 +38,8 @@
       modal = null
     }
   })
-  const addEphemeralToken = (token: Token) => {
-    temporaryTokens = temporaryTokens.concat(token)
-    try {
-      localStorage.setItem('tokens', JSON.stringify(temporaryTokens))
-    } catch (err) {}
-  }
   const addCustom = (newToken: Token) => {
-    console.log('add custom', newToken)
-    addEphemeralToken(newToken)
+    customTokens.tokens.update((tkns) => tkns.concat(newToken))
     searchValue = ''
     // use token as focus in bridge settings stores
   }
@@ -59,24 +48,39 @@
     modal?.close()
   }
   let searchValue = ''
-  const getSubset = (val: string) => {
+  let showAllTokens = false
+  const getSubset = ($tokens: Token[], val: string, allTokens: boolean) => {
+    let tkns = $tokens
+    if (!val && !allTokens) {
+      return tkns
+    }
     const lowerVal = val.toLowerCase()
-    const filter = isAddress(val)
-      ? ({ address }: Token) => {
-          return getAddress(address) === getAddress(val)
-        }
-      : ({ name, symbol, address, extensions }: Token) => {
-          return (
-            address.toLowerCase().includes(lowerVal) ||
-            !!Object.values(extensions?.bridgeInfo || {}).find((info) => {
-              return info.tokenAddress.toLowerCase().includes(lowerVal)
-            }) ||
-            name.toLowerCase().includes(lowerVal) ||
-            symbol.toLowerCase().includes(lowerVal)
-          )
-        }
-    return temporaryTokens.concat($bridgableTokens).filter(filter)
+    if (lowerVal) {
+      const filter = isAddress(val)
+        ? ({ address }: Token) => {
+            return getAddress(address) === getAddress(val)
+          }
+        : ({ name, symbol, address, extensions }: Token) => {
+            return (
+              address.toLowerCase().includes(lowerVal) ||
+              !!Object.values(extensions?.bridgeInfo || {}).find((info) => {
+                return info.tokenAddress.toLowerCase().includes(lowerVal)
+              }) ||
+              name.toLowerCase().includes(lowerVal) ||
+              symbol.toLowerCase().includes(lowerVal)
+            )
+          }
+      tkns = tkns.filter(filter)
+    }
+    if (showAllTokens) return tkns
+    const [inside, outside] = _.partition(tkns, onlyFromCurrentNetwork)
+    return inside
   }
+
+  const onlyFromCurrentNetwork = (tkn) => (
+    tkn.chainId === 369
+    && !!tkn.extensions.bridgeInfo[Number($bridgeKey)]?.tokenAddress
+  )
 
   const loadViaMulticall = async (target: viem.Hex | null) => {
     if (!target) {
@@ -98,7 +102,8 @@
     }
     return custom
   }
-  $: subset = searchValue ? getSubset(searchValue) : temporaryTokens.concat($bridgableTokens)
+  const tokens = customTokens.tokens
+  $: subset = getSubset($tokens.concat($bridgableTokens), searchValue, showAllTokens)
   $: inputIsAddress = isAddress(searchValue)
   $: addButtonDisabled = !inputIsAddress || !!subset.length
   $: searchValueHex = inputIsAddress ? (searchValue as viem.Hex) : null
@@ -154,6 +159,12 @@
         </button>
       </li>
     </ul>
+    <label class="flex py-2 px-6 text-neutral-400 items-center">
+      <input type="checkbox" class="toggle" bind:checked={showAllTokens} />
+      <span class="ml-3 text-sm">
+        <span class="font-medium text-neutral-400">Show all tokens</span>
+      </span>
+    </label>
   </div>
   <form method="dialog" class="modal-backdrop">
     <button

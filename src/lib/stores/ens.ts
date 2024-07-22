@@ -4,7 +4,7 @@ import { normalize } from 'viem/ens'
 import { writable } from 'svelte/store'
 import { getAddress, isAddress, zeroAddress, type Hex, type PublicClient } from 'viem'
 import { Chains } from './auth/types'
-import { clientFromChain } from './bridge-settings'
+import { clientFromChain } from './input'
 
 type ChainKey = keyof typeof Chains
 

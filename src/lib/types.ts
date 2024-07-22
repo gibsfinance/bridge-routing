@@ -22,8 +22,8 @@ export type Token = {
   name: string;
   symbol: string;
   decimals: number;
-  logoURI: string;
   chainId: number;
+  logoURI?: string;
   extensions?: Extensions
 }
 

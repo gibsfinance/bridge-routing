@@ -7,15 +7,17 @@
     bridgeAddress,
     amountToBridge,
     foreignData,
-    clientFromChain,
-    walletClient,
-    assetIn,
+    // clientFromChain,
+    // walletClient,
+    // assetIn,
   } from '$lib/stores/bridge-settings'
   import { destinationChains } from '$lib/stores/config'
   import * as abis from '$lib/stores/abis'
   import { getContract, type Hex } from 'viem'
   import Loading from './Loading.svelte'
-  import { bridgeKey } from '$lib/stores/input'
+  import * as input from '$lib/stores/input'
+
+  const { walletClient, assetIn, clientFromChain, bridgeKey } = input
 
   $: disabled = BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n
 

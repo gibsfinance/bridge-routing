@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { loading } from '$lib/stores/loading'
   export let tooltip = ''
   export let show = false
   export let disabled = false
@@ -12,8 +13,8 @@
     class:positioned-right={position === 'right'}
     class:tooltip-left={position === 'right'}
     class:tooltip-right={position === 'left'}
-    class:bg-red-600={!disabled}
-    class:bg-red-400={disabled}
+    class:bg-red-600={!disabled && $loading.resolved}
+    class:bg-red-400={disabled || !$loading.resolved}
     data-tip={tooltip}>
     !!
   </div>

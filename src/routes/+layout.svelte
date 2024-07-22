@@ -38,7 +38,7 @@
     min-height: 100vh;
   }
   :global(.tooltip::before) {
-    @apply max-w-96;
+    @apply max-w-96 whitespace-pre-line;
   }
   :global(.tooltip.tooltip-top.tooltip-left-toward-center::before) {
     @apply -translate-x-0 right-0 left-auto;

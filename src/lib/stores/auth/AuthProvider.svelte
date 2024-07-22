@@ -11,11 +11,10 @@
   import { Chains } from './types'
   import { onMount, setContext } from 'svelte'
   import { CONTEXT_KEY } from './methods'
-  import { activeChain, walletClient } from '$lib/stores/bridge-settings'
   import type { ChainWithDecimalId } from '@web3-onboard/common'
   import { createWalletClient, custom, zeroAddress } from 'viem'
   import gibsIcon from '$lib/images/1FAF0.svg'
-  import { recipient } from '../input'
+  import { recipient, activeChain, walletClient } from '../input'
   const walletConnect = walletConnectModule({
     projectId: '1f8a963aa1809cada8560d560360107d',
     requiredChains: Object.values(Chains).map((cId) => Number(cId)),

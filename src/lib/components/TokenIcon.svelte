@@ -9,6 +9,7 @@
   export { className as class }
   let loaded: boolean | null = null
   const markLoaded = (val: boolean) => () => {
+    console.log('marking', val)
     loaded = val
   }
   const markSuccess = markLoaded(true)
@@ -16,7 +17,7 @@
 </script>
 
 <div class="grid grid-cols-1 grid-rows-1 relative" data-url={src}>
-  {#if src && visible && loaded !== false}
+  {#if visible || loaded !== null}
     <img
       on:load={markSuccess}
       on:error={markFailure}
@@ -25,6 +26,7 @@
       height={size}
       width={size}
       class={className}
+      class:invisible={!loaded}
       class:absolute={true} />
   {/if}
   <Icon icon="ph:question" height={size} width={size} class={`${className} ${!loaded ? '' : 'invisible'}`} />

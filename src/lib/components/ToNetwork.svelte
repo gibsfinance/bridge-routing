@@ -11,7 +11,6 @@
   import FeeTypeToggle from '$lib/components/FeeTypeToggle.svelte'
   import {
     limitFromPercent,
-    loadFeeFor,
     priceCorrective,
     latestBaseFeePerGas,
     amountAfterBridgeFee,
@@ -33,8 +32,7 @@
   export let originationNetwork!: VisualChain
   export let destinationNetwork!: VisualChain
   export let asset!: Token
-  const feeType = input.feeType
-  const bridgeFrom = input.bridgeFrom
+  const { feeType, assetInAddress, bridgeFrom } = input
   const dispatch = createEventDispatcher()
   const showToolbox = (type: string) => {
     dispatch('toggle', type)
@@ -68,7 +66,7 @@
     })
   }
   onMount(() => () => unwatch?.())
-  $: loadFeeFor(originationNetwork.chainId, destinationNetwork.chainId)
+  input.loadFeeFor(originationNetwork.chainId, destinationNetwork.chainId)
   // lock toggles
   let costLimitLocked = false
   let deliveryFeeLocked = false
@@ -90,16 +88,18 @@
     return formatUnits(target, 18)
   }
   const gasPercentFeeFromNetworkInputs = () => {
-    const decimals = 6n
-    const lowResLimit = ($latestBaseFeePerGas * ($fee + oneEther)) / (10n ** (11n - decimals) * 10n * oneEther)
-    let lim = lowResLimit * 10n ** (18n - decimals)
-    if ($priceCorrective > 0n) {
-      lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset.decimals))
-      if (lim > $amountAfterBridgeFee) {
-        lim = $amountAfterBridgeFee
-      }
-      return humanReadableNumber(lim, asset.decimals)
+    if ($priceCorrective === 0n) {
+      return
     }
+    const numDecimals = 6n
+    const lowResLimit = ($latestBaseFeePerGas * ($fee + oneEther)) / (10n ** (11n - numDecimals) * 10n * oneEther)
+    let lim = lowResLimit * 10n ** (18n - numDecimals)
+    lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset.decimals))
+    if (lim > $amountAfterBridgeFee) {
+      lim = $amountAfterBridgeFee
+    }
+    console.log($fee, lim)
+    return humanReadableNumber(lim, asset.decimals)
   }
   const reflowFees = () => {
     if ($feeType === input.FeeType.PERCENT) {
@@ -111,6 +111,7 @@
       if (!costLimitLocked) {
         const floatingLimit = gasPercentFeeFromNetworkInputs()
         if (floatingLimit) {
+          // console.log(floatingLimit)
           input.limit.set(floatingLimit)
         }
       }
@@ -128,7 +129,7 @@
     ($fee || !$fee) &&
     $latestBaseFeePerGas &&
     $feeType &&
-    asset
+    $assetInAddress
   ) {
     reflowFees()
   }
@@ -172,7 +173,7 @@
           options={[
             { key: input.FeeType.FIXED, text: 'Fixed' },
             { key: input.FeeType.GAS_TIP, text: '⛽+%' },
-            { key: input.FeeType.PERCENT, text: input.FeeType.PERCENT },
+            { key: input.FeeType.PERCENT, text: '%' },
           ]}
           on:change={(e) => {
             feeType.set(e.detail.key)
@@ -190,7 +191,7 @@
         data-tip={$feeType === input.FeeType.FIXED
           ? 'Fee uses fixed value defined in cost limit'
           : $feeType === input.FeeType.GAS_TIP
-            ? `Percentage of gas used * ${$foreignSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action`
+            ? `Percentage of gas used * ${$foreignSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber($estimatedNetworkCost, asset.decimals)} ${utils.nativeSymbol(asset, $unwrap)}`
             : 'the percentage of bridged tokens after the bridge fee'}
         class:line-through={$feeType === input.FeeType.FIXED}
         on:click={focusOnInputChild}>
