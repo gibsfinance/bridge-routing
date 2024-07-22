@@ -72,21 +72,19 @@ export const multicallErc20 = async ({
   target: viem.Hex
   chain: viem.Chain
 }) => {
+  const options = {
+    chain: chain,
+    client: client,
+    abi: viem.erc20Abi,
+    target,
+    calls: erc20MetadataCalls,
+  }
   try {
-    return await multicallRead<Erc20Metadata>({
-      chain: chain,
-      client: client,
-      abi: viem.erc20Abi,
-      target,
-      calls: erc20MetadataCalls,
-    })
+    return await multicallRead<Erc20Metadata>(options)
   } catch (err) {
     return await multicallRead<Erc20Metadata>({
-      chain: chain,
-      client: client,
+      ...options,
       abi: viem.erc20Abi_bytes32,
-      target,
-      calls: erc20MetadataCalls,
     })
   }
 }
