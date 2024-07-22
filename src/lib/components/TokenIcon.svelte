@@ -9,7 +9,6 @@
   export { className as class }
   let loaded: boolean | null = null
   const markLoaded = (val: boolean) => () => {
-    console.log('marking', val)
     loaded = val
   }
   const markSuccess = markLoaded(true)
