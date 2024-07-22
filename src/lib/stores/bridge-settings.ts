@@ -249,7 +249,7 @@ export const priceCorrective = derived(
       if (cancelled) return
       loading.decrement('gas')
       const [outputToken, inputToken] = results.map(outputFromRouter)
-      console.log([outputToken, inputToken])
+      // console.log([outputToken, inputToken])
       const res = outputToken && outputToken > 0n ? (
         inputToken && inputToken > outputToken && inputToken / outputToken === 1n ? inputToken : outputToken
       ) : inputToken
