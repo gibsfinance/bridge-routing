@@ -1,10 +1,10 @@
-import { derived, get, writable, type Readable, type Stores } from 'svelte/store'
+import { derived, get, writable } from 'svelte/store'
 import * as input from '$lib/stores/input'
 import { derived as asyncDerived } from './async'
 import * as viem from 'viem'
 import { Chains, type DestinationChains } from './auth/types'
 import { loading } from './loading'
-import type { Extensions, Token, TokenList } from '../types'
+import type { Token } from '../types'
 import { chainsMetadata } from './auth/constants'
 import { multicallErc20, multicallRead } from '$lib/utils'
 import _ from 'lodash'
@@ -12,52 +12,15 @@ import { uniV2Settings, destinationChains, defaultAssetIn, nativeAssetOut } from
 import * as abis from './abis'
 import * as imageLinks from './image-links'
 import { isZero, stripNonNumber } from './utils'
+import { latestBaseFeePerGas } from './chain-events'
 
 export const provider = derived([input.bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].provider)
 
 export const foreignSupportsEIP1559 = derived([input.bridgeKey], ([$bridgeKey]) => ($bridgeKey === Chains.BNB ? false : true))
 /** the estimated gas that will be consumed by running the foreign transaction */
 export const estimatedGas = writable(400_000n)
-/** the block.baseFeePerGas on the latest block */
-export const latestBaseFeePerGas = writable(0n)
 /** the first recipient of the tokens (router) */
 export const router = derived([input.bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].router as viem.Hex)
-// /** the final destination of the tokens (user's wallet or other named address) */
-// export const destination = writable(viem.zeroAddress as viem.Hex)
-
-// const fetchedAssetIn: Readable<Token | null> = derived([input.assetInAddress, input.bridgeKey], ([$assetInAddress, $bridgeKey], set) => {
-//   // if (!$assetInAddress) {
-//   //   set(null)
-//   //   return
-//   // }
-//   const addr = viem.getAddress($assetInAddress)
-//   if (defaultAssetIn[$bridgeKey].address === addr) {
-//     set(defaultAssetIn[$bridgeKey])
-//     return
-//   }
-//   set(null)
-//   multicallErc20({
-//     client: input.clientFromChain(Chains.PLS),
-//     target: addr,
-//     chain: chainsMetadata[Chains.PLS],
-//   }).then(([name, symbol, decimals]) => {
-//     if ($assetInAddress !== get(input.assetInAddress)) {
-//       console.log('skip set')
-//       return
-//     }
-//     const tkn = {
-//       name, symbol, decimals,
-//       address: addr,
-//       chainId: Number(Chains.PLS),
-//     } as Token
-//     tkn.logoURI = $desiredAssetIn.logoURI || imageLinks.image(tkn)
-//     tkn.extensions = getExtensions(tkn)
-//     set(tkn)
-//   })
-// })
-// export const assetIn = derived([fetchedAssetIn, input.bridgeKey, input.assetInAddress], ([$fetchedAssetIn, $bridgeKey, $assetInAddress]) => {
-//   return $fetchedAssetIn || $assetInAddress || defaultAssetIn[$bridgeKey]
-// })
 /** the address of the bridge proxy contract on home */
 export const bridgeAddress = derived([input.bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].homeBridge as viem.Hex)
 export const foreignBridgeAddress = derived([input.bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].foreignBridge as viem.Hex)
@@ -177,6 +140,19 @@ const oneTokenInt = derived([input.assetIn], ([$assetIn]) => (
 ))
 
 let priceCorrectiveGuard = {}
+type FetchResult = bigint[] | viem.Hex
+const fetchCache = new Map<string, {
+  time: number;
+  result: Promise<[FetchResult]>;
+}>()
+setInterval(() => {
+  const now = Date.now()
+  for (const [k, cached] of fetchCache.entries()) {
+    if (cached.time + 20_000 < now) {
+      fetchCache.delete(k)
+    }
+  }
+}, 5_000)
 const readAmountOut = ({
   $oneTokenInt, $assetInAddress, chain, $bridgeKey,
 }: {
@@ -184,8 +160,13 @@ const readAmountOut = ({
   $assetInAddress: viem.Hex;
   chain: Chains;
   $bridgeKey: DestinationChains;
-}) => (
-  multicallRead<[bigint[] | viem.Hex]>({
+}, baseFee: bigint): Promise<[FetchResult]> => {
+  const key = `${chain}-${$bridgeKey}-${baseFee}-${$assetInAddress}-${$oneTokenInt}`
+  let res = fetchCache.get(key)
+  if (res) {
+    return res.result
+  }
+  const q = multicallRead<[bigint[] | viem.Hex]>({
     chain: chainsMetadata[chain],
     client: input.clientFromChain(chain),
     abi: abis.pulsexRouter,
@@ -209,21 +190,26 @@ const readAmountOut = ({
       ]
     }],
   })
-)
+  fetchCache.set(key, {
+    time: Date.now(),
+    result: q,
+  })
+  return q
+}
 /** the number of tokens to push into the bridge (before fees) */
 export const amountToBridge = derived([input.amountIn, input.assetIn], ([$amountIn, $assetIn]) => {
   if (isZero($amountIn)) return 0n
   return viem.parseUnits(stripNonNumber($amountIn), $assetIn.decimals)
 })
 export const priceCorrective = derived(
-  [input.assetIn, input.bridgeKey, oneTokenInt, assetOut, amountToBridge],
-  ([$assetIn, $bridgeKey, $oneTokenInt, $assetOut, $amountToBridge], set) => {
+  [input.assetIn, input.bridgeKey, oneTokenInt, assetOut, amountToBridge, latestBaseFeePerGas],
+  ([$assetIn, $bridgeKey, $oneTokenInt, $assetOut, $amountToBridge, $latestBaseFeePerGas], set) => {
     // check if recognized as wrapped
     // if recognized as wrapped, use oneEther
     let cancelled = false
     priceCorrectiveGuard = {}
     const pcg = priceCorrectiveGuard
-    if (input.isNative($assetIn)) {
+    if (input.isNative($assetIn) || $assetOut.address === viem.zeroAddress) {
       set(oneEther)
       return
     }
@@ -236,30 +222,42 @@ export const priceCorrective = derived(
       const [hops] = result
       if (Array.isArray(hops)) {
         const last = hops[hops.length - 1]
-        return last
+        return (last * $oneTokenInt) / toBridge
       }
     }
+    loading.increment('gas')
+    // console.log('fetching price corrective', {
+    //   $assetInAddress: $assetOut.address,
+    //   $oneTokenInt,
+    //   chain: $bridgeKey,
+    //   $bridgeKey,
+    // })
     Promise.all([
       readAmountOut({
         $assetInAddress: $assetOut.address,
-        $oneTokenInt,
+        $oneTokenInt: toBridge,
         chain: $bridgeKey,
         $bridgeKey,
-      }),
+      }, $latestBaseFeePerGas),
       readAmountOut({
         $assetInAddress: $assetIn.address,
-        $oneTokenInt,
+        $oneTokenInt: toBridge,
         chain: Chains.PLS,
         $bridgeKey,
-      }),
+      }, $latestBaseFeePerGas),
     ]).then((results) => {
+      if (cancelled) return
+      loading.decrement('gas')
       const [outputToken, inputToken] = results.map(outputFromRouter)
+      console.log([outputToken, inputToken])
       const res = outputToken && outputToken > 0n ? (
         inputToken && inputToken > outputToken && inputToken / outputToken === 1n ? inputToken : outputToken
       ) : inputToken
+      // console.log('setting price corrective', res)
       set(res || 0n)
     })
     return () => {
+      loading.decrement('gas')
       cancelled = true
     }
   }, oneEther)

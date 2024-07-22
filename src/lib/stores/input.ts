@@ -23,6 +23,7 @@ export const setLimitDecimals = (d: number) => {
 }
 
 const humanReadableSet = (store: Writable<string>) => (v: string) => {
+  // console.trace(get(store), v)
   if (!v) {
     if (get(store)) {
       store.set(v)

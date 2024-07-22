@@ -12,7 +12,6 @@
   import {
     limitFromPercent,
     priceCorrective,
-    latestBaseFeePerGas,
     amountAfterBridgeFee,
     foreignSupportsEIP1559,
     estimatedCost,
@@ -23,6 +22,9 @@
     oneEther,
     desiredExcessCompensationPercentage,
   } from '$lib/stores/bridge-settings'
+  import {
+    latestBaseFeePerGas,
+  } from '$lib/stores/chain-events'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
   import SmallInput from './SmallInput.svelte'
@@ -41,31 +43,31 @@
     chain: destinationNetwork,
     transport: http(),
   })
-  let unwatch!: () => void
-  const doUnwatch = () => {
-    loading.decrement('gas')
-    unwatch?.()
-  }
-  $: if (publicClient) {
-    doUnwatch()
-    loading.increment('gas')
-    unwatch = publicClient.watchBlocks({
-      emitOnBegin: true,
-      onBlock: async (block) => {
-        let perGas = block.baseFeePerGas
-        if (!perGas) {
-          perGas = await publicClient.getGasPrice()
-          const minGWei = 2_500_000_000n
-          if (perGas < minGWei) {
-            perGas = minGWei
-          }
-        }
-        latestBaseFeePerGas.update(() => perGas)
-        loading.decrement('gas')
-      },
-    })
-  }
-  onMount(() => () => unwatch?.())
+  // let unwatch!: () => void
+  // const doUnwatch = () => {
+  //   loading.decrement('gas')
+  //   unwatch?.()
+  // }
+  // $: if (publicClient) {
+  //   doUnwatch()
+    // loading.increment('gas')
+    // unwatch = publicClient.watchBlocks({
+    //   emitOnBegin: true,
+    //   onBlock: async (block) => {
+    //     let perGas = block.baseFeePerGas
+    //     if (!perGas) {
+    //       perGas = await publicClient.getGasPrice()
+    //       const minGWei = 2_500_000_000n
+    //       if (perGas < minGWei) {
+    //         perGas = minGWei
+    //       }
+    //     }
+    //     latestBaseFeePerGas.set(perGas)
+    //     loading.decrement('gas')
+    //   },
+    // })
+  // }
+  // onMount(() => () => unwatch?.())
   input.loadFeeFor(originationNetwork.chainId, destinationNetwork.chainId)
   // lock toggles
   let costLimitLocked = false
@@ -75,11 +77,12 @@
   const max = parseEther('10')
   const min = parseEther('0.05')
   const percentFeeFromNetworkInputs = () => {
-    if (!$amountAfterBridgeFee) {
+    // console.log($amountAfterBridgeFee ,$estimatedNetworkCost)
+    if (!$amountAfterBridgeFee || !$estimatedNetworkCost) {
       return 0n
     }
     const ratioOffset = $estimatedNetworkCost / ($amountAfterBridgeFee / 25_000n)
-    let target = min + scaledBasisPoint * ratioOffset
+    let target = min + (scaledBasisPoint * ratioOffset)
     if (target > max) {
       target = max
     } else if (target < min) {
@@ -98,7 +101,7 @@
     if (lim > $amountAfterBridgeFee) {
       lim = $amountAfterBridgeFee
     }
-    console.log($fee, lim)
+    // console.log($fee, lim)
     return humanReadableNumber(lim, asset.decimals)
   }
   const reflowFees = () => {
@@ -127,7 +130,8 @@
     (costLimitLocked || !costLimitLocked) &&
     ($amountToBridge || !$amountToBridge) &&
     ($fee || !$fee) &&
-    $latestBaseFeePerGas &&
+    $estimatedNetworkCost &&
+    // ($latestBaseFeePerGas || !$latestBaseFeePerGas) &&
     $feeType &&
     $assetInAddress
   ) {
@@ -195,6 +199,7 @@
             : 'the percentage of bridged tokens after the bridge fee'}
         class:line-through={$feeType === input.FeeType.FIXED}
         on:click={focusOnInputChild}>
+        <Loading />
         {#if $feeType !== input.FeeType.FIXED}
           <span class:hidden={$feeType !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><SmallInput
             value={input.fee}
