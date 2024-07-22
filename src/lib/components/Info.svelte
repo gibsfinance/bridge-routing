@@ -1,6 +1,7 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
   import VersionedLink from './VersionedLink.svelte'
+  import { router } from '$lib/stores/bridge-settings'
   const openModal = () => {
     const el = document.querySelector('#bridge-info-modal') as any
     el.showModal()
@@ -20,7 +21,7 @@
       <Icon icon="fe:github-alt" height="1.5em" width="1.5em" />
     </button>
   </a>
-  <a href="https://etherscan.io/address/0x5f542C3ce02a56586a91A7DE80deBF29947836eD#code" target="_blank" class="mr-2">
+  <a href="https://etherscan.io/address/{$router}#code" target="_blank" class="mr-2">
     <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="mdi:ethereum" height="1.5em" width="1.5em" />
     </button>
