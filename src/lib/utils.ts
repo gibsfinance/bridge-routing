@@ -90,7 +90,7 @@ export const multicallErc20 = async ({
 }
 
 export const nativeSymbol = (asset: types.Token, unwrap = false) =>
-  unwrap && asset.symbol[0] === 'W' && asset.name.startsWith('Wrapped') ? asset.symbol.slice(1) : asset.symbol
+  unwrap ? asset.symbol.slice(1) : asset.symbol
 
 export const nativeName = (asset: types.Token, unwrap = false) =>
-  unwrap && asset.symbol[0] === 'W' && asset.name.startsWith('Wrapped') ? asset.name.split('Wrapped ').join('') : asset.name
+  unwrap ? asset.name.split('Wrapped ').join('') : asset.name

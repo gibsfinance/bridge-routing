@@ -124,7 +124,7 @@
           <button class="flex flex-row grow cursor-pointer" on:click={() => selectToken(token)}>
             <Lazy let:load>
               <!-- might be a good idea to simply keep it loaded after first -->
-              <TokenIcon visible={load} sources={assetSources(token)} />
+              <TokenIcon visible={load} src={assetSources(token)} />
             </Lazy>
             <span class="pl-2 leading-8">{token.name}</span>
           </button>

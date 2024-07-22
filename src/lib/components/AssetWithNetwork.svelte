@@ -13,11 +13,7 @@
 </script>
 
 <span class="token-image-container relative" style="--token-size: {tokenSize};">
-  <TokenIcon
-    visible
-    size={tokenSize * 4}
-    sources={assetSources(asset)}
-    class="rounded-full overflow-hidden shadow-md" />
+  <TokenIcon visible size={tokenSize * 4} src={assetSources(asset)} class="rounded-full overflow-hidden shadow-md" />
   <img
     class="network-image absolute -bottom-1 -right-1 bg-slate-100 rounded-full"
     style="--network-size: {networkSize};"

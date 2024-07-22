@@ -9,13 +9,14 @@
     limit,
     amountToBridge,
     limitFromPercent,
+    unwrap,
   } from '$lib/stores/bridge-settings'
   import { humanReadableNumber } from '$lib/stores/utils'
   import * as utils from '$lib/utils'
   import Loading from './Loading.svelte'
   import type { Token } from '$lib/types'
   import * as input from '$lib/stores/input'
-  const { unwrap, feeType, fee: inputFee } = input
+  const { feeType, fee: inputFee } = input
   const oneEther = 10n ** 18n
   $: afterBridge = $amountToBridge - ($amountToBridge * $bridgeFee) / oneEther
   $: estimated = afterBridge - $estimatedCost

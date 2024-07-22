@@ -1,4 +1,5 @@
 import * as viem from 'viem'
+import querystring from 'querystring'
 import { imageRoot } from "$lib/config"
 
 export const list = (path: string) => {
@@ -14,6 +15,10 @@ interface MinimalTokenInfo {
 export const image = (t: MinimalTokenInfo) => (
   t.logoURI ||
   `${network(t.chainId)}/${viem.getAddress(t.address)}`
+)
+
+export const images = (sources: string[]) => (
+  `${imageRoot}/image/?${sources.map((s) => `i=${s}`).join('&')}`
 )
 
 export const network = (chainId: number) => (

@@ -525,18 +525,20 @@ export const assetSources = (asset: Token) => {
     if (!info.tokenAddress) {
       return null
     }
-    return imageLinks.image({
-      address: info.tokenAddress,
-      chainId: Number(chainId),
-    })
+    return `${Number(chainId)}/${info.tokenAddress}`
+    // return imageLinks.image({
+    //   address: info.tokenAddress,
+    //   chainId: Number(chainId),
+    // })
   })] as string[]
   if (!asset.chainId) {
     console.trace(asset)
   }
-  return _(bridgedImage.concat([asset.logoURI]))
+  const sources = _(bridgedImage.concat([`${asset.chainId}/${asset.address}`]))
     .compact()
     .uniq()
     .value()
+  return imageLinks.images(sources)
 }
 
 export const bridgableTokens = derived<Stores, Token[]>([], (() => {
