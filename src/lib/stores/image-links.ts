@@ -1,5 +1,4 @@
 import * as viem from 'viem'
-import querystring from 'querystring'
 import { imageRoot } from "$lib/config"
 
 export const list = (path: string) => {
