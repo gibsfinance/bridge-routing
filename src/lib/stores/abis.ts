@@ -13,9 +13,7 @@ export const inputBridge = viem.parseAbi([
 export const inputBridgeBNB = viem.parseAbi([
   'function relayTokens(address token, address _receiver, uint256 _value, address _senderOrigin) external',
 ])
-export const erc677 = viem.parseAbi([
-  'function transferAndCall(address, uint256, bytes calldata) external',
-])
+export const erc677 = viem.parseAbi(['function transferAndCall(address, uint256, bytes calldata) external'])
 export const erc677BNB = viem.parseAbi([
   'function transferAndCall(address, uint256, bytes calldata, address sender) external',
 ])

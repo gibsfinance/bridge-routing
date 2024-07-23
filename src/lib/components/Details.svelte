@@ -15,8 +15,7 @@
   import Loading from './Loading.svelte'
   import type { Token } from '$lib/types'
   import * as input from '$lib/stores/input'
-  const {
-    bridgeFee,feeType, fee: inputFee } = input
+  const { bridgeFee, feeType, fee: inputFee } = input
   const oneEther = 10n ** 18n
   $: afterBridge = $amountToBridge - ($amountToBridge * $bridgeFee) / oneEther
   $: estimated = afterBridge - $estimatedCost

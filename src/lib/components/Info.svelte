@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
   import VersionedLink from './VersionedLink.svelte'
-  import { router } from '$lib/stores/bridge-settings'
+  import { router } from '$lib/stores/input'
   const openModal = () => {
     const el = document.querySelector('#bridge-info-modal') as any
     el.showModal()

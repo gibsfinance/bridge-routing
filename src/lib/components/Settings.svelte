@@ -2,7 +2,7 @@
   import SmallInput from './SmallInput.svelte'
   import { ensToAddress, walletAccount } from '$lib/stores/auth/store'
   import { createPublicClient, http, isAddress, zeroAddress } from 'viem'
-  import { router, unwrap, calldata, bridgeAddress } from '$lib/stores/bridge-settings'
+  import { unwrap, calldata } from '$lib/stores/bridge-settings'
   import * as input from '$lib/stores/input'
   import { Chains } from '$lib/stores/auth/types'
   import { chainsMetadata } from '$lib/stores/auth/constants'
@@ -10,7 +10,7 @@
   import { ensTld, isEns } from '$lib/stores/ens'
   import { normalize } from 'viem/ens'
   import { loading } from '$lib/stores/loading'
-  const { recipient, canChangeUnwrap } = input
+  const { recipient, canChangeUnwrap, bridgeAddress, router } = input
   const updateDestination = async (e: CustomEvent) => {
     let addr = e.detail.value
     if (addr === 'me' && $walletAccount) {

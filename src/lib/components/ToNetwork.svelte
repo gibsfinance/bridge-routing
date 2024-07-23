@@ -4,7 +4,6 @@
   import { formatUnits, parseEther } from 'viem'
   import NetworkSummary from './NetworkSummary.svelte'
   import { humanReadableNumber } from '$lib/stores/utils'
-  import { loading } from '$lib/stores/loading'
   import Loading from '$lib/components/Loading.svelte'
   import LockIcon from '$lib/components/LockIcon.svelte'
   import UndercompensatedWarning from '$lib/components/warnings/Undercompensated.svelte'
@@ -13,7 +12,6 @@
     limitFromPercent,
     priceCorrective,
     amountAfterBridgeFee,
-    foreignSupportsEIP1559,
     estimatedCost,
     unwrap,
     amountToBridge,
@@ -24,7 +22,6 @@
   } from '$lib/stores/bridge-settings'
   import { latestBaseFeePerGas } from '$lib/stores/chain-events'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
-  import { createPublicClient, http } from 'viem'
   import SmallInput from './SmallInput.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import * as utils from '$lib/utils'
@@ -32,40 +29,11 @@
   export let originationNetwork!: VisualChain
   export let destinationNetwork!: VisualChain
   export let asset!: Token
-  const { feeType, assetInAddress, bridgeFrom } = input
+  const { feeType, assetInAddress, bridgeFrom, foreignSupportsEIP1559 } = input
   const dispatch = createEventDispatcher()
   const showToolbox = (type: string) => {
     dispatch('toggle', type)
   }
-  $: publicClient = createPublicClient({
-    chain: destinationNetwork,
-    transport: http(),
-  })
-  // let unwatch!: () => void
-  // const doUnwatch = () => {
-  //   loading.decrement('gas')
-  //   unwatch?.()
-  // }
-  // $: if (publicClient) {
-  //   doUnwatch()
-  // loading.increment('gas')
-  // unwatch = publicClient.watchBlocks({
-  //   emitOnBegin: true,
-  //   onBlock: async (block) => {
-  //     let perGas = block.baseFeePerGas
-  //     if (!perGas) {
-  //       perGas = await publicClient.getGasPrice()
-  //       const minGWei = 2_500_000_000n
-  //       if (perGas < minGWei) {
-  //         perGas = minGWei
-  //       }
-  //     }
-  //     latestBaseFeePerGas.set(perGas)
-  //     loading.decrement('gas')
-  //   },
-  // })
-  // }
-  // onMount(() => () => unwatch?.())
   input.loadFeeFor(originationNetwork.chainId, destinationNetwork.chainId)
   // lock toggles
   let costLimitLocked = false
@@ -75,7 +43,6 @@
   const max = parseEther('10')
   const min = parseEther('0.05')
   const percentFeeFromNetworkInputs = () => {
-    // console.log($amountAfterBridgeFee ,$estimatedNetworkCost)
     if (!$amountAfterBridgeFee || !$estimatedNetworkCost) {
       return 0n
     }

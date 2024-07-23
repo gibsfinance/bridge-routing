@@ -77,10 +77,8 @@
     return inside
   }
 
-  const onlyFromCurrentNetwork = (tkn) => (
-    tkn.chainId === 369
-    && !!tkn.extensions.bridgeInfo[Number($bridgeKey)]?.tokenAddress
-  )
+  const onlyFromCurrentNetwork = (tkn) =>
+    tkn.chainId === 369 && !!tkn.extensions.bridgeInfo[Number($bridgeKey)]?.tokenAddress
 
   const loadViaMulticall = async (target: viem.Hex | null) => {
     if (!target) {

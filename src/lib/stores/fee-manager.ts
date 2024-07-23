@@ -1,5 +1,5 @@
 import * as viem from 'viem'
-import { Chains } from "./auth/types";
+import { Chains } from './auth/types'
 
 type Settings = {
   bridge: viem.Hex

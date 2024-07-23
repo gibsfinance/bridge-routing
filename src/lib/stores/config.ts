@@ -1,7 +1,6 @@
 import * as viem from 'viem'
-import type { Token } from "$lib/types";
-import { Chains, Provider, type DestinationChains } from "./auth/types";
-import * as imageLinks from './image-links'
+import type { Token } from '$lib/types'
+import { Chains, Provider, type DestinationChains } from './auth/types'
 
 export const uniV2Settings = {
   [Chains.PLS]: {
@@ -16,10 +15,13 @@ export const uniV2Settings = {
     router: '0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F',
     wNative: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
   },
-} as Record<Chains, {
-  router: viem.Hex;
-  wNative: viem.Hex;
-}>
+} as Record<
+  Chains,
+  {
+    router: viem.Hex
+    wNative: viem.Hex
+  }
+>
 
 export const destinationChains = {
   [Chains.ETH]: {
@@ -34,12 +36,15 @@ export const destinationChains = {
     foreignBridge: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
     router: '0x47525293647C3725D911Cc0f6E000D2E831c4219',
   },
-} as Record<DestinationChains, {
-  provider: Provider,
-  homeBridge: viem.Hex
-  foreignBridge: viem.Hex
-  router: viem.Hex
-}>
+} as Record<
+  DestinationChains,
+  {
+    provider: Provider
+    homeBridge: viem.Hex
+    foreignBridge: viem.Hex
+    router: viem.Hex
+  }
+>
 
 export const nativeAssetOut = {
   [Chains.ETH]: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -63,7 +68,7 @@ export const defaultAssetIn = {
           tokenAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
           destinationBridgeAddress: viem.zeroAddress,
           originationBridgeAddress: viem.zeroAddress,
-        }
+        },
       },
     },
   },
@@ -83,7 +88,7 @@ export const defaultAssetIn = {
           tokenAddress: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
           destinationBridgeAddress: viem.zeroAddress,
           originationBridgeAddress: viem.zeroAddress,
-        }
+        },
       },
     },
   },

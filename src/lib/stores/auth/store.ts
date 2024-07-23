@@ -1,11 +1,5 @@
 import { derived, type Readable } from 'svelte/store'
-import {
-  createPublicClient,
-  http,
-  type Address,
-  type WalletClient,
-  type PublicClient,
-} from 'viem'
+import { createPublicClient, http, type Address, type WalletClient, type PublicClient } from 'viem'
 import { Chains } from './types'
 import { chainsMetadata } from './constants'
 import { normalize } from 'viem/ens'

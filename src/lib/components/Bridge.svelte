@@ -10,7 +10,7 @@
   import { Chains } from '$lib/stores/auth/types'
   import { get } from 'svelte/store'
   import * as input from '$lib/stores/input'
-  const { bridgeKey, assetIn, bridgableTokens} = input
+  const { bridgeKey, assetIn, bridgableTokens } = input
   $: originationNetwork = chainsMetadata[Chains.PLS]
   $: destinationNetwork = chainsMetadata[$bridgeKey]
   let dropdowns: Record<string, boolean> = {}

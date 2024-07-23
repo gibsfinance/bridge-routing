@@ -3,13 +3,9 @@ import * as types from './types'
 
 type Erc20Metadata = [string, string, number]
 
-export const erc20MetadataCalls = [
-  { functionName: 'name' },
-  { functionName: 'symbol' },
-  { functionName: 'decimals' },
-]
+export const erc20MetadataCalls = [{ functionName: 'name' }, { functionName: 'symbol' }, { functionName: 'decimals' }]
 
-export const multicallRead = async <T,>({
+export const multicallRead = async <T>({
   chain,
   client,
   abi,
@@ -45,16 +41,16 @@ export const multicallRead = async <T,>({
       call.allowFailure
         ? r[i].success
           ? viem.decodeFunctionResult({
+              abi: call.abi || abi,
+              functionName: call.functionName,
+              data: r[i].returnData,
+            })
+          : r[i].returnData
+        : viem.decodeFunctionResult({
             abi: call.abi || abi,
             functionName: call.functionName,
             data: r[i].returnData,
-          })
-          : r[i].returnData
-        : viem.decodeFunctionResult({
-          abi: call.abi || abi,
-          functionName: call.functionName,
-          data: r[i].returnData,
-        }),
+          }),
     ) as T
   } catch (err) {
     console.log(target, calls, reads)
@@ -88,8 +84,7 @@ export const multicallErc20 = async ({
   }
 }
 
-export const nativeSymbol = (asset: types.Token, unwrap = false) =>
-  unwrap ? asset.symbol.slice(1) : asset.symbol
+export const nativeSymbol = (asset: types.Token, unwrap = false) => (unwrap ? asset.symbol.slice(1) : asset.symbol)
 
 export const nativeName = (asset: types.Token, unwrap = false) =>
   unwrap ? asset.name.split('Wrapped ').join('') : asset.name

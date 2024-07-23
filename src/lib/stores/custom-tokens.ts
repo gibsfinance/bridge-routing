@@ -1,5 +1,5 @@
-import type { Token } from "$lib/types"
-import { get, writable, type Writable } from "svelte/store"
+import type { Token } from '$lib/types'
+import { get, writable, type Writable } from 'svelte/store'
 
 let temporaryTokens: Token[] = []
 // load a test
@@ -8,14 +8,18 @@ try {
   if (tokensSerialized) {
     temporaryTokens = JSON.parse(tokensSerialized)
   }
-} catch (err) { }
+} catch (err) {
+  console.error(err)
+}
 
 const tokensStore = writable(temporaryTokens)
 
 const updateLocalStorage = (list: Token[]) => {
   try {
     localStorage.setItem('tokens', JSON.stringify(list))
-  } catch (err) { }
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 export const tokens: Writable<Token[]> = {

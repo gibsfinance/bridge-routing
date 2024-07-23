@@ -16,12 +16,13 @@ export const humanReadableNumber = (num = 0n, decimals = 18, decimalCount: null 
     n = n.slice(0, n.length - 1)
   }
   if (decimalCount !== null) {
-    let [i, d] = n.split('.')
+    const [i, d] = n.split('.')
     if (d) {
-      if (d.length < decimalCount) {
-        d = padEnd(d, decimalCount, '0')
+      let dec = d
+      if (dec.length < decimalCount) {
+        dec = padEnd(dec, decimalCount, '0')
       }
-      n = `${i}.${d}`
+      n = `${i}.${dec}`
     } else {
       n = i
     }
@@ -30,17 +31,19 @@ export const humanReadableNumber = (num = 0n, decimals = 18, decimalCount: null 
 }
 
 export const stripNonNumber = (n: string) => {
-  return n.replace(/[^0-9.]/g, '').split('.').slice(0, 2).join('.')
+  return n
+    .replace(/[^0-9.]/g, '')
+    .split('.')
+    .slice(0, 2)
+    .join('.')
 }
 
-export const isZero = (n: string) => (
-  !n || !n.replace(/[0.]/g, '').length
-)
+export const isZero = (n: string) => !n || !n.replace(/[0.]/g, '').length
 
 export function numberWithCommas(x: string) {
-  var parts = x.toString().split(".")
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-  return parts.join(".")
+  const parts = x.toString().split('.')
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return parts.join('.')
 }
 
 export const decimalValidation = (v: string, decimals = 18) => {
