@@ -131,7 +131,7 @@ export const minAmount = derived(
   0n,
 )
 
-export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [DestinationChains, Token]): Promise<null | {
+export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [DestinationChains, Token | null]): Promise<null | {
   toForeign?: {
     home: viem.Hex
     foreign?: viem.Hex

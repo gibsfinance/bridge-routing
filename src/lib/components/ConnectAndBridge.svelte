@@ -120,8 +120,11 @@
     //   throw err
     // }
     // const to = assets[$bridgeKey].input.address
-    console.log('inside send transaction')
+    // console.log('inside send transaction')
     const tokenInfo = await tokenBridgeInfo([$bridgeKey, $assetIn])
+    if (!tokenInfo || !$assetIn) {
+      return
+    }
     const account = $walletAccount as viem.Hex
     const options = {
       account,
@@ -176,6 +179,9 @@
     }, 20_000)
   }
   const increaseApproval = async () => {
+    if (!$assetIn) {
+      return
+    }
     const contract = viem.getContract({
       abi: viem.erc20Abi,
       address: $assetIn.address,
@@ -217,8 +223,10 @@
         class:shadow-md={!disabled}
         {disabled}
         on:click={sendIncreaseApproval}>
-        <div class="size-5"></div>&nbsp;Approve {humanReadableNumber($amountToBridge, $assetIn.decimals)}
-        {$assetIn.symbol}&nbsp;<Loading keepSpace class="my-[10px]" />
+        <div class="size-5"></div>&nbsp;Approve {!$assetIn
+          ? ''
+          : humanReadableNumber($amountToBridge, $assetIn.decimals)}
+        {$assetIn?.symbol}&nbsp;<Loading keepSpace class="my-[10px]" />
       </button>
     {/if}
   {:else}
