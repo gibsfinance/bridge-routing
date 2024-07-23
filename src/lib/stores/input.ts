@@ -5,7 +5,7 @@ import { loading } from '$lib/stores/loading'
 import { page } from '$app/stores'
 import * as imageLinks from '$lib/stores/image-links'
 import * as viem from 'viem'
-import { humanReadableNumber, isZero, stripNonNumber } from '$lib/stores/utils'
+import { countDecimals, humanReadableNumber, isZero, stripNonNumber } from '$lib/stores/utils'
 import { parseUnits, zeroAddress } from "viem";
 import { Chains, type DestinationChains } from "./auth/types";
 import { feeManagerMapping } from "./fee-manager";
@@ -36,7 +36,7 @@ const humanReadableSet = (store: Writable<string>) => (v: string) => {
     store.set(val)
     return
   }
-  val = humanReadableNumber(parseUnits(val, decimals), decimals)
+  val = humanReadableNumber(parseUnits(val, decimals), decimals, countDecimals(v))
   if (get(store) === val) {
     return
   }

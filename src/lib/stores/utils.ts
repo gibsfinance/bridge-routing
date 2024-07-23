@@ -1,6 +1,13 @@
+import { padEnd } from 'lodash'
 import { formatUnits, parseUnits } from 'viem'
 
-export const humanReadableNumber = (num = 0n, decimals = 18) => {
+export const countDecimals = (v: string) => {
+  if (!v) return 0
+  const [, d] = v.split('.')
+  return d ? d.length : 0
+}
+
+export const humanReadableNumber = (num = 0n, decimals = 18, decimalCount: null | number = null) => {
   let n = num === 0n ? '0.0' : formatUnits(num, decimals)
   const len = Math.min(n.length, 20)
   n = n.slice(0, len)
@@ -8,12 +15,17 @@ export const humanReadableNumber = (num = 0n, decimals = 18) => {
   if (n[n.length - 1] === '.') {
     n = n.slice(0, n.length - 1)
   }
-  // if (truncateLarge !== undefined) {
-  //   const [int, d] = n.split('.')
-  //   if (decimals >= 15 ? int.length > 2 : int.length > 5) {
-  //     return numberWithCommas(d && truncateLarge ? `${int}.${d.slice(0, truncateLarge)}` : int)
-  //   }
-  // }
+  if (decimalCount !== null) {
+    let [i, d] = n.split('.')
+    if (d) {
+      if (d.length < decimalCount) {
+        d = padEnd(d, decimalCount, '0')
+      }
+      n = `${i}.${d}`
+    } else {
+      n = i
+    }
+  }
   return numberWithCommas(n)
 }
 

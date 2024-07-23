@@ -1,85 +1,25 @@
 <script lang="ts">
   import NetworkSummary from './NetworkSummary.svelte'
-  import { walletAccount } from '$lib/stores/auth/store'
-  import { erc20Abi, formatUnits } from 'viem'
+  import { formatUnits } from 'viem'
   import type { VisualChain } from '$lib/stores/auth/types'
   import { writable, type Writable } from 'svelte/store'
   import { amountToBridge } from '$lib/stores/bridge-settings'
-  import { bridgeKey, assetIn, publicClient } from '$lib/stores/input'
-  import { destinationChains } from '$lib/stores/config'
-  import * as abis from '$lib/stores/abis'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
-  import { loading } from '$lib/stores/loading'
   import Warning from './Warning.svelte'
   import Icon from '@iconify/svelte'
   import * as modalStore from '$lib/stores/modal'
   import type { Token } from '$lib/types'
   import type { FormEventHandler } from 'svelte/elements'
+  import { tokenBalance, minAmount } from '$lib/stores/chain-events'
 
   export let network!: VisualChain
   export let asset!: Token
   export let value!: Writable<string>
+  // when asset changs, reset to zero
   $: if (asset) {
     value.set('')
   }
-  let balance = 0n
-  const getBalance = async () => {
-    if (!$walletAccount) {
-      return null
-    }
-    loading.increment('balance')
-    return $publicClient
-      .readContract({
-        abi: erc20Abi,
-        functionName: 'balanceOf',
-        args: [$walletAccount],
-        address: asset.address,
-      })
-      .then((res) => {
-        loading.decrement('balance')
-        balance = res || 0n
-        return balance
-      })
-  }
-  const getMinAmount = async () => {
-    return $publicClient.readContract({
-      abi: abis.inputBridge,
-      functionName: 'minPerTx',
-      args: [$assetIn.address],
-      address: destinationChains[$bridgeKey].homeBridge,
-    })
-  }
-
-  $: $walletAccount && getBalance()
-
-  let unwind!: () => void
-  const doUnwind = () => {
-    loading.increment('minAmount')
-    balance = 0n
-    unwind?.()
-  }
-  const minInput = writable(0n)
   const focused = writable(false)
-  $: if ($publicClient) {
-    doUnwind()
-    getBalance()
-    // assume that the min amount will not change while the page is loaded
-    getMinAmount().then((res) => {
-      minInput.set(res)
-      loading.decrement('minAmount')
-    })
-    unwind = $publicClient.watchContractEvent({
-      address: asset.address,
-      abi: erc20Abi,
-      eventName: 'Transfer',
-      onLogs: async (logs) => {
-        const transfer = logs.filter((l) => l.eventName === 'Transfer')
-        if (transfer.length) {
-          await getBalance()
-        }
-      },
-    })
-  }
   const openModal = () => {
     modalStore.type.set('choosetoken')
   }
@@ -93,12 +33,11 @@
     <NetworkSummary
       {network}
       {asset}
-      {balance}
+      balance={$tokenBalance}
       showMax
       on:max-balance={() => {
-        const updated = formatUnits(balance, asset.decimals)
+        const updated = formatUnits($tokenBalance, asset.decimals)
         value.set(updated)
-        // val.set(updated)
       }} />
   </div>
   <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
@@ -111,10 +50,10 @@
         on:blur={() => focused.set(false)}
         on:input={handleInput} />
       <Warning
-        show={$amountToBridge < $minInput && $amountToBridge > 0n}
+        show={$amountToBridge < $minAmount && $amountToBridge > 0n}
         disabled={$focused}
         position="left"
-        tooltip="Input is too low, must be at least {formatUnits($minInput, asset.decimals)}" />
+        tooltip="Input is too low, must be at least {formatUnits($minAmount, asset.decimals)}" />
     </span>
 
     <button

@@ -16,15 +16,14 @@
   import * as viem from 'viem'
   import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input'
+  import { tokenBalance } from '$lib/stores/chain-events'
 
   const { walletClient, assetIn, clientFromChain, bridgeKey, recipient } = input
 
-  $: disabled = BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n
-  // $: tokenInfo = $assetLink
+  $: disabled = BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n || $amountToBridge > $tokenBalance
 
   const { connect } = useAuth()
   let txHash: viem.Hex | undefined
-  // txHash = zeroHash
 
   const initiateBridge = async () => {
     // const foreignClient = clientFromChain(Chains.ETH).extend((client) => ({
