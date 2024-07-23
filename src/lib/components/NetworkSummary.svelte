@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Chains, VisualChain } from '$lib/stores/auth/types'
-  import { formatEther } from 'viem'
+  import * as viem from 'viem'
   import NetworkImage from './NetworkImage.svelte'
   import { createEventDispatcher } from 'svelte'
   import * as utils from '$lib/utils'
@@ -30,7 +30,7 @@
       class:mx-2={showMax}
       class:ml-2={!showMax}
       data-tip={unwrap ? utils.nativeName(asset) : asset.name}>
-      <Loading key={['balance', 'minAmount']}>{balance == 0n ? '0.0' : formatEther(balance)}</Loading
+      <Loading key={['balance', 'minAmount']}>{balance == 0n ? '0.0' : viem.formatUnits(balance, asset.decimals)}</Loading
       >&nbsp;{utils.nativeSymbol(asset, unwrap)}
     </div>
     {#if showMax}
