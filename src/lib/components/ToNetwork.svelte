@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as input from '$lib/stores/input'
-  import { createEventDispatcher, onMount } from 'svelte'
+  import { createEventDispatcher } from 'svelte'
   import { formatUnits, parseEther } from 'viem'
   import NetworkSummary from './NetworkSummary.svelte'
   import { humanReadableNumber } from '$lib/stores/utils'
@@ -61,13 +61,11 @@
     }
     const numDecimals = 6n
     const lowResLimit = ($latestBaseFeePerGas * ($fee + oneEther)) / (10n ** (11n - numDecimals) * 10n * oneEther)
-    console.log($latestBaseFeePerGas, $fee, numDecimals)
     let lim = lowResLimit * 10n ** (18n - numDecimals)
     lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset.decimals))
     if (lim > $amountAfterBridgeFee) {
       lim = $amountAfterBridgeFee
     }
-    // console.log($fee, lim)
     return humanReadableNumber(lim, asset.decimals)
   }
   const reflowFees = () => {
