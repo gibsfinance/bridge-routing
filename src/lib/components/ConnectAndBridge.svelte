@@ -126,7 +126,10 @@
           address: $bridgeAddress,
           client: $walletClient!,
         })
-        txHash = await bridgeContract.write.relayTokens([$assetIn.address, $recipient, $amountToBridge, account], options)
+        txHash = await bridgeContract.write.relayTokens(
+          [$assetIn.address, $recipient, $amountToBridge, account],
+          options,
+        )
       } else {
         // extra arg in transfer+call
         const contract = viem.getContract({
@@ -140,7 +143,7 @@
       if (tokenInfo.toForeign) {
         // native to pulsechain
         const bridgeContract = viem.getContract({
-          abi: abis.inputBridgeBNB,
+          abi: abis.inputBridge,
           address: $bridgeAddress,
           client: $walletClient!,
         })
@@ -241,7 +244,8 @@
         class:cursor-not-allowed={disabled}
         class:shadow-md={!disabled}
         on:click={increaseApproval}>
-        <Loading class="my-[10px]">Approve {humanReadableNumber($amountToBridge, $assetIn.decimals)} {$assetIn.symbol}</Loading>
+        <Loading class="my-[10px]"
+          >Approve {humanReadableNumber($amountToBridge, $assetIn.decimals)} {$assetIn.symbol}</Loading>
       </button>
     {/if}
   {:else}
