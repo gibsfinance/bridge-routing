@@ -168,13 +168,9 @@ export const toNetwork = derived([input.bridgeKey], ([$bridgeKey]) => ($bridgeKe
 export const oneEther = 10n ** 18n
 
 export const desiredExcessCompensationBasisPoints = derived([input.assetIn, input.feeType], ([$assetIn, $feeType]) => {
-  const native = input.isNative($assetIn)
   return $feeType === input.FeeType.PERCENT
     ? 1_000n
-    : $feeType === input.FeeType.GAS_TIP
-      ? native ? 1_000n : 5_000n
-      // fixed
-      : native ? 5_000n : 10_000n
+    : (input.isNative($assetIn) ? 1_000n : 5_000n)
 })
 
 export const desiredCompensationRatio = derived(

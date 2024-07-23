@@ -22,9 +22,7 @@
     oneEther,
     desiredExcessCompensationPercentage,
   } from '$lib/stores/bridge-settings'
-  import {
-    latestBaseFeePerGas,
-  } from '$lib/stores/chain-events'
+  import { latestBaseFeePerGas } from '$lib/stores/chain-events'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import { createPublicClient, http } from 'viem'
   import SmallInput from './SmallInput.svelte'
@@ -50,22 +48,22 @@
   // }
   // $: if (publicClient) {
   //   doUnwatch()
-    // loading.increment('gas')
-    // unwatch = publicClient.watchBlocks({
-    //   emitOnBegin: true,
-    //   onBlock: async (block) => {
-    //     let perGas = block.baseFeePerGas
-    //     if (!perGas) {
-    //       perGas = await publicClient.getGasPrice()
-    //       const minGWei = 2_500_000_000n
-    //       if (perGas < minGWei) {
-    //         perGas = minGWei
-    //       }
-    //     }
-    //     latestBaseFeePerGas.set(perGas)
-    //     loading.decrement('gas')
-    //   },
-    // })
+  // loading.increment('gas')
+  // unwatch = publicClient.watchBlocks({
+  //   emitOnBegin: true,
+  //   onBlock: async (block) => {
+  //     let perGas = block.baseFeePerGas
+  //     if (!perGas) {
+  //       perGas = await publicClient.getGasPrice()
+  //       const minGWei = 2_500_000_000n
+  //       if (perGas < minGWei) {
+  //         perGas = minGWei
+  //       }
+  //     }
+  //     latestBaseFeePerGas.set(perGas)
+  //     loading.decrement('gas')
+  //   },
+  // })
   // }
   // onMount(() => () => unwatch?.())
   input.loadFeeFor(originationNetwork.chainId, destinationNetwork.chainId)
@@ -82,7 +80,7 @@
       return 0n
     }
     const ratioOffset = $estimatedNetworkCost / ($amountAfterBridgeFee / 25_000n)
-    let target = min + (scaledBasisPoint * ratioOffset)
+    let target = min + scaledBasisPoint * ratioOffset
     if (target > max) {
       target = max
     } else if (target < min) {
@@ -96,6 +94,7 @@
     }
     const numDecimals = 6n
     const lowResLimit = ($latestBaseFeePerGas * ($fee + oneEther)) / (10n ** (11n - numDecimals) * 10n * oneEther)
+    console.log($latestBaseFeePerGas, $fee, numDecimals)
     let lim = lowResLimit * 10n ** (18n - numDecimals)
     lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset.decimals))
     if (lim > $amountAfterBridgeFee) {
@@ -114,7 +113,6 @@
       if (!costLimitLocked) {
         const floatingLimit = gasPercentFeeFromNetworkInputs()
         if (floatingLimit) {
-          // console.log(floatingLimit)
           input.limit.set(floatingLimit)
         }
       }
@@ -191,7 +189,7 @@
           >{/if}
       </span>
       <button
-        class="flex flex-row strike tooltip tooltip-top tooltip-left-toward-center"
+        class="flex flex-row strike tooltip tooltip-top tooltip-left-toward-center items-center"
         data-tip={$feeType === input.FeeType.FIXED
           ? 'Fee uses fixed value defined in cost limit'
           : $feeType === input.FeeType.GAS_TIP
@@ -235,7 +233,7 @@
           {:else}
             <SmallInput
               value={input.limit}
-              suffix={utils.nativeSymbol(asset, $unwrap)}
+              suffix="&nbsp;{utils.nativeSymbol(asset, $unwrap)}"
               on:input={() => {
                 costLimitLocked = true
               }} />

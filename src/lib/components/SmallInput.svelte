@@ -44,7 +44,7 @@
       on:input={changeFromEvent}
       on:blur={ensureValue} />
   </div>
-  {#if suffix}&nbsp;{suffix}&nbsp;{:else if !editOnLeft}&nbsp;{/if}
+  {#if suffix}{suffix}&nbsp;{:else if !editOnLeft}&nbsp;{/if}
   {#if !editOnLeft}
     <button class="flex items-center text-sm" on:click={focusOnInput}>
       <Icon icon="teenyicons:edit-outline" height="1em" width="1em" />
