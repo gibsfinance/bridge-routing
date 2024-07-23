@@ -12,7 +12,6 @@
     assetLink,
     approval,
   } from '$lib/stores/bridge-settings'
-  import { destinationChains } from '$lib/stores/config'
   import * as abis from '$lib/stores/abis'
   import * as viem from 'viem'
   import Loading from './Loading.svelte'
@@ -24,7 +23,7 @@
   // $: tokenInfo = $assetLink
 
   const { connect } = useAuth()
-  let txHash: Hex | undefined
+  let txHash: viem.Hex | undefined
   // txHash = zeroHash
 
   const initiateBridge = async () => {
@@ -111,13 +110,13 @@
     // }
     // const to = assets[$bridgeKey].input.address
     console.log('inside send transaction')
-    const tokenInfo = await tokenBridgeInfo($bridgeKey, $assetIn)
+    const tokenInfo = await tokenBridgeInfo([$bridgeKey, $assetIn])
     const account = $walletAccount as viem.Hex
     const options = {
       account,
       type: 'eip1559',
       chain: chainsMetadata[Chains.PLS],
-    }
+    } as const
     if ($bridgeKey === Chains.BNB) {
       if (tokenInfo.toForeign) {
         // token is native to pulsechain
@@ -212,7 +211,7 @@
       account,
       type: 'eip1559',
       chain: chainsMetadata[Chains.PLS],
-    }
+    } as const
     txHash = await contract.write.approve([$bridgeAddress, $amountToBridge], options)
     const receipt = await clientFromChain(Chains.PLS).waitForTransactionReceipt({
       hash: txHash,
