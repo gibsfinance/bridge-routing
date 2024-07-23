@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { humanReadableNumber } from '$lib/stores/utils'
   import type { Chains, VisualChain } from '$lib/stores/auth/types'
   import * as viem from 'viem'
   import NetworkImage from './NetworkImage.svelte'
@@ -30,7 +31,7 @@
       class:mx-2={showMax}
       class:ml-2={!showMax}
       data-tip={unwrap ? utils.nativeName(asset) : asset.name}>
-      <Loading key={['balance', 'minAmount']}>{balance == 0n ? '0.0' : viem.formatUnits(balance, asset.decimals)}</Loading
+      <Loading key={['balance', 'minAmount']}>{humanReadableNumber(balance, asset.decimals)}</Loading
       >&nbsp;{utils.nativeSymbol(asset, unwrap)}
     </div>
     {#if showMax}

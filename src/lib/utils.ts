@@ -1,6 +1,5 @@
 import * as viem from 'viem'
 import * as types from './types'
-import type { defaultAssetIn } from './stores/config'
 
 type Erc20Metadata = [string, string, number]
 

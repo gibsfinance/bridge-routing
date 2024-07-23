@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { humanReadableNumber } from '$lib/stores/utils'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { useAuth } from '$lib/stores/auth/methods'
   import { walletAccount } from '$lib/stores/auth/store'
@@ -240,7 +241,7 @@
         class:cursor-not-allowed={disabled}
         class:shadow-md={!disabled}
         on:click={increaseApproval}>
-        <Loading class="my-[10px]">Approve</Loading>
+        <Loading class="my-[10px]">Approve {humanReadableNumber($amountToBridge, $assetIn.decimals)} {$assetIn.symbol}</Loading>
       </button>
     {/if}
   {:else}
