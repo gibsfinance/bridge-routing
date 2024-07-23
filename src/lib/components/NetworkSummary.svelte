@@ -1,7 +1,6 @@
 <script lang="ts">
   import { humanReadableNumber } from '$lib/stores/utils'
   import type { Chains, VisualChain } from '$lib/stores/auth/types'
-  import * as viem from 'viem'
   import NetworkImage from './NetworkImage.svelte'
   import { createEventDispatcher } from 'svelte'
   import * as utils from '$lib/utils'
@@ -30,8 +29,8 @@
       class="text-xs leading-8 tooltip tooltip-left flex items-end self-end"
       class:mx-2={showMax}
       class:ml-2={!showMax}
-      data-tip={unwrap ? utils.nativeName(asset) : asset.name}>
-      <Loading key={['balance', 'minAmount']}>{humanReadableNumber(balance, asset.decimals)}</Loading
+      data-tip={utils.nativeName(asset, unwrap)}>
+      <Loading key={['balance', 'minAmount']}>{humanReadableNumber(balance, asset?.decimals || 18)}</Loading
       >&nbsp;{utils.nativeSymbol(asset, unwrap)}
     </div>
     {#if showMax}

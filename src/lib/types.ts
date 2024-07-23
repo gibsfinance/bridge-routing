@@ -5,7 +5,7 @@ export type Call = {
   functionName: string
   target?: viem.Hex
   abi?: viem.Abi
-  args?: (bigint | viem.Hex)[]
+  args?: (bigint | viem.Hex | viem.Hex[])[]
 }
 
 export type PerNetworkBridgeLink = {

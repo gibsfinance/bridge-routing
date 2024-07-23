@@ -15,7 +15,7 @@ import * as imageLinks from './image-links'
 import { isZero, stripNonNumber } from './utils'
 import { latestBaseFeePerGas } from './chain-events'
 
-const backupAssetIn = {
+export const backupAssetIn = {
   address: viem.zeroAddress,
   name: 'unknown',
   symbol: 'xxx',
@@ -28,7 +28,14 @@ const backupAssetIn = {
 export const assetOut = asyncDerived(
   [input.bridgeKey, input.assetIn],
   async ([$bridgeKey, $assetIn]) => {
-    const { toHome, toForeign } = await chainEvents.tokenBridgeInfo([$bridgeKey, $assetIn])
+    if (!$assetIn) {
+      return backupAssetIn
+    }
+    const tokenInfo = await chainEvents.tokenBridgeInfo([$bridgeKey, $assetIn])
+    if (!tokenInfo) {
+      return backupAssetIn
+    }
+    const { toHome, toForeign } = tokenInfo
     let res = backupAssetIn
     const foreign = toHome?.foreign || toForeign?.foreign
     if (foreign && foreign !== viem.zeroAddress) {
@@ -93,7 +100,7 @@ export const desiredExcessCompensationPercentage = derived(
   ([$desiredExcessCompensationBasisPoints]) => viem.formatUnits($desiredExcessCompensationBasisPoints, 2),
 )
 
-const oneTokenInt = derived([input.assetIn], ([$assetIn]) => 10n ** BigInt($assetIn.decimals))
+const oneTokenInt = derived([input.assetIn], ([$assetIn]) => $assetIn ? 10n ** BigInt($assetIn.decimals) : 1n)
 
 let priceCorrectiveGuard = {}
 type FetchResult = bigint[] | viem.Hex
@@ -161,7 +168,7 @@ const readAmountOut = (
 }
 /** the number of tokens to push into the bridge (before fees) */
 export const amountToBridge = derived([input.amountIn, input.assetIn], ([$amountIn, $assetIn]) => {
-  if (isZero($amountIn)) return 0n
+  if (isZero($amountIn) || !$assetIn) return 0n
   return viem.parseUnits(stripNonNumber($amountIn), $assetIn.decimals)
 })
 export const priceCorrective = derived(
@@ -172,7 +179,7 @@ export const priceCorrective = derived(
     let cancelled = false
     priceCorrectiveGuard = {}
     const pcg = priceCorrectiveGuard
-    if ($assetOut.address === viem.zeroAddress) {
+    if (!$assetIn || $assetOut.address === viem.zeroAddress) {
       set(0n)
       return
     }
@@ -197,14 +204,14 @@ export const priceCorrective = derived(
     Promise.all([
       $bridgeKey === Chains.ETH && $assetLink && $assetLink.toHome
         ? readAmountOut(
-            {
-              $assetInAddress: $assetOut.address,
-              $oneTokenInt: toBridge,
-              chain: $bridgeKey,
-              $bridgeKey,
-            },
-            $latestBaseFeePerGas,
-          )
+          {
+            $assetInAddress: $assetOut.address,
+            $oneTokenInt: toBridge,
+            chain: $bridgeKey,
+            $bridgeKey,
+          },
+          $latestBaseFeePerGas,
+        )
         : (['0x'] as [viem.Hex]),
       readAmountOut(
         {
@@ -250,7 +257,7 @@ export const estimatedNetworkCost = derived(
 )
 /** the maximum number of tokens that the user wishes to pay in fees */
 export const limit = derived([input.limit, input.assetIn], ([$limit, $assetIn]) => {
-  if (isZero($limit)) return 0n
+  if (isZero($limit) || !$assetIn) return 0n
   return viem.parseUnits(stripNonNumber($limit), $assetIn.decimals)
 })
 export const fee = derived([input.fee], ([$fee]) => {
@@ -367,7 +374,10 @@ export const foreignCalldata = derived(
   },
 )
 
-export const assetSources = (asset: Token) => {
+export const assetSources = (asset: Token | null) => {
+  if (!asset) {
+    return ''
+  }
   const bridgedImage = [
     ...Object.entries(asset.extensions?.bridgeInfo || {}).map(([chainId, info]) => {
       if (!info.tokenAddress) {
@@ -390,7 +400,10 @@ export const assetSources = (asset: Token) => {
   return imageLinks.images(sources)
 }
 
-export const getOriginationChainId = (asset: Token) => {
+export const getOriginationChainId = (asset: Token | null) => {
+  if (!asset) {
+    return Number(Chains.PLS)
+  }
   const bridgeInfo = asset.extensions?.bridgeInfo
   const $bridgeKey = get(input.bridgeKey)
   if (_.isEmpty(bridgeInfo)) {

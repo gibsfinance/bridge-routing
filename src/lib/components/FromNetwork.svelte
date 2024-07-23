@@ -53,15 +53,15 @@
         show={$amountToBridge < $minAmount && $amountToBridge > 0n}
         disabled={$focused}
         position="left"
-        tooltip="Input is too low, must be at least {formatUnits($minAmount, asset.decimals)}" />
+        tooltip="Input is too low, must be at least {formatUnits($minAmount, asset?.decimals || 18)}" />
     </span>
 
     <button
       class="tooltip tooltip-left leading-8 py-2 px-3 flex flex-row space-x-2 items-center open-modal-container"
-      data-tip={asset.name}
+      data-tip={asset?.name || ''}
       on:click={openModal}>
       <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
-      <span class="ml-2">{asset.symbol}</span>
+      <span class="ml-2">{asset?.symbol || ''}</span>
       <Icon icon="mingcute:right-fill" height="1em" width="1em" class="flex icon transition-all" />
     </button>
   </div>

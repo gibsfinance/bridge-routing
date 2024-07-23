@@ -65,7 +65,7 @@ export const tokenBalance = derived(
   [walletAccount, input.publicClient, input.assetIn],
   ([$walletAccount, $publicClient, $assetIn], set) => {
     let cancelled = false
-    if (!$walletAccount || $walletAccount === viem.zeroAddress) {
+    if (!$assetIn || !$walletAccount || $walletAccount === viem.zeroAddress) {
       set(0n)
       return
     }
@@ -108,6 +108,10 @@ export const tokenBalance = derived(
 export const minAmount = derived(
   [input.bridgeKey, input.publicClient, input.assetIn],
   ([$bridgeKey, $publicClient, $assetIn], set) => {
+    if (!$assetIn) {
+      set(0n)
+      return
+    }
     let cancelled = false
     $publicClient
       .readContract({
@@ -127,7 +131,7 @@ export const minAmount = derived(
   0n,
 )
 
-export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [DestinationChains, Token]): Promise<{
+export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [DestinationChains, Token]): Promise<null | {
   toForeign?: {
     home: viem.Hex
     foreign?: viem.Hex
@@ -137,6 +141,9 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [DestinationChains
     foreign: viem.Hex
   }
 }> => {
+  if (!$assetIn) {
+    return null
+  }
   const args = [$assetIn.address]
   const mappings = await multicallRead<viem.Hex[]>({
     client: input.clientFromChain(Chains.PLS),
@@ -218,6 +225,10 @@ const checkApproval = async ([$walletAccount, $bridgeAddress, $assetLink, $publi
 export const assetLink = derived<Stores, TokenBridgeInfo>(
   [input.bridgeKey, input.assetIn],
   ([$bridgeKey, $assetIn], set) => {
+    if (!$assetIn) {
+      set(null)
+      return
+    }
     let cancelled = false
     tokenBridgeInfo([$bridgeKey, $assetIn]).then((allowance) => {
       if (cancelled) return
@@ -227,12 +238,15 @@ export const assetLink = derived<Stores, TokenBridgeInfo>(
       cancelled = true
     }
   },
+  null,
 )
 
 export const approval = derived(
   [walletAccount, input.bridgeAddress, assetLink, input.publicClient],
   ([$walletAccount, $bridgeAddress, $assetLink, $publicClient], set) => {
-    if (!$walletAccount) return
+    if (!$assetLink || !$walletAccount) {
+      return
+    }
     let cancelled = false
     const getApproval = () =>
       checkApproval([$walletAccount, $bridgeAddress, $assetLink, $publicClient]).then((approval) => {
@@ -240,7 +254,7 @@ export const approval = derived(
         set(approval)
       })
     getApproval()
-    let unwatch: viem.WatchContractEventReturnType = () => {}
+    let unwatch: viem.WatchContractEventReturnType = () => { }
     if ($assetLink.toForeign) {
       const account = viem.getAddress($walletAccount)
       const bridgeAddr = viem.getAddress($bridgeAddress)

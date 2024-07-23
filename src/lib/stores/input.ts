@@ -101,11 +101,10 @@ export const bridgeKey = derived(
 )
 
 export const bridgableTokens = writable<Token[]>([])
-;(() => {
-  const set = (tokens: Token[]) => {
-    bridgableTokens.set(tokens)
-  }
-  return () => {
+  ; (() => {
+    const set = (tokens: Token[]) => {
+      bridgableTokens.set(tokens)
+    }
     loading.increment()
     Promise.all([
       fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo&chainId=369')),
@@ -145,8 +144,7 @@ export const bridgableTokens = writable<Token[]>([])
         loading.decrement()
         throw err
       })
-  }
-})()
+  })()
 
 export const assetInAddress = derived([bridgeKey, page], ([$bridgeKey, $page]) =>
   viem.getAddress($page.params.assetInAddress || defaultAssetIn[$bridgeKey as DestinationChains].address),
@@ -156,13 +154,11 @@ export const assetIn = derived(
   [assetInAddress, bridgeKey, bridgableTokens, customTokens.tokens],
   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens]) => {
     const $assetIn =
-      _.find($bridgableTokens || [], {
-        address: $assetInAddress,
-      }) ||
-      _.find($customTokens || [], {
-        address: $assetInAddress,
-      }) ||
-      defaultAssetIn[$bridgeKey]
+      $bridgableTokens.length ? (
+        _.find($bridgableTokens || [], { address: $assetInAddress })
+        || _.find($customTokens || [], { address: $assetInAddress })
+        || defaultAssetIn[$bridgeKey]
+      ) : null
     return $assetIn
   },
 )
@@ -173,7 +169,8 @@ export const unwrap = {
   ...unwrapStore,
 }
 
-export const isNative = ($asset: Token) => {
+export const isNative = ($asset: Token | null) => {
+  if (!$asset) return false
   if ($asset.chainId === Number(Chains.PLS)) {
     return !!Object.values(defaultAssetIn).find(
       ($defaultAssetIn) => viem.getAddress($defaultAssetIn.address) === viem.getAddress($asset.address),
@@ -183,7 +180,7 @@ export const isNative = ($asset: Token) => {
     return nativeAssetOut[chainId] === $asset.address
   }
 }
-export const canChangeUnwrap = derived([assetIn], ([$assetIn]) => isNative($assetIn))
+export const canChangeUnwrap = derived([assetIn], ([$assetIn]) => !!$assetIn && isNative($assetIn))
 
 export const activeChain = writable<Chains>(Chains.PLS)
 export const walletClient = writable<viem.WalletClient | undefined>()
