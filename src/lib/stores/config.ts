@@ -57,10 +57,6 @@ export const defaultAssetIn = {
     name: 'Wrapped Ether from Ethereum',
     address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
     decimals: 18,
-    // logoURI: imageLinks.image({
-    //   chainId: Number(Chains.ETH),
-    //   address: nativeAssetOut[Chains.ETH],
-    // }),
     chainId: 369,
     extensions: {
       bridgeInfo: {
@@ -77,10 +73,6 @@ export const defaultAssetIn = {
     name: 'Wrapped BNB',
     address: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
     decimals: 18,
-    // logoURI: imageLinks.image({
-    //   chainId: Number(Chains.BNB),
-    //   address: nativeAssetOut[Chains.BNB],
-    // }),
     chainId: 369,
     extensions: {
       bridgeInfo: {

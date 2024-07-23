@@ -6,7 +6,7 @@
   import * as utils from '$lib/utils'
   import Loading from './Loading.svelte'
   import type { Token } from '$lib/types'
-  export let balance = 0n
+  export let balance: bigint | null = null
   export let asset!: Token
   export let network!: VisualChain
   export let networkOptions: Chains[] = []
@@ -18,6 +18,7 @@
     if (disableMax) return
     dispatch('max-balance')
   }
+  $: bal = balance || 0n
 </script>
 
 <div class="flex flex-row justify-between">
@@ -30,8 +31,10 @@
       class:mx-2={showMax}
       class:ml-2={!showMax}
       data-tip={utils.nativeName(asset, unwrap)}>
-      <Loading key={['balance', 'minAmount']}>{humanReadableNumber(balance, asset?.decimals || 18)}</Loading
-      >&nbsp;{utils.nativeSymbol(asset, unwrap)}
+      <Loading key="balance">{humanReadableNumber(bal, asset?.decimals || 18)}</Loading>&nbsp;{utils.nativeSymbol(
+        asset,
+        unwrap,
+      )}
     </div>
     {#if showMax}
       <div class="text-white leading-8">

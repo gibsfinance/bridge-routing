@@ -19,6 +19,7 @@
     fee,
     oneEther,
     desiredExcessCompensationPercentage,
+    foreignTokenBalance,
   } from '$lib/stores/bridge-settings'
   import { latestBaseFeePerGas } from '$lib/stores/chain-events'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
@@ -94,13 +95,11 @@
     ($amountToBridge || !$amountToBridge) &&
     ($fee || !$fee) &&
     $estimatedNetworkCost &&
-    // ($latestBaseFeePerGas || !$latestBaseFeePerGas) &&
     $feeType &&
     $assetInAddress
   ) {
     reflowFees()
   }
-  let balance = 0n
   const focusOnInputChild = (e: any) => {
     e.currentTarget.querySelector('input')?.focus()
   }
@@ -119,7 +118,12 @@
 
 <div class="shadow-md rounded-lg">
   <div class="bg-slate-100 py-2 px-3 rounded-t-lg hover:z-10">
-    <NetworkSummary network={destinationNetwork} {networkOptions} {asset} {balance} unwrap={$unwrap} />
+    <NetworkSummary
+      network={destinationNetwork}
+      {networkOptions}
+      {asset}
+      balance={$foreignTokenBalance}
+      unwrap={$unwrap} />
   </div>
   <div class="bg-slate-100 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">

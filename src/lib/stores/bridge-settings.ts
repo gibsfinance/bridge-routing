@@ -1,7 +1,8 @@
-import { derived, get } from 'svelte/store'
+import { derived, get, type Stores } from 'svelte/store'
 import * as input from '$lib/stores/input'
 import { derived as asyncDerived } from './async'
 import * as viem from 'viem'
+import { walletAccount } from './auth/store'
 import { Chains, type DestinationChains } from './auth/types'
 import { loading } from './loading'
 import type { Token } from '../types'
@@ -9,7 +10,7 @@ import * as chainEvents from './chain-events'
 import { chainsMetadata } from './auth/constants'
 import { multicallErc20, multicallRead } from '$lib/utils'
 import _ from 'lodash'
-import { uniV2Settings, destinationChains, defaultAssetIn } from './config'
+import { uniV2Settings, destinationChains, defaultAssetIn, nativeAssetOut } from './config'
 import * as abis from './abis'
 import * as imageLinks from './image-links'
 import { isZero, stripNonNumber } from './utils'
@@ -69,6 +70,76 @@ export const assetOut = asyncDerived(
     return res
   },
   backupAssetIn,
+)
+
+export const foreignTokenBalance = derived<Stores, bigint | null>(
+  [walletAccount, chainEvents.destinationPublicClient, input.bridgeKey, assetOut, input.unwrap],
+  ([$walletAccount, $publicClient, $bridgeKey, $assetOut, $unwrap], set) => {
+    let cancelled = false
+    if (!$assetOut || $assetOut.address === viem.zeroAddress || !$walletAccount || $walletAccount === viem.zeroAddress) {
+      set(0n)
+      return
+    }
+    set(null)
+    loading.increment('balance')
+    const unwrappable = nativeAssetOut[$bridgeKey as DestinationChains]
+    const getNativeBalance = async () => {
+      const balance = await $publicClient.getBalance({
+        address: $walletAccount,
+      })
+      if (cancelled) return
+      set(balance)
+    }
+    if ($unwrap && viem.getAddress(unwrappable) === viem.getAddress($assetOut.address)) {
+      getNativeBalance()
+      const unwatch = $publicClient.watchBlocks({
+        onBlock: () => {
+          loading.decrement('balance')
+          getNativeBalance()
+        },
+      })
+      return () => {
+        loading.decrement('balance')
+        unwatch?.()
+        cancelled = true
+      }
+    }
+    const token = viem.getContract({
+      address: $assetOut.address,
+      abi: viem.erc20Abi,
+      client: $publicClient,
+    });
+    const getBalance = async () => {
+      const balance = await token.read.balanceOf([$walletAccount])
+      if (cancelled) return
+      loading.decrement('balance')
+      set(balance)
+    }
+    const account = viem.getAddress($walletAccount)
+    const unwatch = $publicClient.watchContractEvent({
+      abi: viem.erc20Abi,
+      eventName: 'Transfer',
+      address: $assetOut.address,
+      onLogs: (logs) => {
+        if (
+          logs.find(
+            (l) =>
+              viem.getAddress(l.args.from as viem.Hex) === account ||
+              viem.getAddress(l.args.to as viem.Hex) === account,
+          )
+        ) {
+          getBalance().catch(console.error)
+        }
+      },
+    })
+    getBalance().catch(console.error)
+    return () => {
+      cancelled = true
+      loading.decrement('balance')
+      unwatch()
+    }
+  },
+  null,
 )
 
 export const unwrap = derived([input.unwrap, input.canChangeUnwrap], ([$unwrapSetting, $canChangeUnwrap]) => {
