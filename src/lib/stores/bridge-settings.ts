@@ -13,6 +13,7 @@ import * as abis from './abis'
 import * as imageLinks from './image-links'
 import { isZero, stripNonNumber } from './utils'
 import { latestBaseFeePerGas } from './chain-events'
+import { walletAccount } from './auth/store'
 
 export const provider = derived([input.bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].provider)
 
@@ -33,51 +34,106 @@ const backupAssetIn = {
   chainId: 369,
 } as Token
 
-/** the asset coming out on the other side of the bridge (foreign) */
-export const assetOut = asyncDerived(
-  [bridgeAddress, input.assetIn, input.bridgeKey],
-  async ([$bridgeAddress, $assetIn, $bridgeKey]) => {
-    const args = [$assetIn.address]
+export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [DestinationChains, Token]): Promise<{
+  toForeign?: {
+    home: viem.Hex;
+    foreign?: viem.Hex;
+  },
+  toHome?: {
+    home: viem.Hex;
+    foreign: viem.Hex;
+  },
+}> => {
+  const args = [$assetIn.address]
+  const mappings = await multicallRead<viem.Hex[]>({
+    client: input.clientFromChain(Chains.PLS),
+    chain: chainsMetadata[Chains.PLS],
+    abi: abis.inputBridge,
+    target: destinationChains[$bridgeKey].homeBridge,
+    calls: [
+      { functionName: 'bridgedTokenAddress', args },
+      { functionName: 'nativeTokenAddress', args },
+    ],
+  })
+  let [
+    foreignTokenAddress, // bridgedTokenAddress
+    nativeTokenAddress,
+  ] = mappings
+
+  if (foreignTokenAddress !== viem.zeroAddress) {
+    // if we are here, then we know that we are dealing with a native
+    // address, so we need to go to the foreign chain
     const mappings = await multicallRead<viem.Hex[]>({
-      client: input.clientFromChain(Chains.PLS),
-      chain: chainsMetadata[Chains.PLS],
+      client: input.clientFromChain($bridgeKey),
+      chain: chainsMetadata[$bridgeKey],
       abi: abis.inputBridge,
-      target: $bridgeAddress,
+      target: destinationChains[$bridgeKey].foreignBridge,
       calls: [
         { functionName: 'bridgedTokenAddress', args },
         { functionName: 'nativeTokenAddress', args },
       ],
     })
-    let [
-      foreignTokenAddress, // bridgedTokenAddress
-      nativeTokenAddress,
-    ] = mappings
-
-    if (foreignTokenAddress !== viem.zeroAddress) {
-      // if we are here, then we know that we are dealing with a native
-      // address, so we need to go to the foreign chain
-      const mappings = await multicallRead<viem.Hex[]>({
-        client: input.clientFromChain($bridgeKey),
-        chain: chainsMetadata[$bridgeKey],
-        abi: abis.inputBridge,
-        target: destinationChains[$bridgeKey].foreignBridge,
-        calls: [
-          { functionName: 'bridgedTokenAddress', args },
-          { functionName: 'nativeTokenAddress', args },
-        ],
-      })
-      foreignTokenAddress = mappings[0]
-      nativeTokenAddress = args[0]
-    } else if (nativeTokenAddress !== viem.zeroAddress) {
-      foreignTokenAddress = nativeTokenAddress
+    foreignTokenAddress = mappings[0]
+    nativeTokenAddress = args[0]
+    if (nativeTokenAddress === $assetIn.address) {
+      return {
+        toForeign: {
+          foreign: foreignTokenAddress,
+          home: $assetIn.address,
+        },
+      }
     }
+  } else if (nativeTokenAddress !== viem.zeroAddress) {
+    return {
+      toHome: {
+        foreign: nativeTokenAddress,
+        home: $assetIn.address,
+      },
+    }
+  }
+  return {
+    toForeign: {
+      home: $assetIn.address,
+    },
+  }
+  // fallback case
+}
 
+const checkApproval = async (
+  [$walletAccount, $bridgeAddress, $assetLink, $publicClient]:
+    [viem.Hex | undefined, viem.Hex, null | Awaited<ReturnType<typeof tokenBridgeInfo>>, viem.PublicClient]
+) => {
+  if (!$walletAccount) {
+    return 0n
+  }
+  if (!$assetLink || $assetLink.toHome) {
+    return 0n // irrelevant
+  }
+  const token = viem.getContract({
+    abi: viem.erc20Abi,
+    address: $assetLink.toForeign!.home!,
+    client: $publicClient,
+  })
+  const allowance = await token.read.allowance([$walletAccount, $bridgeAddress])
+  return allowance
+}
+
+export const assetLink = asyncDerived([input.bridgeKey, input.assetIn], tokenBridgeInfo, null)
+
+export const approval = asyncDerived([walletAccount, bridgeAddress, assetLink, input.publicClient], checkApproval, 0n)
+
+/** the asset coming out on the other side of the bridge (foreign) */
+export const assetOut = asyncDerived(
+  [input.bridgeKey, input.assetIn],
+  async ([$bridgeKey, $assetIn]) => {
+    const { toHome, toForeign } = await tokenBridgeInfo([$bridgeKey, $assetIn])
     let res = backupAssetIn
-    if (foreignTokenAddress !== viem.zeroAddress) {
+    const foreign = toHome?.foreign || toForeign?.foreign
+    if (foreign && foreign !== viem.zeroAddress) {
       const r = await multicallErc20({
         client: input.clientFromChain($bridgeKey),
         chain: chainsMetadata[$bridgeKey],
-        target: foreignTokenAddress,
+        target: foreign,
       }).catch(() => null)
       if (!r) {
         return backupAssetIn
@@ -86,7 +142,7 @@ export const assetOut = asyncDerived(
       res = {
         name, symbol, decimals,
         chainId: Number($bridgeKey),
-        address: foreignTokenAddress,
+        address: foreign,
       } as Token
       res.logoURI = imageLinks.image(res)
     } else {
@@ -99,7 +155,6 @@ export const assetOut = asyncDerived(
         symbol: `w${$assetIn.symbol}`,
       } as Token
     }
-    // res.extensions = getExtensions(res)
     return res
   }, backupAssetIn)
 
@@ -202,18 +257,19 @@ export const amountToBridge = derived([input.amountIn, input.assetIn], ([$amount
   return viem.parseUnits(stripNonNumber($amountIn), $assetIn.decimals)
 })
 export const priceCorrective = derived(
-  [input.assetIn, input.bridgeKey, oneTokenInt, assetOut, amountToBridge, latestBaseFeePerGas],
-  ([$assetIn, $bridgeKey, $oneTokenInt, $assetOut, $amountToBridge, $latestBaseFeePerGas], set) => {
+  [input.assetIn, input.bridgeKey, assetLink, oneTokenInt, assetOut, amountToBridge, latestBaseFeePerGas],
+  ([$assetIn, $bridgeKey, $assetLink, $oneTokenInt, $assetOut, $amountToBridge, $latestBaseFeePerGas], set) => {
     // check if recognized as wrapped
     // if recognized as wrapped, use oneEther
     let cancelled = false
     priceCorrectiveGuard = {}
     const pcg = priceCorrectiveGuard
-    if (input.isNative($assetIn) || $assetOut.address === viem.zeroAddress) {
+    if (!$assetOut || input.isNative($assetIn) || $assetOut.address === viem.zeroAddress) {
       set(oneEther)
       return
     }
-    let toBridge = $amountToBridge
+    // the max fee i am targeting is 10%
+    let toBridge = $amountToBridge / 10n
     if (toBridge === 0n) {
       toBridge = viem.parseUnits('10', $assetIn.decimals)
     }
@@ -226,19 +282,13 @@ export const priceCorrective = derived(
       }
     }
     loading.increment('gas')
-    // console.log('fetching price corrective', {
-    //   $assetInAddress: $assetOut.address,
-    //   $oneTokenInt,
-    //   chain: $bridgeKey,
-    //   $bridgeKey,
-    // })
     Promise.all([
-      readAmountOut({
+      $bridgeKey === Chains.ETH && $assetLink && $assetLink.toHome ? readAmountOut({
         $assetInAddress: $assetOut.address,
         $oneTokenInt: toBridge,
         chain: $bridgeKey,
         $bridgeKey,
-      }, $latestBaseFeePerGas),
+      }, $latestBaseFeePerGas) : ['0x'] as [viem.Hex],
       readAmountOut({
         $assetInAddress: $assetIn.address,
         $oneTokenInt: toBridge,

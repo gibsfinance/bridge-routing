@@ -7,19 +7,20 @@
     bridgeAddress,
     amountToBridge,
     foreignData,
-    // clientFromChain,
-    // walletClient,
-    // assetIn,
+    tokenBridgeInfo,
+    assetLink,
+    approval,
   } from '$lib/stores/bridge-settings'
   import { destinationChains } from '$lib/stores/config'
   import * as abis from '$lib/stores/abis'
-  import { getContract, type Hex } from 'viem'
+  import * as viem from 'viem'
   import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input'
 
-  const { walletClient, assetIn, clientFromChain, bridgeKey } = input
+  const { walletClient, assetIn, clientFromChain, bridgeKey, recipient } = input
 
   $: disabled = BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n
+  // $: tokenInfo = $assetLink
 
   const { connect } = useAuth()
   let txHash: Hex | undefined
@@ -109,44 +110,70 @@
     // }
     // const to = assets[$bridgeKey].input.address
     console.log('inside send transaction')
-    txHash = await ($bridgeKey === Chains.BNB
-      ? getContract({
+    const tokenInfo = await tokenBridgeInfo($bridgeKey, $assetIn)
+    const account = $walletAccount as viem.Hex
+    const options = {
+      account,
+      type: 'eip1559',
+      chain: chainsMetadata[Chains.PLS],
+    }
+    if ($bridgeKey === Chains.BNB) {
+      if (tokenInfo.toForeign) {
+        // token is native to pulsechain
+        const bridgeContract = viem.getContract({
+          abi: abis.inputBridgeBNB,
+          address: $bridgeAddress,
+          client: $walletClient!,
+        })
+        txHash = await bridgeContract.write.relayTokens([$assetIn.address, $recipient, $amountToBridge, account], options)
+      } else {
+        // extra arg in transfer+call
+        const contract = viem.getContract({
           abi: abis.erc677BNB,
           address: $assetIn.address,
           client: $walletClient!,
-        }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData, $walletAccount as Hex], {
-          account: $walletAccount as Hex,
-          type: 'eip1559',
-          chain: chainsMetadata[Chains.PLS],
         })
-      : getContract({
+        txHash = await contract.write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData, account], options)
+      }
+    } else if ($bridgeKey === Chains.ETH) {
+      if (tokenInfo.toForeign) {
+        // native to pulsechain
+        const bridgeContract = viem.getContract({
+          abi: abis.inputBridgeBNB,
+          address: $bridgeAddress,
+          client: $walletClient!,
+        })
+        txHash = await bridgeContract.write.relayTokens([$assetIn.address, $recipient, $amountToBridge], options)
+      } else {
+        const contract = viem.getContract({
           abi: abis.erc677,
           address: $assetIn.address,
           client: $walletClient!,
-        }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData], {
-          account: $walletAccount as Hex,
-          type: 'eip1559',
-          chain: chainsMetadata[Chains.PLS],
-        }))
+        })
+        txHash = await contract.write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData], options)
+      }
+    } else {
+      throw new Error('unrecognized chain')
+    }
     // txHash = await sendTransaction({
     //   sendTransaction: async () => {
     //     console.log('inside send transaction')
     //     return await ($bridgeKey === 'BNB'
-    //       ? getContract({
+    //       ? viem.getContract({
     //           abi: erc677abiBNB,
     //           address: assets[$bridgeKey].input.address,
     //           client: $walletClient!,
-    //         }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData, $walletAccount as Hex], {
-    //           account: $walletAccount as Hex,
+    //         }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData, $walletAccount as viem.Hex], {
+    //           account: $walletAccount as viem.Hex,
     //           type: 'eip1559',
     //           chain: chainsMetadata[Chains.PLS],
     //         })
-    //       : getContract({
+    //       : viem.getContract({
     //           abi: erc677abi,
     //           address: assets[$bridgeKey].input.address,
     //           client: $walletClient!,
     //         }).write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData], {
-    //           account: $walletAccount as Hex,
+    //           account: $walletAccount as viem.Hex,
     //           type: 'eip1559',
     //           chain: chainsMetadata[Chains.PLS],
     //         }))
@@ -156,32 +183,66 @@
     if (!txHash) {
       return
     }
-    ;((hash: Hex) =>
-      setTimeout(() => {
-        if (hash !== txHash) {
-          return
-        }
-        txHash = undefined
-      }, 20_000))(txHash)
     const receipt = await clientFromChain(Chains.PLS).waitForTransactionReceipt({
       hash: txHash,
     })
+    wipeTxHash(txHash)
+    console.log(receipt)
+  }
+  const wipeTxHash = (hash: viem.Hex) => {
+    setTimeout(() => {
+      if (hash !== txHash) {
+        return
+      }
+      txHash = undefined
+    }, 20_000)
+  }
+  const increaseApproval = async () => {
+    const contract = viem.getContract({
+      abi: viem.erc20Abi,
+      address: $assetIn.address,
+      client: $walletClient!,
+    })
+    const account = $walletAccount as viem.Hex
+    const options = {
+      account,
+      type: 'eip1559',
+      chain: chainsMetadata[Chains.PLS],
+    }
+    txHash = await contract.write.approve([$bridgeAddress, $amountToBridge], options)
+    const receipt = await clientFromChain(Chains.PLS).waitForTransactionReceipt({
+      hash: txHash,
+    })
+    wipeTxHash(txHash)
     console.log(receipt)
   }
 </script>
 
 <div>
   {#if $walletAccount}
-    <button
-      class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-around"
-      class:hover:bg-purple-500={!disabled}
-      class:bg-purple-600={!disabled}
-      class:bg-purple-400={disabled}
-      class:cursor-not-allowed={disabled}
-      class:shadow-md={!disabled}
-      on:click={initiateBridge}>
-      <Loading class="my-[10px]">Bridge</Loading>
-    </button>
+    {#if $assetLink && ($assetLink.toHome || ($assetLink.toForeign && $approval >= $amountToBridge))}
+      <button
+        class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-around"
+        class:hover:bg-purple-500={!disabled}
+        class:bg-purple-600={!disabled}
+        class:bg-purple-400={disabled}
+        class:cursor-not-allowed={disabled}
+        class:shadow-md={!disabled}
+        on:click={initiateBridge}>
+        <Loading class="my-[10px]">Bridge</Loading>
+      </button>
+    {:else}
+      <button
+        class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-around"
+        class:hover:bg-purple-500={!disabled}
+        class:bg-purple-600={!disabled}
+        class:bg-purple-400={disabled}
+        class:cursor-not-allowed={disabled}
+        class:shadow-md={!disabled}
+        on:click={increaseApproval}>
+        <Loading class="my-[10px]">Approve</Loading>
+      </button>
+    {/if}
   {:else}
     <button
       class="p-2 bg-purple-600 text-white w-full rounded-lg hover:bg-purple-500 active:bg-purple-500"

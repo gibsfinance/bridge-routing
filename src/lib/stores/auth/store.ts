@@ -9,13 +9,10 @@ import {
 import { Chains } from './types'
 import { chainsMetadata } from './constants'
 import { normalize } from 'viem/ens'
-// import { walletClient } from '../bridge-settings'
 import * as input from '../input'
 
-const { walletClient } = input
-
 export const walletAccount = derived<[Readable<WalletClient | undefined>], Address | undefined>(
-  [walletClient],
+  [input.walletClient],
   ([$walletClient], set) => {
     if (!$walletClient) {
       set(undefined)
