@@ -62,7 +62,7 @@ export const latestBaseFeePerGas = derived(
 )
 
 export const tokenBalance = derived(
-  [walletAccount, input.publicClient, input.assetIn],
+  [walletAccount, input.publicClient, input.assetIn, input.forcedRefresh],
   ([$walletAccount, $publicClient, $assetIn], set) => {
     let cancelled = false
     if (!$assetIn || !$walletAccount || $walletAccount === viem.zeroAddress) {
@@ -236,7 +236,7 @@ export const assetLink = derived<[Readable<DestinationChains>, Readable<Token | 
 )
 
 export const approval = derived(
-  [walletAccount, input.bridgeAddress, assetLink, input.publicClient],
+  [walletAccount, input.bridgeAddress, assetLink, input.publicClient, input.forcedRefresh],
   ([$walletAccount, $bridgeAddress, $assetLink, $publicClient], set) => {
     if (!$assetLink || !$walletAccount) {
       return
@@ -248,7 +248,7 @@ export const approval = derived(
         set(approval)
       })
     getApproval()
-    let unwatch: viem.WatchContractEventReturnType = () => {}
+    let unwatch: viem.WatchContractEventReturnType = () => { }
     if ($assetLink.toForeign) {
       const account = viem.getAddress($walletAccount)
       const bridgeAddr = viem.getAddress($bridgeAddress)
@@ -270,7 +270,7 @@ export const approval = derived(
       })
     }
     return () => {
-      unwatch?.()
+      unwatch()
       cancelled = true
     }
   },

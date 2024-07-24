@@ -49,7 +49,7 @@
         </li>
         <li>
           If, for any reason, your transaction is not run in a timely manner, you can always use
-          <VersionedLink domain="bridge.pulsechain.com" />
+          <VersionedLink domain="bridge.pulsechain.com" path="/#/transactions" />
           to complete the bridge yourself and pay zero fees outside of the bridge fees.
         </li>
       </ul>

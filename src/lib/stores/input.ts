@@ -14,6 +14,12 @@ import type { Token, TokenList } from '$lib/types'
 import _ from 'lodash'
 import { chainsMetadata } from './auth/constants'
 
+export const forcedRefresh = writable(0n)
+
+export const incrementForcedRefresh = () => (
+  forcedRefresh.update((current) => current + 1n)
+)
+
 const limitStore = writable('0')
 
 let decimals = 18
@@ -101,50 +107,50 @@ export const bridgeKey = derived(
 )
 
 export const bridgableTokens = writable<Token[]>([])
-;(() => {
-  const set = (tokens: Token[]) => {
-    bridgableTokens.set(tokens)
-  }
-  loading.increment()
-  Promise.all([
-    fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo&chainId=369')),
-    fetch(imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo&chainId=369')),
-    fetch(imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo&chainId=369')),
-    fetch(imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo&chainId=369')),
-  ])
-    .then(async (results) => {
-      const responses = await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
-      loading.decrement()
-      const list = _(responses)
-        .map('tokens')
-        .flatten()
-        .keyBy(({ chainId, address }) => {
-          return `${Number(chainId)}-${viem.getAddress(address)}`
+  ; (() => {
+    const set = (tokens: Token[]) => {
+      bridgableTokens.set(tokens)
+    }
+    loading.increment()
+    Promise.all([
+      fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo&chainId=369')),
+      fetch(imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo&chainId=369')),
+      fetch(imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo&chainId=369')),
+      fetch(imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo&chainId=369')),
+    ])
+      .then(async (results) => {
+        const responses = await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
+        loading.decrement()
+        const list = _(responses)
+          .map('tokens')
+          .flatten()
+          .keyBy(({ chainId, address }) => {
+            return `${Number(chainId)}-${viem.getAddress(address)}`
+          })
+          .values()
+          .value()
+        const check = (cId: DestinationChains) => (item: Token) =>
+          defaultAssetIn[cId].address === item.address ? defaultAssetIn[cId] : null
+        const checkETH = check(Chains.ETH)
+        const checkBNB = check(Chains.BNB)
+        const sortedList = _.sortBy(list, 'name').map((item) => checkETH(item) || checkBNB(item) || item)
+        // console.log(sortedList)
+        sortedList.forEach((token) => {
+          // register on a central cache so that tokens that are gotten from onchain
+          // still have all extensions
+          // registerExtensions(token, token.extensions)
+          if (!token.logoURI) {
+            token.logoURI = imageLinks.image(token)
+          }
         })
-        .values()
-        .value()
-      const check = (cId: DestinationChains) => (item: Token) =>
-        defaultAssetIn[cId].address === item.address ? defaultAssetIn[cId] : null
-      const checkETH = check(Chains.ETH)
-      const checkBNB = check(Chains.BNB)
-      const sortedList = _.sortBy(list, 'name').map((item) => checkETH(item) || checkBNB(item) || item)
-      // console.log(sortedList)
-      sortedList.forEach((token) => {
-        // register on a central cache so that tokens that are gotten from onchain
-        // still have all extensions
-        // registerExtensions(token, token.extensions)
-        if (!token.logoURI) {
-          token.logoURI = imageLinks.image(token)
-        }
+        set(sortedList)
+        return sortedList
       })
-      set(sortedList)
-      return sortedList
-    })
-    .catch((err) => {
-      loading.decrement()
-      throw err
-    })
-})()
+      .catch((err) => {
+        loading.decrement()
+        throw err
+      })
+  })()
 
 export const assetInAddress = derived([bridgeKey, page], ([$bridgeKey, $page]) =>
   viem.getAddress($page.params.assetInAddress || defaultAssetIn[$bridgeKey as DestinationChains].address),
@@ -155,8 +161,8 @@ export const assetIn = derived(
   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens]) => {
     const $assetIn = $bridgableTokens.length
       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
-        _.find($customTokens || [], { address: $assetInAddress }) ||
-        defaultAssetIn[$bridgeKey]
+      _.find($customTokens || [], { address: $assetInAddress }) ||
+      defaultAssetIn[$bridgeKey]
       : null
     return $assetIn
   },

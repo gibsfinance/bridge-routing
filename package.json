@@ -46,6 +46,7 @@
   },
   "type": "module",
   "dependencies": {
+    "0xsequence": "^1.10.3",
     "@ethersproject/bignumber": "^5.7.0",
     "@iconify/svelte": "^4.0.2",
     "@square/svelte-store": "^1.0.18",

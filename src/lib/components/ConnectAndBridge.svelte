@@ -17,8 +17,17 @@
   import * as input from '$lib/stores/input'
   import { tokenBalance, tokenBridgeInfo, assetLink, approval } from '$lib/stores/chain-events'
   import { loading } from '$lib/stores/loading'
+  import { get } from 'svelte/store'
 
-  const { walletClient, assetIn, clientFromChain, bridgeKey, router, bridgeAddress, foreignBridgeAddress } = input
+  const {
+    walletClient,
+    assetIn,
+    clientFromChain,
+    bridgeKey,
+    router,
+    bridgeAddress,
+    // foreignBridgeAddress,
+  } = input
 
   let disabledByClick = false
   $: disabled =
@@ -31,6 +40,7 @@
     disabledByClick = true
     try {
       loading.increment('user')
+      const amountInBefore = get(input.amountIn)
       const txHash = await fn()
       if (!txHash) {
         return
@@ -39,6 +49,10 @@
         hash: txHash,
       })
       wipeTxHash(txHash)
+      if (fn === initiateBridge && amountInBefore === get(input.amountIn)) {
+        input.amountIn.set('')
+      }
+      input.incrementForcedRefresh()
       console.log(receipt)
     } finally {
       loading.decrement('user')
