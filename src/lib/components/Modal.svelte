@@ -162,15 +162,15 @@
     </ul>
     <div class="flex flex-row">
       <!-- if a whitelist is deemed necessary, then use this checkbox to add it -->
-      <!-- <label class="flex py-2 pl-6 pr-2 text-neutral-400 items-center">
+      <!-- <label class="flex py-2 pl-6 pr-2 text-slate-400 items-center">
         <span class="mr-3 text-sm">
-          <span class="font-medium text-neutral-400">Show all tokens</span>
+          <span class="font-medium text-slate-400">Show all tokens</span>
         </span>
         <input type="checkbox" class="toggle" bind:checked={showAllTokens} />
       </label> -->
-      <label class="flex py-2 pr-6 pl-6 text-neutral-400 items-center">
+      <label class="flex py-2 pr-6 pl-6 text-slate-400 items-center">
         <span class="mr-3 text-sm">
-          <span class="font-medium text-neutral-400">Show All Tokens</span>
+          <span class="font-medium text-slate-400">Show All Tokens</span>
         </span>
         <input type="checkbox" class="toggle" bind:checked={showAllChains} />
       </label>

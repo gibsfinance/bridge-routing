@@ -7,13 +7,14 @@
   export let rect = 'inset(0)'
   export let opacity = '1'
   export let brightness = '100%'
+  export let containerClassName = ''
 </script>
 
-<div class="h-content relative">
+<div class="h-content relative overflow-hidden">
   <div
     class="img"
     style="--blur: {blur}; --size: {size}; --brightness: {brightness}; --rect: {rect}; --opacity: {opacity}; min-height: {min_height}; height: {height}; background-image: url({image_url})">
-    <div class="relative flex justify-center w-full">
+    <div class="relative flex justify-center w-full {containerClassName}">
       <slot />
     </div>
   </div>
@@ -33,10 +34,10 @@
 
     &:before {
       position: absolute;
-      top: calc(var(--size) * -1);
-      right: calc(var(--size) * -1);
-      bottom: calc(var(--size) * -1);
-      left: calc(var(--size) * -1);
+      top: calc(var(--size) * -2);
+      right: calc(var(--size) * -2);
+      bottom: calc(var(--size) * -2);
+      left: calc(var(--size) * -2);
       border: inherit;
       border-color: transparent;
       background: inherit;

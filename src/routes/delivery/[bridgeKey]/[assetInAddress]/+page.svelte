@@ -7,16 +7,13 @@
   $: large = $windowStore.innerHeight > 600 && $windowStore.innerWidth >= 768
 </script>
 
-<BlurryImage height="{large ? 300 : 100}px" image_url={bridgeImage}>
-  <h1
-    class="text-white font-italiana z-10 absolute top-0 bottom-0 left-0 right-0 m-auto text-center content-center capitalize"
-    class:text-5xl={!large}
-    class:md:text-8xl={large}>
-    token delivery
-  </h1>
+<BlurryImage min_height="100vh" image_url={bridgeImage} blur="9px" brightness="50%">
+  <div class="m-auto max-w-lg flex flex-col text-lg -mx-8" class:container={large}>
+    <h1
+      class="text-white font-italiana z-10 top-0 bottom-0 left-0 right-0 m-auto text-center content-center capitalize text-4xl">
+      token delivery
+    </h1>
+    <Bridge />
+    <BridgeFooter />
+  </div>
 </BlurryImage>
-
-<div class="container m-auto max-w-lg flex flex-col">
-  <Bridge />
-  <BridgeFooter />
-</div>

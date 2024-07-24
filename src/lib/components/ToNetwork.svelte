@@ -6,6 +6,7 @@
   import { humanReadableNumber } from '$lib/stores/utils'
   import Loading from '$lib/components/Loading.svelte'
   import LockIcon from '$lib/components/LockIcon.svelte'
+  import { windowStore } from '$lib/stores/window'
   import UndercompensatedWarning from '$lib/components/warnings/Undercompensated.svelte'
   import FeeTypeToggle from '$lib/components/FeeTypeToggle.svelte'
   import {
@@ -108,6 +109,7 @@
   )
   $: networkOptions = Object.keys(chainsMetadata).filter((cId): cId is Chains => cId !== Chains.PLS)
   $: decimals = asset.decimals
+  $: large = $windowStore.innerHeight > 600 && $windowStore.innerWidth >= 768
   $: expectedAmountOut =
     $amountToBridge &&
     humanReadableNumber(
@@ -138,7 +140,9 @@
   <div class="bg-slate-100 mt-[1px] py-1 relative hover:z-10">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <span class="flex items-center">
-        <span class="mr-1">Delivery Fee</span>&nbsp;
+        <span class="mr-1"
+          >{#if large}Delivery Fee{:else}Deliv.{/if}</span
+        >&nbsp;
         <FeeTypeToggle
           active={$feeType}
           options={[

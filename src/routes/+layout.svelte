@@ -4,6 +4,7 @@
   import ModalLoader from '$lib/components/ModalLoader.svelte'
 
   import AuthProvider from '$lib/stores/auth/AuthProvider.svelte'
+  import Footer from '$lib/components/Footer.svelte'
   // import payMe from '$lib/images/pay-me.png'
   // import bridge from '$lib/images/bridge.jpeg'
   // import futureBridge from '$lib/images/future-bridge.webp'
@@ -26,6 +27,7 @@
     <Nav />
     <main class="flex flex-col box-border w-full h-fit bg-slate-50 mt-10">
       <slot />
+      <Footer />
     </main>
     <ModalLoader />
   </div>
