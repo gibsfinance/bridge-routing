@@ -41,16 +41,16 @@ export const multicallRead = async <T>({
       call.allowFailure
         ? r[i].success
           ? viem.decodeFunctionResult({
+              abi: call.abi || abi,
+              functionName: call.functionName,
+              data: r[i].returnData,
+            })
+          : r[i].returnData
+        : viem.decodeFunctionResult({
             abi: call.abi || abi,
             functionName: call.functionName,
             data: r[i].returnData,
-          })
-          : r[i].returnData
-        : viem.decodeFunctionResult({
-          abi: call.abi || abi,
-          functionName: call.functionName,
-          data: r[i].returnData,
-        }),
+          }),
     ) as T
   } catch (err) {
     console.log(target, calls, reads)
@@ -84,9 +84,8 @@ export const multicallErc20 = async ({
   }
 }
 
-export const nativeSymbol = (asset: types.Token | null, unwrap = false) => (
+export const nativeSymbol = (asset: types.Token | null, unwrap = false) =>
   asset ? (unwrap ? asset.symbol.slice(1) : asset.symbol) : ''
-)
 
 export const nativeName = (asset: types.Token | null, unwrap = false) =>
   asset ? (unwrap ? asset.name.split('Wrapped ').join('') : asset.name) : ''

@@ -4,14 +4,21 @@
   import { useAuth } from '$lib/stores/auth/methods'
   import { walletAccount } from '$lib/stores/auth/store'
   import { Chains } from '$lib/stores/auth/types'
-  import { amountToBridge, foreignData } from '$lib/stores/bridge-settings'
+  import {
+    amountToBridge,
+    foreignDataParam,
+    foreignCalldata,
+    // assetOut,
+    // amountAfterBridgeFee,
+  } from '$lib/stores/bridge-settings'
   import * as abis from '$lib/stores/abis'
   import * as viem from 'viem'
   import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input'
   import { tokenBalance, tokenBridgeInfo, assetLink, approval } from '$lib/stores/chain-events'
+  import { loading } from '$lib/stores/loading'
 
-  const { walletClient, assetIn, clientFromChain, bridgeKey, recipient, bridgeAddress } = input
+  const { walletClient, assetIn, clientFromChain, bridgeKey, router, bridgeAddress, foreignBridgeAddress } = input
 
   let disabledByClick = false
   $: disabled =
@@ -23,6 +30,7 @@
   const transactionButtonPress = (fn: () => Promise<viem.Hex | undefined>) => async () => {
     disabledByClick = true
     try {
+      loading.increment('user')
       const txHash = await fn()
       if (!txHash) {
         return
@@ -33,11 +41,15 @@
       wipeTxHash(txHash)
       console.log(receipt)
     } finally {
+      loading.decrement('user')
       disabledByClick = false
     }
   }
 
   const initiateBridge = async () => {
+    if (!$foreignCalldata || !$foreignDataParam) {
+      return
+    }
     // const foreignClient = clientFromChain(Chains.ETH).extend((client) => ({
     //   async traceCall(args: viem.CallParameters) {
     //     return client.request({
@@ -56,40 +68,40 @@
     //   },
     // }))
     // try {
-    //   const trace = await foreignClient.traceCall({
-    //     // abi: outputRouterAbi,
-    //     to: $router,
-    //     data: $foreignCalldata,
-    //     // functionName: 'onTokenBridged',
-    //     // args: [assets.ETH.output.address, $amountAfterBridgeFee, $foreignData],
-    //     // from: $foreignBridgeAddress,
-    //     stateOverride: [
-    //       {
-    //         address: $foreignBridgeAddress,
-    //         balance: 100n * 10n ** 18n,
-    //       },
-    //       {
-    //         address: assets[$bridgeKey].output.address,
-    //         stateDiff: [
-    //           {
-    //             slot: viem.keccak256(
-    //               viem.encodeAbiParameters(
-    //                 viem.parseAbiParameters('address, uint256'),
-    //                 [$router, 3n], // balance of is at 3rd storage slot on weth canonical
-    //               ),
+    // const trace = await foreignClient.traceCall({
+    //   // abi: outputRouterAbi,
+    //   to: $router,
+    //   data: $foreignCalldata,
+    //   // functionName: 'onTokenBridged',
+    //   // args: [assets.ETH.output.address, $amountAfterBridgeFee, $foreignDataParam],
+    //   // from: $foreignBridgeAddress,
+    //   stateOverride: [
+    //     {
+    //       address: $foreignBridgeAddress,
+    //       balance: 100n * 10n ** 18n,
+    //     },
+    //     {
+    //       address: $assetOut.address,
+    //       stateDiff: [
+    //         {
+    //           slot: viem.keccak256(
+    //             viem.encodeAbiParameters(
+    //               viem.parseAbiParameters('address, uint256'),
+    //               [$router, 3n], // balance of is at 3rd storage slot on weth canonical
     //             ),
-    //             value: viem.numberToHex($amountAfterBridgeFee),
-    //           },
-    //         ],
-    //       },
-    //     ],
-    //   })
-    //   console.log(trace)
+    //           ),
+    //           value: viem.numberToHex($amountAfterBridgeFee),
+    //         },
+    //       ],
+    //     },
+    //   ],
+    // })
+    // console.log(trace)
     //   await foreignClient.simulateContract({
-    //     abi: outputRouterAbi,
+    //     abi: abis.outputRouter,
     //     address: $router,
     //     functionName: 'onTokenBridged',
-    //     args: [assets.ETH.output.address, $amountAfterBridgeFee, $foreignData],
+    //     args: [$assetOut.address, $amountAfterBridgeFee, $foreignDataParam],
     //     account: $foreignBridgeAddress,
     //     stateOverride: [
     //       {
@@ -97,7 +109,7 @@
     //         balance: 100n * 10n ** 18n,
     //       },
     //       {
-    //         address: assets.ETH.output.address,
+    //         address: $assetOut.address,
     //         stateDiff: [
     //           {
     //             slot: viem.keccak256(
@@ -139,7 +151,10 @@
           address: $bridgeAddress,
           client: $walletClient!,
         })
-        return await bridgeContract.write.relayTokens([$assetIn.address, $recipient, $amountToBridge, account], options)
+        return await bridgeContract.write.relayTokensAndCall(
+          [$assetIn.address, $router, $amountToBridge, $foreignDataParam, account],
+          options,
+        )
       } else {
         // extra arg in transfer+call
         const contract = viem.getContract({
@@ -147,24 +162,30 @@
           address: $assetIn.address,
           client: $walletClient!,
         })
-        return await contract.write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData, account], options)
+        return await contract.write.transferAndCall(
+          [$bridgeAddress, $amountToBridge, $foreignDataParam, account],
+          options,
+        )
       }
     } else if ($bridgeKey === Chains.ETH) {
       if (tokenInfo.toForeign) {
         // native to pulsechain
         const bridgeContract = viem.getContract({
-          abi: abis.inputBridge,
+          abi: abis.inputBridgeETH,
           address: $bridgeAddress,
           client: $walletClient!,
         })
-        return await bridgeContract.write.relayTokens([$assetIn.address, $recipient, $amountToBridge], options)
+        return await bridgeContract.write.relayTokensAndCall(
+          [$assetIn.address, $router, $amountToBridge, $foreignDataParam],
+          options,
+        )
       } else {
         const contract = viem.getContract({
-          abi: abis.erc677,
+          abi: abis.erc677ETH,
           address: $assetIn.address,
           client: $walletClient!,
         })
-        return await contract.write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignData], options)
+        return await contract.write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignDataParam], options)
       }
     } else {
       throw new Error('unrecognized chain')
@@ -211,7 +232,7 @@
         class:shadow-md={!disabled}
         {disabled}
         on:click={sendInitiateBridge}>
-        <div class="size-5"></div>&nbsp;Bridge&nbsp;<Loading keepSpace class="my-[10px]" />
+        <div class="size-5"></div>&nbsp;Bridge&nbsp;<Loading key="user" keepSpace class="my-[10px]" />
       </button>
     {:else}
       <button
@@ -226,7 +247,7 @@
         <div class="size-5"></div>&nbsp;Approve {!$assetIn
           ? ''
           : humanReadableNumber($amountToBridge, $assetIn.decimals)}
-        {$assetIn?.symbol}&nbsp;<Loading keepSpace class="my-[10px]" />
+        {$assetIn?.symbol}&nbsp;<Loading key="user" keepSpace class="my-[10px]" />
       </button>
     {/if}
   {:else}

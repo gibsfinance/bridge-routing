@@ -16,7 +16,7 @@
   import * as input from '$lib/stores/input'
   import _ from 'lodash'
 
-  const { bridgeKey, bridgeClient, bridgableTokens, publicClient } = input
+  const { bridgeKey, bridgableTokens, publicClient } = input
 
   const dispatch = createEventDispatcher()
   const submit = (token: Token) => {
@@ -48,7 +48,10 @@
     modal?.close()
   }
   let searchValue = ''
-  let showAllTokens = false
+  // if you add a whitelist
+  // let showAllTokens = false
+  let showAllChains = false
+
   const getSubset = ($tokens: Token[], val: string, allTokens: boolean) => {
     let tkns = $tokens
     if (!val && !allTokens) {
@@ -72,13 +75,13 @@
           }
       tkns = tkns.filter(filter)
     }
-    if (showAllTokens) return tkns
+    if (showAllChains) return tkns
     const [inside, outside] = _.partition(tkns, onlyFromCurrentNetwork)
     return inside
   }
 
-  const onlyFromCurrentNetwork = (tkn) =>
-    tkn.chainId === 369 && !!tkn.extensions.bridgeInfo[Number($bridgeKey)]?.tokenAddress
+  const onlyFromCurrentNetwork = (tkn: Token) =>
+    tkn.chainId === 369 && !!tkn.extensions?.bridgeInfo?.[Number($bridgeKey)]?.tokenAddress
 
   const loadViaMulticall = async (target: viem.Hex | null) => {
     if (!target) {
@@ -101,7 +104,7 @@
     return custom
   }
   const tokens = customTokens.tokens
-  $: subset = getSubset($tokens.concat($bridgableTokens), searchValue, showAllTokens)
+  $: subset = getSubset($tokens.concat($bridgableTokens), searchValue, showAllChains)
   $: inputIsAddress = isAddress(searchValue)
   $: addButtonDisabled = !inputIsAddress || !!subset.length
   $: searchValueHex = inputIsAddress ? (searchValue as viem.Hex) : null
@@ -157,12 +160,20 @@
         </button>
       </li>
     </ul>
-    <label class="flex py-2 px-6 text-neutral-400 items-center">
-      <input type="checkbox" class="toggle" bind:checked={showAllTokens} />
-      <span class="ml-3 text-sm">
-        <span class="font-medium text-neutral-400">Show all tokens</span>
-      </span>
-    </label>
+    <div class="flex flex-row">
+      <!-- <label class="flex py-2 pl-6 pr-2 text-neutral-400 items-center">
+        <span class="mr-3 text-sm">
+          <span class="font-medium text-neutral-400">Show all tokens</span>
+        </span>
+        <input type="checkbox" class="toggle" bind:checked={showAllTokens} />
+      </label> -->
+      <label class="flex py-2 pr-6 pl-2 text-neutral-400 items-center">
+        <span class="mr-3 text-sm">
+          <span class="font-medium text-neutral-400">Show All Tokens</span>
+        </span>
+        <input type="checkbox" class="toggle" bind:checked={showAllChains} />
+      </label>
+    </div>
   </div>
   <form method="dialog" class="modal-backdrop">
     <button

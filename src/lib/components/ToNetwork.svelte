@@ -166,7 +166,7 @@
             : 'the percentage of bridged tokens after the bridge fee'}
         class:line-through={$feeType === input.FeeType.FIXED}
         on:click={focusOnInputChild}>
-        <Loading />
+        <Loading key="gas" />
         {#if $feeType !== input.FeeType.FIXED}
           <span class:hidden={$feeType !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><SmallInput
             value={input.fee}

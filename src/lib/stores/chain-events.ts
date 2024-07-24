@@ -2,7 +2,7 @@ import * as input from './input'
 import { multicallRead } from '$lib/utils'
 import * as abis from './abis'
 import * as viem from 'viem'
-import { derived, type Stores } from 'svelte/store'
+import { derived, type Readable } from 'svelte/store'
 import { loading } from './loading'
 import { walletAccount } from './auth/store'
 import { destinationChains } from './config'
@@ -12,7 +12,7 @@ import { chainsMetadata } from './auth/constants'
 
 export const destinationPublicClient = derived([input.bridgeKey], ([$bridgeKey]) => input.clientFromChain($bridgeKey))
 
-export const block = derived<Stores, null | viem.Block>(
+export const block = derived<[Readable<viem.PublicClient>], null | viem.Block>(
   [destinationPublicClient],
   ([$destinationPublicClient], set) => {
     loading.increment('gas')
@@ -79,19 +79,12 @@ export const tokenBalance = derived(
       if (cancelled) return
       set(balance)
     }
-    const account = viem.getAddress($walletAccount)
     const unwatch = $publicClient.watchContractEvent({
       abi: viem.erc20Abi,
       eventName: 'Transfer',
       address: $assetIn.address,
       onLogs: (logs) => {
-        if (
-          logs.find(
-            (l) =>
-              viem.getAddress(l.args.from as viem.Hex) === account ||
-              viem.getAddress(l.args.to as viem.Hex) === account,
-          )
-        ) {
+        if (logs.length) {
           getBalance()
         }
       },
@@ -211,7 +204,8 @@ const checkApproval = async ([$walletAccount, $bridgeAddress, $assetLink, $publi
     return 0n
   }
   if (!$assetLink || $assetLink.toHome) {
-    return 0n // irrelevant
+    // irrelevant because bridge minted the tokens
+    return 0n
   }
   const token = viem.getContract({
     abi: viem.erc20Abi,
@@ -222,7 +216,7 @@ const checkApproval = async ([$walletAccount, $bridgeAddress, $assetLink, $publi
   return allowance
 }
 
-export const assetLink = derived<Stores, TokenBridgeInfo>(
+export const assetLink = derived<[Readable<DestinationChains>, Readable<Token | null>], TokenBridgeInfo>(
   [input.bridgeKey, input.assetIn],
   ([$bridgeKey, $assetIn], set) => {
     if (!$assetIn) {
@@ -254,7 +248,7 @@ export const approval = derived(
         set(approval)
       })
     getApproval()
-    let unwatch: viem.WatchContractEventReturnType = () => { }
+    let unwatch: viem.WatchContractEventReturnType = () => {}
     if ($assetLink.toForeign) {
       const account = viem.getAddress($walletAccount)
       const bridgeAddr = viem.getAddress($bridgeAddress)
