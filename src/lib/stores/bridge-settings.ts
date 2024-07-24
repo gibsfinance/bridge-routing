@@ -359,7 +359,9 @@ export const bridgeCost = derived(
 )
 /** the number of tokens available after they have crossed the bridge */
 export const amountAfterBridgeFee = derived([amountToBridge, bridgeCost], ([$amountToBridge, $bridgeCost]) => {
-  return $amountToBridge - $bridgeCost
+  const afterFee = $amountToBridge - $bridgeCost
+  if (afterFee < 0n) return 0n
+  return afterFee
 })
 
 export const limitFromPercent = derived([fee, amountAfterBridgeFee], ([$fee, $amountAfterBridgeFee]) => {
@@ -439,12 +441,13 @@ export const foreignDataParam = derived(
 export const foreignCalldata = derived(
   [assetOut, amountAfterBridgeFee, feeDirectorStructEncoded],
   ([$assetOut, $amountAfterBridgeFee, $feeDirectorStructEncoded]) => {
-    const output = $assetOut
-    if (!output) return null
+    if (!$assetOut) {
+      return null
+    }
     return viem.encodeFunctionData({
       abi: abis.outputRouter,
       functionName: 'onTokenBridged',
-      args: [output.address, $amountAfterBridgeFee, $feeDirectorStructEncoded],
+      args: [$assetOut.address, $amountAfterBridgeFee, $feeDirectorStructEncoded],
     })
   },
 )
