@@ -14,7 +14,8 @@
     "format": "prettier --write ."
   },
   "engines": {
-    "node": "20.15.1"
+    "node": "20.15.1",
+    "pnpm": "9.6.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.33.0",
