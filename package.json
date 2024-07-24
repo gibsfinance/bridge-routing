@@ -13,9 +13,6 @@
     "lint": "prettier --check . && eslint \"./**/*.ts\" --ignore-pattern \".svelte-kit\" -c .eslintrc.mjs",
     "format": "prettier --write ."
   },
-  "engines": {
-    "node": "20.15.1"
-  },
   "devDependencies": {
     "@playwright/test": "^1.33.0",
     "@sveltejs/adapter-auto": "^3.2.0",
