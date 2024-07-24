@@ -161,6 +161,7 @@
       </li>
     </ul>
     <div class="flex flex-row">
+      <!-- if a whitelist is deemed necessary, then use this checkbox to add it -->
       <!-- <label class="flex py-2 pl-6 pr-2 text-neutral-400 items-center">
         <span class="mr-3 text-sm">
           <span class="font-medium text-neutral-400">Show all tokens</span>
