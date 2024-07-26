@@ -19,13 +19,22 @@
   @apply bg-slate-950;
 }
 
+.tooltip {
+  --tooltip-tail: 0.25rem;
+  /* @apply max-w-none; */
+}
+
+html {
+  @apply bg-slate-950;
+}
+
 body {
   min-height: 100vh;
   margin: 0;
   background-attachment: fixed;
   /* background-color: var(--color-bg-1); */
   background-size: 100vw 100vh;
-  @apply bg-slate-100;
+  @apply bg-slate-950;
   /* background-image: radial-gradient(50% 50% at 50% 50%,
 			rgba(255, 255, 255, 0.75) 0%,
 			rgba(255, 255, 255, 0) 100%),

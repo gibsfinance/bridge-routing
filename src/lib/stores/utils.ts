@@ -1,20 +1,51 @@
-import { formatUnits, parseUnits, type Hex } from 'viem'
-import type { chainsMetadata } from './auth/constants'
+import _ from 'lodash'
+import { formatUnits, parseUnits } from 'viem'
 
-export const humanReadableNumber = (num = 0n, decimals = 18) => {
-  return num === 0n ? '0.0' : formatUnits(num, decimals)
+export const countDecimals = (v: string) => {
+  if (!v) return 0
+  const [, d] = v.split('.')
+  return d ? d.length : 0
 }
-export type Asset = {
-  symbol: string
-  name: string
-  address: Hex
-  decimals: number
-  networkOrigination: keyof typeof chainsMetadata
-  hostedNetwork: keyof typeof chainsMetadata
-  native?: {
-    name: string
-    symbol: string
+
+export const humanReadableNumber = (num = 0n, decimals = 18, decimalCount: null | number = null, truncLen = false) => {
+  let n = num === 0n ? '0.0' : formatUnits(num, decimals)
+  const len = truncLen ? Math.min(n.length, 20) : n.length
+  // console.log(num, n, len)
+  n = n.slice(0, len)
+  // this line should only be hit when non zero values are passed
+  if (n[n.length - 1] === '.') {
+    n = n.slice(0, n.length - 1)
   }
+  if (decimalCount !== null) {
+    const [i, d] = n.split('.')
+    // console.log(i, d)
+    if (d) {
+      let dec = d
+      if (dec.length < decimalCount) {
+        dec = _.padEnd(dec, decimalCount, '0')
+      }
+      n = `${i}.${dec}`
+    } else {
+      n = i
+    }
+  }
+  return numberWithCommas(n)
+}
+
+export const stripNonNumber = (n: string) => {
+  return n
+    .replace(/[^0-9.]/g, '')
+    .split('.')
+    .slice(0, 2)
+    .join('.')
+}
+
+export const isZero = (n: string) => !n || !n.replace(/[0.]/g, '').length
+
+export function numberWithCommas(x: string) {
+  const parts = x.toString().split('.')
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return parts.join('.')
 }
 
 export const decimalValidation = (v: string, decimals = 18) => {

@@ -1,39 +1,52 @@
 <script lang="ts">
   import '$lib/styles/global.css'
-  import Nav from '$lib/components/Nav.svelte'
+  import { onMount } from 'svelte'
 
-  import AuthProvider from '$lib/stores/auth/AuthProvider.svelte'
-  // import payMe from '$lib/images/pay-me.png'
-  // import bridge from '$lib/images/bridge.jpeg'
-  // import futureBridge from '$lib/images/future-bridge.webp'
-  // import fingers from '$lib/images/1FAF0.svg'
-  // const preloadImageUrls = [payMe, bridge, futureBridge, fingers]
+  import { firstMount } from '$lib/stores/window'
+  import Nav from '$lib/components/Nav.svelte'
+  import Footer from '$lib/components/Footer.svelte'
+  import Loader from '$lib/components/Loader.svelte'
+  onMount(() => {
+    firstMount.set(true)
+  })
 </script>
 
 <svelte:head>
-  <!-- {#each preloadImageUrls as image}
-    <link rel="preload" as="image" href={image} />
-  {/each} -->
   <meta name="robots" content="noindex nofollow" />
   <html lang="en" />
 </svelte:head>
 
-<!-- <svelte:window on:resize={updateWindow} /> -->
-
-<AuthProvider>
-  <div class="app bg-slate-950">
-    <Nav />
-    <main class="flex flex-col box-border w-full h-fit bg-slate-50 mt-10">
+<!--
+  importing in this way allows the scripts to be loaded in parallel
+  and for us to show a loader until loading is complete
+-->
+<div class="app bg-slate-950">
+  {#await import('$lib/pages/Delivery.svelte')}
+    <div class="app">
+      <Nav />
+      <main class="flex flex-col box-border w-full min-h-screen bg-slate-950 text-white mt-10">
+        <div class="flex grow items-center justify-center">
+          <Loader loaded={false} size="lg" />
+        </div>
+        <Footer />
+      </main>
+    </div>
+  {:then c}
+    <svelte:component this={c.default}>
       <slot />
-    </main>
-  </div>
-</AuthProvider>
+    </svelte:component>
+  {/await}
+</div>
 
 <style>
   .app {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+  }
+  :global(.tooltip::before) {
+    @apply max-w-96 whitespace-pre-line;
   }
   :global(.tooltip.tooltip-top.tooltip-left-toward-center::before) {
     @apply -translate-x-0 right-0 left-auto;

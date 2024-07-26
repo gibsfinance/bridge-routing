@@ -1,6 +1,7 @@
 import { sveltekit } from '@sveltejs/kit/vite'
 import { defineConfig } from 'vitest/config'
 import pkg from './package.json'
+import { ssp } from 'sveltekit-search-params/plugin'
 
 // import nodePolyfills from 'rollup-plugin-polyfill-node'
 
@@ -9,6 +10,7 @@ import pkg from './package.json'
 
 export default defineConfig({
   plugins: [
+    ssp(),
     sveltekit(),
     // development, &&
     // nodePolyfills({

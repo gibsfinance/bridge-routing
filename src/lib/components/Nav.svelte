@@ -1,19 +1,18 @@
 <script lang="ts">
+  import { type as modalType } from '$lib/stores/modal'
+  import VersionedLink from '$lib/components/VersionedLink.svelte'
   import { goto } from '$app/navigation'
   import gibs from '$lib/images/1FAF0.svg'
   import { onMount } from 'svelte'
   import Icon from '@iconify/svelte'
   import Loading from './Loading.svelte'
   import { page } from '$app/stores'
-
-  let bridgeUrl = ''
+  import { bridgeKey } from '$lib/stores/input'
+  import { Chains } from '$lib/stores/auth/types'
+  import { domains } from '$lib/stores/window'
 
   onMount(() => {
-    fetch('https://bridge.pulsechain.com/version.json')
-      .then((res) => res.json())
-      .then((res) => {
-        bridgeUrl = res.ipfs_gateways[0]
-      })
+    domains.add('bridge.pulsechain.com')
   })
 
   const gotoHome = async () => {
@@ -21,6 +20,9 @@
   }
   const gotoNativeDelivery = async () => {
     await goto('/delivery')
+  }
+  const showRPCConfig = () => {
+    modalType.set('rpc')
   }
 </script>
 
@@ -34,21 +36,51 @@
         on:click={gotoHome}
         class="link leading-8 pr-2 text-white font-italiana uppercase flex flex-row">
         <img src={gibs} alt="a yellow hand with index finger and thub rubbing together" class="size-8" />
-        <span>Gibs&nbsp;</span>
+        <span class="leading-8">Gibs&nbsp;</span>
         <Loading />
       </span>
-      <div>
-        <ul class="flex flex-row">
+      <div class="items-center flex">
+        <ul class="flex flex-row items-center">
           <li>
-            <a class="h-8 w-8 py-1 px-2 text-white flex items-center" href="{bridgeUrl}/#/transactions" target="_blank">
-              <button>
-                <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
-              </button>
-            </a>
+            {#if $bridgeKey === Chains.ETH}
+              <VersionedLink domain="bridge.pulsechain.com" path="/#/transactions" let:direct let:path>
+                <a aria-label="to recent bridge transactions on ethereum" href="{direct}{path}" target="_blank">
+                  <button
+                    type="button"
+                    name="transactions"
+                    class="h-10 w-10 text-white flex items-center justify-center">
+                    <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
+                  </button>
+                </a>
+              </VersionedLink>
+            {:else}
+              <a
+                aria-label="to recent bridge transactions on bsc"
+                href="https://tokensex.link/explorer"
+                target="_blank">
+                <button type="button" name="transactions" class="h-10 w-10 text-white flex items-center justify-center">
+                  <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
+                </button>
+              </a>
+            {/if}
+          </li>
+          <li>
+            <button
+              type="button"
+              name="rpc-settings"
+              class="h-10 w-10 text-white flex items-center justify-center"
+              on:click={showRPCConfig}>
+              <Icon icon="gravity-ui:plug-connection" />
+            </button>
           </li>
           {#if !$page.route.id?.includes('/delivery')}
             <li>
-              <button class="link" on:keypress={gotoNativeDelivery} on:click={gotoNativeDelivery}>🌁</button>
+              <button
+                type="button"
+                name="bridge"
+                class="link"
+                on:keypress={gotoNativeDelivery}
+                on:click={gotoNativeDelivery}>🌁</button>
             </li>
           {/if}
         </ul>

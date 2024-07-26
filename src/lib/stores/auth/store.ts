@@ -1,69 +1,41 @@
-import { derived, writable, type Readable } from 'svelte/store'
-import {
-  createPublicClient,
-  type Address,
-  type WalletClient,
-  http,
-  getContract,
-  multicall3Abi,
-  type PublicClient,
-} from 'viem'
+import { derived, type Readable } from 'svelte/store'
+import { type Address, type WalletClient, type PublicClient } from 'viem'
 import { Chains } from './types'
-import { chainsMetadata } from './constants'
 import { normalize } from 'viem/ens'
-import { destination } from '../bridge-settings'
-
-export const activeChain = writable<Chains>(Chains.PLS)
-export const walletClient = writable<WalletClient | undefined>()
+import * as input from '../input'
 
 export const walletAccount = derived<[Readable<WalletClient | undefined>], Address | undefined>(
-  [walletClient],
+  [input.walletClient],
   ([$walletClient], set) => {
     if (!$walletClient) {
       set(undefined)
       return undefined
     }
 
-    $walletClient?.requestAddresses().then((accounts) => {
+    $walletClient?.requestAddresses().then(async (accounts) => {
       const [account] = accounts
 
       set(account)
-      destination.set(account)
+      input.recipient.set(account)
     })
   },
 )
 
-export const clientFromChain = ($activeChain: Chains) => {
-  return createPublicClient({
-    chain: chainsMetadata[$activeChain],
-    transport: http(),
-  })
-}
-
-export const publicClient = derived(activeChain, clientFromChain)
-export const multicall = derived([activeChain, publicClient], ([$activeChain, $publicClient]) => {
-  const metadata = chainsMetadata[$activeChain]
-  return getContract({
-    abi: multicall3Abi,
-    client: $publicClient,
-    address: metadata.contracts!.multicall3!.address,
-  })
-})
-
 export const accountENS = derived([walletAccount], ([$walletAccount], set) => {
-  if (!$walletAccount) return undefined
+  if (!$walletAccount) {
+    return undefined
+  }
 
   /** ENS resolver exists just on the mainnet  */
-  const ethPublicClient = createPublicClient({
-    chain: chainsMetadata[Chains.ETH],
-    transport: http(),
-  })
+  const ethPublicClient = input.clientFromChain(Chains.ETH)
 
   ethPublicClient.getEnsName({ address: $walletAccount }).then((ens) => set(ens))
 })
 
 export const ensToAddress = async (publicClient: PublicClient, ens: string) => {
-  if (!publicClient.chain?.contracts?.ensRegistry) return null
+  if (!publicClient.chain?.contracts?.ensRegistry) {
+    return null
+  }
   return publicClient.getEnsAddress({
     name: normalize(ens),
   })

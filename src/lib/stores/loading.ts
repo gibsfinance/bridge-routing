@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 
 const loadingCounter = writable({
   total: 0,
@@ -8,10 +8,17 @@ const loadingCounter = writable({
   },
   isResolved(key?: string | string[]) {
     if (!key) return this.resolved
-    if (Array.isArray(key)) key.reduce((total, k) => total + (this.categories[k] || 0), 0) === 0
+    if (Array.isArray(key)) return key.reduce((total, k) => total + (this.categories[k] || 0), 0) === 0
     return !this.categories[key as string]
   },
 })
+
+setInterval(() => {
+  const c = get(loadingCounter)
+  if (!c.isResolved()) {
+    console.log(c)
+  }
+}, 4_000)
 
 export const loading = {
   ...loadingCounter,
@@ -37,7 +44,4 @@ export const loading = {
       return l
     })
   },
-  // resolved: (key?: string) => {
-  //   return key ? !get(loadingCounter).categories[key] : !get(loadingCounter).total
-  // },
 }

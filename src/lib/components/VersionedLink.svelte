@@ -1,24 +1,19 @@
 <script lang="ts">
+  import { directDomain, domains } from '$lib/stores/window'
   import Icon from '@iconify/svelte'
-  import { onMount } from 'svelte'
 
   export let domain = 'bridge.pulsechain.com'
   export let path = ''
-  let directUrl = ''
-  const getDirectUrl = () => {
-    fetch(`https://${domain}/version.json`)
-      .then((res) => res.json())
-      .then((j) => {
-        directUrl = j.ipfs_gateways[0]
-      })
-  }
-  onMount(() => {
-    getDirectUrl()
-  })
+  $: domains.add(domain)
+  $: d = $directDomain.get(domain) || domain
 </script>
 
-<span class="inline whitespace-pre">
-  <a class="underline" target="_blank" href="https://{domain}{path}">{domain}</a><a
-    href={directUrl + path}
-    target="_blank"><Icon icon="gis:direct" class="inline mx-1" height="2em" width="2em" /></a>
-</span>
+<slot direct={d} {path}>
+  <span class="inline whitespace-pre">
+    <a class="underline" aria-label="to indexed page for {domain}" target="_blank" href="https://{domain}{path}"
+      >{domain}</a>
+    <a href="{d}{path}" aria-label="direct to ipfs page for {domain}" target="_blank">
+      <Icon icon="gis:direct" class="inline mx-1" height="2em" width="2em" />
+    </a>
+  </span>
+</slot>

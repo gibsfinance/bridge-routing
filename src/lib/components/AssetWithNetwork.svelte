@@ -1,22 +1,19 @@
 <script lang="ts">
-  import type { Asset } from '$lib/stores/utils'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { imageRoot } from '$lib/config'
+  import type { Token } from '$lib/types'
+  import type { DestinationChains } from '$lib/stores/auth/types'
+  import TokenIcon from './TokenIcon.svelte'
+  import { assetSources, getOriginationChainId } from '$lib/stores/bridge-settings'
 
-  export let asset!: Asset
+  export let asset!: Token
   export let tokenSize = 10
   export let networkSize = 5
-
-  $: chain = chainsMetadata[asset.hostedNetwork]
-  $: remap = new Map<string, string>([
-    ['0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C', `1/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2`],
-  ])
-
-  $: remapped = remap.get(asset.address) || `${asset.address}`
+  $: originationChainId = getOriginationChainId(asset)
+  $: chain = chainsMetadata[`0x${originationChainId.toString(16)}` as DestinationChains]
 </script>
 
 <span class="token-image-container relative" style="--token-size: {tokenSize};">
-  <img src="{imageRoot}/image/{chain.id}/{remapped}" alt="" class="rounded-full overflow-hidden shadow-md" />
+  <TokenIcon visible size={tokenSize * 4} src={assetSources(asset)} class="rounded-full overflow-hidden shadow-md" />
   <img
     class="network-image absolute -bottom-1 -right-1 bg-slate-100 rounded-full"
     style="--network-size: {networkSize};"

@@ -1,37 +1,40 @@
 <script lang="ts">
-  import type { VisualChain } from '$lib/stores/auth/types'
-  import { formatEther } from 'viem'
+  import { humanReadableNumber } from '$lib/stores/utils'
+  import type { Chains, VisualChain } from '$lib/stores/auth/types'
   import NetworkImage from './NetworkImage.svelte'
   import { createEventDispatcher } from 'svelte'
-  import type { Asset } from '$lib/stores/utils'
+  import * as utils from '$lib/utils'
   import Loading from './Loading.svelte'
-  export let balance = 0n
-  export let asset!: Asset
+  import type { Token } from '$lib/types'
+  export let balance: bigint | null = null
+  export let asset!: Token
   export let network!: VisualChain
+  export let networkOptions: Chains[] = []
   export let showMax = false
-  export let native = false
+  export let unwrap = false
   $: disableMax = balance === 0n
   const dispatch = createEventDispatcher()
   const maxOutBalance = () => {
     if (disableMax) return
     dispatch('max-balance')
   }
+  $: bal = balance || 0n
 </script>
 
 <div class="flex flex-row justify-between">
   <div class="flex flex-row">
-    <NetworkImage {network} />
-    <span class="leading-8 ml-1">{network.name}</span>
+    <NetworkImage {network} {networkOptions} />
   </div>
   <div class="flex flex-row">
     <div
       class="text-xs leading-8 tooltip tooltip-left flex items-end self-end"
       class:mx-2={showMax}
       class:ml-2={!showMax}
-      data-tip={native ? asset.native?.name || asset.name : asset.name}>
-      <Loading key={['balance', 'minAmount']}>{balance == 0n ? '0.0' : formatEther(balance)}</Loading>&nbsp;{native
-        ? asset.native?.symbol || asset.symbol
-        : asset.symbol}
+      data-tip={utils.nativeName(asset, unwrap)}>
+      <Loading key="balance">{humanReadableNumber(bal, asset?.decimals || 18)}</Loading>&nbsp;{utils.nativeSymbol(
+        asset,
+        unwrap,
+      )}
     </div>
     {#if showMax}
       <div class="text-white leading-8">
