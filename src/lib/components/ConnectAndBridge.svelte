@@ -274,7 +274,11 @@
 {#each hashes as txHash}
   <div class="toast mb-16">
     <div class="alert alert-info bg-purple-400 text-slate-100">
-      <a href="{chainsMetadata[Chains.PLS].blockExplorers?.default.url}/tx/{txHash}" class="underline" target="_blank">
+      <a
+        href="{chainsMetadata[Chains.PLS].blockExplorers?.default.url}/tx/{txHash}"
+        class="underline"
+        aria-label="transaction details"
+        target="_blank">
         Submitted: {txHash.slice(0, 6)}...{txHash.slice(-4)}
       </a>
     </div>

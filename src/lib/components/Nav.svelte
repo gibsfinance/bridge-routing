@@ -44,28 +44,43 @@
           <li>
             {#if $bridgeKey === Chains.ETH}
               <VersionedLink domain="bridge.pulsechain.com" path="/#/transactions" let:direct let:path>
-                <a href="{direct}{path}" target="_blank">
-                  <button class="h-10 w-10 text-white flex items-center justify-center">
+                <a aria-label="to recent bridge transactions on ethereum" href="{direct}{path}" target="_blank">
+                  <button
+                    type="button"
+                    name="transactions"
+                    class="h-10 w-10 text-white flex items-center justify-center">
                     <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
                   </button>
                 </a>
               </VersionedLink>
             {:else}
-              <a href="https://tokensex.link/explorer" target="_blank">
-                <button class="h-10 w-10 text-white flex items-center justify-center">
+              <a
+                aria-label="to recent bridge transactions on bsc"
+                href="https://tokensex.link/explorer"
+                target="_blank">
+                <button type="button" name="transactions" class="h-10 w-10 text-white flex items-center justify-center">
                   <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
                 </button>
               </a>
             {/if}
           </li>
           <li>
-            <button class="h-10 w-10 text-white flex items-center justify-center" on:click={showRPCConfig}>
+            <button
+              type="button"
+              name="rpc-settings"
+              class="h-10 w-10 text-white flex items-center justify-center"
+              on:click={showRPCConfig}>
               <Icon icon="gravity-ui:plug-connection" />
             </button>
           </li>
           {#if !$page.route.id?.includes('/delivery')}
             <li>
-              <button class="link" on:keypress={gotoNativeDelivery} on:click={gotoNativeDelivery}>🌁</button>
+              <button
+                type="button"
+                name="bridge"
+                class="link"
+                on:keypress={gotoNativeDelivery}
+                on:click={gotoNativeDelivery}>🌁</button>
             </li>
           {/if}
         </ul>

@@ -157,6 +157,7 @@
             input.fee.set($desiredExcessCompensationPercentage)
           }} />{#if $feeType === input.FeeType.PERCENT}<button
             type="button"
+            name="toggle-delivery-fee"
             class="flex px-1"
             on:click={() => {
               deliveryFeeLocked = !deliveryFeeLocked
@@ -164,6 +165,8 @@
           >{/if}
       </span>
       <button
+        type="button"
+        name="fee-amount"
         class="flex flex-row strike tooltip tooltip-top tooltip-left-toward-center items-center"
         data-tip={$feeType === input.FeeType.FIXED
           ? 'Fee uses fixed value defined in cost limit'
@@ -188,6 +191,8 @@
   <div class="bg-slate-100 mt-[1px] py-1 relative hover:z-10">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <button
+        type="button"
+        name="toggle-cost-limit"
         class="tooltip tooltip-top tooltip-right-toward-center"
         data-tip="Allows cost limit to float with the destination chain's base fee. While unlocked the number in the ui may change. Once a transaction is sent, the number in that transaction's calldata is fixed"
         on:click={() => {
@@ -197,6 +202,8 @@
             locked={costLimitLocked} />{/if}
       </button>
       <button
+        type="button"
+        name="cost-limit"
         class="tooltip tooltip-top tooltip-left-toward-center flex flex-row items-end self-end"
         data-tip={$feeType === input.FeeType.FIXED || $feeType === input.FeeType.PERCENT
           ? 'The fixed fee to tip if the validator does the work'
@@ -220,8 +227,10 @@
   <div class="rounded-b-lg bg-slate-100 mt-[1px] py-1 hover:z-10">
     <div class="flex flex-row px-3 leading-10 justify-between">
       <div class="flex flex-row">
-        <button class="flex mr-2" on:click={() => showToolbox('settings')}>⚙️</button>
-        <button class="flex" on:click={() => showToolbox('details')}>📐</button>
+        <button type="button" name="transaction-settings" class="flex mr-2" on:click={() => showToolbox('settings')}
+          >⚙️</button>
+        <button type="button" name="transaction-details" class="flex" on:click={() => showToolbox('details')}
+          >📐</button>
       </div>
       <span
         class="tooltip text-xl sm:text-2xl leading-10 flex items-center self-center tooltip-top tooltip-left-toward-center"

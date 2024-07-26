@@ -20,17 +20,25 @@
     <Icon icon="entypo:info" />
   </button>
 
-  <a href="https://github.com/orgs/gibsfinance/repositories" target="_blank" class="mr-2">
+  <a
+    aria-label="github repository"
+    href="https://github.com/orgs/gibsfinance/repositories"
+    target="_blank"
+    class="mr-2">
     <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="fe:github-alt" height="1.5em" width="1.5em" />
     </button>
   </a>
-  <a href="https://{domain}.io/address/{$router}#code" target="_blank" class="mr-2">
+  <a
+    aria-label="router code on block explorer"
+    href="https://{domain}.io/address/{$router}#code"
+    target="_blank"
+    class="mr-2">
     <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon {icon} height="1.5em" width="1.5em" />
     </button>
   </a>
-  <a href="https://x.com/gibsfinance" target="_blank" class="mr-2">
+  <a aria-label="x.com profile" href="https://x.com/gibsfinance" target="_blank" class="mr-2">
     <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="ri:twitter-fill" height="1.25em" width="1.25em" />
     </button>
