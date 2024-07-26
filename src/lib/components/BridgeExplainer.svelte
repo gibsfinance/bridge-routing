@@ -17,12 +17,12 @@
       <p class="text-left">
         Introducing "Token Delivery" for PulseChain to EVM Omnibridges. With a minimal implementations, and commitment
         to security, <a href="delivery" class="underline">gibs.finance/delivery</a>
-        simplifies bridging to Ethereum while supporting user privacy.
+        simplifies bridging to Ethereum and Binance Smart Chain while supporting user privacy.
       </p>
       <p class="mt-4 sm:mt-8 text-left">
         Through its minimalist design, gibs.finance eliminates the need for users to pre-fund recipient wallets,
         reducing associated expenses and streamlining transactions. This unique feature ensures gas savings and enhances
-        user privacy by eliminating the need to fund the address on Ethereum from other addresses.
+        user privacy by eliminating the need to fund the address from other addresses.
       </p>
       <p class="mt-4 sm:mt-8 text-left">
         At Gibs.finance, user security is paramount. The contracts keep users in control of their funds at all times.
