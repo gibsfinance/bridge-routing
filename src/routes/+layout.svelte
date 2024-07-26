@@ -5,11 +5,16 @@
 
   import AuthProvider from '$lib/stores/auth/AuthProvider.svelte'
   import Footer from '$lib/components/Footer.svelte'
+  import { firstMount } from '$lib/stores/window'
+  import { onMount } from 'svelte'
   // import payMe from '$lib/images/pay-me.png'
   // import bridge from '$lib/images/bridge.jpeg'
   // import futureBridge from '$lib/images/future-bridge.webp'
   // import fingers from '$lib/images/1FAF0.svg'
   // const preloadImageUrls = [payMe, bridge, futureBridge, fingers]
+  onMount(() => {
+    firstMount.set(true)
+  })
 </script>
 
 <svelte:head>

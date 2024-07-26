@@ -23,6 +23,7 @@ import { defaultAssetIn, destinationChains, nativeAssetOut } from './config'
 import type { Token, TokenList } from '$lib/types'
 import _ from 'lodash'
 import { chainsMetadata } from './auth/constants'
+import { windowLoaded } from './window'
 
 export const forcedRefresh = writable(0n)
 
@@ -116,10 +117,12 @@ export const bridgeKey = derived(
   ([$page]) => (Chains[$page.params.bridgeKey as keyof typeof Chains] || Chains.ETH) as DestinationChains,
 )
 
-export const bridgableTokens = writable<Token[]>([])
-;(() => {
-  const set = (tokens: Token[]) => {
-    bridgableTokens.set(tokens)
+export const bridgableTokens = derived([windowLoaded], ([$windowLoaded], set) => {
+  let cancelled = false
+  console.log($windowLoaded)
+  if (!$windowLoaded) {
+    set([])
+    return
   }
   loading.increment()
   Promise.all([
@@ -131,6 +134,7 @@ export const bridgableTokens = writable<Token[]>([])
     .then(async (results) => {
       const responses = await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
       loading.decrement()
+      if (cancelled) return
       const list = _(responses)
         .map('tokens')
         .flatten()
@@ -160,7 +164,10 @@ export const bridgableTokens = writable<Token[]>([])
       loading.decrement()
       throw err
     })
-})()
+  return () => {
+    cancelled = true
+  }
+}, [] as Token[])
 
 export const assetInAddress = derived([bridgeKey, page], ([$bridgeKey, $page]) =>
   getAddress($page.params.assetInAddress || defaultAssetIn[$bridgeKey as DestinationChains].address),
@@ -171,8 +178,8 @@ export const assetIn = derived(
   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens]) => {
     const $assetIn = $bridgableTokens.length
       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
-        _.find($customTokens || [], { address: $assetInAddress }) ||
-        defaultAssetIn[$bridgeKey]
+      _.find($customTokens || [], { address: $assetInAddress }) ||
+      defaultAssetIn[$bridgeKey]
       : null
     // console.log($assetIn)
     return $assetIn

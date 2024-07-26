@@ -8,15 +8,12 @@
   import { page } from '$app/stores'
   import { bridgeKey } from '$lib/stores/input'
   import { Chains } from '$lib/stores/auth/types'
+  import { domains } from '$lib/stores/window'
 
   let bridgeUrl = ''
 
   onMount(() => {
-    fetch('https://bridge.pulsechain.com/version.json')
-      .then((res) => res.json())
-      .then((res) => {
-        bridgeUrl = res.ipfs_gateways[0]
-      })
+    domains.add('bridge.pulsechain.com')
   })
 
   const gotoHome = async () => {

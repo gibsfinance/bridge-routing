@@ -3,6 +3,7 @@ import * as imageLinks from './image-links'
 import type { Token, TokenList } from '$lib/types'
 import { Chains, Provider, type DestinationChains } from './auth/types'
 import { derived } from 'svelte/store'
+import { windowLoaded, windowStore } from './window'
 
 export const uniV2Settings = {
   [Chains.PLS]: {
@@ -89,13 +90,21 @@ export const defaultAssetIn = {
 } as Record<DestinationChains, Token>
 
 export const whitelisted = derived(
-  [],
-  (_a, set) => {
+  [windowLoaded],
+  ([$windowLoaded], set) => {
+    let cancelled = false
+    if (!$windowLoaded) {
+      set(new Set<Hex>([]))
+      return
+    }
     fetch(imageLinks.list('/pulsex'))
       .then(async (res) => (await res.json()) as TokenList)
       .then(({ tokens }) => {
+        if (cancelled) return
         set(new Set<Hex>(tokens.map((tkn) => getAddress(tkn.address))))
       })
+    return () => {
+      cancelled = true
+    }
   },
-  new Set<Hex>([]),
 )
