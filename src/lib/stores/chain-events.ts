@@ -2,7 +2,14 @@ import * as input from './input'
 import { multicallRead } from '$lib/utils'
 import * as abis from './abis'
 import {
-  type PublicClient, type Block, getContract, erc20Abi, type Hex, zeroAddress, type WatchContractEventReturnType, getAddress
+  type PublicClient,
+  type Block,
+  getContract,
+  erc20Abi,
+  type Hex,
+  zeroAddress,
+  type WatchContractEventReturnType,
+  getAddress,
 } from 'viem'
 import { derived, type Readable } from 'svelte/store'
 import { loading } from './loading'
@@ -257,7 +264,7 @@ export const approval = derived(
         set(approval)
       })
     getApproval()
-    let unwatch: WatchContractEventReturnType = () => { }
+    let unwatch: WatchContractEventReturnType = () => {}
     if ($assetLink.toForeign) {
       const account = getAddress($walletAccount)
       const bridgeAddr = getAddress($bridgeAddress)
@@ -268,9 +275,7 @@ export const approval = derived(
         onLogs: (logs) => {
           if (
             logs.find(
-              (l) =>
-                getAddress(l.args.owner as Hex) === account ||
-                getAddress(l.args.spender as Hex) === bridgeAddr,
+              (l) => getAddress(l.args.owner as Hex) === account || getAddress(l.args.spender as Hex) === bridgeAddr,
             )
           ) {
             getApproval()

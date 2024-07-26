@@ -9,7 +9,7 @@
   <h4 class="text-2xl mt-4">protect your privacy, keep custody of your tokens</h4>
 </div>
 
-<BlurryImage image_url={futureBridge} blur="9px" brightness="75%" min_height="auto">
+<BlurryImage image_url="url({futureBridge})" blur="9px" brightness="75%" min_height="auto">
   <div class="text-white">
     <div class="container m-auto text-xl text-center drop-shadow-lg md:max-w-3xl">
       <p class="text-left">

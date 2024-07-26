@@ -2,7 +2,18 @@ import { derived, get, type Readable } from 'svelte/store'
 import * as input from '$lib/stores/input'
 import { derived as asyncDerived } from './async'
 import {
-  zeroAddress, type Hex, type PublicClient, getContract, erc20Abi, formatUnits, parseUnits, isAddress, encodeAbiParameters, concatHex, encodeFunctionData, getAddress
+  zeroAddress,
+  type Hex,
+  type PublicClient,
+  getContract,
+  erc20Abi,
+  formatUnits,
+  parseUnits,
+  isAddress,
+  encodeAbiParameters,
+  concatHex,
+  encodeFunctionData,
+  getAddress,
 } from 'viem'
 import { walletAccount } from './auth/store'
 import { Chains, type DestinationChains } from './auth/types'
@@ -75,24 +86,13 @@ export const assetOut = asyncDerived(
 )
 
 export const foreignTokenBalance = derived<
-  [
-    Readable<Hex | undefined>,
-    Readable<PublicClient>,
-    Readable<DestinationChains>,
-    Readable<Token>,
-    Readable<boolean>,
-  ],
+  [Readable<Hex | undefined>, Readable<PublicClient>, Readable<DestinationChains>, Readable<Token>, Readable<boolean>],
   null | bigint
 >(
   [walletAccount, chainEvents.destinationPublicClient, input.bridgeKey, assetOut, input.unwrap],
   ([$walletAccount, $publicClient, $bridgeKey, $assetOut, $unwrap], set) => {
     let cancelled = false
-    if (
-      !$assetOut ||
-      $assetOut.address === zeroAddress ||
-      !$walletAccount ||
-      $walletAccount === zeroAddress
-    ) {
+    if (!$assetOut || $assetOut.address === zeroAddress || !$walletAccount || $walletAccount === zeroAddress) {
       set(0n)
       return
     }
@@ -139,11 +139,7 @@ export const foreignTokenBalance = derived<
         address: $assetOut.address,
         onLogs: (logs) => {
           if (
-            logs.find(
-              (l) =>
-                getAddress(l.args.from as Hex) === account ||
-                getAddress(l.args.to as Hex) === account,
-            )
+            logs.find((l) => getAddress(l.args.from as Hex) === account || getAddress(l.args.to as Hex) === account)
           ) {
             getBalance().catch(console.error)
           }
@@ -314,15 +310,15 @@ export const priceCorrective = derived(
     Promise.all([
       $bridgeKey === Chains.ETH && $assetLink && $assetLink.toHome && $assetOut.address !== zeroAddress
         ? readAmountOut(
-          {
-            $assetInAddress: $assetOut.address,
-            $oneTokenInt: toBridge,
-            chain: $bridgeKey,
-            $bridgeKey,
-          },
-          $latestBaseFeePerGas,
-          [[$assetIn.address, uniV2Settings[$bridgeKey].wNative]],
-        )
+            {
+              $assetInAddress: $assetOut.address,
+              $oneTokenInt: toBridge,
+              chain: $bridgeKey,
+              $bridgeKey,
+            },
+            $latestBaseFeePerGas,
+            [[$assetIn.address, uniV2Settings[$bridgeKey].wNative]],
+          )
         : ([[]] as FetchResult[]),
       readAmountOut(
         {
@@ -504,20 +500,20 @@ export const calldata = derived(
     if (!$foreignDataParam) return null
     return $bridgeKey === Chains.ETH
       ? encodeFunctionData({
-        abi: abis.erc677ETH,
-        functionName: 'transferAndCall',
-        args: [destinationChains[$bridgeKey].homeBridge, $amountToBridge, $foreignDataParam],
-      })
+          abi: abis.erc677ETH,
+          functionName: 'transferAndCall',
+          args: [destinationChains[$bridgeKey].homeBridge, $amountToBridge, $foreignDataParam],
+        })
       : encodeFunctionData({
-        abi: abis.erc677BNB,
-        functionName: 'transferAndCall',
-        args: [
-          destinationChains[$bridgeKey].homeBridge,
-          $amountToBridge,
-          $foreignDataParam,
-          $walletAccount || zeroAddress,
-        ],
-      })
+          abi: abis.erc677BNB,
+          functionName: 'transferAndCall',
+          args: [
+            destinationChains[$bridgeKey].homeBridge,
+            $amountToBridge,
+            $foreignDataParam,
+            $walletAccount || zeroAddress,
+          ],
+        })
   },
 )
 

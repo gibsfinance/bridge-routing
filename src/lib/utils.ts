@@ -1,7 +1,15 @@
 import {
-  type Chain, type PublicClient, type Hex, type Abi,
-  getContract, createClient, multicall3Abi, encodeFunctionData, decodeFunctionResult,
-  erc20Abi, erc20Abi_bytes32
+  type Chain,
+  type PublicClient,
+  type Hex,
+  type Abi,
+  getContract,
+  createClient,
+  multicall3Abi,
+  encodeFunctionData,
+  decodeFunctionResult,
+  erc20Abi,
+  erc20Abi_bytes32,
 } from 'viem'
 import * as types from './types'
 
@@ -45,16 +53,16 @@ export const multicallRead = async <T>({
       call.allowFailure
         ? r[i].success
           ? decodeFunctionResult({
+              abi: call.abi || abi,
+              functionName: call.functionName,
+              data: r[i].returnData,
+            })
+          : r[i].returnData
+        : decodeFunctionResult({
             abi: call.abi || abi,
             functionName: call.functionName,
             data: r[i].returnData,
-          })
-          : r[i].returnData
-        : decodeFunctionResult({
-          abi: call.abi || abi,
-          functionName: call.functionName,
-          data: r[i].returnData,
-        }),
+          }),
     ) as T
   } catch (err) {
     console.log(target, calls, reads)
