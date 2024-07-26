@@ -16,9 +16,6 @@
     input.unwrap.set(native)
     input.fee.set(formatUnits($desiredExcessCompensationBasisPoints, 2))
   }
-  const chooseRpcSubmit = () => {
-    window.location.reload()
-  }
 </script>
 
 {#if $modalType === 'choosetoken'}
