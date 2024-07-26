@@ -13,5 +13,5 @@
 {#if loaded && !keepSpace}
   <slot />
 {:else}
-  <Loader class={className} {loaded} />
+  <Loader class={className} {loaded} {size} />
 {/if}
