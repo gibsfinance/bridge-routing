@@ -4,9 +4,11 @@
   import VersionedLink from './VersionedLink.svelte'
 </script>
 
-<div class="container px-2 py-10 text-center m-auto text-slate-950">
-  <h3 class="text-5xl font-italiana">Token Delivery</h3>
-  <h4 class="text-2xl mt-4">protect your privacy, keep custody of your tokens</h4>
+<div class="bg-slate-100">
+  <div class="container px-2 py-10 text-center m-auto text-slate-950">
+    <h3 class="text-5xl font-italiana">Token Delivery</h3>
+    <h4 class="text-2xl mt-4">protect your privacy, keep custody of your tokens</h4>
+  </div>
 </div>
 
 <BlurryImage image_url="url({futureBridge})" blur="9px" brightness="75%" min_height="auto">
