@@ -16,6 +16,10 @@
   <html lang="en" />
 </svelte:head>
 
+<!--
+  importing in this way allows the scripts to be loaded in parallel
+  and for us to show a loader until loading is complete
+-->
 <div class="app bg-slate-950">
   {#await import('$lib/pages/Delivery.svelte')}
     <div class="app">
