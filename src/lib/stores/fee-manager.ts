@@ -1,8 +1,8 @@
-import * as viem from 'viem'
+import type { Hex } from 'viem'
 import { Chains } from './auth/types'
 
 type Settings = {
-  bridge: viem.Hex
+  bridge: Hex
   feeH2F: bigint
   feeF2H: bigint
 }

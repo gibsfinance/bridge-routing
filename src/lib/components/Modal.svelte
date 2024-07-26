@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as customTokens from '$lib/stores/custom-tokens'
   import type { Token } from '$lib/types'
-  import * as viem from 'viem'
+  import type { Hex } from 'viem'
   import { createEventDispatcher, onMount } from 'svelte'
   export let openOnMount: boolean = false
   import TokenIcon from '$lib/components/TokenIcon.svelte'
@@ -83,7 +83,7 @@
   const onlyFromCurrentNetwork = (tkn: Token) =>
     tkn.chainId === 369 && !!tkn.extensions?.bridgeInfo?.[Number($bridgeKey)]?.tokenAddress
 
-  const loadViaMulticall = async (target: viem.Hex | null) => {
+  const loadViaMulticall = async (target: Hex | null) => {
     if (!target) {
       throw new Error('no target')
     }
@@ -107,7 +107,7 @@
   $: subset = getSubset($tokens.concat($bridgableTokens), searchValue, showAllTokens, showAllChains)
   $: inputIsAddress = isAddress(searchValue)
   $: addButtonDisabled = !inputIsAddress || !!subset.length
-  $: searchValueHex = inputIsAddress ? (searchValue as viem.Hex) : null
+  $: searchValueHex = inputIsAddress ? (searchValue as Hex) : null
 </script>
 
 <dialog id="choose-token-modal" class="modal" bind:this={modal}>

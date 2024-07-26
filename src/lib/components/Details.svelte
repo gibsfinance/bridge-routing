@@ -1,5 +1,5 @@
 <script lang="ts">
-  import * as viem from 'viem'
+  import { formatEther } from 'viem'
   import UndercompensatedWarning from '$lib/components/warnings/Undercompensated.svelte'
   import Warning from './Warning.svelte'
   import {
@@ -31,7 +31,7 @@
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10">
     <span class="w-32">Bridged</span>
     <span class="flex flex-row justify-between grow">
-      <span>-{viem.formatEther($bridgeFee * 100n)}%</span>
+      <span>-{formatEther($bridgeFee * 100n)}%</span>
       <span class="flex flex-row items-end self-end">
         <Loading key="gas">{humanReadableNumber(afterBridge, asset.decimals)}</Loading>&nbsp;{asset.symbol}
       </span>
@@ -115,7 +115,7 @@
     <span class="flex flex-row justify-end grow">
       <!-- <span class="flex flex-row items-end self-end font-mono">out&nbsp;=</span> -->
       <span class="flex flex-row items-end self-end font-mono text-right">
-        (in-{viem.formatEther(
+        (in-{formatEther(
           $bridgeFee * 100n,
         )}%)-{#if $feeType === input.FeeType.FIXED}fixed=out{:else if $feeType === input.FeeType.GAS_TIP}min(limit,base*{$inputFee}%)=out{:else if $feeType === input.FeeType.PERCENT}{$inputFee}%=out
         {/if}

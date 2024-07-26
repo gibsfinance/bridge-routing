@@ -12,7 +12,7 @@
     // amountAfterBridgeFee,
   } from '$lib/stores/bridge-settings'
   import * as abis from '$lib/stores/abis'
-  import * as viem from 'viem'
+  import { type Hex, getContract, erc20Abi, maxUint256 } from 'viem'
   import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input'
   import { tokenBalance, tokenBridgeInfo, assetLink, approval } from '$lib/stores/chain-events'
@@ -34,9 +34,9 @@
     disabledByClick || BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n || $amountToBridge > $tokenBalance
 
   const { connect } = useAuth()
-  const hashes: viem.Hex[] = []
+  const hashes: Hex[] = []
 
-  const transactionButtonPress = (fn: () => Promise<viem.Hex | undefined>) => async () => {
+  const transactionButtonPress = (fn: () => Promise<Hex | undefined>) => async () => {
     disabledByClick = true
     try {
       loading.increment('user')
@@ -65,12 +65,12 @@
       return
     }
     // const foreignClient = clientFromChain(Chains.ETH).extend((client) => ({
-    //   async traceCall(args: viem.CallParameters) {
+    //   async traceCall(args: CallParameters) {
     //     return client.request({
     //       method: 'debug_traceCall' as unknown as any,
     //       params: [
     //         {
-    //           ...viem.formatTransactionRequest(args),
+    //           ...formatTransactionRequest(args),
     //           from: $foreignBridgeAddress,
     //         },
     //         'latest',
@@ -98,13 +98,13 @@
     //       address: $assetOut.address,
     //       stateDiff: [
     //         {
-    //           slot: viem.keccak256(
-    //             viem.encodeAbiParameters(
-    //               viem.parseAbiParameters('address, uint256'),
+    //           slot: keccak256(
+    //             encodeAbiParameters(
+    //               parseAbiParameters('address, uint256'),
     //               [$router, 3n], // balance of is at 3rd storage slot on weth canonical
     //             ),
     //           ),
-    //           value: viem.numberToHex($amountAfterBridgeFee),
+    //           value: numberToHex($amountAfterBridgeFee),
     //         },
     //       ],
     //     },
@@ -126,14 +126,14 @@
     //         address: $assetOut.address,
     //         stateDiff: [
     //           {
-    //             slot: viem.keccak256(
-    //               viem.encodeAbiParameters(
-    //                 viem.parseAbiParameters('address, uint256'),
+    //             slot: keccak256(
+    //               encodeAbiParameters(
+    //                 parseAbiParameters('address, uint256'),
     //                 [$router, 3n], // balance of is at 3rd storage slot on weth canonical
     //               ),
     //             ),
-    //             value: viem.numberToHex(viem.maxUint256),
-    //             // viem.numberToHex($amountAfterBridgeFee, {
+    //             value: numberToHex(maxUint256),
+    //             // numberToHex($amountAfterBridgeFee, {
     //             //   size: 32,
     //             // }),
     //           },
@@ -150,7 +150,7 @@
     if (!tokenInfo || !$assetIn) {
       return
     }
-    const account = $walletAccount as viem.Hex
+    const account = $walletAccount as Hex
     const options = {
       account,
       type: 'eip1559',
@@ -159,7 +159,7 @@
     if ($bridgeKey === Chains.BNB) {
       if (tokenInfo.toForeign) {
         // token is native to pulsechain
-        const bridgeContract = viem.getContract({
+        const bridgeContract = getContract({
           abi: abis.inputBridgeBNB,
           address: $bridgeAddress,
           client: $walletClient!,
@@ -170,7 +170,7 @@
         )
       } else {
         // extra arg in transfer+call
-        const contract = viem.getContract({
+        const contract = getContract({
           abi: abis.erc677BNB,
           address: $assetIn.address,
           client: $walletClient!,
@@ -183,7 +183,7 @@
     } else if ($bridgeKey === Chains.ETH) {
       if (tokenInfo.toForeign) {
         // native to pulsechain
-        const bridgeContract = viem.getContract({
+        const bridgeContract = getContract({
           abi: abis.inputBridgeETH,
           address: $bridgeAddress,
           client: $walletClient!,
@@ -193,7 +193,7 @@
           options,
         )
       } else {
-        const contract = viem.getContract({
+        const contract = getContract({
           abi: abis.erc677ETH,
           address: $assetIn.address,
           client: $walletClient!,
@@ -204,7 +204,7 @@
       throw new Error('unrecognized chain')
     }
   }
-  const wipeTxHash = (hash: viem.Hex) => {
+  const wipeTxHash = (hash: Hex) => {
     setTimeout(() => {
       const index = hashes.indexOf(hash)
       if (index >= 0) {
@@ -216,18 +216,18 @@
     if (!$assetIn) {
       return
     }
-    const contract = viem.getContract({
-      abi: viem.erc20Abi,
+    const contract = getContract({
+      abi: erc20Abi,
       address: $assetIn.address,
       client: $walletClient!,
     })
-    const account = $walletAccount as viem.Hex
+    const account = $walletAccount as Hex
     const options = {
       account,
       type: 'eip1559',
       chain: chainsMetadata[Chains.PLS],
     } as const
-    return await contract.write.approve([$bridgeAddress, viem.maxUint256], options)
+    return await contract.write.approve([$bridgeAddress, maxUint256], options)
   }
   const sendInitiateBridge = transactionButtonPress(initiateBridge)
   const sendIncreaseApproval = transactionButtonPress(increaseApproval)

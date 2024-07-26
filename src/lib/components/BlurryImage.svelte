@@ -8,11 +8,12 @@
   export let opacity = '1'
   export let brightness = '100%'
   export let containerClassName = ''
+  export let bg_color = 'bg-slate-950'
 </script>
 
 <div class="h-content relative overflow-hidden w-full">
   <div
-    class="img w-full"
+    class="img w-full {bg_color}"
     style="--blur: {blur}; --size: {size}; --brightness: {brightness}; --rect: {rect}; --opacity: {opacity}; min-height: {min_height}; height: {height}; background-image: url({image_url})">
     <div class="relative flex justify-center w-full {containerClassName}">
       <slot />

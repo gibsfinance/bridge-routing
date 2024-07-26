@@ -1,24 +1,24 @@
-import * as viem from 'viem'
+import type { Hex, Abi } from 'viem'
 
 export type Call = {
   allowFailure?: boolean
   functionName: string
-  target?: viem.Hex
-  abi?: viem.Abi
-  args?: (bigint | viem.Hex | viem.Hex[])[]
+  target?: Hex
+  abi?: Abi
+  args?: (bigint | Hex | Hex[])[]
 }
 
 export type PerNetworkBridgeLink = {
-  tokenAddress: viem.Hex
-  originationBridgeAddress: viem.Hex
-  destinationBridgeAddress: viem.Hex
+  tokenAddress: Hex
+  originationBridgeAddress: Hex
+  destinationBridgeAddress: Hex
 }
 export type Extensions = {
   bridgeInfo?: Record<number, PerNetworkBridgeLink>
 }
 
 export type Token = {
-  address: viem.Hex
+  address: Hex
   name: string
   symbol: string
   decimals: number

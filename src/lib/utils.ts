@@ -1,4 +1,8 @@
-import * as viem from 'viem'
+import {
+  type Chain, type PublicClient, type Hex, type Abi,
+  getContract, createClient, multicall3Abi, encodeFunctionData, decodeFunctionResult,
+  erc20Abi, erc20Abi_bytes32
+} from 'viem'
 import * as types from './types'
 
 type Erc20Metadata = [string, string, number]
@@ -12,25 +16,25 @@ export const multicallRead = async <T>({
   calls,
   target,
 }: {
-  chain: viem.Chain
-  client: ReturnType<typeof viem.createClient>
-  abi: viem.Abi
+  chain: Chain
+  client: ReturnType<typeof createClient>
+  abi: Abi
   calls: types.Call[]
-  target?: viem.Hex
+  target?: Hex
 }) => {
-  const multicall = viem.getContract({
-    abi: viem.multicall3Abi,
+  const multicall = getContract({
+    abi: multicall3Abi,
     address: chain.contracts!.multicall3!.address!,
     client,
   })
   const arg = calls.map((call) => ({
-    callData: viem.encodeFunctionData({
+    callData: encodeFunctionData({
       abi: call.abi || abi,
       functionName: call.functionName,
       args: call.args || [],
     }),
     allowFailure: call.allowFailure || false,
-    target: (call.target || target) as viem.Hex,
+    target: (call.target || target) as Hex,
   }))
   let reads: null | Awaited<ReturnType<typeof multicall.read.aggregate3>> = null
   try {
@@ -40,17 +44,17 @@ export const multicallRead = async <T>({
     return calls.map((call, i) =>
       call.allowFailure
         ? r[i].success
-          ? viem.decodeFunctionResult({
-              abi: call.abi || abi,
-              functionName: call.functionName,
-              data: r[i].returnData,
-            })
-          : r[i].returnData
-        : viem.decodeFunctionResult({
+          ? decodeFunctionResult({
             abi: call.abi || abi,
             functionName: call.functionName,
             data: r[i].returnData,
-          }),
+          })
+          : r[i].returnData
+        : decodeFunctionResult({
+          abi: call.abi || abi,
+          functionName: call.functionName,
+          data: r[i].returnData,
+        }),
     ) as T
   } catch (err) {
     console.log(target, calls, reads)
@@ -63,14 +67,14 @@ export const multicallErc20 = async ({
   target,
   chain,
 }: {
-  client: viem.PublicClient
-  target: viem.Hex
-  chain: viem.Chain
+  client: PublicClient
+  target: Hex
+  chain: Chain
 }) => {
   const options = {
     chain: chain,
     client: client,
-    abi: viem.erc20Abi,
+    abi: erc20Abi,
     target,
     calls: erc20MetadataCalls,
   }
@@ -79,7 +83,7 @@ export const multicallErc20 = async ({
   } catch (err) {
     return await multicallRead<Erc20Metadata>({
       ...options,
-      abi: viem.erc20Abi_bytes32,
+      abi: erc20Abi_bytes32,
     })
   }
 }

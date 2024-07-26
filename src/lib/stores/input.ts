@@ -4,9 +4,19 @@ import * as customTokens from './custom-tokens'
 import { loading } from '$lib/stores/loading'
 import { page } from '$app/stores'
 import * as imageLinks from '$lib/stores/image-links'
-import * as viem from 'viem'
+import {
+  type Hex,
+  getAddress,
+  type WalletClient,
+  createPublicClient,
+  http,
+  getContract,
+  multicall3Abi,
+  encodeFunctionData,
+  zeroAddress,
+  parseUnits,
+} from 'viem'
 import { countDecimals, humanReadableNumber, isZero, stripNonNumber } from '$lib/stores/utils'
-import { parseUnits, zeroAddress } from 'viem'
 import { Chains, type DestinationChains } from './auth/types'
 import { feeManagerMapping } from './fee-manager'
 import { defaultAssetIn, destinationChains, nativeAssetOut } from './config'
@@ -91,7 +101,7 @@ export const feeType = {
   },
 }
 
-const recipientStore = writable<viem.Hex>(zeroAddress)
+const recipientStore = writable<Hex>(zeroAddress)
 
 export const recipient = {
   ...recipientStore,
@@ -107,53 +117,53 @@ export const bridgeKey = derived(
 )
 
 export const bridgableTokens = writable<Token[]>([])
-;(() => {
-  const set = (tokens: Token[]) => {
-    bridgableTokens.set(tokens)
-  }
-  loading.increment()
-  Promise.all([
-    fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo&chainId=369')),
-    fetch(imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo&chainId=369')),
-    fetch(imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo&chainId=369')),
-    fetch(imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo&chainId=369')),
-  ])
-    .then(async (results) => {
-      const responses = await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
-      loading.decrement()
-      const list = _(responses)
-        .map('tokens')
-        .flatten()
-        .keyBy(({ chainId, address }) => {
-          return `${Number(chainId)}-${viem.getAddress(address)}`
+  ; (() => {
+    const set = (tokens: Token[]) => {
+      bridgableTokens.set(tokens)
+    }
+    loading.increment()
+    Promise.all([
+      fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo&chainId=369')),
+      fetch(imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo&chainId=369')),
+      fetch(imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo&chainId=369')),
+      fetch(imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo&chainId=369')),
+    ])
+      .then(async (results) => {
+        const responses = await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
+        loading.decrement()
+        const list = _(responses)
+          .map('tokens')
+          .flatten()
+          .keyBy(({ chainId, address }) => {
+            return `${Number(chainId)}-${getAddress(address)}`
+          })
+          .values()
+          .value()
+        const check = (cId: DestinationChains) => (item: Token) =>
+          defaultAssetIn[cId].address === item.address ? defaultAssetIn[cId] : null
+        const checkETH = check(Chains.ETH)
+        const checkBNB = check(Chains.BNB)
+        const sortedList = _.sortBy(list, 'name').map((item) => checkETH(item) || checkBNB(item) || item)
+        // console.log(sortedList)
+        sortedList.forEach((token) => {
+          // register on a central cache so that tokens that are gotten from onchain
+          // still have all extensions
+          // registerExtensions(token, token.extensions)
+          if (!token.logoURI) {
+            token.logoURI = imageLinks.image(token)
+          }
         })
-        .values()
-        .value()
-      const check = (cId: DestinationChains) => (item: Token) =>
-        defaultAssetIn[cId].address === item.address ? defaultAssetIn[cId] : null
-      const checkETH = check(Chains.ETH)
-      const checkBNB = check(Chains.BNB)
-      const sortedList = _.sortBy(list, 'name').map((item) => checkETH(item) || checkBNB(item) || item)
-      // console.log(sortedList)
-      sortedList.forEach((token) => {
-        // register on a central cache so that tokens that are gotten from onchain
-        // still have all extensions
-        // registerExtensions(token, token.extensions)
-        if (!token.logoURI) {
-          token.logoURI = imageLinks.image(token)
-        }
+        set(sortedList)
+        return sortedList
       })
-      set(sortedList)
-      return sortedList
-    })
-    .catch((err) => {
-      loading.decrement()
-      throw err
-    })
-})()
+      .catch((err) => {
+        loading.decrement()
+        throw err
+      })
+  })()
 
 export const assetInAddress = derived([bridgeKey, page], ([$bridgeKey, $page]) =>
-  viem.getAddress($page.params.assetInAddress || defaultAssetIn[$bridgeKey as DestinationChains].address),
+  getAddress($page.params.assetInAddress || defaultAssetIn[$bridgeKey as DestinationChains].address),
 )
 
 export const assetIn = derived(
@@ -161,8 +171,8 @@ export const assetIn = derived(
   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens]) => {
     const $assetIn = $bridgableTokens.length
       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
-        _.find($customTokens || [], { address: $assetInAddress }) ||
-        defaultAssetIn[$bridgeKey]
+      _.find($customTokens || [], { address: $assetInAddress }) ||
+      defaultAssetIn[$bridgeKey]
       : null
     // console.log($assetIn)
     return $assetIn
@@ -179,7 +189,7 @@ export const isNative = ($asset: Token | null) => {
   if (!$asset) return false
   if ($asset.chainId === Number(Chains.PLS)) {
     return !!Object.values(defaultAssetIn).find(
-      ($defaultAssetIn) => viem.getAddress($defaultAssetIn.address) === viem.getAddress($asset.address),
+      ($defaultAssetIn) => getAddress($defaultAssetIn.address) === getAddress($asset.address),
     )
   } else {
     const chainId = `0x${$asset.chainId.toString(16)}` as DestinationChains
@@ -189,12 +199,12 @@ export const isNative = ($asset: Token | null) => {
 export const canChangeUnwrap = derived([assetIn], ([$assetIn]) => !!$assetIn && isNative($assetIn))
 
 export const activeChain = writable<Chains>(Chains.PLS)
-export const walletClient = writable<viem.WalletClient | undefined>()
+export const walletClient = writable<WalletClient | undefined>()
 
 export const clientFromChain = ($activeChain: Chains) => {
-  return viem.createPublicClient({
+  return createPublicClient({
     chain: chainsMetadata[$activeChain],
-    transport: viem.http(chainsMetadata[$activeChain].rpcUrls.default.http[0], {
+    transport: http(chainsMetadata[$activeChain].rpcUrls.default.http[0], {
       batch: {
         wait: 10,
         batchSize: 10,
@@ -206,8 +216,8 @@ export const clientFromChain = ($activeChain: Chains) => {
 export const publicClient = derived(activeChain, clientFromChain)
 export const multicall = derived([activeChain, publicClient], ([$activeChain, $publicClient]) => {
   const metadata = chainsMetadata[$activeChain]
-  return viem.getContract({
-    abi: viem.multicall3Abi,
+  return getContract({
+    abi: multicall3Abi,
     client: $publicClient,
     address: metadata.contracts!.multicall3!.address,
   })
@@ -230,7 +240,7 @@ export const loadFeeFor = async (fromId: Chains, toId: Chains) => {
       {
         allowFailure: false,
         target: settings.bridge,
-        callData: viem.encodeFunctionData({
+        callData: encodeFunctionData({
           abi: abis.feeManager,
           functionName: 'HOME_TO_FOREIGN_FEE',
         }),
@@ -238,7 +248,7 @@ export const loadFeeFor = async (fromId: Chains, toId: Chains) => {
       {
         allowFailure: false,
         target: settings.bridge,
-        callData: viem.encodeFunctionData({
+        callData: encodeFunctionData({
           abi: abis.feeManager,
           functionName: 'FOREIGN_TO_HOME_FEE',
         }),
@@ -250,19 +260,19 @@ export const loadFeeFor = async (fromId: Chains, toId: Chains) => {
       {
         allowFailure: false,
         target: settings.bridge,
-        callData: viem.encodeFunctionData({
+        callData: encodeFunctionData({
           abi: abis.feeManager,
           functionName: 'getFee',
-          args: [keyH2F.returnData, viem.zeroAddress],
+          args: [keyH2F.returnData, zeroAddress],
         }),
       },
       {
         allowFailure: false,
         target: settings.bridge,
-        callData: viem.encodeFunctionData({
+        callData: encodeFunctionData({
           abi: abis.feeManager,
           functionName: 'getFee',
-          args: [keyF2H.returnData, viem.zeroAddress],
+          args: [keyF2H.returnData, zeroAddress],
         }),
       },
     ],
@@ -288,13 +298,13 @@ export const foreignSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) => ($b
 /** the estimated gas that will be consumed by running the foreign transaction */
 export const estimatedGas = writable(400_000n)
 /** the first recipient of the tokens (router) */
-export const router = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].router as viem.Hex)
+export const router = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].router as Hex)
 /** the address of the bridge proxy contract on home */
 export const bridgeAddress = derived(
   [bridgeKey],
-  ([$bridgeKey]) => destinationChains[$bridgeKey].homeBridge as viem.Hex,
+  ([$bridgeKey]) => destinationChains[$bridgeKey].homeBridge as Hex,
 )
 export const foreignBridgeAddress = derived(
   [bridgeKey],
-  ([$bridgeKey]) => destinationChains[$bridgeKey].foreignBridge as viem.Hex,
+  ([$bridgeKey]) => destinationChains[$bridgeKey].foreignBridge as Hex,
 )

@@ -1,4 +1,4 @@
-import * as viem from 'viem'
+import { type Hex, zeroAddress, getAddress } from 'viem'
 import * as imageLinks from './image-links'
 import type { Token, TokenList } from '$lib/types'
 import { Chains, Provider, type DestinationChains } from './auth/types'
@@ -20,8 +20,8 @@ export const uniV2Settings = {
 } as Record<
   Chains,
   {
-    routers: viem.Hex[]
-    wNative: viem.Hex
+    routers: Hex[]
+    wNative: Hex
   }
 >
 
@@ -42,16 +42,16 @@ export const destinationChains = {
   DestinationChains,
   {
     provider: Provider
-    homeBridge: viem.Hex
-    foreignBridge: viem.Hex
-    router: viem.Hex
+    homeBridge: Hex
+    foreignBridge: Hex
+    router: Hex
   }
 >
 
 export const nativeAssetOut = {
   [Chains.ETH]: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
   [Chains.BNB]: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
-} as Record<DestinationChains, viem.Hex>
+} as Record<DestinationChains, Hex>
 
 export const defaultAssetIn = {
   [Chains.ETH]: {
@@ -64,8 +64,8 @@ export const defaultAssetIn = {
       bridgeInfo: {
         '1': {
           tokenAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-          destinationBridgeAddress: viem.zeroAddress,
-          originationBridgeAddress: viem.zeroAddress,
+          destinationBridgeAddress: zeroAddress,
+          originationBridgeAddress: zeroAddress,
         },
       },
     },
@@ -80,8 +80,8 @@ export const defaultAssetIn = {
       bridgeInfo: {
         '56': {
           tokenAddress: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
-          destinationBridgeAddress: viem.zeroAddress,
-          originationBridgeAddress: viem.zeroAddress,
+          destinationBridgeAddress: zeroAddress,
+          originationBridgeAddress: zeroAddress,
         },
       },
     },
@@ -94,8 +94,8 @@ export const whitelisted = derived(
     fetch(imageLinks.list('/pulsex'))
       .then(async (res) => (await res.json()) as TokenList)
       .then(({ tokens }) => {
-        set(new Set<viem.Hex>(tokens.map((tkn) => viem.getAddress(tkn.address))))
+        set(new Set<Hex>(tokens.map((tkn) => getAddress(tkn.address))))
       })
   },
-  new Set<viem.Hex>([]),
+  new Set<Hex>([]),
 )
