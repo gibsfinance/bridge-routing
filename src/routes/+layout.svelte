@@ -1,36 +1,42 @@
 <script lang="ts">
   import '$lib/styles/global.css'
-  import Nav from '$lib/components/Nav.svelte'
-  import ModalLoader from '$lib/components/ModalLoader.svelte'
-
-  import AuthProvider from '$lib/stores/auth/AuthProvider.svelte'
-  import Footer from '$lib/components/Footer.svelte'
-  import { firstMount } from '$lib/stores/window'
   import { onMount } from 'svelte'
+
+  import { firstMount } from '$lib/stores/window'
+  import Nav from '$lib/components/Nav.svelte'
+  import Footer from '$lib/components/Footer.svelte'
+  import Loader from '$lib/components/Loader.svelte'
   onMount(() => {
     firstMount.set(true)
   })
 </script>
 
 <svelte:head>
-  <link href="https://fonts.googleapis.com/css2?family=Italiana&display=swap" rel="stylesheet" />
   <meta name="robots" content="noindex nofollow" />
   <html lang="en" />
 </svelte:head>
 
-<AuthProvider>
-  <div class="app bg-slate-950">
-    <Nav />
-    <main class="flex flex-col box-border w-full h-fit bg-slate-50 mt-10">
+<div class="app bg-slate-950">
+  {#await import('$lib/pages/Delivery.svelte')}
+    <div class="app">
+      <Nav />
+      <main class="flex flex-col box-border w-full min-h-screen bg-slate-950 text-white mt-10">
+        <div class="flex grow items-center justify-center">
+          <Loader loaded={false} size="lg" />
+        </div>
+        <Footer />
+      </main>
+    </div>
+  {:then c}
+    <svelte:component this={c.default}>
       <slot />
-      <Footer />
-    </main>
-    <ModalLoader />
-  </div>
-</AuthProvider>
+    </svelte:component>
+  {/await}
+</div>
 
 <style>
   .app {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
