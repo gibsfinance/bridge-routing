@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { type as modalType } from '$lib/stores/modal'
   import VersionedLink from '$lib/components/VersionedLink.svelte'
   import { goto } from '$app/navigation'
   import gibs from '$lib/images/1FAF0.svg'
@@ -10,8 +11,6 @@
   import { Chains } from '$lib/stores/auth/types'
   import { domains } from '$lib/stores/window'
 
-  let bridgeUrl = ''
-
   onMount(() => {
     domains.add('bridge.pulsechain.com')
   })
@@ -22,8 +21,8 @@
   const gotoNativeDelivery = async () => {
     await goto('/delivery')
   }
-  const gotoTransactions = async () => {
-    window.location.href = `${bridgeUrl}/#/transactions`
+  const showRPCConfig = () => {
+    modalType.set('rpc')
   }
 </script>
 
@@ -44,18 +43,25 @@
         <ul class="flex flex-row items-center">
           <li>
             {#if $bridgeKey === Chains.ETH}
-              <VersionedLink domain="bridge.pulsechain.com" path="/#/transactions">
-                <button class="h-10 w-10 text-white flex items-center justify-center" on:click={gotoTransactions}>
-                  <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
-                </button>
+              <VersionedLink domain="bridge.pulsechain.com" path="/#/transactions" let:direct let:path>
+                <a href="{direct}{path}" target="_blank">
+                  <button class="h-10 w-10 text-white flex items-center justify-center">
+                    <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
+                  </button>
+                </a>
               </VersionedLink>
             {:else}
               <a href="https://tokensex.link/explorer" target="_blank">
-                <button class="h-10 w-10 text-white flex items-center justify-center" on:click={gotoTransactions}>
+                <button class="h-10 w-10 text-white flex items-center justify-center">
                   <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
                 </button>
               </a>
             {/if}
+          </li>
+          <li>
+            <button class="h-10 w-10 text-white flex items-center justify-center" on:click={showRPCConfig}>
+              <Icon icon="gravity-ui:plug-connection" />
+            </button>
           </li>
           {#if !$page.route.id?.includes('/delivery')}
             <li>

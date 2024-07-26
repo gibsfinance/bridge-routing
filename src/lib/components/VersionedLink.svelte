@@ -4,12 +4,15 @@
 
   export let domain = 'bridge.pulsechain.com'
   export let path = ''
-  let directUrl = ''
   $: domains.add(domain)
+  $: d = $directDomain.get(domain) || domain
 </script>
 
-<span class="inline whitespace-pre">
-  <a class="underline" target="_blank" href="https://{$directDomain.get(domain) || domain}{path}">{domain}</a><a
-    href={directUrl + path}
-    target="_blank"><Icon icon="gis:direct" class="inline mx-1" height="2em" width="2em" /></a>
-</span>
+<slot direct={d} {path}>
+  <span class="inline whitespace-pre">
+    <a class="underline" target="_blank" href="https://{domain}{path}">{domain}</a>
+    <a href="{d}{path}" target="_blank">
+      <Icon icon="gis:direct" class="inline mx-1" height="2em" width="2em" />
+    </a>
+  </span>
+</slot>

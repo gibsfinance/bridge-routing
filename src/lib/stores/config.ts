@@ -107,4 +107,5 @@ export const whitelisted = derived(
       cancelled = true
     }
   },
+  new Set<Hex>(),
 )

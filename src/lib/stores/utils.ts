@@ -1,4 +1,4 @@
-import { padEnd } from 'lodash'
+import _ from 'lodash'
 import { formatUnits, parseUnits } from 'viem'
 
 export const countDecimals = (v: string) => {
@@ -22,7 +22,7 @@ export const humanReadableNumber = (num = 0n, decimals = 18, decimalCount: null 
     if (d) {
       let dec = d
       if (dec.length < decimalCount) {
-        dec = padEnd(dec, decimalCount, '0')
+        dec = _.padEnd(dec, decimalCount, '0')
       }
       n = `${i}.${dec}`
     } else {

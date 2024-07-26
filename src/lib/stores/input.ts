@@ -1,4 +1,5 @@
 import { derived, get, writable, type Writable } from 'svelte/store'
+import * as rpcs from '$lib/stores/rpcs'
 import * as abis from './abis'
 import * as customTokens from './custom-tokens'
 import { loading } from '$lib/stores/loading'
@@ -15,6 +16,8 @@ import {
   encodeFunctionData,
   zeroAddress,
   parseUnits,
+  fallback,
+  type PublicClient,
 } from 'viem'
 import { countDecimals, humanReadableNumber, isZero, stripNonNumber } from '$lib/stores/utils'
 import { Chains, type DestinationChains } from './auth/types'
@@ -119,7 +122,6 @@ export const bridgeKey = derived(
 
 export const bridgableTokens = derived([windowLoaded], ([$windowLoaded], set) => {
   let cancelled = false
-  console.log($windowLoaded)
   if (!$windowLoaded) {
     set([])
     return
@@ -208,19 +210,34 @@ export const canChangeUnwrap = derived([assetIn], ([$assetIn]) => !!$assetIn && 
 export const activeChain = writable<Chains>(Chains.PLS)
 export const walletClient = writable<WalletClient | undefined>()
 
+const clientCache = new Map<Chains, { key: string; client: PublicClient }>([])
+
 export const clientFromChain = ($activeChain: Chains) => {
-  return createPublicClient({
+  const urls = _.compact(get(rpcs.store).get($activeChain) || [])
+  const key = rpcs.key($activeChain, urls)
+  const existing = clientCache.get($activeChain)
+  if (existing && existing.key === key) {
+    return existing.client
+  }
+  const client = createPublicClient({
     chain: chainsMetadata[$activeChain],
-    transport: http(chainsMetadata[$activeChain].rpcUrls.default.http[0], {
-      batch: {
-        wait: 10,
-        batchSize: 10,
-      },
-    }),
+    transport: fallback(urls.map((rpc) => (
+      http(rpc, {
+        batch: {
+          wait: 10,
+          batchSize: 10,
+        },
+      })
+    )), { rank: true }),
   })
+  clientCache.set($activeChain, {
+    key,
+    client,
+  })
+  return client
 }
 
-export const publicClient = derived(activeChain, clientFromChain)
+export const publicClient = derived([activeChain, forcedRefresh], ([$activeChain]) => clientFromChain($activeChain))
 export const multicall = derived([activeChain, publicClient], ([$activeChain, $publicClient]) => {
   const metadata = chainsMetadata[$activeChain]
   return getContract({

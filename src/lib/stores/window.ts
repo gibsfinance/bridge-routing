@@ -1,11 +1,13 @@
 import { derived, get, readable, writable } from 'svelte/store'
 import _ from 'lodash'
 
+export const windowIsAvailable = typeof window !== 'undefined'
+
 const w = readable(
-  {
+  windowIsAvailable ? {
     innerWidth: window.innerWidth,
     innerHeight: window.innerHeight,
-  },
+  } : {},
   (set) => {
     const getCurrent = () => ({
       innerWidth: window.innerWidth,
@@ -19,7 +21,10 @@ const w = readable(
       }
       set(current)
     }
-    const handler = (e: Event) => updateIfDifferent()
+    const handler = () => updateIfDifferent()
+    if (!windowIsAvailable) {
+      return () => { }
+    }
     window.addEventListener('resize', handler)
     const unwind = () => {
       window.removeEventListener('resize', handler)
@@ -43,6 +48,9 @@ export const windowLoaded = derived([firstMount], ([$firstMount], set) => {
       loaded = true
       set(loaded)
     }
+  }
+  if (!windowIsAvailable) {
+    return () => { }
   }
   window.addEventListener('load', handler)
   document.addEventListener('DOMContentLoaded', handler)
