@@ -7,26 +7,16 @@
   import Footer from '$lib/components/Footer.svelte'
   import { firstMount } from '$lib/stores/window'
   import { onMount } from 'svelte'
-  // import payMe from '$lib/images/pay-me.png'
-  // import bridge from '$lib/images/bridge.jpeg'
-  // import futureBridge from '$lib/images/future-bridge.webp'
-  // import fingers from '$lib/images/1FAF0.svg'
-  // const preloadImageUrls = [payMe, bridge, futureBridge, fingers]
   onMount(() => {
     firstMount.set(true)
   })
 </script>
 
 <svelte:head>
-  <!-- {#each preloadImageUrls as image}
-    <link rel="preload" as="image" href={image} />
-  {/each} -->
   <link href="https://fonts.googleapis.com/css2?family=Italiana&display=swap" rel="stylesheet" />
   <meta name="robots" content="noindex nofollow" />
   <html lang="en" />
 </svelte:head>
-
-<!-- <svelte:window on:resize={updateWindow} /> -->
 
 <AuthProvider>
   <div class="app bg-slate-950">
