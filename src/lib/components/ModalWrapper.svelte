@@ -38,6 +38,6 @@
 <style lang="postcss">
   .modal-box {
     width: 100%;
-    @apply max-w-[36rem];
+    @apply max-w-[36rem] shadow-lg shadow-black;
   }
 </style>
