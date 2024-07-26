@@ -16,6 +16,7 @@
   <!-- {#each preloadImageUrls as image}
     <link rel="preload" as="image" href={image} />
   {/each} -->
+  <link href="https://fonts.googleapis.com/css2?family=Italiana&display=swap" rel="stylesheet" />
   <meta name="robots" content="noindex nofollow" />
   <html lang="en" />
 </svelte:head>
