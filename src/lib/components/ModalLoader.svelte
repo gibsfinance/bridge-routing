@@ -5,6 +5,7 @@
   import { page } from '$app/stores'
   import { type as modalType } from '$lib/stores/modal'
   import type { Token } from '$lib/types'
+  import InfoExplain from '$lib/components/InfoExplain.svelte'
   import ModalWrapper from '$lib/components/ModalWrapper.svelte'
   import TokenSelect from '$lib/components/TokenSelect.svelte'
   import RPCConfig from '$lib/components/RPC.svelte'
@@ -32,5 +33,9 @@
         input.incrementForcedRefresh()
       }}
       on:close={close} />
+  </ModalWrapper>
+{:else if $modalType === 'info'}
+  <ModalWrapper openOnMount height="dynamic">
+    <InfoExplain />
   </ModalWrapper>
 {/if}

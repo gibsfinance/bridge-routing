@@ -9,7 +9,7 @@
 
   let dropdown!: HTMLDetailsElement
   export let network!: VisualChain
-  export let height: number | undefined = undefined
+  export let size: number | undefined = undefined
   export let networkOptions: Chains[] = []
   $: reorderedBridgeKeys = networkOptions.slice(0).sort((a, b) => {
     if (b === $bridgeKey) {
@@ -26,7 +26,7 @@
 {#if reorderedBridgeKeys.length}
   <details class="dropdown static flex flex-grow justify-center" bind:this={dropdown}>
     <summary class="flex flex-row justify-items-center items-center space-x-2 select-none">
-      <StaticNetworkImage {network} {height} provider={destinationChains[$bridgeKey].provider} />
+      <StaticNetworkImage {network} {size} provider={destinationChains[$bridgeKey].provider} />
       <span class="leading-8 ml-1">{network.name}</span>
       <Icon icon="mingcute:down-fill" height="1.25em" width="1.25em" class="flex" />
     </summary>
@@ -44,7 +44,7 @@
                 }
               }
             }}>
-            <StaticNetworkImage network={chainsMetadata[option]} provider={providerFromOption(option)} {height} />
+            <StaticNetworkImage network={chainsMetadata[option]} provider={providerFromOption(option)} {size} />
             <span class="px-2 flex flex-grow">{chainsMetadata[option].name}</span>
           </button>
         </li>
@@ -53,7 +53,7 @@
   </details>
 {:else}
   <div class="flex flex-row justify-items-center items-center space-x-2">
-    <StaticNetworkImage {network} {height} />
+    <StaticNetworkImage {network} {size} />
     <span class="leading-8">{network.name}</span>
   </div>
 {/if}

@@ -3,6 +3,8 @@
   import * as modalStore from '$lib/stores/modal'
   import _ from 'lodash'
   export let openOnMount: boolean = false
+  export let id = 'dynamic'
+  export let height = 'fixed'
 
   let modal: HTMLDialogElement | null = null
   const doClose = (e: Event) => {
@@ -20,8 +22,8 @@
   })
 </script>
 
-<dialog id="choose-token-modal" class="modal" bind:this={modal}>
-  <div class="modal-box text-slate-50 max-h-full h-96 p-0 overflow-hidden flex flex-col">
+<dialog id="{id}-modal" class="modal" bind:this={modal}>
+  <div class="modal-box text-slate-50 max-h-full p-0 overflow-hidden flex flex-col" class:h-96={height === 'fixed'}>
     <slot close={doClose} />
   </div>
   <form method="dialog" class="modal-backdrop">
