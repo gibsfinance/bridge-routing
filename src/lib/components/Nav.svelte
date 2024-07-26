@@ -1,10 +1,13 @@
 <script lang="ts">
+  import VersionedLink from '$lib/components/VersionedLink.svelte'
   import { goto } from '$app/navigation'
   import gibs from '$lib/images/1FAF0.svg'
   import { onMount } from 'svelte'
   import Icon from '@iconify/svelte'
   import Loading from './Loading.svelte'
   import { page } from '$app/stores'
+  import { bridgeKey } from '$lib/stores/input'
+  import { Chains } from '$lib/stores/auth/types'
 
   let bridgeUrl = ''
 
@@ -43,9 +46,19 @@
       <div class="items-center flex">
         <ul class="flex flex-row items-center">
           <li>
-            <button class="h-10 w-10 text-white flex items-center justify-center" on:click={gotoTransactions}>
-              <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
-            </button>
+            {#if $bridgeKey === Chains.ETH}
+              <VersionedLink domain="bridge.pulsechain.com" path="/#/transactions">
+                <button class="h-10 w-10 text-white flex items-center justify-center" on:click={gotoTransactions}>
+                  <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
+                </button>
+              </VersionedLink>
+            {:else}
+              <a href="https://tokensex.link/explorer" target="_blank">
+                <button class="h-10 w-10 text-white flex items-center justify-center" on:click={gotoTransactions}>
+                  <Icon icon="bitcoin-icons:transactions-filled" height="1.6em" width="1.6em" />
+                </button>
+              </a>
+            {/if}
           </li>
           {#if !$page.route.id?.includes('/delivery')}
             <li>

@@ -7,9 +7,10 @@ export const countDecimals = (v: string) => {
   return d ? d.length : 0
 }
 
-export const humanReadableNumber = (num = 0n, decimals = 18, decimalCount: null | number = null) => {
+export const humanReadableNumber = (num = 0n, decimals = 18, decimalCount: null | number = null, truncLen = false) => {
   let n = num === 0n ? '0.0' : formatUnits(num, decimals)
-  const len = Math.min(n.length, 20)
+  const len = truncLen ? Math.min(n.length, 20) : n.length
+  // console.log(num, n, len)
   n = n.slice(0, len)
   // this line should only be hit when non zero values are passed
   if (n[n.length - 1] === '.') {
@@ -17,6 +18,7 @@ export const humanReadableNumber = (num = 0n, decimals = 18, decimalCount: null 
   }
   if (decimalCount !== null) {
     const [i, d] = n.split('.')
+    // console.log(i, d)
     if (d) {
       let dec = d
       if (dec.length < decimalCount) {

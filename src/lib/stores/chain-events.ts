@@ -43,17 +43,23 @@ export const latestBaseFeePerGas = derived(
     let perGas = $block.baseFeePerGas
     let cancelled = false
     if (!perGas) {
-      const minGWei = 2_500_000_000n
-      perGas = minGWei
-      $destinationPublicClient.getGasPrice().then((result) => {
-        if (cancelled) return
-        if (result < minGWei) {
-          result = minGWei
-        }
-        set(result)
-      })
+      const minWei = 3_000_000_000n
+      perGas = minWei
+      $destinationPublicClient
+        .getGasPrice()
+        .catch(() => 0n)
+        .then((result) => {
+          if (cancelled) {
+            return
+          }
+          if (result < minWei) {
+            result = minWei
+          }
+          set(result)
+        })
+    } else {
+      set(perGas)
     }
-    set(perGas)
     return () => {
       cancelled = true
     }
@@ -77,6 +83,7 @@ export const tokenBalance = derived(
     const getBalance = async () => {
       const balance = await token.read.balanceOf([$walletAccount])
       if (cancelled) return
+      console.log('token balance', balance)
       set(balance)
     }
     const unwatch = $publicClient.watchContractEvent({
@@ -248,7 +255,7 @@ export const approval = derived(
         set(approval)
       })
     getApproval()
-    let unwatch: viem.WatchContractEventReturnType = () => { }
+    let unwatch: viem.WatchContractEventReturnType = () => {}
     if ($assetLink.toForeign) {
       const account = viem.getAddress($walletAccount)
       const bridgeAddr = viem.getAddress($bridgeAddress)

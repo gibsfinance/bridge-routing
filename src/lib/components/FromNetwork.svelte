@@ -2,7 +2,7 @@
   import NetworkSummary from './NetworkSummary.svelte'
   import { formatUnits } from 'viem'
   import type { VisualChain } from '$lib/stores/auth/types'
-  import { writable, type Writable } from 'svelte/store'
+  import { get, writable, type Writable } from 'svelte/store'
   import { amountToBridge } from '$lib/stores/bridge-settings'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import Warning from './Warning.svelte'
@@ -11,6 +11,7 @@
   import type { Token } from '$lib/types'
   import type { FormEventHandler } from 'svelte/elements'
   import { tokenBalance, minAmount } from '$lib/stores/chain-events'
+  import { stripNonNumber } from '$lib/stores/utils'
 
   export let network!: VisualChain
   export let asset!: Token
@@ -19,6 +20,7 @@
   $: if (asset) {
     value.set('')
   }
+  let val = ''
   const focused = writable(false)
   const openModal = () => {
     modalStore.type.set('choosetoken')
@@ -45,8 +47,11 @@
       <input
         class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-xl sm:text-2xl w-full"
         placeholder="0.0"
-        value={$value}
-        on:focus={() => focused.set(true)}
+        value={$focused ? val : $value}
+        on:focus={() => {
+          val = stripNonNumber(get(value))
+          focused.set(true)
+        }}
         on:blur={() => focused.set(false)}
         on:input={handleInput} />
       <Warning

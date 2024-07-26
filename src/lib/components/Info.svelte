@@ -1,11 +1,15 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
   import VersionedLink from './VersionedLink.svelte'
-  import { router } from '$lib/stores/input'
+  import { bridgeKey, router } from '$lib/stores/input'
+  import { Chains } from '$lib/stores/auth/types'
   const openModal = () => {
     const el = document.querySelector('#bridge-info-modal') as any
     el.showModal()
   }
+  $: isEth = $bridgeKey === Chains.ETH
+  $: domain = isEth ? 'etherscan' : 'bscscan'
+  $: icon = isEth ? 'token:ethereum' : 'token:binance-smart-chain'
 </script>
 
 <div class="flex flex-row">
@@ -21,9 +25,9 @@
       <Icon icon="fe:github-alt" height="1.5em" width="1.5em" />
     </button>
   </a>
-  <a href="https://etherscan.io/address/{$router}#code" target="_blank" class="mr-2">
+  <a href="https://{domain}.io/address/{$router}#code" target="_blank" class="mr-2">
     <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
-      <Icon icon="mdi:ethereum" height="1.5em" width="1.5em" />
+      <Icon {icon} height="1.5em" width="1.5em" />
     </button>
   </a>
   <a href="https://x.com/gibsfinance" target="_blank" class="mr-2">

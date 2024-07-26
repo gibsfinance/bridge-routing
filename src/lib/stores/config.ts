@@ -1,24 +1,26 @@
 import * as viem from 'viem'
-import type { Token } from '$lib/types'
+import * as imageLinks from './image-links'
+import type { Token, TokenList } from '$lib/types'
 import { Chains, Provider, type DestinationChains } from './auth/types'
+import { derived } from 'svelte/store'
 
 export const uniV2Settings = {
   [Chains.PLS]: {
-    router: '0x165C3410fC91EF562C50559f7d2289fEbed552d9',
+    routers: ['0x98bf93ebf5c380C0e6Ae8e192A7e2AE08edAcc02', '0x165C3410fC91EF562C50559f7d2289fEbed552d9'],
     wNative: '0xA1077a294dDE1B09bB078844df40758a5D0f9a27',
   },
   [Chains.ETH]: {
-    router: '0x7a250d5630b4cf539739df2c5dacb4c659f2488d',
+    routers: ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d'],
     wNative: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
   },
   [Chains.BNB]: {
-    router: '0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F',
+    routers: ['0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F'],
     wNative: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
   },
 } as Record<
   Chains,
   {
-    router: viem.Hex
+    routers: viem.Hex[]
     wNative: viem.Hex
   }
 >
@@ -34,7 +36,7 @@ export const destinationChains = {
     provider: 'tokensex',
     homeBridge: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
     foreignBridge: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
-    router: '0x47525293647C3725D911Cc0f6E000D2E831c4219',
+    router: '0xC1fbe75Ad4cb8Ed4cA122bA2146d57B9eAe07dcf',
   },
 } as Record<
   DestinationChains,
@@ -85,3 +87,15 @@ export const defaultAssetIn = {
     },
   },
 } as Record<DestinationChains, Token>
+
+export const whitelisted = derived(
+  [],
+  (_a, set) => {
+    fetch(imageLinks.list('/pulsex'))
+      .then(async (res) => (await res.json()) as TokenList)
+      .then(({ tokens }) => {
+        set(new Set<viem.Hex>(tokens.map((tkn) => viem.getAddress(tkn.address))))
+      })
+  },
+  new Set<viem.Hex>([]),
+)

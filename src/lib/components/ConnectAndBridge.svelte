@@ -110,7 +110,7 @@
     //     },
     //   ],
     // })
-    // console.log(trace)
+    // console.info(trace)
     //   await foreignClient.simulateContract({
     //     abi: abis.outputRouter,
     //     address: $router,
@@ -142,11 +142,10 @@
     //     ],
     //   })
     // } catch (err) {
-    //   console.log(err)
+    //   console.error(err)
     //   throw err
     // }
     // const to = assets[$bridgeKey].input.address
-    // console.log('inside send transaction')
     const tokenInfo = await tokenBridgeInfo([$bridgeKey, $assetIn])
     if (!tokenInfo || !$assetIn) {
       return

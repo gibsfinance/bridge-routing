@@ -1,10 +1,5 @@
 <script lang="ts">
-  import Onboard, {
-    type ConnectOptions,
-    type DisconnectOptions,
-    // type PreflightNotificationsOptions,
-    type WalletState,
-  } from '@web3-onboard/core'
+  import Onboard, { type ConnectOptions, type DisconnectOptions, type WalletState } from '@web3-onboard/core'
   import { chainsMetadata } from './constants'
   import injectedWallet from '@web3-onboard/injected-wallets'
   import walletConnectModule from '@web3-onboard/walletconnect'
@@ -46,14 +41,12 @@
     //   mobile: {
     //     enabled: true,
     //     transactionHandler: (txInfo) => {
-    //       console.log(txInfo)
     //     },
     //     position: 'bottomRight',
     //   },
     //   desktop: {
     //     enabled: true,
     //     transactionHandler: (txInfo) => {
-    //       console.log(txInfo)
     //     },
     //     position: 'bottomRight',
     //   },
@@ -88,8 +81,12 @@
       // Delete this part if you don't want to check if the current wallet chain is the one from the store
       walletState[0].chains[0].id.toLowerCase() !== $activeChain.toLowerCase()
     ) {
-      //await switchChain(Chains.ETH);
-      await switchChain($activeChain)
+      // only switch if the current tab is active
+      if (document.visibilityState === 'visible') {
+        await switchChain($activeChain)
+      } else {
+        // wait for visibility state change, then switch
+      }
     } else {
       $activeChain = walletState[0].chains[0].id as Chains
     }
@@ -102,7 +99,6 @@
   onMount(() => {
     const sub = onboard.state.select('wallets').subscribe(OnWalletsStateChange)
     // const subNotifications = onboard.state.select('notifications').subscribe((update) => {
-    //   console.log('tx notification', update)
     // })
     return () => {
       sub?.unsubscribe()

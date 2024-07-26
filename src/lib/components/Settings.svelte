@@ -1,11 +1,10 @@
 <script lang="ts">
   import SmallInput from './SmallInput.svelte'
   import { ensToAddress, walletAccount } from '$lib/stores/auth/store'
-  import { createPublicClient, http, isAddress, zeroAddress } from 'viem'
+  import { isAddress, zeroAddress } from 'viem'
   import { unwrap, calldata } from '$lib/stores/bridge-settings'
   import * as input from '$lib/stores/input'
   import { Chains } from '$lib/stores/auth/types'
-  import { chainsMetadata } from '$lib/stores/auth/constants'
   import Warning from './Warning.svelte'
   import { ensTld, isEns } from '$lib/stores/ens'
   import { normalize } from 'viem/ens'
@@ -23,13 +22,10 @@
     if (isEns(addr)) {
       const tld = ensTld(addr)
       const normalized = normalize(addr)
-      const publicClient = createPublicClient({
-        chain: chainsMetadata[Chains[tld]],
-        transport: http(),
-      })
+      const publicClient = input.clientFromChain(Chains[tld])
       loading.increment('ens')
       const resolved = await ensToAddress(publicClient, normalized).catch((err) => {
-        console.log(err)
+        console.error(err)
         return null
       })
       if (resolved) {
@@ -78,6 +74,6 @@
       id="calldata"
       disabled
       class="bg-transparent outline-none resize-none flex flex-grow cursor-not-allowed font-mono text-xs md:text-sm -mr-3 pr-3"
-      rows="5">{$calldata.slice(2)}</textarea>
+      rows="5">{$calldata?.slice(2)}</textarea>
   </div>
 </div>

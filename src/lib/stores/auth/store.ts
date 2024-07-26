@@ -1,7 +1,6 @@
 import { derived, type Readable } from 'svelte/store'
-import { createPublicClient, http, type Address, type WalletClient, type PublicClient } from 'viem'
+import { type Address, type WalletClient, type PublicClient } from 'viem'
 import { Chains } from './types'
-import { chainsMetadata } from './constants'
 import { normalize } from 'viem/ens'
 import * as input from '../input'
 
@@ -28,10 +27,7 @@ export const accountENS = derived([walletAccount], ([$walletAccount], set) => {
   }
 
   /** ENS resolver exists just on the mainnet  */
-  const ethPublicClient = createPublicClient({
-    chain: chainsMetadata[Chains.ETH],
-    transport: http(),
-  })
+  const ethPublicClient = input.clientFromChain(Chains.ETH)
 
   ethPublicClient.getEnsName({ address: $walletAccount }).then((ens) => set(ens))
 })

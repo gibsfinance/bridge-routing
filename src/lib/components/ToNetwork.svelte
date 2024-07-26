@@ -48,7 +48,7 @@
     if (!$amountAfterBridgeFee || !$estimatedNetworkCost) {
       return 0n
     }
-    const ratioOffset = $estimatedNetworkCost / ($amountAfterBridgeFee / 25_000n)
+    const ratioOffset = ($estimatedNetworkCost * 25_000n) / $amountAfterBridgeFee
     let target = min + scaledBasisPoint * ratioOffset
     if (target > max) {
       target = max
@@ -115,6 +115,8 @@
     humanReadableNumber(
       $amountAfterBridgeFee - $estimatedCost > 0n ? $amountAfterBridgeFee - $estimatedCost : 0n,
       decimals,
+      null,
+      true,
     )
 </script>
 

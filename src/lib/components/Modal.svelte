@@ -49,12 +49,12 @@
   }
   let searchValue = ''
   // if you add a whitelist
-  // let showAllTokens = false
+  let showAllTokens = false
   let showAllChains = false
 
-  const getSubset = ($tokens: Token[], val: string, allTokens: boolean) => {
+  const getSubset = ($tokens: Token[], val: string, allTokens: boolean, allChains: boolean) => {
     let tkns = $tokens
-    if (!val && !allTokens) {
+    if (!val && allTokens && allChains) {
       return tkns
     }
     const lowerVal = val.toLowerCase()
@@ -75,7 +75,7 @@
           }
       tkns = tkns.filter(filter)
     }
-    if (showAllChains) return tkns
+    if (allChains) return tkns
     const [inside, outside] = _.partition(tkns, onlyFromCurrentNetwork)
     return inside
   }
@@ -104,7 +104,7 @@
     return custom
   }
   const tokens = customTokens.tokens
-  $: subset = getSubset($tokens.concat($bridgableTokens), searchValue, showAllChains)
+  $: subset = getSubset($tokens.concat($bridgableTokens), searchValue, showAllTokens, showAllChains)
   $: inputIsAddress = isAddress(searchValue)
   $: addButtonDisabled = !inputIsAddress || !!subset.length
   $: searchValueHex = inputIsAddress ? (searchValue as viem.Hex) : null
@@ -117,7 +117,10 @@
         type="text"
         class="grow flex leading-6"
         placeholder="0x... or name/symbol"
-        bind:value={searchValue}
+        value={searchValue}
+        on:input={(e) => {
+          searchValue = e.currentTarget.value
+        }}
         autocomplete="off"
         autocorrect="off"
         autocapitalize="off"
@@ -183,3 +186,10 @@
       }}>close</button>
   </form>
 </dialog>
+
+<style lang="postcss">
+  .modal-box {
+    width: 100%;
+    @apply max-w-[36rem];
+  }
+</style>

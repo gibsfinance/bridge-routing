@@ -10,7 +10,7 @@ import * as chainEvents from './chain-events'
 import { chainsMetadata } from './auth/constants'
 import { multicallErc20, multicallRead } from '$lib/utils'
 import _ from 'lodash'
-import { uniV2Settings, destinationChains, defaultAssetIn, nativeAssetOut } from './config'
+import { uniV2Settings, destinationChains, defaultAssetIn, nativeAssetOut, whitelisted } from './config'
 import * as abis from './abis'
 import * as imageLinks from './image-links'
 import { isZero, stripNonNumber } from './utils'
@@ -130,27 +130,40 @@ export const foreignTokenBalance = derived<
       set(balance)
     }
     const account = viem.getAddress($walletAccount)
-    const unwatch = $publicClient.watchContractEvent({
-      abi: viem.erc20Abi,
-      eventName: 'Transfer',
-      address: $assetOut.address,
-      onLogs: (logs) => {
-        if (
-          logs.find(
-            (l) =>
-              viem.getAddress(l.args.from as viem.Hex) === account ||
-              viem.getAddress(l.args.to as viem.Hex) === account,
-          )
-        ) {
+    if ($bridgeKey === Chains.ETH) {
+      const unwatch = $publicClient.watchContractEvent({
+        abi: viem.erc20Abi,
+        eventName: 'Transfer',
+        address: $assetOut.address,
+        onLogs: (logs) => {
+          if (
+            logs.find(
+              (l) =>
+                viem.getAddress(l.args.from as viem.Hex) === account ||
+                viem.getAddress(l.args.to as viem.Hex) === account,
+            )
+          ) {
+            getBalance().catch(console.error)
+          }
+        },
+      })
+      getBalance().catch(console.error)
+      return () => {
+        cancelled = true
+        loading.decrement('balance')
+        unwatch()
+      }
+    } else {
+      const unwatch = $publicClient.watchBlocks({
+        onBlock: () => {
           getBalance().catch(console.error)
-        }
-      },
-    })
-    getBalance().catch(console.error)
-    return () => {
-      cancelled = true
-      loading.decrement('balance')
-      unwatch()
+        },
+      })
+      return () => {
+        cancelled = true
+        loading.decrement('balance')
+        unwatch()
+      }
     }
   },
   null,
@@ -169,9 +182,20 @@ export const toNetwork = derived([input.bridgeKey], ([$bridgeKey]) =>
 
 export const oneEther = 10n ** 18n
 
-export const desiredExcessCompensationBasisPoints = derived([input.assetIn, input.feeType], ([$assetIn, $feeType]) => {
-  return $feeType === input.FeeType.PERCENT ? 1_000n : input.isNative($assetIn) ? 1_000n : 5_000n
-})
+export const desiredExcessCompensationBasisPoints = derived(
+  [input.assetIn, input.feeType, whitelisted],
+  ([$assetIn, $feeType, $whitelisted]) => {
+    return !$assetIn
+      ? 0n
+      : $feeType === input.FeeType.PERCENT
+        ? 1_000n
+        : input.isNative($assetIn)
+          ? 1_000n
+          : $whitelisted.has(viem.getAddress($assetIn.address))
+            ? 5_000n
+            : 10_000n
+  },
+)
 
 export const desiredCompensationRatio = derived(
   [desiredExcessCompensationBasisPoints],
@@ -193,7 +217,7 @@ const fetchCache = new Map<
   string,
   {
     time: number
-    result: Promise<[FetchResult]>
+    result: Promise<FetchResult[]>
   }
 >()
 setInterval(() => {
@@ -217,33 +241,26 @@ const readAmountOut = (
     $bridgeKey: DestinationChains
   },
   baseFee: bigint,
-): Promise<[FetchResult]> => {
+  paths: viem.Hex[][],
+): Promise<FetchResult[]> => {
   const key = `${chain}-${$bridgeKey}-${baseFee}-${$assetInAddress}-${$oneTokenInt}`
   const res = fetchCache.get(key)
   if (res) {
     return res.result
   }
-  const q = multicallRead<[bigint[] | viem.Hex]>({
+  const q = multicallRead<FetchResult[]>({
     chain: chainsMetadata[chain],
     client: input.clientFromChain(chain),
     abi: abis.pulsexRouter,
     // pulsex router
-    target: uniV2Settings[chain].router,
-    calls: [
-      {
+    calls: _.flatMap(uniV2Settings[chain].routers, (target) =>
+      paths.map((path) => ({
         functionName: 'getAmountsOut',
         allowFailure: true,
-        args: [
-          // if 1 token goes into swap
-          $oneTokenInt,
-          [
-            // take the asset, go through wNative, then to wrapped native
-            $assetInAddress,
-            uniV2Settings[chain].wNative,
-          ].concat(chain === Chains.PLS ? [defaultAssetIn[$bridgeKey].address] : []),
-        ],
-      },
-    ],
+        args: [$oneTokenInt, path],
+        target,
+      })),
+    ),
   })
   fetchCache.set(key, {
     time: Date.now(),
@@ -264,7 +281,8 @@ export const priceCorrective = derived(
     let cancelled = false
     priceCorrectiveGuard = {}
     const pcg = priceCorrectiveGuard
-    if (!$assetIn || $assetOut.address === viem.zeroAddress) {
+    if (!$assetIn) {
+      // console.log('zero address', $assetIn, $assetOut)
       set(0n)
       return
     }
@@ -277,27 +295,33 @@ export const priceCorrective = derived(
     if (toBridge === 0n) {
       toBridge = viem.parseUnits('10', $assetIn.decimals)
     }
-    const outputFromRouter = (result: [viem.Hex | bigint[]]) => {
-      if (cancelled || priceCorrectiveGuard !== pcg) return
-      const [hops] = result
-      if (Array.isArray(hops)) {
-        const last = hops[hops.length - 1]
-        return (last * $oneTokenInt) / toBridge
+    const outputFromRouter = (result: FetchResult) => {
+      if (cancelled || priceCorrectiveGuard !== pcg) {
+        return 0n
       }
+      if (_.isString(result)) {
+        return 0n
+      }
+      if (!result.length) {
+        return 0n
+      }
+      const last = result[result.length - 1]
+      return (last * $oneTokenInt) / toBridge
     }
     loading.increment('gas')
     Promise.all([
-      $bridgeKey === Chains.ETH && $assetLink && $assetLink.toHome
+      $bridgeKey === Chains.ETH && $assetLink && $assetLink.toHome && $assetOut.address !== viem.zeroAddress
         ? readAmountOut(
-          {
-            $assetInAddress: $assetOut.address,
-            $oneTokenInt: toBridge,
-            chain: $bridgeKey,
-            $bridgeKey,
-          },
-          $latestBaseFeePerGas,
-        )
-        : (['0x'] as [viem.Hex]),
+            {
+              $assetInAddress: $assetOut.address,
+              $oneTokenInt: toBridge,
+              chain: $bridgeKey,
+              $bridgeKey,
+            },
+            $latestBaseFeePerGas,
+            [[$assetIn.address, uniV2Settings[$bridgeKey].wNative]],
+          )
+        : ([[]] as FetchResult[]),
       readAmountOut(
         {
           $assetInAddress: $assetIn.address,
@@ -306,11 +330,25 @@ export const priceCorrective = derived(
           $bridgeKey,
         },
         $latestBaseFeePerGas,
+        [
+          [$assetIn.address, uniV2Settings[Chains.PLS].wNative, defaultAssetIn[$bridgeKey].address],
+          [$assetIn.address, defaultAssetIn[$bridgeKey].address],
+        ],
       ),
     ]).then((results) => {
+      // console.log(results)
       if (cancelled) return
       loading.decrement('gas')
-      const [outputToken, inputToken] = results.map(outputFromRouter)
+      const max = (amountsOut: (bigint | undefined)[]) => {
+        return _(amountsOut)
+          .compact()
+          .reduce((max, current) => (max < current ? current : max), 0n)
+      }
+      const [outputs, inputs] = results
+      const outputAmounts = outputs.map(outputFromRouter)
+      const inputAmounts = inputs.map(outputFromRouter)
+      const outputToken = max(outputAmounts)
+      const inputToken = max(inputAmounts)
       const res =
         outputToken && outputToken > 0n
           ? inputToken && inputToken > outputToken && inputToken / outputToken === 1n
@@ -464,20 +502,20 @@ export const calldata = derived(
     if (!$foreignDataParam) return null
     return $bridgeKey === Chains.ETH
       ? viem.encodeFunctionData({
-        abi: abis.erc677ETH,
-        functionName: 'transferAndCall',
-        args: [destinationChains[$bridgeKey].homeBridge, $amountToBridge, $foreignDataParam],
-      })
+          abi: abis.erc677ETH,
+          functionName: 'transferAndCall',
+          args: [destinationChains[$bridgeKey].homeBridge, $amountToBridge, $foreignDataParam],
+        })
       : viem.encodeFunctionData({
-        abi: abis.erc677BNB,
-        functionName: 'transferAndCall',
-        args: [
-          destinationChains[$bridgeKey].homeBridge,
-          $amountToBridge,
-          $foreignDataParam,
-          $walletAccount || viem.zeroAddress,
-        ],
-      })
+          abi: abis.erc677BNB,
+          functionName: 'transferAndCall',
+          args: [
+            destinationChains[$bridgeKey].homeBridge,
+            $amountToBridge,
+            $foreignDataParam,
+            $walletAccount || viem.zeroAddress,
+          ],
+        })
   },
 )
 
@@ -491,10 +529,6 @@ export const assetSources = (asset: Token | null) => {
         return null
       }
       return `${Number(chainId)}/${info.tokenAddress}`
-      // return imageLinks.image({
-      //   address: info.tokenAddress,
-      //   chainId: Number(chainId),
-      // })
     }),
   ] as string[]
   if (!asset.chainId) {

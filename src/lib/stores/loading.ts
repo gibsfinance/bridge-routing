@@ -28,7 +28,6 @@ export const loading = {
         l.categories[key] = (l.categories[key] || 0) + 1
       }
       l.total += 1
-      // console.log(l)
       return l
     })
   },
@@ -42,7 +41,6 @@ export const loading = {
         l.categories[key] = (l.categories[key] || 0) - 1
       }
       l.total -= 1
-      // console.log(l)
       return l
     })
   },
