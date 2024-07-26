@@ -19,9 +19,8 @@ import { Chains, type DestinationChains } from './auth/types'
 import type { Token } from '$lib/types'
 import { chainsMetadata } from './auth/constants'
 
-export const destinationPublicClient = derived(
-  [input.bridgeKey, input.forcedRefresh],
-  ([$bridgeKey]) => input.clientFromChain($bridgeKey),
+export const destinationPublicClient = derived([input.bridgeKey, input.forcedRefresh], ([$bridgeKey]) =>
+  input.clientFromChain($bridgeKey),
 )
 
 export const block = derived<[Readable<PublicClient>], null | Block>(
@@ -267,7 +266,7 @@ export const approval = derived(
         set(approval)
       })
     getApproval()
-    let unwatch: WatchContractEventReturnType = () => { }
+    let unwatch: WatchContractEventReturnType = () => {}
     if ($assetLink.toForeign) {
       const account = getAddress($walletAccount)
       const bridgeAddr = getAddress($bridgeAddress)

@@ -120,56 +120,60 @@ export const bridgeKey = derived(
   ([$page]) => (Chains[$page.params.bridgeKey as keyof typeof Chains] || Chains.ETH) as DestinationChains,
 )
 
-export const bridgableTokens = derived([windowLoaded], ([$windowLoaded], set) => {
-  let cancelled = false
-  if (!$windowLoaded) {
-    set([])
-    return
-  }
-  loading.increment()
-  Promise.all([
-    fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo&chainId=369')),
-    fetch(imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo&chainId=369')),
-    fetch(imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo&chainId=369')),
-    fetch(imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo&chainId=369')),
-  ])
-    .then(async (results) => {
-      const responses = await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
-      loading.decrement()
-      if (cancelled) return
-      const list = _(responses)
-        .map('tokens')
-        .flatten()
-        .keyBy(({ chainId, address }) => {
-          return `${Number(chainId)}-${getAddress(address)}`
+export const bridgableTokens = derived(
+  [windowLoaded],
+  ([$windowLoaded], set) => {
+    let cancelled = false
+    if (!$windowLoaded) {
+      set([])
+      return
+    }
+    loading.increment()
+    Promise.all([
+      fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo&chainId=369')),
+      fetch(imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo&chainId=369')),
+      fetch(imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo&chainId=369')),
+      fetch(imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo&chainId=369')),
+    ])
+      .then(async (results) => {
+        const responses = await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
+        loading.decrement()
+        if (cancelled) return
+        const list = _(responses)
+          .map('tokens')
+          .flatten()
+          .keyBy(({ chainId, address }) => {
+            return `${Number(chainId)}-${getAddress(address)}`
+          })
+          .values()
+          .value()
+        const check = (cId: DestinationChains) => (item: Token) =>
+          defaultAssetIn[cId].address === item.address ? defaultAssetIn[cId] : null
+        const checkETH = check(Chains.ETH)
+        const checkBNB = check(Chains.BNB)
+        const sortedList = _.sortBy(list, 'name').map((item) => checkETH(item) || checkBNB(item) || item)
+        // console.log(sortedList)
+        sortedList.forEach((token) => {
+          // register on a central cache so that tokens that are gotten from onchain
+          // still have all extensions
+          // registerExtensions(token, token.extensions)
+          if (!token.logoURI) {
+            token.logoURI = imageLinks.image(token)
+          }
         })
-        .values()
-        .value()
-      const check = (cId: DestinationChains) => (item: Token) =>
-        defaultAssetIn[cId].address === item.address ? defaultAssetIn[cId] : null
-      const checkETH = check(Chains.ETH)
-      const checkBNB = check(Chains.BNB)
-      const sortedList = _.sortBy(list, 'name').map((item) => checkETH(item) || checkBNB(item) || item)
-      // console.log(sortedList)
-      sortedList.forEach((token) => {
-        // register on a central cache so that tokens that are gotten from onchain
-        // still have all extensions
-        // registerExtensions(token, token.extensions)
-        if (!token.logoURI) {
-          token.logoURI = imageLinks.image(token)
-        }
+        set(sortedList)
+        return sortedList
       })
-      set(sortedList)
-      return sortedList
-    })
-    .catch((err) => {
-      loading.decrement()
-      throw err
-    })
-  return () => {
-    cancelled = true
-  }
-}, [] as Token[])
+      .catch((err) => {
+        loading.decrement()
+        throw err
+      })
+    return () => {
+      cancelled = true
+    }
+  },
+  [] as Token[],
+)
 
 export const assetInAddress = derived([bridgeKey, page], ([$bridgeKey, $page]) =>
   getAddress($page.params.assetInAddress || defaultAssetIn[$bridgeKey as DestinationChains].address),
@@ -180,8 +184,8 @@ export const assetIn = derived(
   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens]) => {
     const $assetIn = $bridgableTokens.length
       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
-      _.find($customTokens || [], { address: $assetInAddress }) ||
-      defaultAssetIn[$bridgeKey]
+        _.find($customTokens || [], { address: $assetInAddress }) ||
+        defaultAssetIn[$bridgeKey]
       : null
     // console.log($assetIn)
     return $assetIn
@@ -221,14 +225,17 @@ export const clientFromChain = ($activeChain: Chains) => {
   }
   const client = createPublicClient({
     chain: chainsMetadata[$activeChain],
-    transport: fallback(urls.map((rpc) => (
-      http(rpc, {
-        batch: {
-          wait: 10,
-          batchSize: 10,
-        },
-      })
-    )), { rank: true }),
+    transport: fallback(
+      urls.map((rpc) =>
+        http(rpc, {
+          batch: {
+            wait: 10,
+            batchSize: 10,
+          },
+        }),
+      ),
+      { rank: true },
+    ),
   })
   clientCache.set($activeChain, {
     key,

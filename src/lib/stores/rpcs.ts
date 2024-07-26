@@ -1,7 +1,7 @@
 import { Chains } from '$lib/stores/auth/types'
 import { chainsMetadata } from './auth/constants'
-import { get, writable } from 'svelte/store';
-import _ from 'lodash';
+import { get, writable } from 'svelte/store'
+import _ from 'lodash'
 
 type RPCData = Map<Chains, string[]>
 
@@ -11,15 +11,12 @@ const defaultData = new Map([
   [Chains.BNB, [chainsMetadata[Chains.BNB].rpcUrls.default.http[0]]],
 ])
 
-export const key = (c: Chains, l: string[]) => (
-  `${c},${(l as string[]).join(',')}`
-)
+export const key = (c: Chains, l: string[]) => `${c},${(l as string[]).join(',')}`
 
 const entries = new Map(defaultData.entries())
 const serializer = {
   stringify(obj: RPCData) {
-    return [...obj.entries()]
-      .map(([c, l]) => key(c, l)).join('\n')
+    return [...obj.entries()].map(([c, l]) => key(c, l)).join('\n')
   },
   parse(entry: string | null) {
     if (!entry) {
@@ -29,9 +26,9 @@ const serializer = {
       entry.split('\n').map((ro) => {
         const [chain, ...list] = ro.split(',')
         return [chain as Chains, _.compact(list)]
-      })
+      }),
     )
-  }
+  },
 }
 const localStorageKey = 'rpcs'
 export const store = writable(serializer.parse(localStorage.getItem(localStorageKey)))

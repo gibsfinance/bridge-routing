@@ -3,7 +3,7 @@ import * as imageLinks from './image-links'
 import type { Token, TokenList } from '$lib/types'
 import { Chains, Provider, type DestinationChains } from './auth/types'
 import { derived } from 'svelte/store'
-import { windowLoaded, windowStore } from './window'
+import { windowLoaded } from './window'
 
 export const uniV2Settings = {
   [Chains.PLS]: {

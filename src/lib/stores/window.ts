@@ -4,13 +4,15 @@ import _ from 'lodash'
 export const windowIsAvailable = typeof window !== 'undefined'
 
 const w = readable(
-  windowIsAvailable ? {
-    innerWidth: window.innerWidth,
-    innerHeight: window.innerHeight,
-  } : {
-    innerHeight: 0,
-    innerWidth: 0,
-  },
+  windowIsAvailable
+    ? {
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+      }
+    : {
+        innerHeight: 0,
+        innerWidth: 0,
+      },
   (set) => {
     const getCurrent = () => ({
       innerWidth: window.innerWidth,
@@ -26,7 +28,7 @@ const w = readable(
     }
     const handler = () => updateIfDifferent()
     if (!windowIsAvailable) {
-      return () => { }
+      return () => {}
     }
     window.addEventListener('resize', handler)
     const unwind = () => {
@@ -39,29 +41,33 @@ const w = readable(
 
 export const firstMount = writable()
 
-export const windowLoaded = derived([firstMount], ([$firstMount], set) => {
-  if ($firstMount) {
-    set(true)
-    return
-  }
-  let loaded = false
-  const handler = (e: Event) => {
-    console.log(e)
-    if (!loaded) {
-      loaded = true
-      set(loaded)
+export const windowLoaded = derived(
+  [firstMount],
+  ([$firstMount], set) => {
+    if ($firstMount) {
+      set(true)
+      return
     }
-  }
-  if (!windowIsAvailable) {
-    return () => { }
-  }
-  window.addEventListener('load', handler)
-  document.addEventListener('DOMContentLoaded', handler)
-  return () => {
-    window.removeEventListener('load', handler)
-    document.removeEventListener('DOMContentLoadedd', handler)
-  }
-}, false)
+    let loaded = false
+    const handler = (e: Event) => {
+      console.log(e)
+      if (!loaded) {
+        loaded = true
+        set(loaded)
+      }
+    }
+    if (!windowIsAvailable) {
+      return () => {}
+    }
+    window.addEventListener('load', handler)
+    document.addEventListener('DOMContentLoaded', handler)
+    return () => {
+      window.removeEventListener('load', handler)
+      document.removeEventListener('DOMContentLoadedd', handler)
+    }
+  },
+  false,
+)
 
 export { w as windowStore }
 
@@ -82,22 +88,28 @@ export const domains = {
   },
 }
 
-export const directDomain = derived([domainsStore], ([$domainStore], set) => {
-  let cancelled = false
-  Promise.all([...$domainStore.entries()].map(async ([domain, direct]) => {
-    if (direct) {
-      return [domain, direct] as const
+export const directDomain = derived(
+  [domainsStore],
+  ([$domainStore], set) => {
+    let cancelled = false
+    Promise.all(
+      [...$domainStore.entries()].map(async ([domain, direct]) => {
+        if (direct) {
+          return [domain, direct] as const
+        }
+        return fetch(`https://${domain}/version.json`)
+          .then((res) => res.json())
+          .then((j) => {
+            return [domain, j.ipfs_gateways[0] as string] as const
+          })
+      }),
+    ).then((entries) => {
+      if (cancelled) return
+      set(new Map(entries))
+    })
+    return () => {
+      cancelled = true
     }
-    return fetch(`https://${domain}/version.json`)
-      .then((res) => res.json())
-      .then((j) => {
-        return [domain, j.ipfs_gateways[0] as string] as const
-      })
-  })).then((entries) => {
-    if (cancelled) return
-    set(new Map(entries))
-  })
-  return () => {
-    cancelled = true
-  }
-}, new Map<string, string>())
+  },
+  new Map<string, string>(),
+)
