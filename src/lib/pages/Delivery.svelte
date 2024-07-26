@@ -5,11 +5,13 @@
   import ModalLoader from '$lib/components/ModalLoader.svelte'
 </script>
 
-<AuthProvider>
-  <Nav />
-  <main class="flex flex-col box-border w-full h-fit bg-slate-50 mt-10">
-    <slot />
+<main class="flex flex-col box-border w-full h-fit min-h-screen bg-slate-950">
+  <AuthProvider>
+    <Nav />
+    <div class="flex flex-col mt-10 min-h-screen">
+      <slot />
+    </div>
     <Footer />
-  </main>
-  <ModalLoader />
-</AuthProvider>
+    <ModalLoader />
+  </AuthProvider>
+</main>

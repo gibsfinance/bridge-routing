@@ -6,7 +6,7 @@
 </script>
 
 <span
-  class="flex text-center font-mono font-thin tooltip tooltip-left"
+  class="flex text-center font-mono font-thin tooltip tooltip-left leading-8"
   data-tip={new Date(+env.version || 0).toISOString()}>
   v{appVersion}@{isLocal ? 'local' : env.version}
 </span>
