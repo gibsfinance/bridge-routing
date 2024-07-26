@@ -7,7 +7,10 @@ const w = readable(
   windowIsAvailable ? {
     innerWidth: window.innerWidth,
     innerHeight: window.innerHeight,
-  } : {},
+  } : {
+    innerHeight: 0,
+    innerWidth: 0,
+  },
   (set) => {
     const getCurrent = () => ({
       innerWidth: window.innerWidth,

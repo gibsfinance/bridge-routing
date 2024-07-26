@@ -8,7 +8,7 @@
 </script>
 
 <BlurryImage min_height="100vh" image_url="url({bridgeImageFuzzy})" blur="9px" brightness="50%">
-  <div class="m-auto max-w-lg flex flex-col text-lg -mx-8" class:container={large}>
+  <div class="m-auto max-w-lg flex flex-col text-lg -mx-8 mt-16" class:container={large}>
     <h1
       class="text-white font-italiana z-10 top-0 bottom-0 left-0 right-0 m-auto text-center content-center capitalize text-4xl">
       token delivery
