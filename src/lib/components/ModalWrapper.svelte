@@ -23,7 +23,9 @@
 </script>
 
 <dialog id="{id}-modal" class="modal" bind:this={modal}>
-  <div class="modal-box text-slate-50 max-h-full p-0 overflow-hidden flex flex-col" class:h-96={height === 'fixed'}>
+  <div
+    class="modal-box text-neutral-900 dark:text-slate-50 max-h-full p-0 overflow-hidden flex flex-col"
+    class:h-96={height === 'fixed'}>
     <slot close={doClose} />
   </div>
   <form method="dialog" class="modal-backdrop">

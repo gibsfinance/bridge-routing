@@ -17,6 +17,7 @@
   font-family: var(--font-body);
   color: var(--color-text);
   @apply bg-slate-950;
+  /* --b1: var(--color-bg-0); */
 }
 
 .tooltip {
