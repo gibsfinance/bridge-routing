@@ -22,7 +22,9 @@
       <p class="mt-4 sm:mt-8 text-left">
         Through its minimalist design, gibs.finance eliminates the need for users to pre-fund recipient wallets,
         reducing associated expenses and streamlining transactions. This unique feature ensures gas savings and enhances
-        user privacy by eliminating the need to fund the address from other addresses.
+        user privacy by eliminating the need to fund the destination from other addresses. It also allows you to pay
+        your fees in tokens that are not native tokens, such as Ether. This allows users to transfer from Pulsechain
+        directly to their preferred off-ramp provider. (Coinbase, Kraken, etc.)
       </p>
       <p class="mt-4 sm:mt-8 text-left">
         At Gibs.finance, user security is paramount. The contracts keep users in control of their funds at all times.
