@@ -17,7 +17,7 @@
       <p class="text-left">
         Introducing "Token Delivery" for PulseChain to EVM Omnibridges. With a minimal implementations, and commitment
         to security, <a href="delivery" class="underline">gibs.finance/delivery</a>
-        uses Pulsechain bridge contract, and adds a delivery feature to Ethereum or BSC without having to claim
+        uses Pulsechain bridge contract, and adds a delivery feature to Ethereum or BSC without having to claim your tokens.
       </p>
       <p class="mt-4 sm:mt-8 text-left">
         Through its minimalist design, gibs.finance eliminates the need for users to pre-fund recipient wallets,
