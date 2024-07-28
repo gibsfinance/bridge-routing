@@ -31,13 +31,13 @@ export const destinationChains = {
     provider: 'pulsechain',
     homeBridge: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
     foreignBridge: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
-    router: '0x5E839Db26618b31A7cFC027D20D6F8ecf302fCe2',
+    router: '0x0560e1392185bf554E1e0044cD752aeA83F37C6E',
   },
   [Chains.BNB]: {
     provider: 'tokensex',
     homeBridge: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
     foreignBridge: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
-    router: '0xC1fbe75Ad4cb8Ed4cA122bA2146d57B9eAe07dcf',
+    router: '0xC985f38b9d082692C6744C628026305E3f202fE1',
   },
 } as Record<
   DestinationChains,
