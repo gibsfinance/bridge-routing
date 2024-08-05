@@ -42,4 +42,9 @@
       <Icon icon="ri:twitter-fill" height="1.25em" width="1.25em" />
     </button>
   </a>
+  <a href="https://t.me/+6ejcIlIAbL5lYzFh" target="_blank" class="mr-2" aria-label="a link to the telegram channel">
+    <button class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500">
+      <Icon icon="line-md:telegram" height="1.25em" width="1.25em" />
+    </button>
+  </a>
 </div>
