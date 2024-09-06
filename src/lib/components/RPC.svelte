@@ -11,6 +11,9 @@
 
 <div class="flex flex-col h-full py-4">
   <h2 class="leading-10 text-2xl text-center">RPCs</h2>
+  <p class="text-center px-4 text-sm text-gray-400">
+    Endpoints will be used under the same public client, and will use batching where possible.
+  </p>
   <div class="overflow-y-scroll flex flex-col px-4">
     {#each $rpcStore as [chain, list]}
       <div class="mt-4">
@@ -43,7 +46,7 @@
             </li>
           {/each}
           {#if !rpcs.hasDefault(chain, list)}
-            <li>
+            <li class="mb-2 flex w-full flex-grow">
               <label class="flex text-sm">
                 <button
                   type="button"

@@ -184,8 +184,8 @@ export const assetIn = derived(
   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens]) => {
     const $assetIn = $bridgableTokens.length
       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
-        _.find($customTokens || [], { address: $assetInAddress }) ||
-        defaultAssetIn[$bridgeKey]
+      _.find($customTokens || [], { address: $assetInAddress }) ||
+      defaultAssetIn[$bridgeKey]
       : null
     // console.log($assetIn)
     return $assetIn
@@ -216,6 +216,13 @@ export const walletClient = writable<WalletClient | undefined>()
 
 const clientCache = new Map<Chains, { key: string; client: PublicClient }>([])
 
+export const config = {
+  batch: {
+    wait: 10,
+    batchSize: 10,
+  },
+}
+
 export const clientFromChain = ($activeChain: Chains) => {
   const urls = _.compact(get(rpcs.store).get($activeChain) || [])
   const key = rpcs.key($activeChain, urls)
@@ -230,7 +237,6 @@ export const clientFromChain = ($activeChain: Chains) => {
         http(rpc, {
           batch: {
             wait: 10,
-            batchSize: 10,
           },
         }),
       ),
