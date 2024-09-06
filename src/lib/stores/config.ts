@@ -46,15 +46,22 @@ export const pathways = {
     },
   },
 } as Record<
-  Provider, Partial<Record<
-    Chains, Partial<Record<
-      DestinationChains, {
-        home: Hex;
-        foreign: Hex;
-        router: Hex;
-      }
-    >>
-  >>
+  Provider,
+  Partial<
+    Record<
+      Chains,
+      Partial<
+        Record<
+          DestinationChains,
+          {
+            home: Hex
+            foreign: Hex
+            router: Hex
+          }
+        >
+      >
+    >
+  >
 >
 
 export const destinationChains = {
