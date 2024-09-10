@@ -10,6 +10,15 @@ export enum Chains {
   // OP = '0xa',
 }
 
+/**
+ * constraints regarding which bridge directions can be linked together
+ */
+export const destinations = {
+  [Chains.PLS]: [Chains.ETH, Chains.BNB],
+  [Chains.ETH]: [Chains.PLS],
+  [Chains.BNB]: [Chains.PLS],
+} as const
+
 export type DestinationChains = Chains.ETH | Chains.BNB
 
 export type VisualChain = Chain & {

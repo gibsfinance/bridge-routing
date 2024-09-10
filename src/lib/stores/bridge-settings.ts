@@ -85,6 +85,7 @@ export const assetOut = asyncDerived(
   backupAssetIn,
 )
 
+/** this value represents the balance on the foreign network */
 export const foreignTokenBalance = derived<
   [Readable<Hex | undefined>, Readable<PublicClient>, Readable<DestinationChains>, Readable<Token>, Readable<boolean>],
   null | bigint
