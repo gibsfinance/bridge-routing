@@ -85,6 +85,7 @@ export const assetOut = asyncDerived(
   backupAssetIn,
 )
 
+/** this value represents the balance on the foreign network */
 export const foreignTokenBalance = derived<
   [Readable<Hex | undefined>, Readable<PublicClient>, Readable<DestinationChains>, Readable<Token>, Readable<boolean>],
   null | bigint
@@ -310,15 +311,15 @@ export const priceCorrective = derived(
     Promise.all([
       $bridgeKey === Chains.ETH && $assetLink && $assetLink.toHome && $assetOut.address !== zeroAddress
         ? readAmountOut(
-            {
-              $assetInAddress: $assetOut.address,
-              $oneTokenInt: toBridge,
-              chain: $bridgeKey,
-              $bridgeKey,
-            },
-            $latestBaseFeePerGas,
-            [[$assetIn.address, uniV2Settings[$bridgeKey].wNative]],
-          )
+          {
+            $assetInAddress: $assetOut.address,
+            $oneTokenInt: toBridge,
+            chain: $bridgeKey,
+            $bridgeKey,
+          },
+          $latestBaseFeePerGas,
+          [[$assetIn.address, uniV2Settings[$bridgeKey].wNative]],
+        )
         : ([[]] as FetchResult[]),
       readAmountOut(
         {
@@ -500,20 +501,20 @@ export const calldata = derived(
     if (!$foreignDataParam) return null
     return $bridgeKey === Chains.ETH
       ? encodeFunctionData({
-          abi: abis.erc677ETH,
-          functionName: 'transferAndCall',
-          args: [destinationChains[$bridgeKey].homeBridge, $amountToBridge, $foreignDataParam],
-        })
+        abi: abis.erc677ETH,
+        functionName: 'transferAndCall',
+        args: [destinationChains[$bridgeKey].homeBridge, $amountToBridge, $foreignDataParam],
+      })
       : encodeFunctionData({
-          abi: abis.erc677BNB,
-          functionName: 'transferAndCall',
-          args: [
-            destinationChains[$bridgeKey].homeBridge,
-            $amountToBridge,
-            $foreignDataParam,
-            $walletAccount || zeroAddress,
-          ],
-        })
+        abi: abis.erc677BNB,
+        functionName: 'transferAndCall',
+        args: [
+          destinationChains[$bridgeKey].homeBridge,
+          $amountToBridge,
+          $foreignDataParam,
+          $walletAccount || zeroAddress,
+        ],
+      })
   },
 )
 
