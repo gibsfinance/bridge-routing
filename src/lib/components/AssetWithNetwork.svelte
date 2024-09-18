@@ -1,15 +1,14 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import type { Token } from '$lib/types'
-  import type { DestinationChains } from '$lib/stores/auth/types'
   import TokenIcon from './TokenIcon.svelte'
   import { assetSources, getOriginationChainId } from '$lib/stores/bridge-settings'
+  import { bridgeKey } from '$lib/stores/input'
 
   export let asset!: Token
   export let tokenSize = 10
   export let networkSize = 5
-  $: originationChainId = getOriginationChainId(asset)
-  $: chain = chainsMetadata[`0x${originationChainId.toString(16)}` as DestinationChains]
+  $: chain = chainsMetadata[getOriginationChainId(asset, $bridgeKey)]
 </script>
 
 <span class="token-image-container relative" style="--token-size: {tokenSize};">

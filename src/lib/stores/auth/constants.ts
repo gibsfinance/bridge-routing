@@ -1,4 +1,4 @@
-import { mainnet, pulsechain, bsc } from 'viem/chains'
+import { mainnet, pulsechain, bsc, sepolia, pulsechainV4 } from 'viem/chains'
 import type { ChainsMetadata } from './types'
 import { Chains } from './types'
 import * as imageLinks from '$lib/stores/image-links'
@@ -52,5 +52,19 @@ export const chainsMetadata = {
         http: ['https://bsc-pokt.nodies.app'],
       },
     },
+  },
+  [Chains.SEP]: {
+    ...sepolia,
+    name: 'Sepolia',
+    chainId: Chains.SEP,
+    icon: imageLinks.network(mainnet.id),
+    alt: 'two pyramids joined on one side',
+  },
+  [Chains.V4PLS]: {
+    ...pulsechainV4,
+    name: 'Pulsechain V4',
+    chainId: Chains.V4PLS,
+    icon: imageLinks.network(pulsechain.id),
+    alt: 'a pink blue and purple hexagon with an ekg line running horizontally',
   },
 } as ChainsMetadata

@@ -43,7 +43,7 @@
       <div class="items-center flex grow content-end">
         <ul class="flex flex-row items-center grow text-white justify-end">
           <li class="flex flex-row">
-            {#if $bridgeKey === Chains.ETH}
+            {#if $bridgeKey[2] === Chains.ETH}
               <VersionedLink domain="bridge.pulsechain.com" path="/#/transactions" let:direct let:path>
                 <a
                   aria-label="to recent bridge transactions on ethereum"

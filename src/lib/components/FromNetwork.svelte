@@ -14,7 +14,7 @@
   import { stripNonNumber } from '$lib/stores/utils'
 
   export let network!: VisualChain
-  export let asset!: Token
+  export let asset!: Token | null
   export let value!: Writable<string>
   // when asset changs, reset to zero
   $: if (asset) {
@@ -30,47 +30,50 @@
   }
 </script>
 
-<div class="shadow-md rounded-lg">
-  <div class="bg-slate-100 py-2 px-3 rounded-t-lg">
-    <NetworkSummary
-      {network}
-      {asset}
-      balance={$tokenBalance}
-      showMax
-      on:max-balance={() => {
-        const updated = formatUnits($tokenBalance, asset.decimals)
-        value.set(updated)
-      }} />
-  </div>
-  <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
-    <span class="flex flex-grow relative max-w-[70%]">
-      <input
-        class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-xl sm:text-2xl w-full"
-        placeholder="0.0"
-        value={$focused ? val : $value}
-        on:focus={() => {
-          val = stripNonNumber(get(value))
-          focused.set(true)
-        }}
-        on:blur={() => focused.set(false)}
-        on:input={handleInput} />
-      <Warning
-        show={$amountToBridge < $minAmount && $amountToBridge > 0n}
-        disabled={$focused}
-        position="left"
-        tooltip="Input is too low, must be at least {formatUnits($minAmount, asset?.decimals || 18)}" />
-    </span>
+{#if asset}
+  <div class="shadow-md rounded-lg">
+    <div class="bg-slate-100 py-2 px-3 rounded-t-lg">
+      <NetworkSummary
+        {network}
+        {asset}
+        inChain
+        balance={$tokenBalance}
+        showMax
+        on:max-balance={() => {
+          const updated = formatUnits($tokenBalance, asset.decimals)
+          value.set(updated)
+        }} />
+    </div>
+    <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
+      <span class="flex flex-grow relative max-w-[70%]">
+        <input
+          class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-xl sm:text-2xl w-full"
+          placeholder="0.0"
+          value={$focused ? val : $value}
+          on:focus={() => {
+            val = stripNonNumber(get(value))
+            focused.set(true)
+          }}
+          on:blur={() => focused.set(false)}
+          on:input={handleInput} />
+        <Warning
+          show={$amountToBridge < $minAmount && $amountToBridge > 0n}
+          disabled={$focused}
+          position="left"
+          tooltip="Input is too low, must be at least {formatUnits($minAmount, asset?.decimals || 18)}" />
+      </span>
 
-    <button
-      class="tooltip tooltip-left leading-8 py-2 px-3 flex flex-row space-x-2 items-center open-modal-container"
-      data-tip={asset?.name || ''}
-      on:click={openModal}>
-      <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
-      <span class="ml-2">{asset?.symbol || ''}</span>
-      <Icon icon="mingcute:right-fill" height="1em" width="1em" class="flex icon transition-all" />
-    </button>
+      <button
+        class="tooltip tooltip-left leading-8 py-2 px-3 flex flex-row space-x-2 items-center open-modal-container"
+        data-tip={asset?.name || ''}
+        on:click={openModal}>
+        <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
+        <span class="ml-2">{asset?.symbol || ''}</span>
+        <Icon icon="mingcute:right-fill" height="1em" width="1em" class="flex icon transition-all" />
+      </button>
+    </div>
   </div>
-</div>
+{/if}
 
 <style lang="postcss">
   :global(.open-modal-container:hover .icon) {

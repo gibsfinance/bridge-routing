@@ -14,18 +14,22 @@ import {
 import { derived, type Readable } from 'svelte/store'
 import { loading } from './loading'
 import { walletAccount } from './auth/store'
-import { destinationChains } from './config'
-import { Chains, type DestinationChains } from './auth/types'
+import { Chains } from './auth/types'
 import type { Token } from '$lib/types'
 import { chainsMetadata } from './auth/constants'
+import { pathway } from './config'
 
 export const destinationPublicClient = derived([input.bridgeKey, input.forcedRefresh], ([$bridgeKey]) =>
-  input.clientFromChain($bridgeKey),
+  $bridgeKey && input.clientFromChain($bridgeKey[2]),
 )
 
-export const block = derived<[Readable<PublicClient>], null | Block>(
+export const block = derived<[Readable<PublicClient | null>], null | Block>(
   [destinationPublicClient],
   ([$destinationPublicClient], set) => {
+    if (!$destinationPublicClient) {
+      set(null)
+      return
+    }
     loading.increment('gas')
     return $destinationPublicClient.watchBlocks({
       emitOnBegin: true,
@@ -79,7 +83,7 @@ export const latestBaseFeePerGas = derived(
 )
 
 export const tokenBalance = derived(
-  [walletAccount, input.publicClient, input.assetIn, input.forcedRefresh],
+  [walletAccount, input.fromPublicClient, input.assetIn, input.forcedRefresh],
   ([$walletAccount, $publicClient, $assetIn], set) => {
     let cancelled = false
     if (!$assetIn || !$walletAccount || $walletAccount === zeroAddress) {
@@ -94,7 +98,7 @@ export const tokenBalance = derived(
     const getBalance = async () => {
       const balance = await token.read.balanceOf([$walletAccount])
       if (cancelled) return
-      console.log('token balance', balance)
+      // console.log('token balance', balance)
       set(balance)
     }
     const unwatch = $publicClient.watchContractEvent({
@@ -117,19 +121,20 @@ export const tokenBalance = derived(
 )
 
 export const minAmount = derived(
-  [input.bridgeKey, input.publicClient, input.assetIn],
-  ([$bridgeKey, $publicClient, $assetIn], set) => {
-    if (!$assetIn) {
+  [input.bridgePathway, input.fromPublicClient, input.assetIn],
+  ([$bridgePathway, $publicClient, $assetIn], set) => {
+    if (!$bridgePathway || !$assetIn) {
       set(0n)
       return
     }
     let cancelled = false
+    // console.log($bridgePathway.from, $publicClient.chain!.id)
     $publicClient
       .readContract({
         abi: abis.inputBridge,
         functionName: 'minPerTx',
         args: [$assetIn.address],
-        address: destinationChains[$bridgeKey].homeBridge,
+        address: $bridgePathway.from,
       })
       .then((res) => {
         if (cancelled) return
@@ -142,7 +147,7 @@ export const minAmount = derived(
   0n,
 )
 
-export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [DestinationChains, Token | null]): Promise<null | {
+export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, Token | null]): Promise<null | {
   toForeign?: {
     home: Hex
     foreign?: Hex
@@ -152,15 +157,17 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [DestinationChains
     foreign: Hex
   }
 }> => {
-  if (!$assetIn) {
+  const bridgePathway = pathway($bridgeKey)
+  if (!$assetIn || !bridgePathway) {
     return null
   }
+  const [, fromChain, toChain] = $bridgeKey
   const args = [$assetIn.address]
   const mappings = await multicallRead<Hex[]>({
-    client: input.clientFromChain(Chains.PLS),
-    chain: chainsMetadata[Chains.PLS],
+    client: input.clientFromChain(fromChain),
+    chain: chainsMetadata[fromChain],
     abi: abis.inputBridge,
-    target: destinationChains[$bridgeKey].homeBridge,
+    target: bridgePathway.from,
     calls: [
       { functionName: 'bridgedTokenAddress', args },
       { functionName: 'nativeTokenAddress', args },
@@ -174,11 +181,12 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [DestinationChains
   if (foreignTokenAddress !== zeroAddress) {
     // if we are here, then we know that we are dealing with a native
     // address, so we need to go to the foreign chain
+    // console.log(bridgePathway)
     const mappings = await multicallRead<Hex[]>({
-      client: input.clientFromChain($bridgeKey),
-      chain: chainsMetadata[$bridgeKey],
+      client: input.clientFromChain(toChain),
+      chain: chainsMetadata[toChain],
       abi: abis.inputBridge,
-      target: destinationChains[$bridgeKey].foreignBridge,
+      target: bridgePathway.to,
       calls: [
         { functionName: 'bridgedTokenAddress', args },
         { functionName: 'nativeTokenAddress', args },
@@ -234,10 +242,10 @@ const checkApproval = async ([$walletAccount, $bridgeAddress, $assetLink, $publi
   return allowance
 }
 
-export const assetLink = derived<[Readable<DestinationChains>, Readable<Token | null>], TokenBridgeInfo>(
+export const assetLink = derived<[Readable<input.BridgeKey | null>, Readable<Token | null>], TokenBridgeInfo>(
   [input.bridgeKey, input.assetIn],
   ([$bridgeKey, $assetIn], set) => {
-    if (!$assetIn) {
+    if (!$bridgeKey || !$assetIn) {
       set(null)
       return
     }
@@ -254,11 +262,12 @@ export const assetLink = derived<[Readable<DestinationChains>, Readable<Token | 
 )
 
 export const approval = derived(
-  [walletAccount, input.bridgeAddress, assetLink, input.publicClient, input.forcedRefresh],
-  ([$walletAccount, $bridgeAddress, $assetLink, $publicClient], set) => {
-    if (!$assetLink || !$walletAccount) {
+  [walletAccount, input.bridgeKey, assetLink, input.fromPublicClient, input.forcedRefresh],
+  ([$walletAccount, $bridgeKey, $assetLink, $publicClient], set) => {
+    if (!$bridgeKey || !$assetLink || !$walletAccount) {
       return
     }
+    const $bridgeAddress = pathway($bridgeKey)!.from
     let cancelled = false
     const getApproval = () =>
       checkApproval([$walletAccount, $bridgeAddress, $assetLink, $publicClient]).then((approval) => {
@@ -266,7 +275,7 @@ export const approval = derived(
         set(approval)
       })
     getApproval()
-    let unwatch: WatchContractEventReturnType = () => {}
+    let unwatch: WatchContractEventReturnType = () => { }
     if ($assetLink.toForeign) {
       const account = getAddress($walletAccount)
       const bridgeAddr = getAddress($bridgeAddress)

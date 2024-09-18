@@ -80,7 +80,7 @@
   }
 
   const onlyFromCurrentNetwork = (tkn: Token) =>
-    tkn.chainId === 369 && !!tkn.extensions?.bridgeInfo?.[Number($bridgeKey)]?.tokenAddress
+    tkn.chainId === 369 && !!tkn.extensions?.bridgeInfo?.[Number($bridgeKey[2])]?.tokenAddress
 
   const loadViaMulticall = async (target: Hex | null) => {
     if (!target) {

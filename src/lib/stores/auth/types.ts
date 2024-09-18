@@ -7,19 +7,18 @@ export enum Chains {
   PLS = '0x171',
   ETH = '0x1',
   BNB = '0x38',
-  // OP = '0xa',
+  // testnets
+  SEP = '0xaa36a7',
+  V4PLS = '0x3af',
 }
 
-/**
- * constraints regarding which bridge directions can be linked together
- */
-export const destinations = {
-  [Chains.PLS]: [Chains.ETH, Chains.BNB],
-  [Chains.ETH]: [Chains.PLS],
-  [Chains.BNB]: [Chains.PLS],
-} as const
+export type ChainKey = keyof typeof Chains
 
-export type DestinationChains = Chains.ETH | Chains.BNB
+export const ChainIdToKey = new Map<Chains, ChainKey>(
+  Object.entries(Chains).map(([key, chain]) => (
+    [chain, key] as [Chains, ChainKey]
+  ))
+)
 
 export type VisualChain = Chain & {
   chainId: Chains
