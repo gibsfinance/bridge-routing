@@ -20,13 +20,14 @@ import {
   type PublicClient,
 } from 'viem'
 import { countDecimals, humanReadableNumber, isZero, stripNonNumber } from '$lib/stores/utils'
-import { Chains, type DestinationChains } from './auth/types'
-import { feeManagerMapping } from './fee-manager'
-import { defaultAssetIn, destinationChains, nativeAssetOut } from './config'
+import { ChainIdToKey, Chains, Provider } from './auth/types'
+import { settings, type PathwayExtendableConfig } from './fee-manager'
+import { defaultAssetIn, nativeAssetOut, pathway } from './config'
 import type { Token, TokenList } from '$lib/types'
 import _ from 'lodash'
 import { chainsMetadata } from './auth/constants'
 import { windowLoaded } from './window'
+import { asyncDerived } from '@square/svelte-store'
 
 export const forcedRefresh = writable(0n)
 
@@ -111,16 +112,34 @@ export const recipient = {
   ...recipientStore,
 }
 
-export const bridgeFrom = writable(feeManagerMapping)
+export type BridgeKey = [Provider, Chains, Chains]
 
-export const bridgeKeys = Object.keys(destinationChains) as DestinationChains[]
+export const defaultBridgeKey = [
+  Provider.PULSECHAIN,
+  Chains.PLS,
+  Chains.ETH,
+] as BridgeKey
 
-export const bridgeKey = derived(
-  [page],
-  ([$page]) => (Chains[$page.params.bridgeKey as keyof typeof Chains] || Chains.ETH) as DestinationChains,
+export const bridgeKey = writable<BridgeKey>(defaultBridgeKey)
+
+export const partnerBridgeKey = derived([bridgeKey], ([$bridgeKey]) => (
+  [$bridgeKey[0], $bridgeKey[2], $bridgeKey[1]] as BridgeKey
+))
+
+export const validBridgeKey = ([$bridgeKey]: [BridgeKey]) => (
+  !!pathway($bridgeKey)
 )
 
-export const bridgableTokens = derived(
+export const provider = derived([bridgeKey], ([$bridgeKey]) => $bridgeKey[0])
+/** the direction of the bridge crossing */
+export const fromNetwork = derived([bridgeKey], ([$bridgeKey]) => $bridgeKey[1])
+export const fromChainId = derived([fromNetwork], ([$fromNetwork]) => $fromNetwork)
+export const toNetwork = derived([bridgeKey], ([$bridgeKey]) => $bridgeKey[2])
+export const toChainId = derived([toNetwork], ([$toNetwork]) => $toNetwork)
+
+export const bridgePathway = derived([bridgeKey], ([$bridgeKey]) => pathway($bridgeKey))
+
+export const bridgableTokensResponses = derived(
   [windowLoaded],
   ([$windowLoaded], set) => {
     let cancelled = false
@@ -147,22 +166,7 @@ export const bridgableTokens = derived(
           })
           .values()
           .value()
-        const check = (cId: DestinationChains) => (item: Token) =>
-          defaultAssetIn[cId].address === item.address ? defaultAssetIn[cId] : null
-        const checkETH = check(Chains.ETH)
-        const checkBNB = check(Chains.BNB)
-        const sortedList = _.sortBy(list, 'name').map((item) => checkETH(item) || checkBNB(item) || item)
-        // console.log(sortedList)
-        sortedList.forEach((token) => {
-          // register on a central cache so that tokens that are gotten from onchain
-          // still have all extensions
-          // registerExtensions(token, token.extensions)
-          if (!token.logoURI) {
-            token.logoURI = imageLinks.image(token)
-          }
-        })
-        set(sortedList)
-        return sortedList
+        set(list)
       })
       .catch((err) => {
         loading.decrement()
@@ -175,8 +179,30 @@ export const bridgableTokens = derived(
   [] as Token[],
 )
 
+export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([$bridgeKey, $responses]) => {
+  // const [provider, fromChain, toChain] = $bridgeKey
+  if (!$bridgeKey) return []
+  const conf = pathway($bridgeKey)
+  const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token
+  const sortedList = _.sortBy($responses, 'name').map((item) => {
+    if (defaultAssetIn && defaultAssetIn.address === item.address) {
+      return defaultAssetIn
+    }
+    return item
+  })
+  sortedList.forEach((token) => {
+    // register on a central cache so that tokens that are gotten from onchain
+    // still have all extensions
+    // registerExtensions(token, token.extensions)
+    if (!token.logoURI) {
+      token.logoURI = imageLinks.image(token)
+    }
+  })
+  return sortedList
+})
+
 export const assetInAddress = derived([bridgeKey, page], ([$bridgeKey, $page]) =>
-  getAddress($page.params.assetInAddress || defaultAssetIn[$bridgeKey as DestinationChains].address),
+  $bridgeKey && getAddress($page.params.assetInAddress || defaultAssetIn($bridgeKey)!.address),
 )
 
 export const assetIn = derived(
@@ -185,10 +211,9 @@ export const assetIn = derived(
     const $assetIn = $bridgableTokens.length
       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
       _.find($customTokens || [], { address: $assetInAddress }) ||
-      defaultAssetIn[$bridgeKey]
+      defaultAssetIn($bridgeKey)
       : null
-    // console.log($assetIn)
-    return $assetIn
+    return $assetIn as Token | null
   },
 )
 
@@ -198,20 +223,22 @@ export const unwrap = {
   ...unwrapStore,
 }
 
-export const isNative = ($asset: Token | null) => {
-  if (!$asset) return false
-  if ($asset.chainId === Number(Chains.PLS)) {
-    return !!Object.values(defaultAssetIn).find(
-      ($defaultAssetIn) => getAddress($defaultAssetIn.address) === getAddress($asset.address),
-    )
-  } else {
-    const chainId = `0x${$asset.chainId.toString(16)}` as DestinationChains
-    return nativeAssetOut[chainId] === $asset.address
+export const isNative = ($asset: Token | null, $bridgeKey: BridgeKey | null) => {
+  if (!$bridgeKey || !$asset) {
+    return false
   }
+  if ($asset.chainId === Number(Chains.PLS)) {
+    const $defaultAssetIn = defaultAssetIn($bridgeKey)
+    if (!$defaultAssetIn) {
+      return false
+    }
+    return getAddress($defaultAssetIn.address) === getAddress($asset.address)
+  }
+  const chainId = `0x${$asset.chainId.toString(16)}` as Chains
+  return nativeAssetOut[chainId] === $asset.address
 }
-export const canChangeUnwrap = derived([assetIn], ([$assetIn]) => !!$assetIn && isNative($assetIn))
+export const canChangeUnwrap = derived([assetIn, bridgeKey], ([$assetIn, $bridgeKey]) => !!$assetIn && isNative($assetIn, $bridgeKey))
 
-export const activeChain = writable<Chains>(Chains.PLS)
 export const walletClient = writable<WalletClient | undefined>()
 
 const clientCache = new Map<Chains, { key: string; client: PublicClient }>([])
@@ -223,15 +250,15 @@ export const config = {
   },
 }
 
-export const clientFromChain = ($activeChain: Chains) => {
-  const urls = _.compact(get(rpcs.store).get($activeChain) || [])
-  const key = rpcs.key($activeChain, urls)
-  const existing = clientCache.get($activeChain)
+export const clientFromChain = ($fromChainId: Chains) => {
+  const urls = _.compact(get(rpcs.store).get($fromChainId) || [])
+  const key = rpcs.key($fromChainId, urls)
+  const existing = clientCache.get($fromChainId)
   if (existing && existing.key === key) {
     return existing.client
   }
   const client = createPublicClient({
-    chain: chainsMetadata[$activeChain],
+    chain: chainsMetadata[$fromChainId],
     transport: fallback(
       urls.map((rpc) =>
         http(rpc, {
@@ -243,16 +270,18 @@ export const clientFromChain = ($activeChain: Chains) => {
       { rank: true },
     ),
   })
-  clientCache.set($activeChain, {
+  clientCache.set($fromChainId, {
     key,
     client,
   })
   return client
 }
 
-export const publicClient = derived([activeChain, forcedRefresh], ([$activeChain]) => clientFromChain($activeChain))
-export const multicall = derived([activeChain, publicClient], ([$activeChain, $publicClient]) => {
-  const metadata = chainsMetadata[$activeChain]
+export const fromPublicClient = derived([fromChainId, forcedRefresh], ([$fromChainId]) => clientFromChain($fromChainId))
+export const toPublicClient = derived([toChainId, forcedRefresh], ([$toChainId]) => clientFromChain($toChainId))
+
+export const fromChainMulticall = derived([fromChainId, fromPublicClient], ([$fromChainId, $publicClient]) => {
+  const metadata = chainsMetadata[$fromChainId]
   return getContract({
     abi: multicall3Abi,
     client: $publicClient,
@@ -260,23 +289,52 @@ export const multicall = derived([activeChain, publicClient], ([$activeChain, $p
   })
 })
 
-export const bridgeFee = derived(
-  [bridgeFrom, bridgeKey],
-  ([$bridgeFrom, $bridgeKey]) => $bridgeFrom.get(Chains.PLS)!.get($bridgeKey)!.feeH2F,
-)
+export const toChainMulticall = derived([toChainId, toPublicClient], ([$toChainId, $publicClient]) => {
+  const metadata = chainsMetadata[$toChainId]
+  return getContract({
+    abi: multicall3Abi,
+    client: $publicClient,
+    address: metadata.contracts!.multicall3!.address,
+  })
+})
 
-export const loadFeeFor = async (fromId: Chains, toId: Chains) => {
-  const settings = get(bridgeFrom).get(fromId)!.get(toId)!
-  if (settings.feeH2F || settings.feeF2H) {
-    return settings
+export const loadFeeFor = async ($bridgeKey: BridgeKey) => {
+  if (!$bridgeKey) {
+    return null
+  }
+  const s = settings.get($bridgeKey)
+  const path = pathway($bridgeKey)
+  if (!path || (s && s.feeManager)) {
+    return s
   }
   loading.increment('fee')
-  const $multicall = get(multicall)
+  const $multicall = get(path.feeManager === 'from' ? fromChainMulticall : toChainMulticall)
+
+  const [feeManagerResponse] = await $multicall.read.aggregate3([
+    [{
+      allowFailure: false,
+      target: path[path.feeManager],
+      callData: encodeFunctionData({
+        abi: abis.inputBridge,
+        functionName: 'feeManager',
+      }),
+    }]
+  ])
+  const { success, returnData } = feeManagerResponse
+  if (!success) {
+    throw new Error('unable to load feeManager')
+  }
+  if (returnData === '0x') {
+    throw new Error('unable to read feeManager')
+  }
+  const feeManager = (returnData.startsWith('0x000000000000000000000000')
+    ? `0x${returnData.slice(26)}`
+    : `0x${returnData.slice(-40)}`) as Hex
   const [keyH2F, keyF2H] = await $multicall.read.aggregate3([
     [
       {
         allowFailure: false,
-        target: settings.bridge,
+        target: feeManager,
         callData: encodeFunctionData({
           abi: abis.feeManager,
           functionName: 'HOME_TO_FOREIGN_FEE',
@@ -284,7 +342,7 @@ export const loadFeeFor = async (fromId: Chains, toId: Chains) => {
       },
       {
         allowFailure: false,
-        target: settings.bridge,
+        target: feeManager,
         callData: encodeFunctionData({
           abi: abis.feeManager,
           functionName: 'FOREIGN_TO_HOME_FEE',
@@ -296,7 +354,7 @@ export const loadFeeFor = async (fromId: Chains, toId: Chains) => {
     [
       {
         allowFailure: false,
-        target: settings.bridge,
+        target: feeManager,
         callData: encodeFunctionData({
           abi: abis.feeManager,
           functionName: 'getFee',
@@ -305,7 +363,7 @@ export const loadFeeFor = async (fromId: Chains, toId: Chains) => {
       },
       {
         allowFailure: false,
-        target: settings.bridge,
+        target: feeManager,
         callData: encodeFunctionData({
           abi: abis.feeManager,
           functionName: 'getFee',
@@ -314,31 +372,51 @@ export const loadFeeFor = async (fromId: Chains, toId: Chains) => {
       },
     ],
   ])
-  bridgeFrom.update(($bf) => {
-    const fromBridgeSettings = $bf.get(fromId)!
-    const toBridgeSettings = fromBridgeSettings.get(toId)!
-    const updated = $bf.get(fromId)!.set(toId, {
-      ...toBridgeSettings,
-      feeH2F: BigInt(feeH2F.returnData),
-      feeF2H: BigInt(feeF2H.returnData),
-    })
-    $bf.set(fromId, updated)
-    return $bf
-  })
+  const setting = {
+    feeManager,
+    feeH2F: BigInt(feeH2F.returnData),
+    feeF2H: BigInt(feeF2H.returnData),
+  } as PathwayExtendableConfig
+  settings.set($bridgeKey, setting)
   loading.decrement('fee')
-  return get(bridgeFrom).get(fromId)!.get(toId)!
+  return setting
 }
 
-export const provider = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].provider)
+export const bridgeFee = asyncDerived([bridgeKey], async ([$bridgeKey]) => {
+  return loadFeeFor($bridgeKey)
+})
 
-export const foreignSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) => ($bridgeKey === Chains.BNB ? false : true))
+export const destinationSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) =>
+  ($bridgeKey[2] === Chains.BNB ? false : true)
+)
 /** the estimated gas that will be consumed by running the foreign transaction */
 export const estimatedGas = writable(400_000n)
 /** the first recipient of the tokens (router) */
-export const router = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].router as Hex)
+export const router = derived([bridgeKey], ([$bridgeKey]) => pathway($bridgeKey)?.router || zeroAddress as Hex)
 /** the address of the bridge proxy contract on home */
-export const bridgeAddress = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].homeBridge as Hex)
-export const foreignBridgeAddress = derived(
-  [bridgeKey],
-  ([$bridgeKey]) => destinationChains[$bridgeKey].foreignBridge as Hex,
+// export const bridgeAddress = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].homeBridge as Hex)
+// export const foreignBridgeAddress = derived(
+//   [bridgeKey],
+//   ([$bridgeKey]) => destinationChains[$bridgeKey].to as Hex,
+// )
+
+export const toPath = ($bridgeKey: BridgeKey) => {
+  const [provider, fromChain, toChain] = $bridgeKey
+  return `${provider}/${ChainIdToKey.get(fromChain)!}/${ChainIdToKey.get(toChain)!}` as const
+}
+
+export const flippedTokenAddressIn = asyncDerived(
+  [bridgeKey, assetInAddress, bridgableTokens],
+  async ([$bridgeKey, $assetInAddress, $bridgableTokens]) => {
+    const [, fromChain, toChain] = $bridgeKey
+    const token = $bridgableTokens.find((tkn) => (
+      getAddress(tkn.address) === getAddress($assetInAddress) && Number(fromChain) === tkn.chainId
+    ))
+    let known = token?.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
+    if (!known) {
+      // check at the bridge
+      known = zeroAddress
+    }
+    return known
+  },
 )

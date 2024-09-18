@@ -1,6 +1,6 @@
 <script lang="ts">
   import { humanReadableNumber } from '$lib/stores/utils'
-  import type { Chains, VisualChain } from '$lib/stores/auth/types'
+  import type { VisualChain } from '$lib/stores/auth/types'
   import NetworkImage from './NetworkImage.svelte'
   import { createEventDispatcher } from 'svelte'
   import * as utils from '$lib/utils'
@@ -9,9 +9,9 @@
   export let balance: bigint | null = null
   export let asset!: Token
   export let network!: VisualChain
-  export let networkOptions: Chains[] = []
   export let showMax = false
   export let unwrap = false
+  export let inChain = false
   $: disableMax = balance === 0n
   const dispatch = createEventDispatcher()
   const maxOutBalance = () => {
@@ -23,7 +23,7 @@
 
 <div class="flex flex-row justify-between">
   <div class="flex flex-row">
-    <NetworkImage {network} {networkOptions} />
+    <NetworkImage {network} {inChain} />
   </div>
   <div class="flex flex-row">
     <div

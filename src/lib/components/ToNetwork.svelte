@@ -21,22 +21,21 @@
     oneEther,
     desiredExcessCompensationPercentage,
     foreignTokenBalance,
+    bridgeFee,
   } from '$lib/stores/bridge-settings'
   import { latestBaseFeePerGas } from '$lib/stores/chain-events'
-  import { Chains, type VisualChain } from '$lib/stores/auth/types'
+  import type { VisualChain } from '$lib/stores/auth/types'
   import SmallInput from './SmallInput.svelte'
-  import { chainsMetadata } from '$lib/stores/auth/constants'
   import * as utils from '$lib/utils'
   import type { Token } from '$lib/types'
-  export let originationNetwork!: VisualChain
   export let destinationNetwork!: VisualChain
   export let asset!: Token
-  const { feeType, assetInAddress, bridgeFrom, foreignSupportsEIP1559 } = input
+
+  const { feeType, assetInAddress, destinationSupportsEIP1559 } = input
   const dispatch = createEventDispatcher()
   const showToolbox = (type: string) => {
     dispatch('toggle', type)
   }
-  input.loadFeeFor(originationNetwork.chainId, destinationNetwork.chainId)
   // lock toggles
   let costLimitLocked = false
   let deliveryFeeLocked = false
@@ -87,6 +86,11 @@
       input.limit.set(formatUnits(($amountAfterBridgeFee * $fee) / oneEther, asset.decimals))
     }
   }
+  const feeTypeOptions = [
+    { key: input.FeeType.FIXED, text: 'Fixed' },
+    { key: input.FeeType.GAS_TIP, text: '⛽+%' },
+    { key: input.FeeType.PERCENT, text: '%' },
+  ]
   $: if (asset && $feeType === input.FeeType.GAS_TIP) {
     input.limit.set(gasPercentFeeFromNetworkInputs() || '10')
   }
@@ -104,10 +108,8 @@
   const focusOnInputChild = (e: any) => {
     e.currentTarget.querySelector('input')?.focus()
   }
-  $: bridgeFee = humanReadableNumber(
-    $bridgeFrom.get(originationNetwork.chainId)!.get(destinationNetwork.chainId)!.feeH2F * 100n,
-  )
-  $: networkOptions = Object.keys(chainsMetadata).filter((cId): cId is Chains => cId !== Chains.PLS)
+
+  $: bridgeFeeDecimals = humanReadableNumber($bridgeFee * 100n)
   $: decimals = asset.decimals
   $: large = $windowStore.innerHeight > 600 && $windowStore.innerWidth >= 768
   $: expectedAmountOut =
@@ -124,7 +126,7 @@
   <div class="bg-slate-100 py-2 px-3 rounded-t-lg hover:z-10">
     <NetworkSummary
       network={destinationNetwork}
-      {networkOptions}
+      inChain={false}
       {asset}
       balance={$foreignTokenBalance}
       unwrap={$unwrap} />
@@ -135,7 +137,7 @@
       <span
         class="cursor-not-allowed tooltip tooltip-top tooltip-left-toward-center flex items-end self-end"
         data-tip="Fee set on the bridge">
-        <Loading key="fee">{bridgeFee}</Loading>%
+        <Loading key="fee">{bridgeFeeDecimals}</Loading>%
       </span>
     </div>
   </div>
@@ -147,11 +149,7 @@
         >&nbsp;
         <FeeTypeToggle
           active={$feeType}
-          options={[
-            { key: input.FeeType.FIXED, text: 'Fixed' },
-            { key: input.FeeType.GAS_TIP, text: '⛽+%' },
-            { key: input.FeeType.PERCENT, text: '%' },
-          ]}
+          options={feeTypeOptions}
           on:change={(e) => {
             feeType.set(e.detail.key)
             input.fee.set($desiredExcessCompensationPercentage)
@@ -171,7 +169,7 @@
         data-tip={$feeType === input.FeeType.FIXED
           ? 'Fee uses fixed value defined in cost limit'
           : $feeType === input.FeeType.GAS_TIP
-            ? `Percentage of gas used * ${$foreignSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber($estimatedNetworkCost, asset.decimals)} ${utils.nativeSymbol(asset, $unwrap)}`
+            ? `Percentage of gas used * ${$destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber($estimatedNetworkCost, asset.decimals)} ${utils.nativeSymbol(asset, $unwrap)}`
             : 'the percentage of bridged tokens after the bridge fee'}
         class:line-through={$feeType === input.FeeType.FIXED}
         on:click={focusOnInputChild}>

@@ -7,11 +7,10 @@
   import Settings from './Settings.svelte'
   import Details from './Details.svelte'
   import { assetOut, backupAssetIn } from '$lib/stores/bridge-settings'
-  import { Chains } from '$lib/stores/auth/types'
   import * as input from '$lib/stores/input'
   const { bridgeKey, assetIn } = input
-  $: originationNetwork = chainsMetadata[Chains.PLS]
-  $: destinationNetwork = chainsMetadata[$bridgeKey]
+  $: originationNetwork = chainsMetadata[$bridgeKey[1]]
+  $: destinationNetwork = chainsMetadata[$bridgeKey[2]]
   let dropdowns: Record<string, boolean> = {}
   const toggleDropdowns = (e: CustomEvent) => {
     for (const k of Object.keys(dropdowns)) {
@@ -24,9 +23,9 @@
 </script>
 
 <div class="bg-slate-200 p-3 md:p-4 rounded-lg shadow-inner text-slate-950 my-8">
-  <FromNetwork network={originationNetwork} asset={$assetIn} value={input.amountIn} />
+  <FromNetwork network={originationNetwork} asset={$assetIn || backupAssetIn} value={input.amountIn} />
   <NetworkDirection />
-  <ToNetwork {originationNetwork} {destinationNetwork} on:toggle={toggleDropdowns} asset={$assetOut} />
+  <ToNetwork {destinationNetwork} on:toggle={toggleDropdowns} asset={$assetOut} />
   {#if dropdowns.settings}
     <Settings />
   {/if}

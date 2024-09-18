@@ -15,9 +15,12 @@
   import Loading from './Loading.svelte'
   import type { Token } from '$lib/types'
   import * as input from '$lib/stores/input'
-  const { bridgeFee, feeType, fee: inputFee } = input
+  import { pathway } from '$lib/stores/config'
+  const { bridgeFee, bridgeKey, feeType, fee: inputFee } = input
   const oneEther = 10n ** 18n
-  $: afterBridge = $amountToBridge - ($amountToBridge * $bridgeFee) / oneEther
+  $: path = pathway($bridgeKey)
+  $: fee = (path?.toHome ? $bridgeFee?.feeF2H : $bridgeFee?.feeH2F) || 0n
+  $: afterBridge = $amountToBridge - ($amountToBridge * fee) / oneEther
   $: estimated = afterBridge - $estimatedCost
   $: minimumDelivered = afterBridge - $limit
   export let asset!: Token
@@ -31,7 +34,7 @@
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10">
     <span class="w-32">Bridged</span>
     <span class="flex flex-row justify-between grow">
-      <span>-{formatEther($bridgeFee * 100n)}%</span>
+      <span>-{formatEther(fee * 100n)}%</span>
       <span class="flex flex-row items-end self-end">
         <Loading key="gas">{humanReadableNumber(afterBridge, asset.decimals)}</Loading>&nbsp;{asset.symbol}
       </span>
@@ -113,10 +116,9 @@
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10 rounded-b-lg">
     <span class="w-32">Equation</span>
     <span class="flex flex-row justify-end grow">
-      <!-- <span class="flex flex-row items-end self-end font-mono">out&nbsp;=</span> -->
       <span class="flex flex-row items-end self-end font-mono text-right">
         (in-{formatEther(
-          $bridgeFee * 100n,
+          fee * 100n,
         )}%)-{#if $feeType === input.FeeType.FIXED}fixed=out{:else if $feeType === input.FeeType.GAS_TIP}min(limit,base*{$inputFee}%)=out{:else if $feeType === input.FeeType.PERCENT}{$inputFee}%=out
         {/if}
       </span>
