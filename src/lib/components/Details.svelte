@@ -16,6 +16,9 @@
   import type { Token } from '$lib/types'
   import * as input from '$lib/stores/input'
   import { pathway } from '$lib/stores/config'
+  import Hover from './Hover.svelte'
+  import { hover } from '$lib/modifiers/hover'
+  import Tooltip from './Tooltip.svelte'
   const { bridgeFee, bridgeKey, feeType, fee: inputFee } = input
   const oneEther = 10n ** 18n
   $: path = pathway($bridgeKey)
@@ -44,13 +47,16 @@
     <span class="w-32">Network</span>
     <span class="flex flex-row justify-between grow">
       <span>⛽</span>
-      <span
-        class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center"
-        data-tip="the estimated cost to put this transaction on chain in terms of the token being bridged at current gas rates">
-        <Loading key="gas">
-          {humanReadableNumber($estimatedNetworkCost, asset.decimals)}
-        </Loading>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
-      </span>
+      <Hover let:handlers let:hovering>
+        <span use:hover={handlers} class="flex flex-row items-end self-end relative">
+          <Loading key="gas">
+            {humanReadableNumber($estimatedNetworkCost, asset.decimals)}
+          </Loading>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
+          <Tooltip positionFlow="above" position="left" show={hovering}
+            >the estimated cost to put this transaction on chain in terms of the token being bridged at current gas
+            rates</Tooltip>
+        </span>
+      </Hover>
     </span>
   </div>
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
@@ -66,15 +72,18 @@
           -{$inputFee}%
         {/if}
       </span>
-      <span
-        class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center"
-        data-tip="cost as configured by the fee settings">
-        {#if $feeType === input.FeeType.PERCENT}
-          {humanReadableNumber($limitFromPercent, asset.decimals)}
-        {:else}<Loading key="gas">
-            {humanReadableNumber($estimatedCost, asset.decimals)}</Loading
-          >{/if}&nbsp;{utils.nativeSymbol(asset, $unwrap)}
-      </span>
+      <Hover let:handlers let:hovering>
+        <span
+          use:hover={handlers}
+          class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center relative">
+          {#if $feeType === input.FeeType.PERCENT}
+            {humanReadableNumber($limitFromPercent, asset.decimals)}
+          {:else}<Loading key="gas">
+              {humanReadableNumber($estimatedCost, asset.decimals)}</Loading
+            >{/if}&nbsp;{utils.nativeSymbol(asset, $unwrap)}
+          <Tooltip show={hovering}>cost as configured by the fee settings</Tooltip>
+        </span>
+      </Hover>
     </span>
     <UndercompensatedWarning />
   </div>

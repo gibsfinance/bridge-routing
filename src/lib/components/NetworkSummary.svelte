@@ -6,6 +6,9 @@
   import * as utils from '$lib/utils'
   import Loading from './Loading.svelte'
   import type { Token } from '$lib/types'
+  import Hover from './Hover.svelte'
+  import { hover } from '$lib/modifiers/hover'
+  import Tooltip from './Tooltip.svelte'
   export let balance: bigint | null = null
   export let asset!: Token
   export let network!: VisualChain
@@ -26,22 +29,28 @@
     <NetworkImage {network} {inChain} />
   </div>
   <div class="flex flex-row">
-    <div
-      class="text-xs leading-8 tooltip tooltip-left flex items-end self-end"
-      class:mx-2={showMax}
-      class:ml-2={!showMax}
-      data-tip={utils.nativeName(asset, unwrap)}>
-      <Loading key="balance">{humanReadableNumber(bal, asset?.decimals || 18)}</Loading>&nbsp;{utils.nativeSymbol(
-        asset,
-        unwrap,
-      )}
-    </div>
+    <Hover let:handlers let:hovering>
+      <div
+        use:hover={handlers}
+        class="text-xs leading-8 flex items-end self-end relative"
+        class:mx-2={showMax}
+        class:ml-2={!showMax}>
+        {#if !!asset}
+          <Tooltip show={hovering}>{utils.nativeName(asset, unwrap)}</Tooltip>
+        {/if}
+        <Loading key="balance">{humanReadableNumber(bal, asset?.decimals || 18)}</Loading>&nbsp;{utils.nativeSymbol(
+          asset,
+          unwrap,
+        )}
+      </div>
+    </Hover>
     {#if showMax}
       <div class="text-white leading-8">
         <button
           class="uppercase rounded-md text-xs leading-6 px-2"
-          class:bg-purple-600={!disableMax}
           class:bg-purple-400={disableMax}
+          class:bg-purple-600={!disableMax}
+          class:hover:bg-purple-500={!disableMax}
           on:click={maxOutBalance}>
           max
         </button>

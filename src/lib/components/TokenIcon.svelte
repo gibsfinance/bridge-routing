@@ -4,7 +4,7 @@
   export let src = ''
   export let alt = ''
   export let size = 32
-  export let visible = false
+  export let visible!: boolean
   let className = ''
   export { className as class }
   let loaded: boolean | null = null

@@ -67,7 +67,7 @@ export const assetOut = asyncDerived(
         name,
         symbol,
         decimals,
-        chainId: Number($bridgeKey),
+        chainId: Number($bridgeKey[2]),
         address: foreign,
       } as Token
       res.logoURI = imageLinks.image(res)
@@ -244,7 +244,7 @@ const readAmountOut = (
   const q = multicallRead<FetchResult[]>({
     chain: chainsMetadata[chain],
     client: input.clientFromChain(chain),
-    abi: abis.pulsexRouter,
+    abi: abis.univ2Router,
     // pulsex router
     calls: _.flatMap(uniV2Settings[chain].routers, (target) =>
       paths.map((path) => ({
@@ -302,9 +302,10 @@ export const priceCorrective = derived(
       return (last * $oneTokenInt) / toBridge
     }
     loading.increment('gas')
-    const [provider, fromChain, toChain] = $bridgeKey
+    const [, fromChain, toChain] = $bridgeKey
+    const dAssetIn = defaultAssetIn($bridgeKey)
     Promise.all([
-      toChain === Chains.ETH && $assetLink && $assetLink.toHome && $assetOut.address !== zeroAddress
+      $assetLink && $assetLink.toHome && $assetOut.address !== zeroAddress
         ? readAmountOut(
           {
             $assetInAddress: $assetOut.address,
@@ -313,7 +314,7 @@ export const priceCorrective = derived(
             $bridgeKey,
           },
           $latestBaseFeePerGas,
-          [[$assetIn.address, uniV2Settings[toChain].wNative]],
+          [[$assetOut.address, uniV2Settings[toChain].wNative]],
         )
         : ([[]] as FetchResult[]),
       readAmountOut(
@@ -325,12 +326,11 @@ export const priceCorrective = derived(
         },
         $latestBaseFeePerGas,
         [
-          [$assetIn.address, uniV2Settings[fromChain].wNative, defaultAssetIn($bridgeKey)!.address],
-          [$assetIn.address, defaultAssetIn($bridgeKey)!.address],
+          [$assetIn.address, uniV2Settings[fromChain].wNative, dAssetIn!.address],
+          [$assetIn.address, dAssetIn!.address],
         ],
       ),
     ]).then((results) => {
-      // console.log(results)
       if (cancelled) return
       loading.decrement('gas')
       const max = (amountsOut: (bigint | undefined)[]) => {
@@ -533,21 +533,56 @@ export const assetSources = (asset: Token | null) => {
   if (!asset) {
     return ''
   }
-  const bridgedImage = [
+  if (!asset.chainId) {
+    console.trace(asset)
+  }
+  // const bridgedImage = [
+  //   {
+  //     chainId: asset.chainId,
+  //     address: asset.address,
+  //   },
+  //   ...Object.entries(asset.extensions?.bridgeInfo || {}).map(([chainId, info]) => {
+  //     if (!info.tokenAddress) {
+  //       return null
+  //     }
+  //     return {
+  //       chainId: Number(chainId),
+  //       address: info.tokenAddress,
+  //     }
+  //     // return `${Number(chainId)}/${info.tokenAddress}`
+  //   }),
+  // ]
+  // console.log(asset)
+  type MinTokenInfo = Pick<Token, 'chainId' | 'address'>
+  const sources = _([
+    {
+      chainId: asset.chainId,
+      address: asset.address,
+    },
     ...Object.entries(asset.extensions?.bridgeInfo || {}).map(([chainId, info]) => {
       if (!info.tokenAddress) {
         return null
       }
-      return `${Number(chainId)}/${info.tokenAddress}`
+      return {
+        chainId: Number(chainId),
+        address: info.tokenAddress,
+      }
+      // return `${Number(chainId)}/${info.tokenAddress}`
     }),
-  ] as string[]
-  if (!asset.chainId) {
-    console.trace(asset)
-  }
-  const sources = _(bridgedImage.concat([`${asset.chainId}/${asset.address}`]))
+  ])
     .compact()
-    .uniq()
+    .sortBy([
+      // (a: MinTokenInfo) => a.chainId !== asset.chainId,
+      (a: MinTokenInfo) => a.chainId,
+    ])
+    .map((a: MinTokenInfo) => (
+      `${a.chainId}/${a.address}`
+    ))
     .value()
+  // const sources = _(bridgedImage.concat([`${asset.chainId}/${asset.address}`]))
+  //   .compact()
+  //   .uniq()
+  //   .value()
   return imageLinks.images(sources)
 }
 

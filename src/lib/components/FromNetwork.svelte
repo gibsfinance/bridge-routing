@@ -12,6 +12,9 @@
   import type { FormEventHandler } from 'svelte/elements'
   import { tokenBalance, minAmount } from '$lib/stores/chain-events'
   import { stripNonNumber } from '$lib/stores/utils'
+  import Hover from './Hover.svelte'
+  import Tooltip from './Tooltip.svelte'
+  import { hover } from '$lib/modifiers/hover'
 
   export let network!: VisualChain
   export let asset!: Token | null
@@ -63,14 +66,17 @@
           tooltip="Input is too low, must be at least {formatUnits($minAmount, asset?.decimals || 18)}" />
       </span>
 
-      <button
-        class="tooltip tooltip-left leading-8 py-2 px-3 flex flex-row space-x-2 items-center open-modal-container"
-        data-tip={asset?.name || ''}
-        on:click={openModal}>
-        <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
-        <span class="ml-2">{asset?.symbol || ''}</span>
-        <Icon icon="mingcute:right-fill" height="1em" width="1em" class="flex icon transition-all" />
-      </button>
+      <Hover let:handlers let:hovering>
+        <button
+          use:hover={handlers}
+          class="leading-8 py-2 pr-3 pl-2 flex flex-row space-x-2 items-center open-modal-container relative"
+          on:click={openModal}>
+          <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
+          <span class="ml-2">{asset?.symbol || ''}</span>
+          <Icon icon="mingcute:right-fill" height="1em" width="1em" class="flex icon transition-all" />
+          <Tooltip show={hovering}>{asset?.name || ''}</Tooltip>
+        </button>
+      </Hover>
     </div>
   </div>
 {/if}

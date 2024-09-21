@@ -30,7 +30,7 @@ export const feeManager = parseAbi([
   'function FOREIGN_TO_HOME_FEE() public view returns(bytes32)',
   'function getFee(bytes32, address) public view returns(uint256)',
 ])
-export const pulsexRouter = parseAbi([
+export const univ2Router = parseAbi([
   'function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns(uint256[] memory)',
 ])
 export const feeDeliveryStruct = parseAbiParameters('(address, uint256, uint256, uint256)')

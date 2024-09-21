@@ -81,14 +81,13 @@
       // Delete this part if you don't want to check if the current wallet chain is the one from the store
       walletState[0].chains[0].id.toLowerCase() !== $fromChainId.toLowerCase()
     ) {
+      // console.log($fromChainId)
       // only switch if the current tab is active
       if (document.visibilityState === 'visible') {
         await switchChain($fromChainId)
       } else {
         // wait for visibility state change, then switch
       }
-    } else {
-      $fromChainId = walletState[0].chains[0].id as Chains
     }
     $walletClient = createWalletClient({
       chain: chainsMetadata[$fromChainId],
