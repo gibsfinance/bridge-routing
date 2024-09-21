@@ -45,6 +45,7 @@ export type Pathway = {
   usesExtraParam: boolean;
   feeManager: 'from' | 'to'
   toHome: boolean;
+  requiresDelivery: boolean;
 }
 
 export const pathways = {
@@ -58,6 +59,7 @@ export const pathways = {
         usesExtraParam: false,
         feeManager: 'from',
         toHome: false,
+        requiresDelivery: true,
         defaultAssetIn: {
           symbol: 'WETH',
           name: 'Wrapped Ether from Ethereum',
@@ -85,6 +87,7 @@ export const pathways = {
         usesExtraParam: false,
         bridgedNative: '0xA882606494D86804B5514E07e6Bd2D6a6eE6d68A',
         toHome: true,
+        requiresDelivery: false,
         defaultAssetIn: {
           chainId: 1,
           address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -114,6 +117,7 @@ export const pathways = {
         feeManager: 'from',
         usesExtraParam: true,
         toHome: false,
+        requiresDelivery: true,
         defaultAssetIn: {
           symbol: 'WBNB',
           name: 'Wrapped BNB',
@@ -141,6 +145,7 @@ export const pathways = {
         // router: '0x',
         bridgedNative: '0xD69D520f4F23d62C36Cf745E8f5c50f2906F51da',
         toHome: true,
+        requiresDelivery: false,
         defaultAssetIn: {
           "chainId": 56,
           "address": "0xD69D520f4F23d62C36Cf745E8f5c50f2906F51da",

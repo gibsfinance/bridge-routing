@@ -19,15 +19,7 @@
   import { loading } from '$lib/stores/loading'
   import { get } from 'svelte/store'
 
-  const {
-    walletClient,
-    assetIn,
-    clientFromChain,
-    bridgeKey,
-    router,
-    bridgeAddress,
-    // foreignBridgeAddress,
-  } = input
+  const { walletClient, assetIn, clientFromChain, bridgeKey, router, bridgePathway, fromChainId, toChainId } = input
 
   let disabledByClick = false
   $: disabled =
@@ -146,6 +138,9 @@
     //   throw err
     // }
     // const to = assets[$bridgeKey].input.address
+    if (!$bridgePathway) {
+      return
+    }
     const tokenInfo = await tokenBridgeInfo([$bridgeKey, $assetIn])
     if (!tokenInfo || !$assetIn) {
       return
@@ -154,14 +149,14 @@
     const options = {
       account,
       type: 'eip1559',
-      chain: chainsMetadata[Chains.PLS],
+      chain: chainsMetadata[$fromChainId],
     } as const
-    if ($bridgeKey === Chains.BNB) {
+    if ($bridgePathway?.usesExtraParam) {
       if (tokenInfo.toForeign) {
         // token is native to pulsechain
         const bridgeContract = getContract({
-          abi: abis.inputBridgeBNB,
-          address: $bridgeAddress,
+          abi: abis.inputBridgeExtraInput,
+          address: $bridgePathway.from,
           client: $walletClient!,
         })
         return await bridgeContract.write.relayTokensAndCall(
@@ -171,21 +166,21 @@
       } else {
         // extra arg in transfer+call
         const contract = getContract({
-          abi: abis.erc677BNB,
+          abi: abis.erc677ExtraInput,
           address: $assetIn.address,
           client: $walletClient!,
         })
         return await contract.write.transferAndCall(
-          [$bridgeAddress, $amountToBridge, $foreignDataParam, account],
+          [$bridgePathway.to, $amountToBridge, $foreignDataParam, account],
           options,
         )
       }
-    } else if ($bridgeKey === Chains.ETH) {
+    } else {
       if (tokenInfo.toForeign) {
         // native to pulsechain
         const bridgeContract = getContract({
-          abi: abis.inputBridgeETH,
-          address: $bridgeAddress,
+          abi: abis.inputBridge,
+          address: $bridgePathway.from,
           client: $walletClient!,
         })
         return await bridgeContract.write.relayTokensAndCall(
@@ -194,14 +189,12 @@
         )
       } else {
         const contract = getContract({
-          abi: abis.erc677ETH,
+          abi: abis.erc677,
           address: $assetIn.address,
           client: $walletClient!,
         })
-        return await contract.write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignDataParam], options)
+        return await contract.write.transferAndCall([$bridgePathway.to, $amountToBridge, $foreignDataParam], options)
       }
-    } else {
-      throw new Error('unrecognized chain')
     }
   }
   const wipeTxHash = (hash: Hex) => {
@@ -213,7 +206,7 @@
     }, 20_000)
   }
   const increaseApproval = async () => {
-    if (!$assetIn) {
+    if (!$bridgePathway || !$assetIn) {
       return
     }
     const contract = getContract({
@@ -225,8 +218,9 @@
     const options = {
       account,
       type: 'eip1559',
-      chain: chainsMetadata[Chains.PLS],
+      chain: chainsMetadata[$fromChainId],
     } as const
+    const $bridgeAddress = $bridgePathway.from
     return await contract.write.approve([$bridgeAddress, maxUint256], options)
   }
   const sendInitiateBridge = transactionButtonPress(initiateBridge)
@@ -267,7 +261,7 @@
     <button
       class="p-2 bg-purple-600 text-white w-full rounded-lg hover:bg-purple-500 active:bg-purple-500"
       on:click={() => connect()}>
-      Connect
+      Sign In
     </button>
   {/if}
 </div>

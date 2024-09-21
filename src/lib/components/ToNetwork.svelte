@@ -28,6 +28,9 @@
   import SmallInput from './SmallInput.svelte'
   import * as utils from '$lib/utils'
   import type { Token } from '$lib/types'
+  import Tooltip from './Tooltip.svelte'
+  import { hover } from '$lib/modifiers/hover'
+  import Hover from './Hover.svelte'
   export let destinationNetwork!: VisualChain
   export let asset!: Token
 
@@ -134,11 +137,14 @@
   <div class="bg-slate-100 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <span>Bridge Fee</span>
-      <span
-        class="cursor-not-allowed tooltip tooltip-top tooltip-left-toward-center flex items-end self-end"
-        data-tip="Fee set on the bridge">
-        <Loading key="fee">{bridgeFeeDecimals}</Loading>%
-      </span>
+      <Hover let:handlers let:hovering>
+        <span
+          use:hover={handlers}
+          class="cursor-not-allowed tooltip tooltip-top tooltip-left-toward-center flex items-end self-end relative">
+          <Tooltip show={hovering}>Fee set on the bridge</Tooltip>
+          <Loading key="fee">{bridgeFeeDecimals}</Loading>%
+        </span>
+      </Hover>
     </div>
   </div>
   <div class="bg-slate-100 mt-[1px] py-1 relative hover:z-10">
@@ -162,64 +168,77 @@
             }}><LockIcon locked={deliveryFeeLocked} /></button
           >{/if}
       </span>
-      <button
-        type="button"
-        name="fee-amount"
-        class="flex flex-row strike tooltip tooltip-top tooltip-left-toward-center items-center"
-        data-tip={$feeType === input.FeeType.FIXED
-          ? 'Fee uses fixed value defined in cost limit'
-          : $feeType === input.FeeType.GAS_TIP
-            ? `Percentage of gas used * ${$destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber($estimatedNetworkCost, asset.decimals)} ${utils.nativeSymbol(asset, $unwrap)}`
-            : 'the percentage of bridged tokens after the bridge fee'}
-        class:line-through={$feeType === input.FeeType.FIXED}
-        on:click={focusOnInputChild}>
-        <Loading key="gas" />
-        {#if $feeType !== input.FeeType.FIXED}
-          <span class:hidden={$feeType !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><SmallInput
-            value={input.fee}
-            suffix="%"
-            on:input={() => {
-              deliveryFeeLocked = true
-            }} />
-        {/if}
-      </button>
+      <Hover let:handlers let:hovering>
+        <button
+          use:hover={handlers}
+          type="button"
+          name="fee-amount"
+          class="flex flex-row strike tooltip tooltip-top tooltip-left-toward-center items-center relative"
+          class:line-through={$feeType === input.FeeType.FIXED}
+          on:click={focusOnInputChild}>
+          <Tooltip show={hovering} positionFlow="above"
+            >{$feeType === input.FeeType.FIXED
+              ? 'Fee uses fixed value defined in cost limit'
+              : $feeType === input.FeeType.GAS_TIP
+                ? `Percentage of gas used * ${$destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber($estimatedNetworkCost, asset.decimals)} ${utils.nativeSymbol(asset, $unwrap)}`
+                : 'the percentage of bridged tokens after the bridge fee'}</Tooltip>
+          <Loading key="gas" />
+          {#if $feeType !== input.FeeType.FIXED}
+            <span class:hidden={$feeType !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><SmallInput
+              value={input.fee}
+              suffix="%"
+              on:input={() => {
+                deliveryFeeLocked = true
+              }} />
+          {/if}
+        </button>
+      </Hover>
     </div>
     <UndercompensatedWarning />
   </div>
   <div class="bg-slate-100 mt-[1px] py-1 relative hover:z-10">
     <div class="flex flex-row px-3 leading-8 justify-between">
-      <button
-        type="button"
-        name="toggle-cost-limit"
-        class="tooltip tooltip-top tooltip-right-toward-center"
-        data-tip="Allows cost limit to float with the destination chain's base fee. While unlocked the number in the ui may change. Once a transaction is sent, the number in that transaction's calldata is fixed"
-        on:click={() => {
-          costLimitLocked = !costLimitLocked
-        }}>
-        Cost&nbsp;{#if $feeType === input.FeeType.GAS_TIP || $feeType === input.FeeType.FIXED}Limit&nbsp;<LockIcon
-            locked={costLimitLocked} />{/if}
-      </button>
-      <button
-        type="button"
-        name="cost-limit"
-        class="tooltip tooltip-top tooltip-left-toward-center flex flex-row items-end self-end"
-        data-tip={$feeType === input.FeeType.FIXED || $feeType === input.FeeType.PERCENT
-          ? 'The fixed fee to tip if the validator does the work'
-          : 'The max you are willing to tip to the address'}
-        on:click={focusOnInputChild}>
-        <Loading key="gas">
-          {#if $feeType === input.FeeType.PERCENT}
-            <span>{humanReadableNumber($limitFromPercent, asset.decimals)} {utils.nativeSymbol(asset, $unwrap)}</span>
-          {:else}
-            <SmallInput
-              value={input.limit}
-              suffix="&nbsp;{utils.nativeSymbol(asset, $unwrap)}"
-              on:input={() => {
-                costLimitLocked = true
-              }} />
-          {/if}
-        </Loading>
-      </button>
+      <Hover let:hovering let:handlers>
+        <button
+          use:hover={handlers}
+          type="button"
+          name="toggle-cost-limit"
+          class="tooltip tooltip-top tooltip-right-toward-center relative"
+          on:click={() => {
+            costLimitLocked = !costLimitLocked
+          }}>
+          Cost&nbsp;{#if $feeType === input.FeeType.GAS_TIP || $feeType === input.FeeType.FIXED}Limit&nbsp;<LockIcon
+              locked={costLimitLocked} />{/if}
+          <Tooltip position="right" positionFlow="above" show={hovering}
+            >Allows cost limit to float with the destination chain's base fee. While unlocked the number in the ui may
+            change. Once a transaction is sent, the number in that transaction's calldata is fixed</Tooltip>
+        </button>
+      </Hover>
+      <Hover let:hovering let:handlers>
+        <button
+          use:hover={handlers}
+          type="button"
+          name="cost-limit"
+          class="flex flex-row items-end self-end relative"
+          on:click={focusOnInputChild}>
+          <Loading key="gas">
+            {#if $feeType === input.FeeType.PERCENT}
+              <span>{humanReadableNumber($limitFromPercent, asset.decimals)} {utils.nativeSymbol(asset, $unwrap)}</span>
+            {:else}
+              <SmallInput
+                value={input.limit}
+                suffix="&nbsp;{utils.nativeSymbol(asset, $unwrap)}"
+                on:input={() => {
+                  costLimitLocked = true
+                }} />
+            {/if}
+          </Loading>
+          <Tooltip positionFlow="above" position="left" show={hovering}
+            >{$feeType === input.FeeType.FIXED || $feeType === input.FeeType.PERCENT
+              ? 'The fixed fee to tip if the validator does the work'
+              : 'The max you are willing to tip to the address'}</Tooltip>
+        </button>
+      </Hover>
     </div>
   </div>
   <div class="rounded-b-lg bg-slate-100 mt-[1px] py-1 hover:z-10">
@@ -231,11 +250,13 @@
           >📐</button>
       </div>
       <span
-        class="tooltip text-xl sm:text-2xl leading-10 flex items-center self-center tooltip-top tooltip-left-toward-center"
-        data-tip="Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee fluctuates on ethereum">
+        class="tooltip text-xl sm:text-2xl leading-10 flex items-center self-center tooltip-top tooltip-left-toward-center">
         {#if $feeType === input.FeeType.GAS_TIP}~&nbsp;{/if}<Loading key="gas">
           {expectedAmountOut}
         </Loading>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
+        <Tooltip
+          >Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee
+          fluctuates on ethereum</Tooltip>
       </span>
     </div>
   </div>

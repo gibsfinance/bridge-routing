@@ -149,10 +149,10 @@ export const bridgableTokensResponses = derived(
     }
     loading.increment()
     Promise.all([
-      fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo&chainId=369')),
-      fetch(imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo&chainId=369')),
-      fetch(imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo&chainId=369')),
-      fetch(imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo&chainId=369')),
+      fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo')),
+      fetch(imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo')),
+      fetch(imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo')),
+      fetch(imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo')),
     ])
       .then(async (results) => {
         const responses = await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
@@ -180,16 +180,15 @@ export const bridgableTokensResponses = derived(
 )
 
 export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([$bridgeKey, $responses]) => {
-  // const [provider, fromChain, toChain] = $bridgeKey
   if (!$bridgeKey) return []
   const conf = pathway($bridgeKey)
   const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token
-  const sortedList = _.sortBy($responses, 'name').map((item) => {
+  const sortedList = _($responses).sortBy('name').map((item) => {
     if (defaultAssetIn && defaultAssetIn.address === item.address) {
       return defaultAssetIn
     }
     return item
-  })
+  }).filter((tkn) => tkn.chainId === Number($bridgeKey[1])).value()
   sortedList.forEach((token) => {
     // register on a central cache so that tokens that are gotten from onchain
     // still have all extensions
@@ -420,3 +419,10 @@ export const flippedTokenAddressIn = asyncDerived(
     return known
   },
 )
+
+export const flippedBridgeKey = derived([bridgeKey], ([$bridgeKey]) => {
+  const provider = $bridgeKey[0]
+  const fromChain = $bridgeKey[1]
+  const toChain = $bridgeKey[2]
+  return [provider, toChain, fromChain] as BridgeKey
+})
