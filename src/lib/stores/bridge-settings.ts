@@ -4,7 +4,6 @@ import { derived as asyncDerived } from './async'
 import {
   zeroAddress,
   type Hex,
-  type PublicClient,
   getContract,
   erc20Abi,
   formatUnits,
@@ -23,12 +22,12 @@ import * as chainEvents from './chain-events'
 import { chainsMetadata } from './auth/constants'
 import { multicallErc20, multicallRead } from '$lib/utils'
 import _ from 'lodash'
-import { uniV2Settings, defaultAssetIn, nativeAssetOut, whitelisted, pathway } from './config'
+import { uniV2Settings, defaultAssetIn, nativeAssetOut, whitelisted, pathway, pathways } from './config'
 import * as abis from './abis'
 import * as imageLinks from './image-links'
 import { isZero, stripNonNumber } from './utils'
 import { latestBaseFeePerGas } from './chain-events'
-import { feeCache, settings } from './fee-manager'
+import { settings } from './fee-manager'
 
 export const backupAssetIn = {
   address: zeroAddress,
@@ -46,6 +45,7 @@ export const assetOut = asyncDerived(
     if (!$bridgeKey || !$assetIn) {
       return backupAssetIn
     }
+    const toChainId = $bridgeKey[2]
     const tokenInfo = await chainEvents.tokenBridgeInfo([$bridgeKey, $assetIn])
     if (!tokenInfo) {
       return backupAssetIn
@@ -54,12 +54,14 @@ export const assetOut = asyncDerived(
     let res = backupAssetIn
     const foreign = toHome?.foreign || toForeign?.foreign
     if (foreign && foreign !== zeroAddress) {
+      loading.increment('balance')
       const r = await multicallErc20({
-        client: input.clientFromChain($bridgeKey[2]),
-        chain: chainsMetadata[$bridgeKey[2]],
+        client: input.clientFromChain(toChainId),
+        chain: chainsMetadata[toChainId],
         target: foreign,
       }).catch(() => null)
       if (!r) {
+        loading.decrement('balance')
         return backupAssetIn
       }
       const [name, symbol, decimals] = r
@@ -67,7 +69,7 @@ export const assetOut = asyncDerived(
         name,
         symbol,
         decimals,
-        chainId: Number($bridgeKey[2]),
+        chainId: Number(toChainId),
         address: foreign,
       } as Token
       res.logoURI = imageLinks.image(res)
@@ -81,91 +83,96 @@ export const assetOut = asyncDerived(
         symbol: `w${$assetIn.symbol}`,
       } as Token
     }
+    loading.decrement('balance')
     return res
   },
   backupAssetIn,
 )
 
-/** this value represents the balance on the foreign network */
-export const foreignTokenBalance = derived<
-  [Readable<Hex | undefined>, Readable<PublicClient>, Readable<input.BridgeKey>, Readable<Token>, Readable<boolean>],
-  null | bigint
->(
-  [walletAccount, chainEvents.destinationPublicClient, input.bridgeKey, assetOut, input.unwrap],
-  ([$walletAccount, $publicClient, $bridgeKey, $assetOut, $unwrap], set) => {
-    let cancelled = false
-    if (!$bridgeKey || !$assetOut || $assetOut.address === zeroAddress || !$walletAccount || $walletAccount === zeroAddress) {
-      set(0n)
-      return
-    }
-    set(null)
-    loading.increment('balance')
-    const unwrappable = nativeAssetOut[$bridgeKey[2]]
-    const getNativeBalance = async () => {
-      const balance = await $publicClient.getBalance({
-        address: $walletAccount,
-      })
-      if (cancelled) return
-      set(balance)
-    }
-    if ($unwrap && getAddress(unwrappable) === getAddress($assetOut.address)) {
-      getNativeBalance()
-      const unwatch = $publicClient.watchBlocks({
-        onBlock: () => {
-          loading.decrement('balance')
-          getNativeBalance()
-        },
-      })
-      return () => {
-        loading.decrement('balance')
-        unwatch?.()
-        cancelled = true
-      }
-    }
-    const token = getContract({
-      address: $assetOut.address,
-      abi: erc20Abi,
-      client: $publicClient,
+const fetchTokenBalance = (
+  [$walletAccount, $chainId, $asset, $unwrap]: [Hex | undefined, Chains, Token | null, boolean],
+  set: (v: bigint | null) => void,
+) => {
+  let cancelled = false
+  set(null)
+  if (!$asset || $asset.address === zeroAddress || !$walletAccount || $walletAccount === zeroAddress) {
+    return
+  }
+  loading.increment('balance')
+  const unwrappable = nativeAssetOut[$chainId]
+  const $publicClient = input.clientFromChain($chainId)
+  const getNativeBalance = async () => {
+    const balance = await $publicClient.getBalance({
+      address: $walletAccount,
     })
-    const getBalance = async () => {
-      const balance = await token.read.balanceOf([$walletAccount])
-      if (cancelled) return
+    if (cancelled) return
+    set(balance)
+  }
+  if ($unwrap && getAddress(unwrappable) === getAddress($asset.address)) {
+    getNativeBalance()
+    const unwatch = $publicClient.watchBlocks({
+      onBlock: () => {
+        loading.decrement('balance')
+        getNativeBalance()
+      },
+    })
+    return () => {
       loading.decrement('balance')
-      set(balance)
+      unwatch()
+      cancelled = true
     }
-    const account = getAddress($walletAccount)
-    if ($bridgeKey[2] === Chains.ETH) {
-      const unwatch = $publicClient.watchContractEvent({
-        abi: erc20Abi,
-        eventName: 'Transfer',
-        address: $assetOut.address,
-        onLogs: (logs) => {
-          if (
-            logs.find((l) => getAddress(l.args.from as Hex) === account || getAddress(l.args.to as Hex) === account)
-          ) {
-            getBalance().catch(console.error)
-          }
-        },
-      })
-      getBalance().catch(console.error)
-      return () => {
-        cancelled = true
-        loading.decrement('balance')
-        unwatch()
+  }
+  const token = getContract({
+    address: $asset.address,
+    abi: erc20Abi,
+    client: $publicClient,
+  })
+  const getBalance = async () => {
+    const balance = await token.read.balanceOf([$walletAccount])
+    if (cancelled) return
+    loading.decrement('balance')
+    set(balance)
+  }
+  const account = getAddress($walletAccount)
+  const unwatch = $publicClient.watchContractEvent({
+    abi: erc20Abi,
+    eventName: 'Transfer',
+    address: $asset.address,
+    onLogs: (logs) => {
+      if (
+        logs.find((l) => (
+          getAddress(l.args.from as Hex) === account || getAddress(l.args.to as Hex) === account
+        ))
+      ) {
+        getBalance().catch(console.error)
       }
-    } else {
-      const unwatch = $publicClient.watchBlocks({
-        onBlock: () => {
-          getBalance().catch(console.error)
-        },
-      })
-      return () => {
-        cancelled = true
-        loading.decrement('balance')
-        unwatch()
-      }
-    }
-  },
+    },
+  })
+  getBalance().catch(console.error)
+  return () => {
+    cancelled = true
+    loading.decrement('balance')
+    unwatch()
+  }
+}
+
+/** this value represents the balance on the originating network */
+export const fromTokenBalance = derived<
+  [Readable<Hex | undefined>, Readable<Chains>, Readable<Token | null>, Readable<boolean>],
+  bigint | null
+>(
+  [walletAccount, input.fromChainId, input.assetIn, input.unwrap],
+  fetchTokenBalance,
+  null,
+)
+
+/** this value represents the balance on the originating network */
+export const toTokenBalance = derived<
+  [Readable<Hex | undefined>, Readable<Chains>, Readable<Token>, Readable<boolean>],
+  bigint | null
+>(
+  [walletAccount, input.toChainId, assetOut, input.unwrap],
+  fetchTokenBalance,
   null,
 )
 
@@ -178,6 +185,10 @@ export const oneEther = 10n ** 18n
 export const desiredExcessCompensationBasisPoints = derived(
   [input.assetIn, input.feeType, whitelisted, input.bridgeKey],
   ([$assetIn, $feeType, $whitelisted, $bridgeKey]) => {
+    const $pathway = pathway($bridgeKey)
+    if (!$pathway?.requiresDelivery) {
+      return 0n
+    }
     return !$assetIn
       ? 0n
       : $feeType === input.FeeType.PERCENT
@@ -364,9 +375,9 @@ export const priceCorrective = derived(
  * on the foreign network, given current gas conditions
  */
 export const estimatedNetworkCost = derived(
-  [input.estimatedGas, latestBaseFeePerGas, priceCorrective, oneTokenInt],
-  ([$estimatedGas, $latestBaseFeePerGas, $priceCorrective, $oneTokenInt]) => {
-    if (!$priceCorrective) {
+  [input.bridgePathway, input.estimatedGas, latestBaseFeePerGas, priceCorrective, oneTokenInt],
+  ([$bridgePathway, $estimatedGas, $latestBaseFeePerGas, $priceCorrective, $oneTokenInt]) => {
+    if (!$priceCorrective || !$bridgePathway?.requiresDelivery) {
       return 0n
     }
     return ($estimatedGas * $latestBaseFeePerGas * $oneTokenInt) / $priceCorrective
@@ -377,8 +388,8 @@ export const limit = derived([input.limit, input.assetIn], ([$limit, $assetIn]) 
   if (isZero($limit) || !$assetIn) return 0n
   return parseUnits(stripNonNumber($limit), $assetIn.decimals)
 })
-export const fee = derived([input.fee], ([$fee]) => {
-  if (isZero($fee)) return 0n
+export const fee = derived([input.fee, input.bridgePathway], ([$fee, $bridgePathway]) => {
+  if (isZero($fee) || !$bridgePathway || !$bridgePathway.requiresDelivery) return 0n
   return parseUnits(stripNonNumber($fee), 18) / 100n
 })
 
@@ -536,23 +547,6 @@ export const assetSources = (asset: Token | null) => {
   if (!asset.chainId) {
     console.trace(asset)
   }
-  // const bridgedImage = [
-  //   {
-  //     chainId: asset.chainId,
-  //     address: asset.address,
-  //   },
-  //   ...Object.entries(asset.extensions?.bridgeInfo || {}).map(([chainId, info]) => {
-  //     if (!info.tokenAddress) {
-  //       return null
-  //     }
-  //     return {
-  //       chainId: Number(chainId),
-  //       address: info.tokenAddress,
-  //     }
-  //     // return `${Number(chainId)}/${info.tokenAddress}`
-  //   }),
-  // ]
-  // console.log(asset)
   type MinTokenInfo = Pick<Token, 'chainId' | 'address'>
   const sources = _([
     {
@@ -567,54 +561,15 @@ export const assetSources = (asset: Token | null) => {
         chainId: Number(chainId),
         address: info.tokenAddress,
       }
-      // return `${Number(chainId)}/${info.tokenAddress}`
     }),
   ])
     .compact()
     .sortBy([
-      // (a: MinTokenInfo) => a.chainId !== asset.chainId,
       (a: MinTokenInfo) => a.chainId,
     ])
     .map((a: MinTokenInfo) => (
       `${a.chainId}/${a.address}`
     ))
     .value()
-  // const sources = _(bridgedImage.concat([`${asset.chainId}/${asset.address}`]))
-  //   .compact()
-  //   .uniq()
-  //   .value()
   return imageLinks.images(sources)
-}
-
-export const getOriginationChainId = (asset: Token | null, $bridgeKey: input.BridgeKey): Chains => {
-  if (!$bridgeKey || !asset) {
-    return Chains.PLS
-  }
-  const path = pathway($bridgeKey)
-  if (!path) {
-    return Chains.PLS
-  }
-  const bridgeInfo = asset.extensions?.bridgeInfo
-  if (_.isEmpty(bridgeInfo)) {
-    return $bridgeKey[2]
-  }
-  const found = Object.values(Chains).find((chain) => {
-    const bridgeKeyInfo = bridgeInfo[Number(chain)]
-    if (bridgeKeyInfo) {
-      return getAddress(path!.to) ===
-        getAddress(bridgeKeyInfo.originationBridgeAddress)
-        ? $bridgeKey[2]
-        : $bridgeKey[1]
-    }
-  })
-  if (found) {
-    return found
-  }
-  const info = bridgeInfo[Number(Chains.PLS)]
-  if (!info) {
-    return `0x${asset.chainId.toString(16)}` as Chains
-  }
-  return getAddress(path.from) === getAddress(info.originationBridgeAddress)
-    ? $bridgeKey[1]
-    : $bridgeKey[2]
 }

@@ -16,8 +16,8 @@
     dappUrl: 'https://gibs.finance',
   })
 
-  const chains = [Chains.PLS].map((key) => {
-    const chain = chainsMetadata[key as Chains]
+  const chains = Object.values(Chains).map((key) => {
+    const chain = chainsMetadata[key]
 
     return {
       id: +key,

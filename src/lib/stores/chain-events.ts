@@ -18,6 +18,7 @@ import { Chains } from './auth/types'
 import type { Token } from '$lib/types'
 import { chainsMetadata } from './auth/constants'
 import { pathway } from './config'
+import { asyncDerived } from '@square/svelte-store'
 
 export const destinationPublicClient = derived([input.bridgeKey, input.forcedRefresh], ([$bridgeKey]) =>
   $bridgeKey && input.clientFromChain($bridgeKey[2]),
@@ -148,6 +149,7 @@ export const minAmount = derived(
 )
 
 export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, Token | null]): Promise<null | {
+  originationChainId: Chains;
   toForeign?: {
     home: Hex
     foreign?: Hex
@@ -196,6 +198,7 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
     nativeTokenAddress = args[0]
     if (nativeTokenAddress === $assetIn.address) {
       return {
+        originationChainId: fromChain,
         toForeign: {
           foreign: foreignTokenAddress,
           home: $assetIn.address,
@@ -204,21 +207,41 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
     }
   } else if (nativeTokenAddress !== zeroAddress) {
     return {
+      originationChainId: toChain,
       toHome: {
         foreign: nativeTokenAddress,
         home: $assetIn.address,
       },
     }
   }
-  return {
-    toForeign: {
-      home: $assetIn.address,
-    },
-  }
+  return null
+  // return {
+  //   originationChainId: fromChain,
+  //   toForeign: {
+  //     home: $assetIn.address,
+  //   },
+  // }
   // fallback case
 }
 
 type TokenBridgeInfo = Awaited<ReturnType<typeof tokenBridgeInfo>>
+
+export const tokenBridgeTrace = asyncDerived(
+  [input.bridgeKey, input.assetIn],
+  async ([$bridgeKey, $assetIn]) => {
+    return loading.loads('token', () => (
+      tokenBridgeInfo([$bridgeKey, $assetIn])
+    ))
+  },
+)
+
+export const tokenOriginationChainId = asyncDerived(
+  [input.bridgeKey, input.assetIn],
+  async ([$bridgeKey, $assetIn]) => {
+    const info = await tokenBridgeInfo([$bridgeKey, $assetIn])
+    return info?.originationChainId
+  }
+)
 
 const checkApproval = async ([$walletAccount, $bridgeAddress, $assetLink, $publicClient]: [
   Hex | undefined,

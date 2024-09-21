@@ -44,4 +44,15 @@ export const loading = {
       return l
     })
   },
+  loads: async <T>(key: string, fn: () => Promise<T>) => {
+    loading.increment(key)
+    try {
+      const res = await fn()
+      loading.decrement(key)
+      return res
+    } catch (err) {
+      loading.decrement(key)
+      throw err
+    }
+  },
 }

@@ -12,7 +12,7 @@
 <div class="isolate inline-flex rounded-md overflow-hidden">
   {#each options as option, i}
     <button
-      class="leading-6 uppercase text-xs px-2 text-white hover:bg-purple-600"
+      class="leading-6 uppercase text-xs px-2 text-white hover:bg-purple-500"
       class:ml-0.5={i > 0}
       on:click={() => {
         active = option.key

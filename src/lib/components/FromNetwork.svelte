@@ -3,14 +3,14 @@
   import { formatUnits } from 'viem'
   import type { VisualChain } from '$lib/stores/auth/types'
   import { get, writable, type Writable } from 'svelte/store'
-  import { amountToBridge } from '$lib/stores/bridge-settings'
+  import { amountToBridge, fromTokenBalance } from '$lib/stores/bridge-settings'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import Warning from './Warning.svelte'
   import Icon from '@iconify/svelte'
   import * as modalStore from '$lib/stores/modal'
   import type { Token } from '$lib/types'
   import type { FormEventHandler } from 'svelte/elements'
-  import { tokenBalance, minAmount } from '$lib/stores/chain-events'
+  import { minAmount } from '$lib/stores/chain-events'
   import { stripNonNumber } from '$lib/stores/utils'
   import Hover from './Hover.svelte'
   import Tooltip from './Tooltip.svelte'
@@ -40,10 +40,13 @@
         {network}
         {asset}
         inChain
-        balance={$tokenBalance}
+        balance={$fromTokenBalance}
         showMax
         on:max-balance={() => {
-          const updated = formatUnits($tokenBalance, asset.decimals)
+          if (typeof $fromTokenBalance !== 'bigint') {
+            return
+          }
+          const updated = formatUnits($fromTokenBalance, asset.decimals)
           value.set(updated)
         }} />
     </div>
