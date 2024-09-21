@@ -101,14 +101,6 @@
   $: if (asset && $feeType === input.FeeType.GAS_TIP) {
     input.limit.set(gasPercentFeeFromNetworkInputs() || '10')
   }
-  $: console.log(
-    deliveryFeeLocked || !deliveryFeeLocked,
-    costLimitLocked || !costLimitLocked,
-    $amountToBridge || !$amountToBridge,
-    $fee || !$fee,
-    $feeType,
-    $assetInAddress,
-  )
   $: if (
     (deliveryFeeLocked || !deliveryFeeLocked) &&
     (costLimitLocked || !costLimitLocked) &&
