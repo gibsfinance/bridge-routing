@@ -4,11 +4,11 @@
   import NetworkImage from './NetworkImage.svelte'
   import { createEventDispatcher } from 'svelte'
   import * as utils from '$lib/utils'
-  import Loading from './Loading.svelte'
   import type { Token } from '$lib/types'
   import Hover from './Hover.svelte'
   import { hover } from '$lib/modifiers/hover'
   import Tooltip from './Tooltip.svelte'
+  import { loading } from '$lib/stores/loading'
   export let balance: bigint | null = null
   export let asset!: Token
   export let network!: VisualChain
@@ -21,7 +21,6 @@
     if (disableMax) return
     dispatch('max-balance')
   }
-  $: bal = balance || 0n
 </script>
 
 <div class="flex flex-row justify-between">
@@ -38,7 +37,7 @@
         {#if !!asset}
           <Tooltip show={hovering}>{utils.nativeName(asset, unwrap)}</Tooltip>
         {/if}
-        <Loading key="balance">{humanReadableNumber(bal, asset?.decimals || 18)}</Loading>&nbsp;{utils.nativeSymbol(
+        {balance === null ? '' : humanReadableNumber(balance, asset?.decimals || 18)}&nbsp;{utils.nativeSymbol(
           asset,
           unwrap,
         )}

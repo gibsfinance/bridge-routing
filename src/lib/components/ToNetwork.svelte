@@ -20,7 +20,7 @@
     fee,
     oneEther,
     desiredExcessCompensationPercentage,
-    foreignTokenBalance,
+    toTokenBalance,
     bridgeFee,
   } from '$lib/stores/bridge-settings'
   import { latestBaseFeePerGas } from '$lib/stores/chain-events'
@@ -34,7 +34,7 @@
   export let destinationNetwork!: VisualChain
   export let asset!: Token
 
-  const { feeType, assetInAddress, destinationSupportsEIP1559 } = input
+  const { feeType, assetInAddress, destinationSupportsEIP1559, bridgePathway } = input
   const dispatch = createEventDispatcher()
   const showToolbox = (type: string) => {
     dispatch('toggle', type)
@@ -73,6 +73,10 @@
     return humanReadableNumber(lim, asset.decimals)
   }
   const reflowFees = () => {
+    if (!$bridgePathway?.requiresDelivery) {
+      input.fee.set('0')
+      return
+    }
     if ($feeType === input.FeeType.PERCENT) {
       if (!deliveryFeeLocked) {
         input.fee.set(percentFeeFromNetworkInputs() || $desiredExcessCompensationPercentage)
@@ -97,12 +101,19 @@
   $: if (asset && $feeType === input.FeeType.GAS_TIP) {
     input.limit.set(gasPercentFeeFromNetworkInputs() || '10')
   }
+  $: console.log(
+    deliveryFeeLocked || !deliveryFeeLocked,
+    costLimitLocked || !costLimitLocked,
+    $amountToBridge || !$amountToBridge,
+    $fee || !$fee,
+    $feeType,
+    $assetInAddress,
+  )
   $: if (
     (deliveryFeeLocked || !deliveryFeeLocked) &&
     (costLimitLocked || !costLimitLocked) &&
     ($amountToBridge || !$amountToBridge) &&
     ($fee || !$fee) &&
-    $estimatedNetworkCost &&
     $feeType &&
     $assetInAddress
   ) {
@@ -127,12 +138,7 @@
 
 <div class="shadow-md rounded-lg">
   <div class="bg-slate-100 py-2 px-3 rounded-t-lg hover:z-10">
-    <NetworkSummary
-      network={destinationNetwork}
-      inChain={false}
-      {asset}
-      balance={$foreignTokenBalance}
-      unwrap={$unwrap} />
+    <NetworkSummary network={destinationNetwork} inChain={false} {asset} balance={$toTokenBalance} unwrap={$unwrap} />
   </div>
   <div class="bg-slate-100 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
@@ -249,8 +255,7 @@
         <button type="button" name="transaction-details" class="flex" on:click={() => showToolbox('details')}
           >📐</button>
       </div>
-      <span
-        class="tooltip text-xl sm:text-2xl leading-10 flex items-center self-center tooltip-top tooltip-left-toward-center">
+      <span class="text-xl sm:text-2xl leading-10 flex items-center self-center">
         {#if $feeType === input.FeeType.GAS_TIP}~&nbsp;{/if}<Loading key="gas">
           {expectedAmountOut}
         </Loading>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
