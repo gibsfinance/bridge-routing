@@ -310,15 +310,15 @@ export const priceCorrective = derived(
     Promise.all([
       $bridgeKey === Chains.ETH && $assetLink && $assetLink.toHome && $assetOut.address !== zeroAddress
         ? readAmountOut(
-            {
-              $assetInAddress: $assetOut.address,
-              $oneTokenInt: toBridge,
-              chain: $bridgeKey,
-              $bridgeKey,
-            },
-            $latestBaseFeePerGas,
-            [[$assetIn.address, uniV2Settings[$bridgeKey].wNative]],
-          )
+          {
+            $assetInAddress: $assetOut.address,
+            $oneTokenInt: toBridge,
+            chain: $bridgeKey,
+            $bridgeKey,
+          },
+          $latestBaseFeePerGas,
+          [[$assetIn.address, uniV2Settings[$bridgeKey].wNative]],
+        )
         : ([[]] as FetchResult[]),
       readAmountOut(
         {
@@ -455,7 +455,7 @@ export const feeDirectorStructEncoded = derived(
       multiplier = $fee
     }
     if (!isAddress($recipient)) {
-      return '0x'
+      return null
     }
     return encodeAbiParameters(abis.feeDeliveryStruct, [[$recipient, $feeTypeSettings, $limit, multiplier]])
   },
@@ -467,7 +467,7 @@ export const feeDirectorStructEncoded = derived(
 export const foreignDataParam = derived(
   [chainEvents.assetLink, input.router, feeDirectorStructEncoded],
   ([$assetLink, $router, $feeDirectorStructEncoded]) => {
-    return !$assetLink
+    return !$feeDirectorStructEncoded || !$assetLink
       ? null
       : $assetLink.toForeign
         ? $feeDirectorStructEncoded
@@ -477,7 +477,7 @@ export const foreignDataParam = derived(
 export const foreignCalldata = derived(
   [assetOut, amountAfterBridgeFee, feeDirectorStructEncoded],
   ([$assetOut, $amountAfterBridgeFee, $feeDirectorStructEncoded]) => {
-    if (!$assetOut) {
+    if (!$feeDirectorStructEncoded || !$assetOut) {
       return null
     }
     return encodeFunctionData({
@@ -500,20 +500,20 @@ export const calldata = derived(
     if (!$foreignDataParam) return null
     return $bridgeKey === Chains.ETH
       ? encodeFunctionData({
-          abi: abis.erc677ETH,
-          functionName: 'transferAndCall',
-          args: [destinationChains[$bridgeKey].homeBridge, $amountToBridge, $foreignDataParam],
-        })
+        abi: abis.erc677ETH,
+        functionName: 'transferAndCall',
+        args: [destinationChains[$bridgeKey].homeBridge, $amountToBridge, $foreignDataParam],
+      })
       : encodeFunctionData({
-          abi: abis.erc677BNB,
-          functionName: 'transferAndCall',
-          args: [
-            destinationChains[$bridgeKey].homeBridge,
-            $amountToBridge,
-            $foreignDataParam,
-            $walletAccount || zeroAddress,
-          ],
-        })
+        abi: abis.erc677BNB,
+        functionName: 'transferAndCall',
+        args: [
+          destinationChains[$bridgeKey].homeBridge,
+          $amountToBridge,
+          $foreignDataParam,
+          $walletAccount || zeroAddress,
+        ],
+      })
   },
 )
 
