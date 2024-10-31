@@ -12,7 +12,6 @@
   $: chain = $tokenOriginationChainId && chainsMetadata[$tokenOriginationChainId]
   $: src = assetSources(asset)
   $: size = tokenSize * 4
-  // $: console.log(chain, $loading.isResolved('token'))
 </script>
 
 <span class="token-image-container relative" style="--token-size: {tokenSize};">
