@@ -515,7 +515,7 @@ export const calldata = derived(
   ([$bridgeKey, $amountToBridge, $foreignDataParam, $walletAccount]) => {
     if (!$foreignDataParam) return null
     const path = pathway($bridgeKey)
-    if (!path) return '0x' as Hex
+    if (!path) return null
     const destination = path.to
     return path.usesExtraParam
       ? encodeFunctionData({
