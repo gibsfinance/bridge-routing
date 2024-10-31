@@ -1,9 +1,14 @@
 <script lang="ts">
-  import { goto } from '$app/navigation'
-  import { flippedTokenAddressIn, toPath, validBridgeKey, flippedBridgeKey } from '$lib/stores/input'
   import { zeroAddress } from 'viem'
+  import { goto } from '$app/navigation'
+  import { useAuth } from '$lib/stores/auth/methods'
+  import { flippedTokenAddressIn, toPath, validBridgeKey, flippedBridgeKey, toChainId } from '$lib/stores/input'
+  import { walletAccount } from '$lib/stores/auth/store'
+
+  const { switchChain } = useAuth()
 
   const flipDirection = async () => {
+    if ($walletAccount) await switchChain($toChainId)
     await goto(`/delivery/${toPath($flippedBridgeKey)}/${flippedAddressIn}`)
   }
   $: flippedIsValid = validBridgeKey([$flippedBridgeKey])

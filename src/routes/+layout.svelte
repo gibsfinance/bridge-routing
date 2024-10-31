@@ -26,7 +26,7 @@
       <Nav />
       <main class="flex flex-col box-border w-full min-h-screen bg-slate-950 text-white mt-10">
         <div class="flex grow items-center justify-center">
-          <Loader loaded={false} size="lg" />
+          <Loader loaded={false} />
         </div>
         <Footer />
       </main>
