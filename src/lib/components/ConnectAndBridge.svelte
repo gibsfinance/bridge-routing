@@ -4,29 +4,24 @@
   import { useAuth } from '$lib/stores/auth/methods'
   import { walletAccount } from '$lib/stores/auth/store'
   import { Chains } from '$lib/stores/auth/types'
-  import {
-    amountToBridge,
-    foreignDataParam,
-    foreignCalldata,
-    // assetOut,
-    // amountAfterBridgeFee,
-  } from '$lib/stores/bridge-settings'
+  import { fromTokenBalance, amountToBridge, foreignDataParam, foreignCalldata } from '$lib/stores/bridge-settings'
   import * as abis from '$lib/stores/abis'
   import { type Hex, getContract, erc20Abi, maxUint256 } from 'viem'
   import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input'
-  import { tokenBalance, tokenBridgeInfo, assetLink, approval } from '$lib/stores/chain-events'
+  import { tokenBridgeInfo, assetLink, approval } from '$lib/stores/chain-events'
   import { loading } from '$lib/stores/loading'
   import { get } from 'svelte/store'
 
-  const { walletClient, assetIn, clientFromChain, bridgeKey, router, bridgePathway, fromChainId, toChainId } = input
+  const { walletClient, assetIn, clientFromChain, bridgeKey, router, bridgePathway, fromChainId } = input
 
   let disabledByClick = false
+  $: tokenBalance = $fromTokenBalance || 0n
   $: disabled =
-    disabledByClick || BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n || $amountToBridge > $tokenBalance
+    disabledByClick || BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n || $amountToBridge > tokenBalance
 
   const { connect } = useAuth()
-  const hashes: Hex[] = []
+  let hashes: Hex[] = []
 
   const transactionButtonPress = (fn: () => Promise<Hex | undefined>) => async () => {
     disabledByClick = true
@@ -56,6 +51,7 @@
     if (!$foreignCalldata || !$foreignDataParam) {
       return
     }
+    // TODO: add tracing call on foreign network to show that the bridge will be successful
     // const foreignClient = clientFromChain(Chains.ETH).extend((client) => ({
     //   async traceCall(args: CallParameters) {
     //     return client.request({
@@ -137,7 +133,6 @@
     //   console.error(err)
     //   throw err
     // }
-    // const to = assets[$bridgeKey].input.address
     if (!$bridgePathway) {
       return
     }
@@ -145,12 +140,7 @@
     if (!tokenInfo || !$assetIn) {
       return
     }
-    const account = $walletAccount as Hex
-    const options = {
-      account,
-      type: 'eip1559',
-      chain: chainsMetadata[$fromChainId],
-    } as const
+    const options = opts()
     if ($bridgePathway?.usesExtraParam) {
       if (tokenInfo.toForeign) {
         // token is native to pulsechain
@@ -160,7 +150,7 @@
           client: $walletClient!,
         })
         return await bridgeContract.write.relayTokensAndCall(
-          [$assetIn.address, $router, $amountToBridge, $foreignDataParam, account],
+          [$assetIn.address, $router, $amountToBridge, $foreignDataParam, options.account],
           options,
         )
       } else {
@@ -171,7 +161,7 @@
           client: $walletClient!,
         })
         return await contract.write.transferAndCall(
-          [$bridgePathway.to, $amountToBridge, $foreignDataParam, account],
+          [$bridgePathway.to, $amountToBridge, $foreignDataParam, options.account],
           options,
         )
       }
@@ -193,7 +183,10 @@
           address: $assetIn.address,
           client: $walletClient!,
         })
-        return await contract.write.transferAndCall([$bridgePathway.to, $amountToBridge, $foreignDataParam], options)
+        return await contract.write.transferAndCall(
+          [$bridgePathway.to, $amountToBridge, $foreignDataParam], // args
+          options,
+        )
       }
     }
   }
@@ -201,9 +194,18 @@
     setTimeout(() => {
       const index = hashes.indexOf(hash)
       if (index >= 0) {
-        hashes.splice(index, 1)
+        hashes = hashes.slice(0).splice(index, 1)
       }
     }, 20_000)
+  }
+  const opts = () => {
+    const account = $walletAccount as Hex
+    const options = {
+      account,
+      type: 'eip1559',
+      chain: chainsMetadata[$fromChainId],
+    } as const
+    return options
   }
   const increaseApproval = async () => {
     if (!$bridgePathway || !$assetIn) {
@@ -214,14 +216,8 @@
       address: $assetIn.address,
       client: $walletClient!,
     })
-    const account = $walletAccount as Hex
-    const options = {
-      account,
-      type: 'eip1559',
-      chain: chainsMetadata[$fromChainId],
-    } as const
-    const $bridgeAddress = $bridgePathway.from
-    return await contract.write.approve([$bridgeAddress, maxUint256], options)
+    const options = opts()
+    return await contract.write.approve([$bridgePathway.from, maxUint256], options)
   }
   const sendInitiateBridge = transactionButtonPress(initiateBridge)
   const sendIncreaseApproval = transactionButtonPress(increaseApproval)

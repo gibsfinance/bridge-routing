@@ -1,4 +1,4 @@
-import { type Hex, zeroAddress, getAddress } from 'viem'
+import { type Hex, getAddress } from 'viem'
 import * as imageLinks from './image-links'
 import type { Token, TokenList } from '$lib/types'
 import { Chains, Provider } from './auth/types'
@@ -7,45 +7,47 @@ import { windowLoaded } from './window'
 import type { BridgeKey } from './input'
 import _ from 'lodash'
 
-export const uniV2Settings = {
-  [Chains.PLS]: {
-    routers: ['0x98bf93ebf5c380C0e6Ae8e192A7e2AE08edAcc02', '0x165C3410fC91EF562C50559f7d2289fEbed552d9'],
-    wNative: '0xA1077a294dDE1B09bB078844df40758a5D0f9a27',
-  },
-  [Chains.ETH]: {
-    routers: ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d'],
-    wNative: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-  },
-  [Chains.BNB]: {
-    routers: ['0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F'],
-    wNative: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
-  },
-  [Chains.SEP]: {
-    routers: [],
-    wNative: zeroAddress,
-  },
-  [Chains.V4PLS]: {
-    routers: [],
-    wNative: zeroAddress,
-  },
-} as Record<
-  Chains,
-  {
-    routers: Hex[]
-    wNative: Hex
-  }
->
+export const nativeAssetOut = {
+  [Chains.ETH]: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+  [Chains.BNB]: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+  [Chains.PLS]: '0xA1077a294dDE1B09bB078844df40758a5D0f9a27',
+  [Chains.SEP]: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
+  [Chains.V4PLS]: '0x70499adEBB11Efd915E3b69E700c331778628707',
+} as Record<Chains, Hex>
+
+export const uniV2Routers = {
+  [Chains.PLS]: ['0x98bf93ebf5c380C0e6Ae8e192A7e2AE08edAcc02', '0x165C3410fC91EF562C50559f7d2289fEbed552d9'],
+  [Chains.ETH]: ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d'],
+  [Chains.BNB]: ['0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F'],
+  [Chains.SEP]: ['0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3'],
+  [Chains.V4PLS]: ['0xDaE9dd3d1A52CfCe9d5F2fAC7fDe164D500E50f7', '0x636f6407B90661b73b1C0F7e24F4C79f624d0738'],
+} as Record<Chains, Hex[]>
+
+export const nativeTokenSymbol = {
+  [Chains.PLS]: 'PLS',
+  [Chains.V4PLS]: 'V4PLS',
+  [Chains.ETH]: 'ETH',
+  [Chains.SEP]: 'sepETH',
+  [Chains.BNB]: 'BNB',
+}
+
+export const nativeTokenName = {
+  [Chains.PLS]: 'Pulse',
+  [Chains.V4PLS]: 'V4 Pulse',
+  [Chains.ETH]: 'Ether',
+  [Chains.SEP]: 'Sepolia Ether',
+  [Chains.BNB]: 'BNB',
+}
 
 export type Pathway = {
   from: Hex
   to: Hex
   router?: Hex
-  bridgedNative?: Hex
   defaultAssetIn: Token
-  usesExtraParam: boolean;
+  usesExtraParam: boolean
   feeManager: 'from' | 'to'
-  toHome: boolean;
-  requiresDelivery: boolean;
+  toHome: boolean
+  requiresDelivery: boolean
 }
 
 export const pathways = {
@@ -55,7 +57,6 @@ export const pathways = {
         from: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
         to: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
         router: '0x0560e1392185bf554E1e0044cD752aeA83F37C6E',
-        bridgedNative: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
         usesExtraParam: false,
         feeManager: 'from',
         toHome: false,
@@ -69,9 +70,7 @@ export const pathways = {
           extensions: {
             bridgeInfo: {
               '1': {
-                tokenAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-                destinationBridgeAddress: zeroAddress,
-                originationBridgeAddress: zeroAddress,
+                tokenAddress: nativeAssetOut[Chains.ETH],
               },
             },
           },
@@ -85,24 +84,69 @@ export const pathways = {
         // router: zeroAddress,
         feeManager: 'to',
         usesExtraParam: false,
-        bridgedNative: '0xA882606494D86804B5514E07e6Bd2D6a6eE6d68A',
         toHome: true,
         requiresDelivery: false,
         defaultAssetIn: {
           chainId: 1,
-          address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-          name: "Wrapped Ether",
-          symbol: "WETH",
+          address: nativeAssetOut[Chains.ETH],
+          name: 'Wrapped Ether',
+          symbol: 'WETH',
           decimals: 18,
           extensions: {
             bridgeInfo: {
               '369': {
-                tokenAddress: "0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C",
-                originationBridgeAddress: zeroAddress,
-                destinationBridgeAddress: zeroAddress,
-              }
-            }
-          }
+                tokenAddress: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
+              },
+            },
+          },
+        },
+      },
+    },
+    [Chains.V4PLS]: {
+      [Chains.SEP]: {
+        from: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
+        to: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
+        usesExtraParam: false,
+        requiresDelivery: true,
+        toHome: false,
+        feeManager: 'from',
+        defaultAssetIn: {
+          chainId: 943,
+          address: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
+          name: 'Wrapped Ether from Sepolia',
+          symbol: 'WsepETH',
+          decimals: 18,
+          extensions: {
+            bridgeInfo: {
+              '11155111': {
+                tokenAddress: nativeAssetOut[Chains.SEP],
+              },
+            },
+          },
+        },
+      },
+    },
+    [Chains.SEP]: {
+      [Chains.V4PLS]: {
+        from: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
+        to: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
+        usesExtraParam: false,
+        requiresDelivery: false,
+        toHome: true,
+        feeManager: 'to',
+        defaultAssetIn: {
+          chainId: 11_155_111,
+          address: nativeAssetOut[Chains.SEP],
+          name: 'Wrapped Ether',
+          symbol: 'sepWETH',
+          decimals: 18,
+          extensions: {
+            bridgeInfo: {
+              '943': {
+                tokenAddress: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
+              },
+            },
+          },
         },
       },
     },
@@ -113,7 +157,6 @@ export const pathways = {
         from: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
         to: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
         router: '0xC985f38b9d082692C6744C628026305E3f202fE1',
-        bridgedNative: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
         feeManager: 'from',
         usesExtraParam: true,
         toHome: false,
@@ -127,9 +170,7 @@ export const pathways = {
           extensions: {
             bridgeInfo: {
               '56': {
-                tokenAddress: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
-                destinationBridgeAddress: zeroAddress,
-                originationBridgeAddress: zeroAddress,
+                tokenAddress: nativeAssetOut[Chains.BNB],
               },
             },
           },
@@ -142,34 +183,26 @@ export const pathways = {
         to: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
         feeManager: 'to',
         usesExtraParam: true,
-        // router: '0x',
-        bridgedNative: '0xD69D520f4F23d62C36Cf745E8f5c50f2906F51da',
         toHome: true,
         requiresDelivery: false,
         defaultAssetIn: {
-          "chainId": 56,
-          "address": "0xD69D520f4F23d62C36Cf745E8f5c50f2906F51da",
-          "name": "Wrapped Pulse from PulseChain",
-          "symbol": "WPLS",
-          "decimals": 18,
-          "extensions": {
-            "bridgeInfo": {
-              "369": {
-                "tokenAddress": "0x37567B4A01B0F6Ac9b317814Ff0624Fa2013b170",
-                "originationBridgeAddress": zeroAddress,
-                "destinationBridgeAddress": zeroAddress
-              }
-            }
-          }
+          chainId: 56,
+          address: nativeAssetOut[Chains.BNB],
+          name: 'Wrapped BNB from BSC',
+          symbol: 'WBNB',
+          decimals: 18,
+          extensions: {
+            bridgeInfo: {
+              '369': {
+                tokenAddress: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
+              },
+            },
+          },
         },
       },
     },
   },
-} as Record<Provider, Partial<
-  Record<Chains, Partial<
-    Record<Chains, Pathway>
-  >>
->>
+} as Record<Provider, Partial<Record<Chains, Partial<Record<Chains, Pathway>>>>>
 
 export const validBridgeKeys = [
   [Provider.PULSECHAIN, Chains.PLS, Chains.ETH],
@@ -183,14 +216,16 @@ export const validBridgeKeys = [
 
 export const networkInputs = _(validBridgeKeys).map('1').uniq().value()
 
-export const networkOutputs = (input: Chains) => (
-  _(validBridgeKeys).filter((a) => a[1] !== input).map('2').uniq().value()
-)
+export const networkOutputs = (input: Chains) =>
+  _(validBridgeKeys)
+    .filter((a) => a[1] !== input)
+    .map('2')
+    .uniq()
+    .value()
 
 export const pathway = (bridgeKey: BridgeKey | null) => {
   if (!bridgeKey) return
-  const [provider, fromChain, toChain] = bridgeKey
-  return pathways[provider][fromChain]?.[toChain]
+  return _.get(pathways, bridgeKey)
 }
 
 export const defaultAssetIn = ($bridgeKey: BridgeKey | null) => {
@@ -198,14 +233,6 @@ export const defaultAssetIn = ($bridgeKey: BridgeKey | null) => {
   const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token | undefined
   return defaultAssetIn
 }
-
-export const nativeAssetOut = {
-  [Chains.ETH]: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-  [Chains.BNB]: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
-  [Chains.PLS]: '0xA1077a294dDE1B09bB078844df40758a5D0f9a27',
-  [Chains.SEP]: zeroAddress,
-  [Chains.V4PLS]: zeroAddress,
-} as Record<Chains, Hex>
 
 export const whitelisted = derived(
   [windowLoaded],

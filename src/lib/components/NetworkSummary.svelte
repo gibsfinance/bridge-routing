@@ -8,7 +8,6 @@
   import Hover from './Hover.svelte'
   import { hover } from '$lib/modifiers/hover'
   import Tooltip from './Tooltip.svelte'
-  import { loading } from '$lib/stores/loading'
   export let balance: bigint | null = null
   export let asset!: Token
   export let network!: VisualChain

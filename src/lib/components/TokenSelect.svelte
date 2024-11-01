@@ -77,7 +77,6 @@
     if (!target) {
       throw new Error('no target')
     }
-    // const $chain = chainsMetadata[Chains.PLS]
     const [name, symbol, decimals] = await multicallErc20({
       chain: chainsMetadata[$fromChainId],
       client: $fromPublicClient,
