@@ -48,5 +48,6 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    __PROD__: JSON.stringify(process.env.NODE_ENV === 'production'),
   },
 })
