@@ -6,7 +6,7 @@
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import Settings from './Settings.svelte'
   import Details from './Details.svelte'
-  import { assetOut, backupAssetIn } from '$lib/stores/bridge-settings'
+  import { assetOut } from '$lib/stores/bridge-settings'
   import * as input from '$lib/stores/input'
   const { bridgeKey, assetIn } = input
   $: originationNetwork = chainsMetadata[$bridgeKey[1]]
@@ -23,7 +23,7 @@
 </script>
 
 <div class="bg-slate-200 p-3 md:p-4 rounded-lg shadow-inner text-slate-950 my-8">
-  <FromNetwork network={originationNetwork} asset={$assetIn || backupAssetIn} value={input.amountIn} />
+  <FromNetwork network={originationNetwork} asset={$assetIn} value={input.amountIn} />
   <NetworkDirection />
   <ToNetwork {destinationNetwork} on:toggle={toggleDropdowns} asset={$assetOut} />
   {#if dropdowns.settings}

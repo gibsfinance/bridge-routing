@@ -32,7 +32,7 @@
   import { hover } from '$lib/modifiers/hover'
   import Hover from './Hover.svelte'
   export let destinationNetwork!: VisualChain
-  export let asset!: Token
+  export let asset: Token | null = null
 
   const { feeType, assetInAddress, destinationSupportsEIP1559, bridgePathway } = input
   const dispatch = createEventDispatcher()
@@ -66,11 +66,11 @@
     const numDecimals = 6n
     const lowResLimit = ($latestBaseFeePerGas * ($fee + oneEther)) / (10n ** (11n - numDecimals) * 10n * oneEther)
     let lim = lowResLimit * 10n ** (18n - numDecimals)
-    lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset.decimals))
+    lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset!.decimals))
     if (lim > $amountAfterBridgeFee) {
       lim = $amountAfterBridgeFee
     }
-    return humanReadableNumber(lim, asset.decimals)
+    return humanReadableNumber(lim, asset!.decimals)
   }
   const reflowFees = () => {
     if (!$bridgePathway?.requiresDelivery) {
@@ -90,7 +90,7 @@
         }
       }
     } else {
-      input.limit.set(formatUnits(($amountAfterBridgeFee * $fee) / oneEther, asset.decimals))
+      input.limit.set(formatUnits(($amountAfterBridgeFee * $fee) / oneEther, asset!.decimals))
     }
   }
   const feeTypeOptions = [
@@ -116,7 +116,7 @@
   }
 
   $: bridgeFeeDecimals = humanReadableNumber($bridgeFee * 100n)
-  $: decimals = asset.decimals
+  $: decimals = asset?.decimals || 18
   $: large = $windowStore.innerHeight > 600 && $windowStore.innerWidth >= 768
   $: expectedAmountOut =
     $amountToBridge &&
@@ -180,7 +180,7 @@
               >{$feeType === input.FeeType.FIXED
                 ? 'Fee uses fixed value defined in cost limit'
                 : $feeType === input.FeeType.GAS_TIP
-                  ? `Percentage of gas used * ${$destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber($estimatedNetworkCost, asset.decimals)} ${utils.nativeSymbol(asset, $unwrap)}`
+                  ? `Percentage of gas used * ${$destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber($estimatedNetworkCost, asset?.decimals || 18)} ${utils.nativeSymbol(asset, $unwrap)}`
                   : 'the percentage of bridged tokens after the bridge fee'}</Tooltip>
             <Loading key="gas" />
             {#if $feeType !== input.FeeType.FIXED}
@@ -224,7 +224,8 @@
             <Loading key="gas">
               {#if $feeType === input.FeeType.PERCENT}
                 <span
-                  >{humanReadableNumber($limitFromPercent, asset.decimals)} {utils.nativeSymbol(asset, $unwrap)}</span>
+                  >{humanReadableNumber($limitFromPercent, asset?.decimals || 18)}
+                  {utils.nativeSymbol(asset, $unwrap)}</span>
               {:else}
                 <SmallInput
                   value={input.limit}

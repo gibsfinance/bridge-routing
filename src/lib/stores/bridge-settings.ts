@@ -44,7 +44,7 @@ export const assetOut = asyncDerived(
   [input.bridgeKey, input.assetIn],
   async ([$bridgeKey, $assetIn]) => {
     if (!$bridgeKey || !$assetIn) {
-      return backupAssetIn
+      return null
     }
     const toChainId = $bridgeKey[2]
     const assetIn = {
@@ -385,6 +385,9 @@ export const feeTypeSettings = derived([input.feeType, unwrap], ([$feeType, $unw
 export const feeDirectorStructEncoded = derived(
   [input.recipient, feeTypeSettings, limit, fee, input.feeType, assetOut, priceCorrective],
   ([$recipient, $feeTypeSettings, $limit, $fee, $feeType, $assetOut, $priceCorrective]) => {
+    if (!$assetOut) {
+      return null
+    }
     let multiplier = 0n
     if ($feeType === input.FeeType.GAS_TIP && $priceCorrective > 0n) {
       multiplier = ((oneEther + $fee) * 10n ** BigInt($assetOut.decimals)) / $priceCorrective

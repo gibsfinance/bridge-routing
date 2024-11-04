@@ -50,6 +50,8 @@ export type Pathway = {
   requiresDelivery: boolean
 }
 
+export type DeepPathwayConfig = Record<Provider, Partial<Record<Chains, Partial<Record<Chains, Pathway>>>>>
+
 export const pathways = {
   [Provider.PULSECHAIN]: {
     [Chains.PLS]: {
@@ -96,54 +98,6 @@ export const pathways = {
             bridgeInfo: {
               '369': {
                 tokenAddress: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
-              },
-            },
-          },
-        },
-      },
-    },
-    [Chains.V4PLS]: {
-      [Chains.SEP]: {
-        from: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
-        to: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
-        usesExtraParam: false,
-        requiresDelivery: true,
-        toHome: false,
-        feeManager: 'from',
-        defaultAssetIn: {
-          chainId: 943,
-          address: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
-          name: 'Wrapped Ether from Sepolia',
-          symbol: 'WsepETH',
-          decimals: 18,
-          extensions: {
-            bridgeInfo: {
-              '11155111': {
-                tokenAddress: nativeAssetOut[Chains.SEP],
-              },
-            },
-          },
-        },
-      },
-    },
-    [Chains.SEP]: {
-      [Chains.V4PLS]: {
-        from: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
-        to: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
-        usesExtraParam: false,
-        requiresDelivery: false,
-        toHome: true,
-        feeManager: 'to',
-        defaultAssetIn: {
-          chainId: 11_155_111,
-          address: nativeAssetOut[Chains.SEP],
-          name: 'Wrapped Ether',
-          symbol: 'sepWETH',
-          decimals: 18,
-          extensions: {
-            bridgeInfo: {
-              '943': {
-                tokenAddress: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
               },
             },
           },
@@ -202,7 +156,61 @@ export const pathways = {
       },
     },
   },
-} as Record<Provider, Partial<Record<Chains, Partial<Record<Chains, Pathway>>>>>
+} as DeepPathwayConfig
+
+export const testnetPathways = {
+  [Provider.TOKENSEX]: {},
+  [Provider.PULSECHAIN]: {
+    [Chains.V4PLS]: {
+      [Chains.SEP]: {
+        from: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
+        to: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
+        usesExtraParam: false,
+        requiresDelivery: true,
+        toHome: false,
+        feeManager: 'from',
+        defaultAssetIn: {
+          chainId: 943,
+          address: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
+          name: 'Wrapped Ether from Sepolia',
+          symbol: 'WsepETH',
+          decimals: 18,
+          extensions: {
+            bridgeInfo: {
+              '11155111': {
+                tokenAddress: nativeAssetOut[Chains.SEP],
+              },
+            },
+          },
+        },
+      },
+    },
+    [Chains.SEP]: {
+      [Chains.V4PLS]: {
+        from: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
+        to: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
+        usesExtraParam: false,
+        requiresDelivery: false,
+        toHome: true,
+        feeManager: 'to',
+        defaultAssetIn: {
+          chainId: 11_155_111,
+          address: nativeAssetOut[Chains.SEP],
+          name: 'Wrapped Ether',
+          symbol: 'sepWETH',
+          decimals: 18,
+          extensions: {
+            bridgeInfo: {
+              '943': {
+                tokenAddress: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+} as DeepPathwayConfig
 
 export const validBridgeKeys = [
   [Provider.PULSECHAIN, Chains.PLS, Chains.ETH],

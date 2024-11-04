@@ -181,8 +181,8 @@ export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([
   const conf = pathway($bridgeKey)
   const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token
   const sortedList = _($responses)
-    .sortBy('name')
-    .uniqBy('address')
+    .sortBy(['name', 'chainId'])
+    .uniqBy(({ chainId, address }) => `${chainId}-${getAddress(address)}`)
     .map((item) => {
       if (defaultAssetIn && defaultAssetIn.address === item.address) {
         return defaultAssetIn
@@ -191,16 +191,19 @@ export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([
     })
     .filter((tkn) => tkn.chainId === Number($bridgeKey[1]))
     .value()
-  const list = [
-    {
-      chainId: Number($bridgeKey[1]),
-      address: zeroAddress as Hex,
-      name: nativeTokenName[$bridgeKey[1]],
-      decimals: 18,
-      symbol: nativeTokenSymbol[$bridgeKey[1]],
-      logoURI: '',
-    } as Token,
-  ].concat(sortedList)
+  let list: Token[] = []
+  if (sortedList.length) {
+    list = [
+      {
+        chainId: Number($bridgeKey[1]),
+        address: zeroAddress as Hex,
+        name: nativeTokenName[$bridgeKey[1]],
+        decimals: 18,
+        symbol: nativeTokenSymbol[$bridgeKey[1]],
+        logoURI: '',
+      } as Token,
+    ].concat(sortedList)
+  }
   list.forEach((token) => {
     // register on a central cache so that tokens that are gotten from onchain
     // still have all extensions
@@ -212,10 +215,9 @@ export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([
   return list
 })
 
-export const assetInAddress = derived(
-  [bridgeKey, page],
-  ([$bridgeKey, $page]) => $bridgeKey && getAddress($page.params.assetInAddress || defaultAssetIn($bridgeKey)!.address),
-)
+export const assetInAddress = derived([bridgeKey, page], ([$bridgeKey, $page]) => {
+  return $bridgeKey && getAddress($page.params.assetInAddress || defaultAssetIn($bridgeKey)!.address)
+})
 
 export const assetIn = derived(
   [assetInAddress, bridgeKey, bridgableTokens, customTokens.tokens],

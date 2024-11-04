@@ -57,7 +57,7 @@ export const chainsMetadata = {
     ...sepolia,
     name: 'Sepolia',
     chainId: Chains.SEP,
-    icon: imageLinks.network(mainnet.id),
+    icon: imageLinks.network(sepolia.id),
     alt: 'two pyramids joined on one side',
     rpcUrls: {
       default: {
@@ -69,7 +69,7 @@ export const chainsMetadata = {
     ...pulsechainV4,
     name: 'Pulsechain V4',
     chainId: Chains.V4PLS,
-    icon: imageLinks.network(pulsechain.id),
+    icon: imageLinks.network(pulsechainV4.id),
     alt: 'a pink blue and purple hexagon with an ekg line running horizontally',
     rpcUrls: {
       default: {

@@ -9,7 +9,7 @@
   import { hover } from '$lib/modifiers/hover'
   import Tooltip from './Tooltip.svelte'
   export let balance: bigint | null = null
-  export let asset!: Token
+  export let asset: Token | null = null
   export let network!: VisualChain
   export let showMax = false
   export let unwrap = false
