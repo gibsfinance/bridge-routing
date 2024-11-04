@@ -5,11 +5,12 @@
   import { assetSources } from '$lib/stores/bridge-settings'
   import { tokenOriginationChainId } from '$lib/stores/chain-events'
   import { loading } from '$lib/stores/loading'
+  import { zeroAddress } from 'viem'
 
   export let asset!: Token
   export let tokenSize = 10
   export let networkSize = 5
-  $: chain = $tokenOriginationChainId && chainsMetadata[$tokenOriginationChainId]
+  $: chain = asset.address !== zeroAddress && $tokenOriginationChainId && chainsMetadata[$tokenOriginationChainId]
   $: src = assetSources(asset)
   $: size = tokenSize * 4
 </script>

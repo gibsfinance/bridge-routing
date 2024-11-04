@@ -27,7 +27,7 @@ import { isZero, stripNonNumber } from './utils'
 import { latestBaseFeePerGas } from './chain-events'
 import { settings } from './fee-manager'
 
-export const backupAssetIn = {
+const backupAssetIn = {
   address: zeroAddress,
   name: 'unknown',
   symbol: 'xxx',
@@ -49,7 +49,7 @@ export const assetOut = asyncDerived(
       address: $assetIn.address === zeroAddress ? nativeAssetOut[$bridgeKey[1]] : getAddress($assetIn.address),
     }
     if (!assetLink) {
-      return backupAssetIn
+      return null
     }
     const { toHome, toForeign } = assetLink
     let res = backupAssetIn
@@ -61,33 +61,31 @@ export const assetOut = asyncDerived(
         chain: chainsMetadata[toChainId],
         target: foreign,
       }).catch(() => null)
-      if (!r) {
-        loading.decrement('balance')
-        return backupAssetIn
+      if (r) {
+        const [name, symbol, decimals] = r
+        res = {
+          name,
+          symbol,
+          decimals,
+          chainId: Number(toChainId),
+          address: foreign,
+        } as Token
+        res.logoURI = imageLinks.image(res)
+      } else {
+        // assumptions
+        res = {
+          ...assetIn,
+          chainId: Number($bridgeKey[2]),
+          address: zeroAddress,
+          name: `${assetIn.name} from Pulsechain`,
+          symbol: `w${assetIn.symbol}`,
+        } as Token
       }
-      const [name, symbol, decimals] = r
-      res = {
-        name,
-        symbol,
-        decimals,
-        chainId: Number(toChainId),
-        address: foreign,
-      } as Token
-      res.logoURI = imageLinks.image(res)
-    } else {
-      // assumptions
-      res = {
-        ...assetIn,
-        chainId: Number($bridgeKey[2]),
-        address: zeroAddress,
-        name: `${assetIn.name} from Pulsechain`,
-        symbol: `w${assetIn.symbol}`,
-      } as Token
     }
     loading.decrement('balance')
     return res
   },
-  backupAssetIn,
+  null,
 )
 
 /** this value represents the balance on of the asset going into the bridge */
@@ -200,40 +198,17 @@ export const amountToBridge = derived(
   },
 )
 export const priceCorrective = derived(
-  [
-    input.assetIn,
-    input.bridgeKey,
-    chainEvents.assetLink,
-    oneTokenInt,
-    assetOut,
-    amountToBridge,
-    latestBaseFeePerGas,
-    input.flippedBridgeKey,
-  ],
-  (
-    [
-      $assetIn,
-      $bridgeKey,
-      $assetLink,
-      $oneTokenInt,
-      $assetOut,
-      $amountToBridge,
-      $latestBaseFeePerGas,
-      $flippedBridgeKey,
-    ],
-    set,
-  ) => {
+  [input.assetIn, input.bridgeKey, oneTokenInt, assetOut, amountToBridge, latestBaseFeePerGas, input.flippedBridgeKey],
+  ([$assetIn, $bridgeKey, $oneTokenInt, $assetOut, $amountToBridge, $latestBaseFeePerGas, $flippedBridgeKey], set) => {
     // check if recognized as wrapped
     // if recognized as wrapped, use oneEther
     let cancelled = false
     priceCorrectiveGuard = {}
     const pcg = priceCorrectiveGuard
     if (!$assetIn) {
-      // console.log('zero address', $assetIn, $assetOut)
       set(0n)
       return
     }
-    // console.log($assetOut, $assetIn, $bridgeKey, input.isNative($assetIn, $bridgeKey))
     if (!$assetOut || input.isNative($assetOut, $bridgeKey)) {
       set(oneEther)
       return
@@ -302,7 +277,6 @@ export const priceCorrective = derived(
       })
       .then((results) => {
         if (cancelled) return
-        cleanup()
         const max = (amountsOut: (bigint | undefined)[]) => {
           return _(amountsOut)
             .compact()
@@ -321,6 +295,8 @@ export const priceCorrective = derived(
             : inputToken
         set(res || 0n)
       })
+      .catch(console.error)
+      .then(cleanup)
     return cleanup
   },
   oneEther,
@@ -488,9 +464,6 @@ export const calldata = derived(
 export const assetSources = (asset: Token | null) => {
   if (!asset) {
     return ''
-  }
-  if (!asset.chainId) {
-    console.trace(asset)
   }
   type MinTokenInfo = Pick<Token, 'chainId' | 'address'>
   const sources = _([

@@ -90,7 +90,7 @@
           input.limit.set(floatingLimit)
         }
       }
-    } else {
+    } else if (asset) {
       input.limit.set(formatUnits(($amountAfterBridgeFee * $fee) / oneEther, asset!.decimals))
     }
   }

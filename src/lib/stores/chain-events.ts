@@ -10,6 +10,7 @@ import type { Token } from '$lib/types'
 import { chainsMetadata } from './auth/constants'
 import { nativeAssetOut, pathway } from './config'
 import { asyncDerived } from '@square/svelte-store'
+import _ from 'lodash'
 
 export const destinationPublicClient = derived(
   [input.bridgeKey, input.forcedRefresh],
@@ -172,6 +173,22 @@ export const minAmount = derived(
   0n,
 )
 
+const links = _.memoize(
+  async ({ chainId, target, address }: { chainId: Chains; target: Hex; address: Hex }) => {
+    return multicallRead<Hex[]>({
+      client: input.clientFromChain(chainId),
+      chain: chainsMetadata[chainId],
+      abi: abis.inputBridge,
+      target,
+      calls: [
+        { functionName: 'bridgedTokenAddress', args: [address] },
+        { functionName: 'nativeTokenAddress', args: [address] },
+      ],
+    })
+  },
+  ({ chainId, target, address }) => `${chainId}-${target}-${address}`,
+)
+
 export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, Token | null]): Promise<null | {
   originationChainId: Chains
   toForeign?: {
@@ -189,15 +206,10 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
   }
   const [, fromChain, toChain] = $bridgeKey
   const args = [$assetIn.address]
-  const mappings = await multicallRead<Hex[]>({
-    client: input.clientFromChain(fromChain),
-    chain: chainsMetadata[fromChain],
-    abi: abis.inputBridge,
+  const mappings = await links({
+    chainId: fromChain,
     target: bridgePathway.from,
-    calls: [
-      { functionName: 'bridgedTokenAddress', args },
-      { functionName: 'nativeTokenAddress', args },
-    ],
+    address: $assetIn.address,
   })
   let [
     foreignTokenAddress, // bridgedTokenAddress
@@ -205,15 +217,10 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
   ] = mappings
 
   if (foreignTokenAddress !== zeroAddress) {
-    const mappings = await multicallRead<Hex[]>({
-      client: input.clientFromChain(toChain),
-      chain: chainsMetadata[toChain],
-      abi: abis.inputBridge,
+    const mappings = await links({
+      chainId: toChain,
       target: bridgePathway.to,
-      calls: [
-        { functionName: 'bridgedTokenAddress', args },
-        { functionName: 'nativeTokenAddress', args },
-      ],
+      address: $assetIn.address,
     })
     foreignTokenAddress = mappings[0]
     nativeTokenAddress = args[0]
@@ -237,15 +244,10 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
   }
   // we know that the token has not been bridged in the reverse direction. it has only gone from home -> foreign
   // in any case, let's verify it first
-  const homeToForeignMappings = await multicallRead<Hex[]>({
-    client: input.clientFromChain(toChain),
-    chain: chainsMetadata[toChain],
-    abi: abis.inputBridge,
+  const homeToForeignMappings = await links({
+    chainId: toChain,
     target: bridgePathway.to,
-    calls: [
-      { functionName: 'bridgedTokenAddress', args },
-      { functionName: 'nativeTokenAddress', args },
-    ],
+    address: $assetIn.address,
   })
 
   foreignTokenAddress = homeToForeignMappings[0]

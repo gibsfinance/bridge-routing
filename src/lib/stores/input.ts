@@ -191,6 +191,7 @@ export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([
     .value()
   let list: Token[] = []
   if (sortedList.length) {
+    const bridgedWrappedAssetOut = sortedList.find((tkn) => tkn.address === nativeAssetOut[$bridgeKey[1]])
     list = [
       {
         chainId: Number($bridgeKey[1]),
@@ -199,9 +200,19 @@ export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([
         decimals: 18,
         symbol: nativeTokenSymbol[$bridgeKey[1]],
         logoURI: '',
+        extensions: bridgedWrappedAssetOut
+          ? {
+              bridgeInfo: {
+                [Number($bridgeKey[2])]: {
+                  tokenAddress: bridgedWrappedAssetOut.address,
+                },
+              },
+            }
+          : null,
       } as Token,
     ].concat(sortedList)
   }
+  // console.log(list.slice(0, 2))
   list.forEach((token) => {
     // register on a central cache so that tokens that are gotten from onchain
     // still have all extensions
@@ -240,20 +251,17 @@ export const isNative = ($asset: Token | null, $bridgeKey: BridgeKey | null) => 
     return false
   }
   return $asset.address === zeroAddress || !!nativeAssetOut[$asset.chainId as unknown as Chains]
-  // if ($asset.chainId === Number(Chains.PLS) || $asset.chainId === Number(Chains.V4PLS)) {
-  //   const $defaultAssetIn = defaultAssetIn($bridgeKey)
-  //   if (!$defaultAssetIn) {
-  //     return false
-  //   }
-  //   return getAddress($defaultAssetIn.address) === getAddress($asset.address)
-  // }
-  // return false
-  // const chainId = `0x${$asset.chainId.toString(16)}` as Chains
-  // return nativeAssetOut[chainId] === $asset.address
+}
+const isUnwrappable = ($asset: Token | null, $bridgeKey: BridgeKey | null) => {
+  if (!$bridgeKey || !$asset) {
+    return false
+  }
+  const [, , toChain] = $bridgeKey
+  return nativeAssetOut[toChain] === $asset.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
 }
 export const canChangeUnwrap = derived(
   [assetIn, bridgeKey],
-  ([$assetIn, $bridgeKey]) => !!$assetIn && isNative($assetIn, $bridgeKey),
+  ([$assetIn, $bridgeKey]) => !!$assetIn && isUnwrappable($assetIn, $bridgeKey),
 )
 
 export const walletClient = writable<WalletClient | undefined>()
@@ -424,17 +432,26 @@ export const toPath = ($bridgeKey: BridgeKey) => {
   return `${provider}/${ChainIdToKey.get(fromChain)!}/${ChainIdToKey.get(toChain)!}` as const
 }
 
+/**
+ * the address of the token coming out on the other side of the bridge (foreign)
+ * this address should only be used for presentational purposes
+ * to put this into the calldata would produce bad outcomes
+ */
 export const flippedTokenAddressIn = asyncDerived(
-  [bridgeKey, assetInAddress, bridgableTokens],
-  async ([$bridgeKey, $assetInAddress, $bridgableTokens]) => {
+  [bridgeKey, assetInAddress, bridgableTokens, unwrap],
+  async ([$bridgeKey, $assetInAddress, $bridgableTokens, $unwrap]) => {
     const [, fromChain, toChain] = $bridgeKey
+    const assetInAddress = $assetInAddress === zeroAddress ? nativeAssetOut[fromChain] : getAddress($assetInAddress)
     const token = $bridgableTokens.find(
-      (tkn) => getAddress(tkn.address) === getAddress($assetInAddress) && Number(fromChain) === tkn.chainId,
+      (tkn) => getAddress(tkn.address) === assetInAddress && Number(fromChain) === tkn.chainId,
     )
     let known = token?.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
     if (!known) {
       // check at the bridge
-      known = zeroAddress
+      return null
+    }
+    if (nativeAssetOut[toChain] === known && $unwrap) {
+      return zeroAddress
     }
     return known
   },
