@@ -5,6 +5,7 @@
   import NetworkSummary from './NetworkSummary.svelte'
   import { humanReadableNumber } from '$lib/stores/utils'
   import Loading from '$lib/components/Loading.svelte'
+  import { loading } from '$lib/stores/loading'
   import LockIcon from '$lib/components/LockIcon.svelte'
   import { windowStore } from '$lib/stores/window'
   import UndercompensatedWarning from '$lib/components/warnings/Undercompensated.svelte'
@@ -182,14 +183,17 @@
                 : $feeType === input.FeeType.GAS_TIP
                   ? `Percentage of gas used * ${$destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber($estimatedNetworkCost, asset?.decimals || 18)} ${utils.nativeSymbol(asset, $unwrap)}`
                   : 'the percentage of bridged tokens after the bridge fee'}</Tooltip>
-            <Loading key="gas" />
             {#if $feeType !== input.FeeType.FIXED}
-              <span class:hidden={$feeType !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><SmallInput
-                value={input.fee}
-                suffix="%"
-                on:input={() => {
-                  deliveryFeeLocked = true
-                }} />
+              <span class:hidden={$feeType !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><span
+                class="flex items-center"
+                class:opacity-70={!$loading.isResolved('gas')}
+                ><SmallInput
+                  value={input.fee}
+                  suffix="%"
+                  on:input={() => {
+                    deliveryFeeLocked = true
+                  }} />
+              </span>
             {/if}
           </button>
         </Hover>
@@ -221,7 +225,7 @@
             name="cost-limit"
             class="flex flex-row items-end self-end relative"
             on:click={focusOnInputChild}>
-            <Loading key="gas">
+            <span class="flex items-center" class:opacity-70={!$loading.isResolved('gas')}>
               {#if $feeType === input.FeeType.PERCENT}
                 <span
                   >{humanReadableNumber($limitFromPercent, asset?.decimals || 18)}
@@ -234,7 +238,7 @@
                     costLimitLocked = true
                   }} />
               {/if}
-            </Loading>
+            </span>
             <Tooltip positionFlow="above" position="left" show={hovering}
               >{$feeType === input.FeeType.FIXED || $feeType === input.FeeType.PERCENT
                 ? 'The fixed fee to tip if the validator does the work'
@@ -253,9 +257,10 @@
           >📐</button>
       </div>
       <span class="text-xl sm:text-2xl leading-10 flex items-center self-center">
-        {#if $feeType === input.FeeType.GAS_TIP}~&nbsp;{/if}<Loading key="gas">
+        {#if $feeType === input.FeeType.GAS_TIP}~&nbsp;{/if}
+        <span class="flex items-center" class:opacity-70={!$loading.isResolved('gas')}>
           {expectedAmountOut}
-        </Loading>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
+        </span>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
         <Tooltip
           >Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee
           fluctuates on ethereum</Tooltip>

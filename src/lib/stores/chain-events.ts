@@ -1,14 +1,14 @@
 import * as input from './input'
 import { multicallRead } from '$lib/utils'
 import * as abis from './abis'
-import { type PublicClient, type Block, getContract, erc20Abi, type Hex, zeroAddress } from 'viem'
+import { type PublicClient, type Block, getContract, erc20Abi, type Hex, zeroAddress, getAddress } from 'viem'
 import { derived, type Readable } from 'svelte/store'
 import { loading } from './loading'
 import { walletAccount } from './auth/store'
 import { Chains } from './auth/types'
 import type { Token } from '$lib/types'
 import { chainsMetadata } from './auth/constants'
-import { pathway } from './config'
+import { nativeAssetOut, pathway } from './config'
 import { asyncDerived } from '@square/svelte-store'
 
 export const destinationPublicClient = derived(
@@ -133,8 +133,8 @@ export const watchTokenBalance = (chainId: Readable<Chains>, tokenStore: Readabl
   derived(
     [walletAccount, chainId, tokenStore, block, input.unwrap],
     ([$walletAccount, $chainId, $asset, $block], set) => {
-      set(null)
       if (!$block || !$asset || !$walletAccount || $walletAccount === zeroAddress) {
+        set(null)
         return () => {}
       }
       const unwatch = getTokenBalance($chainId, $asset, $walletAccount, set)
@@ -205,9 +205,6 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
   ] = mappings
 
   if (foreignTokenAddress !== zeroAddress) {
-    // if we are here, then we know that we are dealing with a native
-    // address, so we need to go to the foreign chain
-    // console.log(bridgePathway)
     const mappings = await multicallRead<Hex[]>({
       client: input.clientFromChain(toChain),
       chain: chainsMetadata[toChain],
@@ -253,18 +250,13 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
 
   foreignTokenAddress = homeToForeignMappings[0]
   nativeTokenAddress = homeToForeignMappings[1]
-
   if (foreignTokenAddress !== zeroAddress) {
-    foreignTokenAddress = mappings[0]
-    nativeTokenAddress = args[0]
-    if (nativeTokenAddress === $assetIn.address) {
-      return {
-        originationChainId: fromChain,
-        toForeign: {
-          foreign: foreignTokenAddress,
-          home: $assetIn.address,
-        },
-      }
+    return {
+      originationChainId: fromChain,
+      toForeign: {
+        foreign: foreignTokenAddress,
+        home: $assetIn.address,
+      },
     }
   } else if (nativeTokenAddress !== zeroAddress) {
     return {
@@ -280,17 +272,20 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
 
 type TokenBridgeInfo = Awaited<ReturnType<typeof tokenBridgeInfo>>
 
-export const tokenBridgeTrace = asyncDerived([input.bridgeKey, input.assetIn], async ([$bridgeKey, $assetIn]) => {
-  return loading.loads('token', () => tokenBridgeInfo([$bridgeKey, $assetIn]))
+export const assetLink = asyncDerived([input.bridgeKey, input.assetIn], async ([$bridgeKey, $assetIn]) => {
+  if (!$assetIn) {
+    return null
+  }
+  const tokenIn = {
+    ...$assetIn,
+    address: $assetIn.address === zeroAddress ? nativeAssetOut[$bridgeKey[1]] : getAddress($assetIn.address),
+  }
+  return loading.loads('token', () => tokenBridgeInfo([$bridgeKey, tokenIn]))
 })
 
-export const tokenOriginationChainId = asyncDerived(
-  [input.bridgeKey, input.assetIn],
-  async ([$bridgeKey, $assetIn]) => {
-    const info = await tokenBridgeInfo([$bridgeKey, $assetIn])
-    return info?.originationChainId
-  },
-)
+export const tokenOriginationChainId = asyncDerived([assetLink], async ([$assetLink]) => {
+  return $assetLink?.originationChainId
+})
 
 const checkApproval = async ([$walletAccount, $bridgeAddress, $assetLink, $publicClient]: [
   Hex | undefined,
@@ -313,25 +308,6 @@ const checkApproval = async ([$walletAccount, $bridgeAddress, $assetLink, $publi
   const allowance = await token.read.allowance([$walletAccount, $bridgeAddress])
   return allowance
 }
-
-export const assetLink = derived<[Readable<input.BridgeKey | null>, Readable<Token | null>], TokenBridgeInfo>(
-  [input.bridgeKey, input.assetIn],
-  ([$bridgeKey, $assetIn], set) => {
-    if (!$bridgeKey || !$assetIn) {
-      set(null)
-      return
-    }
-    let cancelled = false
-    tokenBridgeInfo([$bridgeKey, $assetIn]).then((allowance) => {
-      if (cancelled) return
-      set(allowance)
-    })
-    return () => {
-      cancelled = true
-    }
-  },
-  null,
-)
 
 export const approval = derived(
   [walletAccount, input.bridgeKey, assetLink, input.fromPublicClient, input.forcedRefresh, block],

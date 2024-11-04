@@ -38,8 +38,8 @@ export const backupAssetIn = {
 
 /** the asset coming out on the other side of the bridge (foreign) */
 export const assetOut = asyncDerived(
-  [input.bridgeKey, input.assetIn],
-  async ([$bridgeKey, $assetIn]) => {
+  [input.bridgeKey, input.assetIn, chainEvents.assetLink],
+  async ([$bridgeKey, $assetIn, assetLink]) => {
     if (!$bridgeKey || !$assetIn) {
       return null
     }
@@ -48,11 +48,10 @@ export const assetOut = asyncDerived(
       ...$assetIn,
       address: $assetIn.address === zeroAddress ? nativeAssetOut[$bridgeKey[1]] : getAddress($assetIn.address),
     }
-    const tokenInfo = await chainEvents.tokenBridgeInfo([$bridgeKey, assetIn])
-    if (!tokenInfo) {
+    if (!assetLink) {
       return backupAssetIn
     }
-    const { toHome, toForeign } = tokenInfo
+    const { toHome, toForeign } = assetLink
     let res = backupAssetIn
     const foreign = toHome?.foreign || toForeign?.foreign
     if (foreign && foreign !== zeroAddress) {
@@ -79,7 +78,7 @@ export const assetOut = asyncDerived(
       // assumptions
       res = {
         ...assetIn,
-        chainId: Number($bridgeKey),
+        chainId: Number($bridgeKey[2]),
         address: zeroAddress,
         name: `${assetIn.name} from Pulsechain`,
         symbol: `w${assetIn.symbol}`,
@@ -201,8 +200,29 @@ export const amountToBridge = derived(
   },
 )
 export const priceCorrective = derived(
-  [input.assetIn, input.bridgeKey, chainEvents.assetLink, oneTokenInt, assetOut, amountToBridge, latestBaseFeePerGas],
-  ([$assetIn, $bridgeKey, $assetLink, $oneTokenInt, $assetOut, $amountToBridge, $latestBaseFeePerGas], set) => {
+  [
+    input.assetIn,
+    input.bridgeKey,
+    chainEvents.assetLink,
+    oneTokenInt,
+    assetOut,
+    amountToBridge,
+    latestBaseFeePerGas,
+    input.flippedBridgeKey,
+  ],
+  (
+    [
+      $assetIn,
+      $bridgeKey,
+      $assetLink,
+      $oneTokenInt,
+      $assetOut,
+      $amountToBridge,
+      $latestBaseFeePerGas,
+      $flippedBridgeKey,
+    ],
+    set,
+  ) => {
     // check if recognized as wrapped
     // if recognized as wrapped, use oneEther
     let cancelled = false
@@ -213,14 +233,15 @@ export const priceCorrective = derived(
       set(0n)
       return
     }
-    if (!$assetOut || input.isNative($assetIn, $bridgeKey)) {
+    // console.log($assetOut, $assetIn, $bridgeKey, input.isNative($assetIn, $bridgeKey))
+    if (!$assetOut || input.isNative($assetOut, $bridgeKey)) {
       set(oneEther)
       return
     }
     // the max fee i am targeting is 10%
-    let toBridge = $amountToBridge / 10n
-    if (toBridge === 0n) {
-      toBridge = parseUnits('10', $assetIn.decimals)
+    let amountToBridge = $amountToBridge / 10n
+    if (amountToBridge === 0n) {
+      amountToBridge = parseUnits('10', $assetOut.decimals)
     }
     const outputFromRouter = (result: FetchResult) => {
       if (cancelled || priceCorrectiveGuard !== pcg) {
@@ -233,62 +254,74 @@ export const priceCorrective = derived(
         return 0n
       }
       const last = result[result.length - 1]
-      return (last * $oneTokenInt) / toBridge
+      return (last * $oneTokenInt) / amountToBridge
     }
-    loading.increment('gas')
     const [, fromChain, toChain] = $bridgeKey
-    const dAssetIn = defaultAssetIn($bridgeKey)
-    Promise.all([
-      $assetLink && $assetLink.toHome && $assetOut.address !== zeroAddress
-        ? readAmountOut(
+    const paymentToken = nativeAssetOut[toChain]
+    const assetInAddress = $assetIn.address === zeroAddress ? nativeAssetOut[fromChain] : $assetIn.address
+    loading.increment('gas')
+    const cleanup = () => {
+      if (cancelled) return
+      cancelled = true
+      loading.decrement('gas')
+    }
+    chainEvents
+      .tokenBridgeInfo([
+        $flippedBridgeKey,
+        {
+          ...$assetOut,
+          address: paymentToken,
+        },
+      ])
+      .then((result) => {
+        const reversePairing = result?.toHome || result?.toForeign
+        const paymentTokenFromBridgeStart =
+          reversePairing?.foreign === zeroAddress ? reversePairing?.home : reversePairing?.foreign
+        return Promise.all([
+          readAmountOut(
+            {
+              $assetInAddress: $assetIn.address,
+              $oneTokenInt: amountToBridge,
+              chain: fromChain,
+              $bridgeKey,
+            },
+            $latestBaseFeePerGas,
+            [[assetInAddress, paymentTokenFromBridgeStart!]],
+          ),
+          readAmountOut(
             {
               $assetInAddress: $assetOut.address,
-              $oneTokenInt: toBridge,
+              $oneTokenInt: amountToBridge,
               chain: toChain,
               $bridgeKey,
             },
             $latestBaseFeePerGas,
-            [[$assetOut.address, nativeAssetOut[toChain]]],
-          )
-        : ([[]] as FetchResult[]),
-      readAmountOut(
-        {
-          $assetInAddress: $assetIn.address,
-          $oneTokenInt: toBridge,
-          chain: fromChain,
-          $bridgeKey,
-        },
-        $latestBaseFeePerGas,
-        [
-          [$assetIn.address, nativeAssetOut[fromChain], dAssetIn!.address],
-          [$assetIn.address, dAssetIn!.address],
-        ],
-      ),
-    ]).then((results) => {
-      if (cancelled) return
-      loading.decrement('gas')
-      const max = (amountsOut: (bigint | undefined)[]) => {
-        return _(amountsOut)
-          .compact()
-          .reduce((max, current) => (max < current ? current : max), 0n)
-      }
-      const [outputs, inputs] = results
-      const outputAmounts = outputs.map(outputFromRouter)
-      const inputAmounts = inputs.map(outputFromRouter)
-      const outputToken = max(outputAmounts)
-      const inputToken = max(inputAmounts)
-      const res =
-        outputToken && outputToken > 0n
-          ? inputToken && inputToken > outputToken && inputToken / outputToken === 1n
-            ? inputToken
-            : outputToken
-          : inputToken
-      set(res || 0n)
-    })
-    return () => {
-      loading.decrement('gas')
-      cancelled = true
-    }
+            [[$assetOut!.address, paymentToken]],
+          ),
+        ])
+      })
+      .then((results) => {
+        if (cancelled) return
+        cleanup()
+        const max = (amountsOut: (bigint | undefined)[]) => {
+          return _(amountsOut)
+            .compact()
+            .reduce((max, current) => (max < current ? current : max), 0n)
+        }
+        const [outputs, inputs] = results
+        const outputAmounts = outputs.map(outputFromRouter)
+        const inputAmounts = inputs.map(outputFromRouter)
+        const outputToken = max(outputAmounts)
+        const inputToken = max(inputAmounts)
+        const res =
+          outputToken && outputToken > 0n
+            ? inputToken && inputToken > outputToken && inputToken / outputToken === 1n
+              ? inputToken
+              : outputToken
+            : inputToken
+        set(res || 0n)
+      })
+    return cleanup
   },
   oneEther,
 )

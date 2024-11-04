@@ -4,7 +4,6 @@ import {
   type Hex,
   type Abi,
   getContract,
-  createClient,
   multicall3Abi,
   encodeFunctionData,
   decodeFunctionResult,
@@ -25,7 +24,7 @@ export const multicallRead = async <T>({
   target,
 }: {
   chain: Chain
-  client: ReturnType<typeof createClient>
+  client: PublicClient
   abi: Abi
   calls: types.Call[]
   target?: Hex

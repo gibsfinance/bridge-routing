@@ -22,7 +22,7 @@ import {
 import { countDecimals, humanReadableNumber, isZero, stripNonNumber } from '$lib/stores/utils'
 import { ChainIdToKey, Chains, Provider } from './auth/types'
 import { settings, type PathwayExtendableConfig } from './fee-manager'
-import { defaultAssetIn, nativeTokenName, nativeTokenSymbol, pathway } from './config'
+import { defaultAssetIn, nativeAssetOut, nativeTokenName, nativeTokenSymbol, pathway } from './config'
 import type { Token, TokenList } from '$lib/types'
 import _ from 'lodash'
 import { chainsMetadata } from './auth/constants'
@@ -239,14 +239,15 @@ export const isNative = ($asset: Token | null, $bridgeKey: BridgeKey | null) => 
   if (!$bridgeKey || !$asset) {
     return false
   }
-  if ($asset.chainId === Number(Chains.PLS) || $asset.chainId === Number(Chains.V4PLS)) {
-    const $defaultAssetIn = defaultAssetIn($bridgeKey)
-    if (!$defaultAssetIn) {
-      return false
-    }
-    return getAddress($defaultAssetIn.address) === getAddress($asset.address)
-  }
-  return false
+  return $asset.address === zeroAddress || !!nativeAssetOut[$asset.chainId as unknown as Chains]
+  // if ($asset.chainId === Number(Chains.PLS) || $asset.chainId === Number(Chains.V4PLS)) {
+  //   const $defaultAssetIn = defaultAssetIn($bridgeKey)
+  //   if (!$defaultAssetIn) {
+  //     return false
+  //   }
+  //   return getAddress($defaultAssetIn.address) === getAddress($asset.address)
+  // }
+  // return false
   // const chainId = `0x${$asset.chainId.toString(16)}` as Chains
   // return nativeAssetOut[chainId] === $asset.address
 }

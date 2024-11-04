@@ -37,9 +37,9 @@
     </summary>
     <ul class="dropdown-content absolute z-[1] p-0 shadow bg-slate-50 w-fit py-1 -mt-10 -mx-2">
       {#each reorderedBridgeKeys as o}
-        <li class="hover:bg-slate-200 h-10 items-center flex flex-row">
+        <li class="hover:bg-slate-200 items-center flex flex-row">
           <button
-            class="px-2 flex flex-row flex-grow items-center"
+            class="px-2 flex flex-row h-10 flex-grow items-center"
             on:click={async () => {
               dropdown.open = false
               const tokenAddressIn = $flippedTokenAddressIn || zeroAddress

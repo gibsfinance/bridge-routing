@@ -230,12 +230,15 @@
   }
   const sendInitiateBridge = transactionButtonPress(initiateBridge)
   const sendIncreaseApproval = transactionButtonPress(increaseApproval)
+  const testId = 'progression-button'
+  $: isNative = $assetIn?.address === zeroAddress
 </script>
 
 <div>
   {#if $walletAccount}
-    {#if $assetLink && ($assetLink.toHome || ($assetLink.toForeign && $approval >= $amountToBridge))}
+    {#if ($assetLink && ($assetLink.toHome || ($assetLink.toForeign && $approval >= $amountToBridge))) || isNative}
       <button
+        data-testid={testId}
         class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-center"
         class:hover:bg-purple-500={!disabled}
         class:bg-purple-600={!disabled}
@@ -248,6 +251,7 @@
       </button>
     {:else}
       <button
+        data-testid={testId}
         class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-center"
         class:hover:bg-purple-500={!disabled}
         class:bg-purple-600={!disabled}
@@ -265,6 +269,7 @@
   {:else}
     <button
       class="p-2 bg-purple-600 text-white w-full rounded-lg hover:bg-purple-500 active:bg-purple-500"
+      data-testid={testId}
       on:click={() => connect()}>
       Sign In
     </button>

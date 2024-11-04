@@ -9,7 +9,7 @@
     "test": "playwright test",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "test:unit": "vitest",
+    "test:unit": "playwright test",
     "lint": "prettier --check . && eslint \"./**/*.ts\" --ignore-pattern \".svelte-kit\" -c .eslintrc.mjs",
     "format": "prettier --write ."
   },

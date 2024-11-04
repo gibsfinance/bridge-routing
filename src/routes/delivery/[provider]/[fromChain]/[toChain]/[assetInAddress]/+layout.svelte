@@ -9,6 +9,7 @@
   $: toChain = $page.params.toChain as ChainKey
   $: bridgeKey = [provider, Chains[fromChain], Chains[toChain]] as input.BridgeKey
   $: if (!input.validBridgeKey([bridgeKey])) {
+    console.log('invalid bridge key', bridgeKey)
     goto(`/delivery/${input.toPath(input.defaultBridgeKey)}/${$page.params.assetInAddress}`)
   } else {
     input.bridgeKey.set(bridgeKey)
