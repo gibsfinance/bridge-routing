@@ -1,6 +1,6 @@
 type Params = {
-  enter: () => void;
-  leave: () => void;
+  enter: () => void
+  leave: () => void
 }
 export function hover(element: HTMLElement, params: Params) {
   element.addEventListener('mouseenter', params.enter)
@@ -9,6 +9,6 @@ export function hover(element: HTMLElement, params: Params) {
     destroy() {
       element.removeEventListener('mouseenter', params.enter)
       element.removeEventListener('mouseleave', params.leave)
-    }
+    },
   }
 }

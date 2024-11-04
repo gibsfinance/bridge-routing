@@ -1,6 +1,6 @@
 import type { Hex } from 'viem'
 import { Chains, Provider } from './auth/types'
-import { bridgeKey, type BridgeKey } from './input'
+import type { BridgeKey } from './input'
 import _ from 'lodash'
 import { writable } from 'svelte/store'
 import { get } from 'svelte/store'
@@ -11,7 +11,9 @@ export type PathwayExtendableConfig = {
   feeF2H: bigint
 }
 
-export const feeCache = writable<Record<Provider, Partial<Record<Chains, Partial<Record<Chains, PathwayExtendableConfig>>>>>>({
+export const feeCache = writable<
+  Record<Provider, Partial<Record<Chains, Partial<Record<Chains, PathwayExtendableConfig>>>>>
+>({
   [Provider.PULSECHAIN]: {},
   [Provider.TOKENSEX]: {},
 })

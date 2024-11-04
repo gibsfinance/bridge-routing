@@ -1,16 +1,7 @@
 import * as input from './input'
 import { multicallRead } from '$lib/utils'
 import * as abis from './abis'
-import {
-  type PublicClient,
-  type Block,
-  getContract,
-  erc20Abi,
-  type Hex,
-  zeroAddress,
-  type WatchContractEventReturnType,
-  getAddress,
-} from 'viem'
+import { type PublicClient, type Block, getContract, erc20Abi, type Hex, zeroAddress } from 'viem'
 import { derived, type Readable } from 'svelte/store'
 import { loading } from './loading'
 import { walletAccount } from './auth/store'
@@ -140,8 +131,8 @@ export const getTokenBalance = (
 
 export const watchTokenBalance = (chainId: Readable<Chains>, tokenStore: Readable<Token | null>) =>
   derived(
-    [walletAccount, chainId, tokenStore, input.unwrap, block],
-    ([$walletAccount, $chainId, $asset, $unwrap, $block], set) => {
+    [walletAccount, chainId, tokenStore, block, input.unwrap],
+    ([$walletAccount, $chainId, $asset, $block], set) => {
       set(null)
       if (!$block || !$asset || !$walletAccount || $walletAccount === zeroAddress) {
         return () => {}

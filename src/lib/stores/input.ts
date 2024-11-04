@@ -127,10 +127,8 @@ export const validBridgeKey = ([$bridgeKey]: [BridgeKey]) => !!pathway($bridgeKe
 
 export const provider = derived([bridgeKey], ([$bridgeKey]) => $bridgeKey[0])
 /** the direction of the bridge crossing */
-export const fromNetwork = derived([bridgeKey], ([$bridgeKey]) => $bridgeKey[1])
-export const fromChainId = derived([fromNetwork], ([$fromNetwork]) => $fromNetwork)
-export const toNetwork = derived([bridgeKey], ([$bridgeKey]) => $bridgeKey[2])
-export const toChainId = derived([toNetwork], ([$toNetwork]) => $toNetwork)
+export const fromChainId = derived([bridgeKey], ([$bridgeKey]) => $bridgeKey[1])
+export const toChainId = derived([bridgeKey], ([$bridgeKey]) => $bridgeKey[2])
 
 export const bridgePathway = derived([bridgeKey], ([$bridgeKey]) => pathway($bridgeKey))
 

@@ -6,14 +6,14 @@
   import { Chains } from '$lib/stores/auth/types'
   import { fromTokenBalance, amountToBridge, foreignDataParam, foreignCalldata } from '$lib/stores/bridge-settings'
   import * as abis from '$lib/stores/abis'
-  import { type Hex, getContract, erc20Abi, maxUint256 } from 'viem'
+  import { type Hex, getContract, erc20Abi, maxUint256, zeroAddress } from 'viem'
   import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input'
   import { tokenBridgeInfo, assetLink, approval } from '$lib/stores/chain-events'
   import { loading } from '$lib/stores/loading'
   import { get } from 'svelte/store'
 
-  const { walletClient, assetIn, clientFromChain, bridgeKey, router, bridgePathway, fromChainId } = input
+  const { walletClient, assetIn, clientFromChain, bridgeKey, router, bridgePathway, fromChainId, recipient } = input
 
   let disabledByClick = false
   $: tokenBalance = $fromTokenBalance || 0n
@@ -142,6 +142,15 @@
     }
     const options = opts()
     if ($bridgePathway?.usesExtraParam) {
+      if ($assetIn.address === zeroAddress) {
+        const nativeRouter = $bridgePathway.nativeRouter
+        const contract = getContract({
+          abi: abis.nativeRouterExtraInput,
+          address: nativeRouter,
+          client: $walletClient!,
+        })
+        return await contract.write.wrapAndRelayTokens([$recipient || options.account, options.account], options)
+      }
       if (tokenInfo.toForeign) {
         // token is native to pulsechain
         const bridgeContract = getContract({

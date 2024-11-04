@@ -15,9 +15,7 @@ export enum Chains {
 export type ChainKey = keyof typeof Chains
 
 export const ChainIdToKey = new Map<Chains, ChainKey>(
-  Object.entries(Chains).map(([key, chain]) => (
-    [chain, key] as [Chains, ChainKey]
-  ))
+  Object.entries(Chains).map(([key, chain]) => [chain, key] as [Chains, ChainKey]),
 )
 
 export type VisualChain = Chain & {

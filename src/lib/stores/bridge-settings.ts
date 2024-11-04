@@ -1,11 +1,9 @@
-import { derived, get, type Readable } from 'svelte/store'
+import { derived } from 'svelte/store'
 import * as input from '$lib/stores/input'
 import { derived as asyncDerived } from './async'
 import {
   zeroAddress,
   type Hex,
-  getContract,
-  erc20Abi,
   formatUnits,
   parseUnits,
   isAddress,
@@ -13,7 +11,6 @@ import {
   concatHex,
   encodeFunctionData,
   getAddress,
-  type Block,
 } from 'viem'
 import { walletAccount } from './auth/store'
 import { Chains } from './auth/types'
@@ -197,8 +194,8 @@ const readAmountOut = (
 }
 /** the number of tokens to push into the bridge (before fees) */
 export const amountToBridge = derived(
-  [input.amountIn, input.assetIn, input.bridgeKey],
-  ([$amountIn, $assetIn, $bridgeKey]) => {
+  [input.amountIn, input.assetIn, input.bridgeKey], //
+  ([$amountIn, $assetIn]) => {
     if (isZero($amountIn) || !$assetIn) return 0n
     return parseUnits(stripNonNumber($amountIn), $assetIn.decimals)
   },
@@ -319,7 +316,7 @@ export const fee = derived([input.fee, input.bridgePathway], ([$fee, $bridgePath
   return parseUnits(stripNonNumber($fee), 18) / 100n
 })
 
-export const bridgeFee = derived([input.bridgeFee, input.bridgeKey], ([_$bridgeFee, $bridgeKey]) => {
+export const bridgeFee = derived([input.bridgeKey, input.bridgeFee], ([$bridgeKey]) => {
   const setting = settings.get($bridgeKey)
   const path = pathway($bridgeKey)
   return (path?.toHome ? setting?.feeF2H : setting?.feeH2F) || 0n
