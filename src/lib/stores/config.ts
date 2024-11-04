@@ -7,6 +7,8 @@ import { windowLoaded } from './window'
 import type { BridgeKey } from './input'
 import _ from 'lodash'
 
+export const isProd = __PROD__
+
 export const nativeAssetOut = {
   [Chains.ETH]: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
   [Chains.BNB]: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
@@ -239,7 +241,7 @@ export const networkOutputs = (input: Chains) =>
 
 export const pathway = (bridgeKey: BridgeKey | null) => {
   if (!bridgeKey) return
-  return _.get(pathways, bridgeKey) || _.get(testnetPathways, bridgeKey)
+  return _.get(pathways, bridgeKey) || (isProd ? _.get(testnetPathways, bridgeKey) : undefined)
 }
 
 export const defaultAssetIn = ($bridgeKey: BridgeKey | null) => {
