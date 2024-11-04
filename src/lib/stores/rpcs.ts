@@ -9,6 +9,8 @@ const defaultData = new Map([
   [Chains.PLS, [chainsMetadata[Chains.PLS].rpcUrls.default.http[0]]],
   [Chains.ETH, [chainsMetadata[Chains.ETH].rpcUrls.default.http[0]]],
   [Chains.BNB, [chainsMetadata[Chains.BNB].rpcUrls.default.http[0]]],
+  [Chains.V4PLS, [chainsMetadata[Chains.V4PLS].rpcUrls.default.http[0]]],
+  [Chains.SEP, [chainsMetadata[Chains.SEP].rpcUrls.default.http[0]]],
 ])
 
 export const key = (c: Chains, l: string[]) => `${c},${(l as string[]).join(',')}`
@@ -22,12 +24,11 @@ const serializer = {
     if (!entry) {
       return entries
     }
-    return new Map(
-      entry.split('\n').map((ro) => {
-        const [chain, ...list] = ro.split(',')
-        return [chain as Chains, _.compact(list)]
-      }),
-    )
+    const stored = entry.split('\n').map((ro) => {
+      const [chain, ...list] = ro.split(',')
+      return [chain as Chains, _.compact(list)] as const
+    }) as [Chains, string[]][]
+    return new Map([...defaultData.entries()].concat(stored))
   },
 }
 const localStorageKey = 'rpcs'

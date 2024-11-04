@@ -1,6 +1,6 @@
 {
   "name": "gibsfinance",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -9,7 +9,7 @@
     "test": "playwright test",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "test:unit": "vitest",
+    "test:unit": "playwright test",
     "lint": "prettier --check . && eslint \"./**/*.ts\" --ignore-pattern \".svelte-kit\" -c .eslintrc.mjs",
     "format": "prettier --write ."
   },
@@ -55,6 +55,7 @@
     "@web3-onboard/injected-wallets": "^2.8.5",
     "@web3-onboard/sequence": "^2.0.8",
     "@web3-onboard/walletconnect": "^2.6.1",
+    "classnames": "^2.5.1",
     "js-sha3": "^0.9.3",
     "lodash": "^4.17.21",
     "svelte-lazy": "^1.2.7",

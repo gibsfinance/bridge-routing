@@ -10,8 +10,6 @@ export type Call = {
 
 export type PerNetworkBridgeLink = {
   tokenAddress: Hex
-  originationBridgeAddress: Hex
-  destinationBridgeAddress: Hex
 }
 export type Extensions = {
   bridgeInfo?: Record<number, PerNetworkBridgeLink>

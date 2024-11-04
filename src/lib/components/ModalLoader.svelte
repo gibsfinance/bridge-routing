@@ -2,7 +2,6 @@
   import * as input from '$lib/stores/input'
   import { desiredExcessCompensationBasisPoints } from '$lib/stores/bridge-settings'
   import { goto } from '$app/navigation'
-  import { page } from '$app/stores'
   import { type as modalType } from '$lib/stores/modal'
   import type { Token } from '$lib/types'
   import InfoExplain from '$lib/components/InfoExplain.svelte'
@@ -10,20 +9,22 @@
   import TokenSelect from '$lib/components/TokenSelect.svelte'
   import RPCConfig from '$lib/components/RPC.svelte'
   import { formatUnits } from 'viem'
+  import { get } from 'svelte/store'
   const chooseTokenSubmit = async (e: CustomEvent<Token>) => {
-    await goto(`/delivery/${$page.params.bridgeKey}/${e.detail.address}`)
-    const native = input.isNative(e.detail)
+    const $bridgeKey = get(input.bridgeKey)
+    await goto(`/delivery/${input.toPath($bridgeKey)}/${e.detail.address}`)
+    const native = input.isNative(e.detail, $bridgeKey)
     input.unwrap.set(native)
     input.fee.set(formatUnits($desiredExcessCompensationBasisPoints, 2))
   }
 </script>
 
 {#if $modalType === 'choosetoken'}
-  <ModalWrapper openOnMount>
-    <TokenSelect openOnMount on:submit={chooseTokenSubmit} />
+  <ModalWrapper>
+    <TokenSelect on:submit={chooseTokenSubmit} />
   </ModalWrapper>
 {:else if $modalType === 'rpc'}
-  <ModalWrapper openOnMount let:close>
+  <ModalWrapper let:close>
     <RPCConfig
       on:submit={(e) => {
         close(e)
@@ -32,7 +33,7 @@
       on:close={close} />
   </ModalWrapper>
 {:else if $modalType === 'info'}
-  <ModalWrapper openOnMount height="dynamic">
+  <ModalWrapper>
     <InfoExplain />
   </ModalWrapper>
 {/if}

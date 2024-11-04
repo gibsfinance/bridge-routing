@@ -9,7 +9,7 @@
   import { ensTld, isEns } from '$lib/stores/ens'
   import { normalize } from 'viem/ens'
   import { loading } from '$lib/stores/loading'
-  const { recipient, canChangeUnwrap, bridgeAddress, router } = input
+  const { recipient, canChangeUnwrap, router, bridgePathway } = input
   const updateDestination = async (e: CustomEvent) => {
     let addr = e.detail.value
     if (addr === 'me' && $walletAccount) {
@@ -65,7 +65,7 @@
   </div>
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed">
     <span>To (Bridge)</span>
-    <span class="font-mono text-xs md:text-sm">{$bridgeAddress}</span>
+    <span class="font-mono text-xs md:text-sm">{$bridgePathway?.to || zeroAddress}</span>
   </div>
   <div class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row">
     <span class="whitespace-pre">Data&nbsp;&nbsp;<span class="font-mono">0x</span></span>

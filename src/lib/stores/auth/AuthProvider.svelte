@@ -9,15 +9,15 @@
   import type { ChainWithDecimalId } from '@web3-onboard/common'
   import { createWalletClient, custom, zeroAddress } from 'viem'
   import gibsIcon from '$lib/images/1FAF0.svg'
-  import { recipient, activeChain, walletClient } from '../input'
+  import { recipient, fromChainId, walletClient } from '../input'
   const walletConnect = walletConnectModule({
     projectId: '1f8a963aa1809cada8560d560360107d',
     requiredChains: Object.values(Chains).map((cId) => Number(cId)),
     dappUrl: 'https://gibs.finance',
   })
 
-  const chains = [Chains.PLS].map((key) => {
-    const chain = chainsMetadata[key as Chains]
+  const chains = Object.values(Chains).map((key) => {
+    const chain = chainsMetadata[key]
 
     return {
       id: +key,
@@ -79,19 +79,18 @@
         return key.toLowerCase() === walletState[0].chains[0].id.toLowerCase()
       }) === -1 ||
       // Delete this part if you don't want to check if the current wallet chain is the one from the store
-      walletState[0].chains[0].id.toLowerCase() !== $activeChain.toLowerCase()
+      walletState[0].chains[0].id.toLowerCase() !== $fromChainId.toLowerCase()
     ) {
+      // console.log($fromChainId)
       // only switch if the current tab is active
       if (document.visibilityState === 'visible') {
-        await switchChain($activeChain)
+        await switchChain($fromChainId)
       } else {
         // wait for visibility state change, then switch
       }
-    } else {
-      $activeChain = walletState[0].chains[0].id as Chains
     }
     $walletClient = createWalletClient({
-      chain: chainsMetadata[$activeChain],
+      chain: chainsMetadata[$fromChainId],
       transport: custom(walletState[0].provider),
     })
   }

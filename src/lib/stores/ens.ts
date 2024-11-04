@@ -3,10 +3,8 @@ import { normalize } from 'viem/ens'
 
 import { writable } from 'svelte/store'
 import { getAddress, isAddress, zeroAddress, type Hex, type PublicClient } from 'viem'
-import { Chains } from './auth/types'
+import { Chains, type ChainKey } from './auth/types'
 import { clientFromChain } from './input'
-
-type ChainKey = keyof typeof Chains
 
 export const ensToAddress = async (publicClient: PublicClient, ens: string) => {
   return publicClient.getEnsAddress({

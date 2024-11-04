@@ -1,5 +1,5 @@
-import { derived, type Readable } from 'svelte/store'
-import { type Address, type WalletClient, type PublicClient } from 'viem'
+import { derived, get, type Readable } from 'svelte/store'
+import { type Address, type WalletClient, type PublicClient, zeroAddress, isAddress } from 'viem'
 import { Chains } from './types'
 import { normalize } from 'viem/ens'
 import * as input from '../input'
@@ -16,7 +16,9 @@ export const walletAccount = derived<[Readable<WalletClient | undefined>], Addre
       const [account] = accounts
 
       set(account)
-      input.recipient.set(account)
+      if (get(input.recipient) == zeroAddress || !isAddress(get(input.recipient))) {
+        input.recipient.set(account)
+      }
     })
   },
 )

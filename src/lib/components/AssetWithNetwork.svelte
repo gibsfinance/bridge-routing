@@ -1,24 +1,29 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import type { Token } from '$lib/types'
-  import type { DestinationChains } from '$lib/stores/auth/types'
   import TokenIcon from './TokenIcon.svelte'
-  import { assetSources, getOriginationChainId } from '$lib/stores/bridge-settings'
+  import { assetSources } from '$lib/stores/bridge-settings'
+  import { tokenOriginationChainId } from '$lib/stores/chain-events'
+  import { loading } from '$lib/stores/loading'
+  import { zeroAddress } from 'viem'
 
   export let asset!: Token
   export let tokenSize = 10
   export let networkSize = 5
-  $: originationChainId = getOriginationChainId(asset)
-  $: chain = chainsMetadata[`0x${originationChainId.toString(16)}` as DestinationChains]
+  $: chain = asset.address !== zeroAddress && $tokenOriginationChainId && chainsMetadata[$tokenOriginationChainId]
+  $: src = assetSources(asset)
+  $: size = tokenSize * 4
 </script>
 
 <span class="token-image-container relative" style="--token-size: {tokenSize};">
-  <TokenIcon visible size={tokenSize * 4} src={assetSources(asset)} class="rounded-full overflow-hidden shadow-md" />
-  <img
-    class="network-image absolute -bottom-1 -right-1 bg-slate-100 rounded-full"
-    style="--network-size: {networkSize};"
-    src={chain.icon}
-    alt={chain.alt} />
+  <TokenIcon visible {size} {src} class="rounded-full overflow-hidden shadow-md" />
+  {#if chain && $loading.isResolved('token')}
+    <img
+      class="network-image absolute -bottom-1 -right-1 bg-slate-100 rounded-full"
+      style="--network-size: {networkSize};"
+      src={chain.icon}
+      alt={chain.alt} />
+  {/if}
 </span>
 
 <style lang="postcss">

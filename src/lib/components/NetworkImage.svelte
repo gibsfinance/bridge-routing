@@ -1,51 +1,53 @@
 <script lang="ts">
-  import { Chains, type DestinationChains, type VisualChain } from '$lib/stores/auth/types'
+  import { type VisualChain } from '$lib/stores/auth/types'
   import Icon from '@iconify/svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { bridgeKey } from '$lib/stores/input'
-  import { destinationChains } from '$lib/stores/config'
+  import { flippedTokenAddressIn, bridgeKey, partnerBridgeKey, toPath } from '$lib/stores/input'
   import { goto } from '$app/navigation'
+  import { page } from '$app/stores'
+  import _ from 'lodash'
+  import { validBridgeKeys } from '$lib/stores/config'
+  import { zeroAddress } from 'viem'
+  $: provider = $page.params.provider
 
   let dropdown!: HTMLDetailsElement
   export let network!: VisualChain
   export let size: number | undefined = undefined
-  export let networkOptions: Chains[] = []
-  $: reorderedBridgeKeys = networkOptions.slice(0).sort((a, b) => {
-    if (b === $bridgeKey) {
-      return -1
-    }
-    if (a === $bridgeKey) {
-      return 1
-    }
-    return a > b ? 1 : -1
-  })
-  const providerFromOption = (option: Chains) => destinationChains[option as DestinationChains].provider
+  export let inChain = false
+  $: bridgeKeyIndex = (2 - Number(inChain)) as 2 | 1
+  // export let networkOptions: BridgeKey[] = []
+  $: networkOptions = inChain
+    ? validBridgeKeys
+    : validBridgeKeys.filter((vbk) => vbk[0] === $bridgeKey[0] && vbk[1] === $bridgeKey[1])
+  $: reorderedBridgeKeys = [$partnerBridgeKey].concat(
+    networkOptions
+      .slice(0)
+      .filter((vbk) => !_.isEqual(vbk, $bridgeKey) && !_.isEqual(vbk, $partnerBridgeKey))
+      .concat([$bridgeKey]),
+  )
 </script>
 
-{#if reorderedBridgeKeys.length}
+{#if inChain}
   <details class="dropdown static flex flex-grow justify-center" bind:this={dropdown}>
     <summary class="flex flex-row justify-items-center items-center space-x-2 select-none">
-      <StaticNetworkImage {network} {size} provider={destinationChains[$bridgeKey].provider} />
+      <StaticNetworkImage {network} {size} {provider} />
       <span class="leading-8 ml-1">{network.name}</span>
       <Icon icon="mingcute:down-fill" height="1.25em" width="1.25em" class="flex" />
     </summary>
     <ul class="dropdown-content absolute z-[1] p-0 shadow bg-slate-50 w-fit py-1 -mt-10 -mx-2">
-      {#each reorderedBridgeKeys as option}
-        <li class="hover:bg-slate-200 h-10 items-center flex flex-row">
+      {#each reorderedBridgeKeys as o}
+        <li class="hover:bg-slate-200 items-center flex flex-row">
           <button
-            class="px-2 flex flex-row flex-grow items-center"
+            class="px-2 flex flex-row h-10 flex-grow items-center"
             on:click={async () => {
-              for (const [key, val] of Object.entries(Chains)) {
-                if (val === option) {
-                  dropdown.open = false
-                  await goto(`/delivery/${key}`, { noScroll: true })
-                  return
-                }
-              }
+              dropdown.open = false
+              const tokenAddressIn = $flippedTokenAddressIn || zeroAddress
+              await goto(`/delivery/${toPath(o)}/${tokenAddressIn}`)
+              return
             }}>
-            <StaticNetworkImage network={chainsMetadata[option]} provider={providerFromOption(option)} {size} />
-            <span class="px-2 flex flex-grow">{chainsMetadata[option].name}</span>
+            <StaticNetworkImage network={chainsMetadata[o[bridgeKeyIndex]]} provider={o[0]} {size} />
+            <span class="px-2 flex flex-grow">{chainsMetadata[o[bridgeKeyIndex]].name}</span>
           </button>
         </li>
       {/each}

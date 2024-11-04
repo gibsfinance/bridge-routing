@@ -7,10 +7,11 @@
     estimatedNetworkCost,
     oneEther,
   } from '$lib/stores/bridge-settings'
+  import { bridgePathway } from '$lib/stores/input'
 </script>
 
 {#if $amountAfterBridgeFee}
-  {#if !$estimatedNetworkCost}
+  {#if !$estimatedNetworkCost && $bridgePathway?.requiresDelivery}
     <Warning show tooltip="Unable to compute network cost. Executor will probably not deliver these tokens." />
   {:else}
     <Warning
