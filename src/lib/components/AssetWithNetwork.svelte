@@ -16,7 +16,7 @@
 </script>
 
 <span class="token-image-container relative" style="--token-size: {tokenSize};">
-  <TokenIcon visible {size} {src} class="rounded-full overflow-hidden shadow-md" />
+  <TokenIcon visible {size} {src} class="overflow-hidden" />
   {#if chain && $loading.isResolved('token')}
     <img
       class="network-image absolute -bottom-1 -right-1 bg-slate-100 rounded-full"
