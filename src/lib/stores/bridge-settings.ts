@@ -20,7 +20,7 @@ import * as chainEvents from './chain-events'
 import { chainsMetadata } from './auth/constants'
 import { multicallErc20, multicallRead } from '$lib/utils'
 import _ from 'lodash'
-import { uniV2Routers, defaultAssetIn, nativeAssetOut, whitelisted, pathway } from './config'
+import { uniV2Routers, nativeAssetOut, whitelisted, pathway } from './config'
 import * as abis from './abis'
 import * as imageLinks from './image-links'
 import { isZero, stripNonNumber } from './utils'
@@ -442,22 +442,59 @@ export const foreignCalldata = derived(
  * to be executed there after validator signatures are provided
  */
 export const calldata = derived(
-  [input.bridgeKey, amountToBridge, foreignDataParam, walletAccount],
-  ([$bridgeKey, $amountToBridge, $foreignDataParam, $walletAccount]) => {
-    if (!$foreignDataParam) return null
+  [
+    walletAccount,
+    input.recipient,
+    input.assetIn,
+    input.router,
+    chainEvents.assetLink,
+    input.bridgeKey,
+    amountToBridge,
+    foreignDataParam,
+  ],
+  ([$walletAccount, $recipient, $assetIn, $router, $assetLink, $bridgeKey, $amountToBridge, $foreignDataParam]) => {
     const path = pathway($bridgeKey)
     if (!path) return null
-    const destination = path.to
+    if (!$recipient || !isAddress($recipient)) return null
+    if (!$walletAccount || !isAddress($walletAccount)) return null
+    if (!$assetIn) return null
+    if ($assetIn.address === zeroAddress) {
+      return path.usesExtraParam
+        ? encodeFunctionData({
+            abi: abis.nativeRouterExtraInput,
+            functionName: 'wrapAndRelayTokens',
+            args: [$recipient, $walletAccount],
+          })
+        : encodeFunctionData({
+            abi: abis.nativeRouter,
+            functionName: 'wrapAndRelayTokens',
+            args: [$recipient],
+          })
+    }
+    if (!$foreignDataParam) return null
+    if ($assetLink?.toForeign) {
+      return path.usesExtraParam
+        ? encodeFunctionData({
+            abi: abis.inputBridgeExtraInput,
+            functionName: 'relayTokensAndCall',
+            args: [$assetIn.address, $router, $amountToBridge, $foreignDataParam, $walletAccount || zeroAddress],
+          })
+        : encodeFunctionData({
+            abi: abis.inputBridge,
+            functionName: 'relayTokensAndCall',
+            args: [$assetIn.address, $router, $amountToBridge, $foreignDataParam],
+          })
+    }
     return path.usesExtraParam
       ? encodeFunctionData({
           abi: abis.erc677ExtraInput,
           functionName: 'transferAndCall',
-          args: [destination, $amountToBridge, $foreignDataParam, $walletAccount || zeroAddress],
+          args: [path.to, $amountToBridge, $foreignDataParam, $walletAccount || zeroAddress],
         })
       : encodeFunctionData({
           abi: abis.erc677,
           functionName: 'transferAndCall',
-          args: [destination, $amountToBridge, $foreignDataParam],
+          args: [path.to, $amountToBridge, $foreignDataParam],
         })
   },
 )

@@ -174,6 +174,8 @@ export const bridgableTokensResponses = derived(
   [] as Token[],
 )
 
+const blacklist = new Set<Hex>(['0xA882606494D86804B5514E07e6Bd2D6a6eE6d68A'])
+
 export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([$bridgeKey, $responses]) => {
   if (!$bridgeKey) return []
   const conf = pathway($bridgeKey)
@@ -192,7 +194,7 @@ export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([
   let list: Token[] = []
   if (sortedList.length) {
     const bridgedWrappedAssetOut = sortedList.find((tkn) => tkn.address === nativeAssetOut[$bridgeKey[1]])
-    list = [
+    list = _([
       {
         chainId: Number($bridgeKey[1]),
         address: zeroAddress as Hex,
@@ -210,7 +212,11 @@ export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([
             }
           : null,
       } as Token,
-    ].concat(sortedList)
+    ])
+      .concat(sortedList)
+      .uniqBy(({ chainId, address }) => getAddress(address, chainId))
+      .filter((tkn) => !blacklist.has(tkn.address))
+      .value()
   }
   // console.log(list.slice(0, 2))
   list.forEach((token) => {
@@ -445,7 +451,7 @@ export const flippedTokenAddressIn = asyncDerived(
     const token = $bridgableTokens.find(
       (tkn) => getAddress(tkn.address) === assetInAddress && Number(fromChain) === tkn.chainId,
     )
-    let known = token?.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
+    const known = token?.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
     if (!known) {
       // check at the bridge
       return null

@@ -51,6 +51,7 @@
     "@ethersproject/bignumber": "^5.7.0",
     "@iconify/svelte": "^4.0.2",
     "@square/svelte-store": "^1.0.18",
+    "@typescript-eslint/typescript-estree": "^8.13.0",
     "@web3-onboard/core": "^2.22.2",
     "@web3-onboard/gas": "^2.2.1",
     "@web3-onboard/injected-wallets": "^2.8.5",

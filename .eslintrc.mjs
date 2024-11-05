@@ -18,6 +18,7 @@ export default [
       '.env*',
       '!.env.example',
       'pnpm-lock.yaml',
+      'bun.lockb',
       'package-lock.yaml',
       'yarn.lock',
     ],

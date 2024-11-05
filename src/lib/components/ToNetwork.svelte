@@ -186,7 +186,7 @@
             {#if $feeType !== input.FeeType.FIXED}
               <span class:hidden={$feeType !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><span
                 class="flex items-center"
-                class:opacity-70={!$loading.isResolved('gas')}
+                class:opacity-60={!$loading.isResolved('gas')}
                 ><SmallInput
                   value={input.fee}
                   suffix="%"
@@ -225,7 +225,7 @@
             name="cost-limit"
             class="flex flex-row items-end self-end relative"
             on:click={focusOnInputChild}>
-            <span class="flex items-center" class:opacity-70={!$loading.isResolved('gas')}>
+            <span class="flex items-center" class:opacity-60={!$loading.isResolved('gas')}>
               {#if $feeType === input.FeeType.PERCENT}
                 <span
                   >{humanReadableNumber($limitFromPercent, asset?.decimals || 18)}
@@ -258,7 +258,7 @@
       </div>
       <span class="text-xl sm:text-2xl leading-10 flex items-center self-center">
         {#if $feeType === input.FeeType.GAS_TIP}~&nbsp;{/if}
-        <span class="flex items-center" class:opacity-70={!$loading.isResolved('gas')}>
+        <span class="flex items-center" class:opacity-60={!$loading.isResolved('gas')}>
           {expectedAmountOut}
         </span>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
         <Tooltip
