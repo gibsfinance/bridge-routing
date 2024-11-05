@@ -10,6 +10,7 @@ export enum Chains {
   // testnets
   SEP = '0xaa36a7',
   V4PLS = '0x3af',
+  // TBNB = '0x61',
 }
 
 export type ChainKey = keyof typeof Chains

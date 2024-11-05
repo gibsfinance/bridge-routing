@@ -165,7 +165,29 @@ export const pathways = {
 } as DeepPathwayConfig
 
 export const testnetPathways = {
-  [Provider.TOKENSEX]: {},
+  [Provider.TOKENSEX]: {
+    // plsv4 to bnb home omnibridge: 0xfd0c07C376D27EA0E9fA64Ac5D2481439e36CF9C
+    // [Chains.BNB]: {
+    //   [Chains.V4PLS]: {
+    //     from: '0xDDf1b0CD7fb7AAA310c703C17995c6671F9DC806',
+    //     to: '0xfd0c07C376D27EA0E9fA64Ac5D2481439e36CF9C',
+    //     usesExtraParam: false,
+    //     requiresDelivery: false,
+    //     toHome: true,
+    //     feeManager: 'to',
+    //     defaultAssetIn: {
+    //       chainId: 56,
+    //       address: nativeAssetOut[Chains.TBNB],
+    //     },
+    //   },
+    // },
+    // [Chains.V4PLS]: {
+    //   [Chains.BNB]: {
+    //     from: '0xfd0c07C376D27EA0E9fA64Ac5D2481439e36CF9C',
+    //     to: '0xDDf1b0CD7fb7AAA310c703C17995c6671F9DC806',
+    //   },
+    // },
+  },
   [Provider.PULSECHAIN]: {
     [Chains.V4PLS]: {
       [Chains.SEP]: {
