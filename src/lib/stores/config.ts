@@ -194,6 +194,7 @@ export const testnetPathways = {
         from: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
         to: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
         nativeRouter: '0x78c38e4536a39A78910fEa9D7c80fDd0aAF89661',
+        router: '0xc00d0c5bb41977BE773c0bfdA2a2dB61309e1f79',
         usesExtraParam: false,
         requiresDelivery: true,
         toHome: false,
