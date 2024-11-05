@@ -11,6 +11,7 @@ import {
   erc20Abi_bytes32,
 } from 'viem'
 import * as types from './types'
+import _ from 'lodash'
 
 type Erc20Metadata = [string, string, number]
 
@@ -69,31 +70,26 @@ export const multicallRead = async <T>({
   }
 }
 
-export const multicallErc20 = async ({
-  client,
-  target,
-  chain,
-}: {
-  client: PublicClient
-  target: Hex
-  chain: Chain
-}) => {
-  const options = {
-    chain: chain,
-    client: client,
-    abi: erc20Abi,
-    target,
-    calls: erc20MetadataCalls,
-  }
-  try {
-    return await multicallRead<Erc20Metadata>(options)
-  } catch (err) {
-    return await multicallRead<Erc20Metadata>({
-      ...options,
-      abi: erc20Abi_bytes32,
-    })
-  }
-}
+export const multicallErc20 = _.memoize(
+  async ({ client, target, chain }: { client: PublicClient; target: Hex; chain: Chain }) => {
+    const options = {
+      chain: chain,
+      client: client,
+      abi: erc20Abi,
+      target,
+      calls: erc20MetadataCalls,
+    }
+    try {
+      return await multicallRead<Erc20Metadata>(options)
+    } catch (err) {
+      return await multicallRead<Erc20Metadata>({
+        ...options,
+        abi: erc20Abi_bytes32,
+      })
+    }
+  },
+  ({ target, chain }) => `${chain.id}-${target}`,
+)
 
 export const nativeSymbol = (asset: types.Token | null, unwrap = false) =>
   asset ? (unwrap ? asset.symbol.slice(1) : asset.symbol) : ''

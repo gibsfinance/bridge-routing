@@ -175,6 +175,15 @@
         )
       }
     } else {
+      if ($assetIn.address === zeroAddress) {
+        const nativeRouter = $bridgePathway.nativeRouter
+        const contract = getContract({
+          abi: abis.nativeRouter,
+          address: nativeRouter,
+          client: $walletClient!,
+        })
+        return await contract.write.wrapAndRelayTokens([$recipient || options.account], options)
+      }
       if (tokenInfo.toForeign) {
         // native to pulsechain
         const bridgeContract = getContract({

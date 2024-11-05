@@ -16,7 +16,7 @@ const loadingCounter = writable({
 setInterval(() => {
   const c = get(loadingCounter)
   if (!c.isResolved()) {
-    console.log(c)
+    console.log({ total: c.total, categories: { ...c.categories } })
   }
 }, 4_000)
 

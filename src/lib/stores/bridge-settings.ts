@@ -252,6 +252,7 @@ export const priceCorrective = derived(
         const reversePairing = result?.toHome || result?.toForeign
         const paymentTokenFromBridgeStart =
           reversePairing?.foreign === zeroAddress ? reversePairing?.home : reversePairing?.foreign
+        if (cancelled) return [[], []] as [FetchResult[], FetchResult[]]
         return Promise.all([
           readAmountOut(
             {
