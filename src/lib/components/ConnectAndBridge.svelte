@@ -4,7 +4,13 @@
   import { useAuth } from '$lib/stores/auth/methods'
   import { walletAccount } from '$lib/stores/auth/store'
   import { Chains } from '$lib/stores/auth/types'
-  import { fromTokenBalance, amountToBridge, foreignDataParam, foreignCalldata, calldata } from '$lib/stores/bridge-settings'
+  import {
+    fromTokenBalance,
+    amountToBridge,
+    foreignDataParam,
+    foreignCalldata,
+    calldata,
+  } from '$lib/stores/bridge-settings'
   import { type Hex, getContract, erc20Abi, maxUint256, zeroAddress } from 'viem'
   import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input'
@@ -31,9 +37,11 @@
       if (!txHash) {
         return
       }
-      const receipt = await clientFromChain(Chains.PLS).waitForTransactionReceipt({
+      // console.log('hash', txHash)
+      const receipt = await clientFromChain($fromChainId).waitForTransactionReceipt({
         hash: txHash,
       })
+      // console.log(receipt)
       wipeTxHash(txHash)
       if (fn === initiateBridge && amountInBefore === get(input.amountIn)) {
         input.amountIn.set('')
@@ -142,7 +150,7 @@
     const options = opts()
     let value = 0n
     // we are moving "from" this side, so we need to use the "from" address
-    let toAddress =  $bridgePathway.from
+    let toAddress = $bridgePathway.from
     if ($assetIn.address === zeroAddress) {
       value = $amountToBridge
       toAddress = $bridgePathway.nativeRouter
@@ -221,6 +229,7 @@
     // }
   }
   const wipeTxHash = (hash: Hex) => {
+    hashes = hashes.concat(hash)
     setTimeout(() => {
       const index = hashes.indexOf(hash)
       if (index >= 0) {

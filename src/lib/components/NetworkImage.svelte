@@ -29,13 +29,13 @@
 </script>
 
 {#if inChain}
-  <details class="dropdown static flex flex-grow justify-center" bind:this={dropdown}>
+  <details class="dropdown relative flex flex-grow justify-center" bind:this={dropdown}>
     <summary class="flex flex-row justify-items-center items-center space-x-2 select-none">
       <StaticNetworkImage {network} {size} {provider} />
       <span class="leading-8 ml-1">{network.name}</span>
-      <Icon icon="mingcute:down-fill" height="1.25em" width="1.25em" class="flex" />
+      <Icon icon="mingcute:down-fill" class="flex size-5" />
     </summary>
-    <ul class="dropdown-content absolute z-[1] p-0 shadow bg-slate-50 w-fit py-1 -mt-10 -mx-2">
+    <ul class="dropdown-content absolute z-[1] px-0 pt-0 shadow bg-slate-50 pb-1 -mt-1 -mx-2 top-0 left-0 w-60">
       {#each reorderedBridgeKeys as o}
         <li class="hover:bg-slate-200 items-center flex flex-row">
           <button

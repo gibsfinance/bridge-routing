@@ -1,7 +1,7 @@
 import * as input from './input'
 import { multicallRead } from '$lib/utils'
 import * as abis from './abis'
-import { type PublicClient, type Block, getContract, erc20Abi, type Hex, zeroAddress, getAddress } from 'viem'
+import { type PublicClient, type Block, getContract, erc20Abi, type Hex, zeroAddress } from 'viem'
 import { derived, type Readable } from 'svelte/store'
 import { loading } from './loading'
 import { walletAccount } from './auth/store'
@@ -205,11 +205,12 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
     return null
   }
   const [, fromChain, toChain] = $bridgeKey
-  const args = [$assetIn.address]
+  const assetInAddress = $assetIn.address === zeroAddress ? nativeAssetOut[fromChain] : $assetIn.address
+  const args = [assetInAddress]
   const mappings = await links({
     chainId: fromChain,
     target: bridgePathway.from,
-    address: $assetIn.address,
+    address: assetInAddress,
   })
   let [
     foreignTokenAddress, // bridgedTokenAddress
@@ -220,16 +221,16 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
     const mappings = await links({
       chainId: toChain,
       target: bridgePathway.to,
-      address: $assetIn.address,
+      address: assetInAddress,
     })
     foreignTokenAddress = mappings[0]
     nativeTokenAddress = args[0]
-    if (nativeTokenAddress === $assetIn.address) {
+    if (nativeTokenAddress === assetInAddress) {
       return {
         originationChainId: fromChain,
         toForeign: {
           foreign: foreignTokenAddress,
-          home: $assetIn.address,
+          home: assetInAddress,
         },
       }
     }
@@ -238,7 +239,7 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
       originationChainId: toChain,
       toHome: {
         foreign: nativeTokenAddress,
-        home: $assetIn.address,
+        home: assetInAddress,
       },
     }
   }
@@ -247,7 +248,7 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
   const homeToForeignMappings = await links({
     chainId: toChain,
     target: bridgePathway.to,
-    address: $assetIn.address,
+    address: assetInAddress,
   })
 
   foreignTokenAddress = homeToForeignMappings[0]
@@ -257,7 +258,7 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
       originationChainId: fromChain,
       toForeign: {
         foreign: foreignTokenAddress,
-        home: $assetIn.address,
+        home: assetInAddress,
       },
     }
   } else if (nativeTokenAddress !== zeroAddress) {
@@ -265,7 +266,7 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
       originationChainId: toChain,
       toHome: {
         foreign: nativeTokenAddress,
-        home: $assetIn.address,
+        home: assetInAddress,
       },
     }
   }
@@ -278,11 +279,7 @@ export const assetLink = asyncDerived([input.bridgeKey, input.assetIn], async ([
   if (!$assetIn) {
     return null
   }
-  const tokenIn = {
-    ...$assetIn,
-    address: $assetIn.address === zeroAddress ? nativeAssetOut[$bridgeKey[1]] : getAddress($assetIn.address),
-  }
-  return loading.loads('token', () => tokenBridgeInfo([$bridgeKey, tokenIn]))
+  return loading.loads('token', () => tokenBridgeInfo([$bridgeKey, $assetIn]))
 })
 
 export const tokenOriginationChainId = asyncDerived([assetLink], async ([$assetLink]) => {

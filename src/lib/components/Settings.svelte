@@ -49,15 +49,18 @@
       show={!(isAddress($recipient || '') && $recipient?.length === 42 && $recipient !== zeroAddress)}
       tooltip="Address is not valid. Casing influences the checksum of the address." />
   </div>
-  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed">
-    <span>Router</span>
-    <span class="font-mono text-xs md:text-sm">{$router}</span>
-  </div>
+  {#if $router}
+    <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed">
+      <span>Router</span>
+      <span class="font-mono text-xs md:text-sm">{$router}</span>
+    </div>
+  {/if}
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row">
     <span>Unwrap</span>
     <input
       type="checkbox"
       class="toggle toggle-sm [--tglbg:white] border-purple-600 bg-purple-600 hover:bg-purple-400 disabled:bg-purple-600 disabled:opacity-100"
+      class:cursor-not-allowed={!$canChangeUnwrap}
       disabled={!$canChangeUnwrap}
       checked={$unwrap}
       on:change={(e) => {
@@ -78,7 +81,7 @@
         id="calldata"
         disabled
         class="bg-transparent outline-none resize-none flex flex-grow cursor-not-allowed font-mono text-xs md:text-sm -mr-3 pr-3 max-h-24"
-        rows={5}>{nonZeroXCalldata}</textarea>
+        rows={4}>{nonZeroXCalldata}</textarea>
     </div>
   {/if}
 </div>

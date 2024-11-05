@@ -264,7 +264,7 @@ export const networkOutputs = (input: Chains) =>
 
 export const pathway = (bridgeKey: BridgeKey | null) => {
   if (!bridgeKey) return
-  return _.get(pathways, bridgeKey) || (isProd ? _.get(testnetPathways, bridgeKey) : undefined)
+  return _.get(pathways, bridgeKey) || (!isProd ? _.get(testnetPathways, bridgeKey) : undefined)
 }
 
 export const defaultAssetIn = ($bridgeKey: BridgeKey | null) => {
