@@ -418,7 +418,7 @@ export const foreignDataParam = derived(
       ? null
       : $assetLink.toForeign
         ? $feeDirectorStructEncoded
-        : concatHex([$router, $feeDirectorStructEncoded])
+        : ($router ? concatHex([$router, $feeDirectorStructEncoded]) : null)
   },
 )
 export const foreignCalldata = derived(
@@ -473,11 +473,12 @@ export const calldata = derived(
     }
     if (!$foreignDataParam) return null
     if ($assetLink?.toForeign) {
+      if (!$router) return null
       return path.usesExtraParam
         ? encodeFunctionData({
             abi: abis.inputBridgeExtraInput,
             functionName: 'relayTokensAndCall',
-            args: [$assetIn.address, $router, $amountToBridge, $foreignDataParam, $walletAccount || zeroAddress],
+            args: [$assetIn.address, $router, $amountToBridge, $foreignDataParam, $walletAccount],
           })
         : encodeFunctionData({
             abi: abis.inputBridge,
@@ -489,7 +490,7 @@ export const calldata = derived(
       ? encodeFunctionData({
           abi: abis.erc677ExtraInput,
           functionName: 'transferAndCall',
-          args: [path.to, $amountToBridge, $foreignDataParam, $walletAccount || zeroAddress],
+          args: [path.to, $amountToBridge, $foreignDataParam, $walletAccount],
         })
       : encodeFunctionData({
           abi: abis.erc677,

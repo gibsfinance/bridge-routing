@@ -425,7 +425,7 @@ export const destinationSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) =>
 /** the estimated gas that will be consumed by running the foreign transaction */
 export const estimatedGas = writable(400_000n)
 /** the first recipient of the tokens (router) */
-export const router = derived([bridgeKey], ([$bridgeKey]) => pathway($bridgeKey)?.router || (zeroAddress as Hex))
+export const router = derived([bridgeKey], ([$bridgeKey]) => pathway($bridgeKey)?.router || null)
 /** the address of the bridge proxy contract on home */
 // export const bridgeAddress = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].homeBridge as Hex)
 // export const foreignBridgeAddress = derived(

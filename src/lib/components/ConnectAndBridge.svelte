@@ -4,8 +4,7 @@
   import { useAuth } from '$lib/stores/auth/methods'
   import { walletAccount } from '$lib/stores/auth/store'
   import { Chains } from '$lib/stores/auth/types'
-  import { fromTokenBalance, amountToBridge, foreignDataParam, foreignCalldata } from '$lib/stores/bridge-settings'
-  import * as abis from '$lib/stores/abis'
+  import { fromTokenBalance, amountToBridge, foreignDataParam, foreignCalldata, calldata } from '$lib/stores/bridge-settings'
   import { type Hex, getContract, erc20Abi, maxUint256, zeroAddress } from 'viem'
   import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input'
@@ -137,76 +136,89 @@
       return
     }
     const tokenInfo = await tokenBridgeInfo([$bridgeKey, $assetIn])
-    if (!tokenInfo || !$assetIn) {
+    if (!tokenInfo || !$assetIn || !$calldata) {
       return
     }
     const options = opts()
-    if ($bridgePathway?.usesExtraParam) {
-      if ($assetIn.address === zeroAddress) {
-        const nativeRouter = $bridgePathway.nativeRouter
-        const contract = getContract({
-          abi: abis.nativeRouterExtraInput,
-          address: nativeRouter,
-          client: $walletClient!,
-        })
-        return await contract.write.wrapAndRelayTokens([$recipient || options.account, options.account], options)
-      }
-      if (tokenInfo.toForeign) {
-        // token is native to pulsechain
-        const bridgeContract = getContract({
-          abi: abis.inputBridgeExtraInput,
-          address: $bridgePathway.from,
-          client: $walletClient!,
-        })
-        return await bridgeContract.write.relayTokensAndCall(
-          [$assetIn.address, $router, $amountToBridge, $foreignDataParam, options.account],
-          options,
-        )
-      } else {
-        // extra arg in transfer+call
-        const contract = getContract({
-          abi: abis.erc677ExtraInput,
-          address: $assetIn.address,
-          client: $walletClient!,
-        })
-        return await contract.write.transferAndCall(
-          [$bridgePathway.to, $amountToBridge, $foreignDataParam, options.account],
-          options,
-        )
-      }
-    } else {
-      if ($assetIn.address === zeroAddress) {
-        const nativeRouter = $bridgePathway.nativeRouter
-        const contract = getContract({
-          abi: abis.nativeRouter,
-          address: nativeRouter,
-          client: $walletClient!,
-        })
-        return await contract.write.wrapAndRelayTokens([$recipient || options.account], options)
-      }
-      if (tokenInfo.toForeign) {
-        // native to pulsechain
-        const bridgeContract = getContract({
-          abi: abis.inputBridge,
-          address: $bridgePathway.from,
-          client: $walletClient!,
-        })
-        return await bridgeContract.write.relayTokensAndCall(
-          [$assetIn.address, $router, $amountToBridge, $foreignDataParam],
-          options,
-        )
-      } else {
-        const contract = getContract({
-          abi: abis.erc677,
-          address: $assetIn.address,
-          client: $walletClient!,
-        })
-        return await contract.write.transferAndCall(
-          [$bridgePathway.to, $amountToBridge, $foreignDataParam], // args
-          options,
-        )
-      }
+    let value = 0n
+    // we are moving "from" this side, so we need to use the "from" address
+    let toAddress =  $bridgePathway.from
+    if ($assetIn.address === zeroAddress) {
+      value = $amountToBridge
+      toAddress = $bridgePathway.nativeRouter
     }
+    return await $walletClient!.sendTransaction({
+      data: $calldata,
+      to: toAddress,
+      value,
+      ...options,
+    })
+    // if ($bridgePathway?.usesExtraParam) {
+    //   if ($assetIn.address === zeroAddress) {
+    //     const nativeRouter = $bridgePathway.nativeRouter
+    //     const contract = getContract({
+    //       abi: abis.nativeRouterExtraInput,
+    //       address: nativeRouter,
+    //       client: $walletClient!,
+    //     })
+    //     return await contract.write.wrapAndRelayTokens([$recipient || options.account, options.account], options)
+    //   }
+    //   if (tokenInfo.toForeign) {
+    //     // token is native to pulsechain
+    //     const bridgeContract = getContract({
+    //       abi: abis.inputBridgeExtraInput,
+    //       address: $bridgePathway.from,
+    //       client: $walletClient!,
+    //     })
+    //     return await bridgeContract.write.relayTokensAndCall(
+    //       [$assetIn.address, $router, $amountToBridge, $foreignDataParam, options.account],
+    //       options,
+    //     )
+    //   } else {
+    //     // extra arg in transfer+call
+    //     const contract = getContract({
+    //       abi: abis.erc677ExtraInput,
+    //       address: $assetIn.address,
+    //       client: $walletClient!,
+    //     })
+    //     return await contract.write.transferAndCall(
+    //       [$bridgePathway.to, $amountToBridge, $foreignDataParam, options.account],
+    //       options,
+    //     )
+    //   }
+    // } else {
+    //   if ($assetIn.address === zeroAddress) {
+    //     const nativeRouter = $bridgePathway.nativeRouter
+    //     const contract = getContract({
+    //       abi: abis.nativeRouter,
+    //       address: nativeRouter,
+    //       client: $walletClient!,
+    //     })
+    //     return await contract.write.wrapAndRelayTokens([$recipient || options.account], options)
+    //   }
+    //   if (tokenInfo.toForeign) {
+    //     // native to pulsechain
+    //     const bridgeContract = getContract({
+    //       abi: abis.inputBridge,
+    //       address: $bridgePathway.from,
+    //       client: $walletClient!,
+    //     })
+    //     return await bridgeContract.write.relayTokensAndCall(
+    //       [$assetIn.address, $router, $amountToBridge, $foreignDataParam],
+    //       options,
+    //     )
+    //   } else {
+    //     const contract = getContract({
+    //       abi: abis.erc677,
+    //       address: $assetIn.address,
+    //       client: $walletClient!,
+    //     })
+    //     return await contract.write.transferAndCall(
+    //       [$bridgePathway.to, $amountToBridge, $foreignDataParam], // args
+    //       options,
+    //     )
+    //   }
+    // }
   }
   const wipeTxHash = (hash: Hex) => {
     setTimeout(() => {
