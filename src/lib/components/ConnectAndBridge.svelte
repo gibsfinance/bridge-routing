@@ -3,7 +3,6 @@
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { useAuth } from '$lib/stores/auth/methods'
   import { walletAccount } from '$lib/stores/auth/store'
-  import { Chains } from '$lib/stores/auth/types'
   import {
     fromTokenBalance,
     amountToBridge,
@@ -17,6 +16,7 @@
   import { tokenBridgeInfo, assetLink, approval } from '$lib/stores/chain-events'
   import { loading } from '$lib/stores/loading'
   import { get } from 'svelte/store'
+  import { addMessage } from '$lib/stores/toast'
 
   const { walletClient, assetIn, clientFromChain, bridgeKey, router, bridgePathway, fromChainId, recipient } = input
 
@@ -41,8 +41,11 @@
       const receipt = await clientFromChain($fromChainId).waitForTransactionReceipt({
         hash: txHash,
       })
-      // console.log(receipt)
-      wipeTxHash(txHash)
+      addMessage({
+        message: 'Submitted: ' + txHash.slice(0, 6) + '...' + txHash.slice(-4),
+        link: chainsMetadata[$fromChainId].blockExplorers?.default.url + '/tx/' + txHash,
+        label: 'submit-tx',
+      })
       if (fn === initiateBridge && amountInBefore === get(input.amountIn)) {
         input.amountIn.set('')
       }
@@ -228,15 +231,6 @@
     //   }
     // }
   }
-  const wipeTxHash = (hash: Hex) => {
-    hashes = hashes.concat(hash)
-    setTimeout(() => {
-      const index = hashes.indexOf(hash)
-      if (index >= 0) {
-        hashes = hashes.slice(0).splice(index, 1)
-      }
-    }, 20_000)
-  }
   const opts = () => {
     const account = $walletAccount as Hex
     const options = {
@@ -305,7 +299,7 @@
     </button>
   {/if}
 </div>
-{#each hashes as txHash}
+<!-- {#each hashes as txHash}
   <div class="toast mb-16">
     <div class="alert alert-info bg-purple-400 text-slate-100">
       <a
@@ -317,4 +311,4 @@
       </a>
     </div>
   </div>
-{/each}
+{/each} -->
