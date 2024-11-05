@@ -253,6 +253,8 @@ export const priceCorrective = derived(
         const paymentTokenFromBridgeStart =
           reversePairing?.foreign === zeroAddress ? reversePairing?.home : reversePairing?.foreign
         if (cancelled) return [[], []] as [FetchResult[], FetchResult[]]
+        // console.log(assetInAddress, paymentTokenFromBridgeStart)
+        // console.log($assetOut!.address, paymentToken)
         return Promise.all([
           readAmountOut(
             {
@@ -262,7 +264,17 @@ export const priceCorrective = derived(
               $bridgeKey,
             },
             $latestBaseFeePerGas,
-            [[assetInAddress, paymentTokenFromBridgeStart!]],
+            [
+              [
+                assetInAddress,
+                paymentTokenFromBridgeStart!,
+              ],
+              [
+                assetInAddress,
+                nativeAssetOut[fromChain],
+                paymentTokenFromBridgeStart!,
+              ],
+            ],
           ),
           readAmountOut(
             {
@@ -272,7 +284,17 @@ export const priceCorrective = derived(
               $bridgeKey,
             },
             $latestBaseFeePerGas,
-            [[$assetOut!.address, paymentToken]],
+            [
+              [
+                $assetOut!.address,
+                paymentToken,
+              ],
+              [
+                $assetOut!.address,
+                nativeAssetOut[toChain],
+                paymentToken,
+              ],
+            ],
           ),
         ])
       })
