@@ -16,10 +16,9 @@
   export let size: number | undefined = undefined
   export let inChain = false
   $: bridgeKeyIndex = (2 - Number(inChain)) as 2 | 1
-  // export let networkOptions: BridgeKey[] = []
   $: networkOptions = inChain
-    ? validBridgeKeys
-    : validBridgeKeys.filter((vbk) => vbk[0] === $bridgeKey[0] && vbk[1] === $bridgeKey[1])
+    ? $validBridgeKeys
+    : $validBridgeKeys.filter((vbk) => vbk[0] === $bridgeKey[0] && vbk[1] === $bridgeKey[1])
   $: reorderedBridgeKeys = [$partnerBridgeKey].concat(
     networkOptions
       .slice(0)

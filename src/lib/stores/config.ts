@@ -2,12 +2,12 @@ import { type Hex, getAddress } from 'viem'
 import * as imageLinks from './image-links'
 import type { Token, TokenList } from '$lib/types'
 import { Chains, Provider } from './auth/types'
-import { derived } from 'svelte/store'
+import { derived, get, readable } from 'svelte/store'
 import { windowLoaded } from './window'
 import type { BridgeKey } from './input'
 import _ from 'lodash'
 
-export const isProd = __PROD__
+export const isProd = readable(__PROD__)
 
 export const nativeAssetOut = {
   [Chains.ETH]: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -243,28 +243,25 @@ export const testnetPathways = {
   },
 } as DeepPathwayConfig
 
-export const validBridgeKeys = [
+const mainnetBridgeKeys = [
   [Provider.PULSECHAIN, Chains.PLS, Chains.ETH],
   [Provider.PULSECHAIN, Chains.ETH, Chains.PLS],
   [Provider.TOKENSEX, Chains.PLS, Chains.BNB],
   [Provider.TOKENSEX, Chains.BNB, Chains.PLS],
-  // testnets
+] as BridgeKey[]
+
+const testnetBridgeKeys = [
   [Provider.PULSECHAIN, Chains.SEP, Chains.V4PLS],
   [Provider.PULSECHAIN, Chains.V4PLS, Chains.SEP],
 ] as BridgeKey[]
 
-export const networkInputs = _(validBridgeKeys).map('1').uniq().value()
-
-export const networkOutputs = (input: Chains) =>
-  _(validBridgeKeys)
-    .filter((a) => a[1] !== input)
-    .map('2')
-    .uniq()
-    .value()
+export const validBridgeKeys = derived([isProd], ([$isProd]) => {
+  return [...mainnetBridgeKeys, ...($isProd ? [] : testnetBridgeKeys)]
+})
 
 export const pathway = (bridgeKey: BridgeKey | null) => {
   if (!bridgeKey) return
-  return _.get(pathways, bridgeKey) || (!isProd ? _.get(testnetPathways, bridgeKey) : undefined)
+  return _.get(pathways, bridgeKey) || (!get(isProd) ? _.get(testnetPathways, bridgeKey) : undefined)
 }
 
 export const defaultAssetIn = ($bridgeKey: BridgeKey | null) => {
