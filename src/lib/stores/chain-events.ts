@@ -122,20 +122,20 @@ export const watchTokenBalance = (chainId: Readable<Chains>, tokenStore: Readabl
   )
 
 export const minAmount = derived(
-  [input.bridgePathway, input.fromPublicClient, input.assetIn],
-  ([$bridgePathway, $publicClient, $assetIn], set) => {
+  [input.bridgePathway, input.fromPublicClient, input.toPublicClient, input.assetIn],
+  ([$bridgePathway, $fromPublicClient, $toPublicClient, $assetIn], set) => {
     if (!$bridgePathway || !$assetIn) {
       set(0n)
       return
     }
     let cancelled = false
-    // console.log($bridgePathway.from, $publicClient.chain!.id)
+    const $publicClient = $bridgePathway.feeManager === 'from' ? $fromPublicClient : $toPublicClient
     $publicClient
       .readContract({
         abi: abis.inputBridge,
         functionName: 'minPerTx',
         args: [$assetIn.address],
-        address: $bridgePathway.from,
+        address: $bridgePathway[$bridgePathway.feeManager],
       })
       .then((res) => {
         if (cancelled) return

@@ -483,7 +483,6 @@ export const calldata = derived(
           })
     }
     if (!$foreignDataParam) return null
-    console.log($assetLink, path)
     if ($assetLink?.toForeign) {
       if (!$router) return null
       return path.usesExtraParam
@@ -502,12 +501,12 @@ export const calldata = derived(
       ? encodeFunctionData({
           abi: abis.erc677ExtraInput,
           functionName: 'transferAndCall',
-          args: [path.to, $amountToBridge, $foreignDataParam, $walletAccount],
+          args: [path.from, $amountToBridge, $foreignDataParam, $walletAccount],
         })
       : encodeFunctionData({
           abi: abis.erc677,
           functionName: 'transferAndCall',
-          args: [path.to, $amountToBridge, $foreignDataParam],
+          args: [path.from, $amountToBridge, $foreignDataParam],
         })
   },
 )
