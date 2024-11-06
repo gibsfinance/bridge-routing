@@ -201,9 +201,12 @@ export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([
         logoURI: '',
         extensions: bridgedWrappedAssetOut
           ? {
+              wrapped: {
+                address: bridgedWrappedAssetOut.address,
+              },
               bridgeInfo: {
                 [Number($bridgeKey[2])]: {
-                  tokenAddress: bridgedWrappedAssetOut.address,
+                  tokenAddress: bridgedWrappedAssetOut.extensions?.bridgeInfo?.[Number($bridgeKey[2])]?.tokenAddress,
                 },
               },
             }

@@ -511,17 +511,17 @@ export const calldata = derived(
   },
 )
 
+/** the sources of the asset, including the wrapped asset if it exists */
 export const assetSources = (asset: Token | null) => {
   if (!asset) {
     return ''
   }
   type MinTokenInfo = Pick<Token, 'chainId' | 'address'>
-  const sources = _([
-    {
-      chainId: asset.chainId,
-      address: asset.address,
-    },
-    ...Object.entries(asset.extensions?.bridgeInfo || {}).map(([chainId, info]) => {
+  const { chainId, address, extensions } = asset
+  const inputs = _([
+    { chainId, address },
+    extensions?.wrapped ? { chainId, address: extensions.wrapped.address } : null,
+    ...Object.entries(extensions?.bridgeInfo || {}).map(([chainId, info]) => {
       if (!info.tokenAddress) {
         return null
       }
@@ -530,8 +530,8 @@ export const assetSources = (asset: Token | null) => {
         address: info.tokenAddress,
       }
     }),
-  ])
-    .compact()
+  ]).compact()
+  const sources = inputs
     .sortBy([(a: MinTokenInfo) => a.chainId])
     .map((a: MinTokenInfo) => `${a.chainId}/${a.address}`)
     .value()

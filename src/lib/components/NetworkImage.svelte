@@ -41,7 +41,8 @@
             class="px-2 flex flex-row h-10 flex-grow items-center"
             on:click={async () => {
               dropdown.open = false
-              const tokenAddressIn = $flippedTokenAddressIn || zeroAddress
+              console.log(o, $partnerBridgeKey)
+              const tokenAddressIn = o === $partnerBridgeKey ? $flippedTokenAddressIn : zeroAddress || zeroAddress
               await goto(`/delivery/${toPath(o)}/${tokenAddressIn}`)
               return
             }}>

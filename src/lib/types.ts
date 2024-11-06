@@ -12,6 +12,7 @@ export type PerNetworkBridgeLink = {
   tokenAddress: Hex
 }
 export type Extensions = {
+  wrapped?: { address: Hex }
   bridgeInfo?: Record<number, PerNetworkBridgeLink>
 }
 
