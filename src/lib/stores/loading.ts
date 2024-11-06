@@ -69,12 +69,17 @@ export const loading = {
     tick().then(async () => {
       if (cancelled) return
       let arg: any = null
-      for (const condition of conditions) {
-        if (cancelled) return
-        arg = await condition(arg)
+      try {
+        for (const condition of conditions) {
+          if (cancelled) return
+          arg = await condition(arg)
+        }
+        return arg
+      } catch (err) {
+        console.error(err)
+      } finally {
+        cleanup()
       }
-      cleanup()
-      return arg
     })
     return cleanup
   },
