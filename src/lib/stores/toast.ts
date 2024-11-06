@@ -15,10 +15,7 @@ export const addMessage = (msg: Message) => {
   console.log('addMessage', msg)
   messages.update((msgs) => [...msgs, msg])
   setTimeout(() => {
-    messages.update((msgs) => {
-      const index = msgs.findIndex((m) => m === msg)
-      return msgs.slice(0).splice(index, 1)
-    })
+    removeMessage(msg)
   }, msg.timeout || 20_000)
 }
 
@@ -26,20 +23,6 @@ export const uri = (chainId: Chains, type: 'tx' | 'address' = 'tx', suffix: stri
   const url = chainsMetadata[Chains.PLS].blockExplorers?.default.url
   return `${url}/${chainId === Chains.V4PLS ? '#/' : ''}${type}/${suffix}`
 }
-
-// const loop = () => {
-//   addMessage({
-//     message: 'Hello',
-//     link: 'https://google.com',
-//     label: 'Hello',
-//     timeout: 10_000 + 10_000 * Math.random(),
-//   })
-//   setTimeout(() => {
-//     loop()
-//   }, 10_000 + 10_000 * Math.random())
-// }
-
-// loop()
 
 export const removeMessage = (msg: Message) => {
   messages.update((msgs) => msgs.filter((m) => m !== msg))
