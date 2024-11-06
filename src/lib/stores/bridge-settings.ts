@@ -17,13 +17,13 @@ import { loading } from './loading'
 import type { Token } from '../types'
 import * as chainEvents from './chain-events'
 import { chainsMetadata } from './auth/constants'
-import { multicallErc20, multicallRead } from '$lib/utils'
+import { multicallErc20, multicallRead, type Erc20Metadata } from '$lib/utils'
 import _ from 'lodash'
 import { uniV2Routers, nativeAssetOut, whitelisted, pathway } from './config'
 import * as abis from './abis'
 import * as imageLinks from './image-links'
 import { isZero, stripNonNumber } from './utils'
-import { latestBaseFeePerGas } from './chain-events'
+import { latestBaseFeePerGas, type TokenBridgeInfo } from './chain-events'
 import { settings } from './fee-manager'
 import { tick } from 'svelte'
 
@@ -59,22 +59,24 @@ export const assetOut = derived(
       set(null)
       return _.noop
     }
-    loading.increment('balance')
-    let cancelled = false
-    const cleanup = () => {
-      if (cancelled) return
-      cancelled = true
-      loading.decrement('balance')
-    }
-    tick()
-      .then(async () => {
-        if (cancelled) return
-        const result = await multicallErc20({
+    const client = input.clientFromChain(toChainId)
+    return loading.loadsAfterTick(
+      'balance',
+      async () => {
+        return client.getCode({ address: foreign })
+      },
+      async (data: Hex, cleanup) => {
+        if (data === '0x') {
+          cleanup()
+          return null
+        }
+        return await multicallErc20({
           client: input.clientFromChain(toChainId),
           chain: chainsMetadata[toChainId],
           target: foreign,
         }).catch(() => null)
-        if (cancelled) return
+      },
+      (result: Erc20Metadata | null) => {
         let res = backupAssetIn
         if (result) {
           const [name, symbol, decimals] = result
@@ -96,11 +98,10 @@ export const assetOut = derived(
             symbol: `w${assetIn.symbol}`,
           } as Token
         }
-        set(res)
-      })
-      .catch(console.error)
-      .then(cleanup)
-    return cleanup
+        return res
+      },
+      set,
+    )
   },
   null as Token | null,
 )
@@ -161,11 +162,11 @@ const fetchCache = new Map<
 setInterval(() => {
   const now = Date.now()
   for (const [k, cached] of fetchCache.entries()) {
-    if (cached.time + 20_000 < now) {
+    if (cached.time + 10_000 < now) {
       fetchCache.delete(k)
     }
   }
-}, 5_000)
+}, 3_000)
 const readAmountOut = (
   {
     $oneTokenInt,
@@ -217,11 +218,6 @@ export const amountToBridge = derived(
 export const priceCorrective = derived(
   [input.assetIn, input.bridgeKey, oneTokenInt, assetOut, amountToBridge, latestBaseFeePerGas, input.flippedBridgeKey],
   ([$assetIn, $bridgeKey, $oneTokenInt, $assetOut, $amountToBridge, $latestBaseFeePerGas, $flippedBridgeKey], set) => {
-    // check if recognized as wrapped
-    // if recognized as wrapped, use oneEther
-    let cancelled = false
-    priceCorrectiveGuard = {}
-    const pcg = priceCorrectiveGuard
     if (!$assetIn) {
       set(0n)
       return
@@ -236,9 +232,6 @@ export const priceCorrective = derived(
       amountToBridge = parseUnits('10', $assetOut.decimals)
     }
     const outputFromRouter = (result: FetchResult) => {
-      if (cancelled || priceCorrectiveGuard !== pcg) {
-        return 0n
-      }
       if (_.isString(result)) {
         return 0n
       }
@@ -251,29 +244,23 @@ export const priceCorrective = derived(
     const [, fromChain, toChain] = $bridgeKey
     const paymentToken = nativeAssetOut[toChain]
     const assetInAddress = $assetIn.address === zeroAddress ? nativeAssetOut[fromChain] : $assetIn.address
-    loading.increment('gas')
-    const cleanup = () => {
-      if (cancelled) return
-      cancelled = true
-      loading.decrement('gas')
-    }
-    tick()
-      .then(async () => {
-        if (cancelled) return
-        const result = await chainEvents.tokenBridgeInfo([
+    return loading.loadsAfterTick(
+      'gas',
+      async () =>
+        await chainEvents.tokenBridgeInfo([
           $flippedBridgeKey,
           {
             ...$assetOut,
             address: paymentToken,
           },
-        ])
+        ]),
+      async (result: TokenBridgeInfo) => {
         const reversePairing = result?.toHome || result?.toForeign
         const paymentTokenFromBridgeStart =
           reversePairing?.foreign === zeroAddress ? reversePairing?.home : reversePairing?.foreign
-        if (cancelled) return [[], []] as [FetchResult[], FetchResult[]]
         // console.log(assetInAddress, paymentTokenFromBridgeStart)
         // console.log($assetOut!.address, paymentToken)
-        const results = await Promise.all([
+        return await Promise.all([
           readAmountOut(
             {
               $assetInAddress: $assetIn.address,
@@ -301,7 +288,8 @@ export const priceCorrective = derived(
             ],
           ),
         ])
-        if (cancelled) return
+      },
+      async (results: [FetchResult[], FetchResult[]]) => {
         const max = (amountsOut: (bigint | undefined)[]) => {
           return _(amountsOut)
             .compact()
@@ -312,17 +300,14 @@ export const priceCorrective = derived(
         const inputAmounts = inputs.map(outputFromRouter)
         const outputToken = max(outputAmounts)
         const inputToken = max(inputAmounts)
-        const res =
-          outputToken && outputToken > 0n
-            ? inputToken && inputToken > outputToken && inputToken / outputToken === 1n
-              ? inputToken
-              : outputToken
-            : inputToken
-        set(res || 0n)
-      })
-      .catch(console.error)
-      .then(cleanup)
-    return cleanup
+        return outputToken && outputToken > 0n
+          ? inputToken && inputToken > outputToken && inputToken / outputToken === 1n
+            ? inputToken
+            : outputToken
+          : inputToken
+      },
+      set,
+    )
   },
   oneEther,
 )

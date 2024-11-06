@@ -9,11 +9,12 @@ import {
   decodeFunctionResult,
   erc20Abi,
   erc20Abi_bytes32,
+  getAddress,
 } from 'viem'
 import * as types from './types'
 import _ from 'lodash'
 
-type Erc20Metadata = [string, string, number]
+export type Erc20Metadata = [string, string, number]
 
 export const erc20MetadataCalls = [{ functionName: 'name' }, { functionName: 'symbol' }, { functionName: 'decimals' }]
 
@@ -65,7 +66,7 @@ export const multicallRead = async <T>({
           }),
     ) as T
   } catch (err) {
-    console.log(client.chain?.id, target, calls, reads)
+    console.trace(client.chain?.id, target, calls, reads)
     throw err
   }
 }
@@ -88,7 +89,7 @@ export const multicallErc20 = _.memoize(
       })
     }
   },
-  ({ target, chain }) => `${chain.id}-${target}`,
+  ({ target, chain }) => getAddress(target, chain.id),
 )
 
 export const nativeSymbol = (asset: types.Token | null, unwrap = false) =>

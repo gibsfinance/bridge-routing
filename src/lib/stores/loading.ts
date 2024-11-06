@@ -23,7 +23,7 @@ setInterval(() => {
 
 export const loading = {
   ...loadingCounter,
-  increment: (key?: string) => {
+  increment: (key?: string | null) => {
     return loadingCounter.update((l) => {
       if (key) {
         l.categories[key] = (l.categories[key] || 0) + 1
@@ -32,7 +32,7 @@ export const loading = {
       return l
     })
   },
-  decrement: (key?: string) => {
+  decrement: (key?: string | null) => {
     return loadingCounter.update((l) => {
       if (key) {
         const current = l.categories[key] || 0
@@ -45,18 +45,7 @@ export const loading = {
       return l
     })
   },
-  loads: async <T>(key: string, fn: () => Promise<T>) => {
-    loading.increment(key)
-    try {
-      const res = await fn()
-      loading.decrement(key)
-      return res
-    } catch (err) {
-      loading.decrement(key)
-      throw err
-    }
-  },
-  loadsAfterTick: (key: string, ...conditions: ((a: any) => any)[]) => {
+  loadsAfterTick: (key: string | null, ...conditions: ((a: any, cleanup: () => void) => any)[]) => {
     loading.increment(key)
     let cancelled = false
     const cleanup = () => {
@@ -66,21 +55,14 @@ export const loading = {
       cancelled = true
       loading.decrement(key)
     }
-    tick().then(async () => {
-      if (cancelled) return
-      let arg: any = null
-      try {
-        for (const condition of conditions) {
-          if (cancelled) return
-          arg = await condition(arg)
-        }
-        return arg
-      } catch (err) {
-        console.error(err)
-      } finally {
-        cleanup()
-      }
-    })
+    let current = tick()
+    for (const condition of conditions) {
+      current = current.then((arg) => {
+        if (cancelled) return
+        return condition(arg, cleanup)
+      })
+    }
+    current.catch(console.error).then(cleanup)
     return cleanup
   },
 }

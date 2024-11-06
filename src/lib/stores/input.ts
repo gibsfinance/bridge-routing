@@ -135,41 +135,38 @@ export const bridgePathway = derived([bridgeKey], ([$bridgeKey]) => pathway($bri
 export const bridgableTokensResponses = derived(
   [windowLoaded],
   ([$windowLoaded], set) => {
-    let cancelled = false
+    // let cancelled = false
     if (!$windowLoaded) {
       set([])
       return
     }
-    loading.increment()
-    Promise.all([
-      fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo')),
-      fetch(imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo')),
-      fetch(imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo')),
-      fetch(imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo')),
-      fetch(imageLinks.list('/testnet-v4-pulsechain-bridge/foreign?extensions=bridgeInfo')),
-      fetch(imageLinks.list('/testnet-v4-pulsechain-bridge/home?extensions=bridgeInfo')),
-    ])
-      .then(async (results) => {
-        const responses = await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
-        loading.decrement()
-        if (cancelled) return
-        const list = _(responses)
+    return loading.loadsAfterTick(
+      null,
+      async () => {
+        return await Promise.all([
+          fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo')),
+          fetch(imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo')),
+          fetch(imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo')),
+          fetch(imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo')),
+          fetch(imageLinks.list('/testnet-v4-pulsechain-bridge/foreign?extensions=bridgeInfo')),
+          fetch(imageLinks.list('/testnet-v4-pulsechain-bridge/home?extensions=bridgeInfo')),
+        ])
+      },
+      async (results: Response[]) => {
+        return await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
+      },
+      async (responses: TokenList[]) => {
+        return _(responses)
           .map('tokens')
           .flatten()
           .keyBy(({ chainId, address }) => {
-            return `${Number(chainId)}-${getAddress(address)}`
+            return getAddress(address, Number(chainId))
           })
           .values()
           .value()
-        set(list)
-      })
-      .catch((err) => {
-        loading.decrement()
-        throw err
-      })
-    return () => {
-      cancelled = true
-    }
+      },
+      set,
+    )
   },
   [] as Token[],
 )
@@ -256,7 +253,10 @@ export const isNative = ($asset: Token | null, $bridgeKey: BridgeKey | null) => 
   if (!$bridgeKey || !$asset) {
     return false
   }
-  return $asset.address === zeroAddress || !!nativeAssetOut[$asset.chainId as unknown as Chains]
+  return (
+    ($asset.address === zeroAddress || !!nativeAssetOut[$asset.chainId as unknown as Chains]) &&
+    !$asset.name.includes(' from Pulsechain')
+  )
 }
 const isUnwrappable = ($asset: Token | null, $bridgeKey: BridgeKey | null) => {
   if (!$bridgeKey || !$asset) {

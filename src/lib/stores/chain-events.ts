@@ -92,42 +92,17 @@ export const getTokenBalance = (
   $walletAccount: Hex,
   set: (v: bigint | null) => void,
 ) => {
-  let cancelled = false
   const $publicClient = input.clientFromChain($chainId)
-  loading.increment('balance')
-  if ($asset.address === zeroAddress) {
-    const getNativeBalance = async () => {
-      const balance = await $publicClient.getBalance({
-        address: $walletAccount,
-      })
-      if (cancelled) return
-      loading.decrement('balance')
-      set(balance)
-    }
-    getNativeBalance().catch(console.error)
-    return () => {
-      if (cancelled) return
-      cancelled = true
-      loading.decrement('balance')
-    }
-  }
-  const token = getContract({
-    address: $asset.address,
-    abi: erc20Abi,
-    client: $publicClient,
-  })
-  const getBalance = async () => {
-    const balance = await token.read.balanceOf([$walletAccount])
-    if (cancelled) return
-    loading.decrement('balance')
-    set(balance)
-  }
-  getBalance().catch(console.error)
-  return () => {
-    if (cancelled) return
-    cancelled = true
-    loading.decrement('balance')
-  }
+  const getBalance =
+    $asset.address === zeroAddress
+      ? () => $publicClient.getBalance({ address: $walletAccount })
+      : () =>
+          getContract({
+            address: $asset.address,
+            abi: erc20Abi,
+            client: $publicClient,
+          }).read.balanceOf([$walletAccount])
+  return loading.loadsAfterTick('balance', getBalance, set)
 }
 
 export const watchTokenBalance = (chainId: Readable<Chains>, tokenStore: Readable<Token | null>) =>
@@ -186,7 +161,7 @@ const links = _.memoize(
       ],
     })
   },
-  ({ chainId, target, address }) => `${chainId}-${target}-${address}`,
+  ({ chainId, target, address }) => `${chainId}-${target}-${address}`.toLowerCase(),
 )
 
 export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, Token | null]): Promise<null | {
@@ -273,7 +248,7 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
   return null
 }
 
-type TokenBridgeInfo = Awaited<ReturnType<typeof tokenBridgeInfo>>
+export type TokenBridgeInfo = Awaited<ReturnType<typeof tokenBridgeInfo>>
 
 export const assetLink = derived<Stores, null | TokenBridgeInfo>(
   [input.bridgeKey, input.assetIn],
