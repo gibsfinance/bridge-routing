@@ -1,6 +1,5 @@
 import { derived } from 'svelte/store'
 import * as input from '$lib/stores/input'
-import { derived as asyncDerived } from './async'
 import {
   zeroAddress,
   type Hex,
@@ -26,6 +25,7 @@ import * as imageLinks from './image-links'
 import { isZero, stripNonNumber } from './utils'
 import { latestBaseFeePerGas } from './chain-events'
 import { settings } from './fee-manager'
+import { tick } from 'svelte'
 
 const backupAssetIn = {
   address: zeroAddress,
@@ -37,11 +37,12 @@ const backupAssetIn = {
 } as Token
 
 /** the asset coming out on the other side of the bridge (foreign) */
-export const assetOut = asyncDerived(
+export const assetOut = derived(
   [input.bridgeKey, input.assetIn, chainEvents.assetLink],
-  async ([$bridgeKey, $assetIn, assetLink]) => {
+  ([$bridgeKey, $assetIn, assetLink], set) => {
     if (!$bridgeKey || !$assetIn) {
-      return null
+      set(null)
+      return _.noop
     }
     const toChainId = $bridgeKey[2]
     const assetIn = {
@@ -49,43 +50,59 @@ export const assetOut = asyncDerived(
       address: $assetIn.address === zeroAddress ? nativeAssetOut[$bridgeKey[1]] : getAddress($assetIn.address),
     }
     if (!assetLink) {
-      return null
+      set(null)
+      return _.noop
     }
     const { toHome, toForeign } = assetLink
-    let res = backupAssetIn
     const foreign = toHome?.foreign || toForeign?.foreign
-    if (foreign && foreign !== zeroAddress) {
-      loading.increment('balance')
-      const r = await multicallErc20({
-        client: input.clientFromChain(toChainId),
-        chain: chainsMetadata[toChainId],
-        target: foreign,
-      }).catch(() => null)
-      if (r) {
-        const [name, symbol, decimals] = r
-        res = {
-          name,
-          symbol,
-          decimals,
-          chainId: Number(toChainId),
-          address: foreign,
-        } as Token
-        res.logoURI = imageLinks.image(res)
-      } else {
-        // assumptions
-        res = {
-          ...assetIn,
-          chainId: Number($bridgeKey[2]),
-          address: zeroAddress,
-          name: `${assetIn.name} from Pulsechain`,
-          symbol: `w${assetIn.symbol}`,
-        } as Token
-      }
+    if (!foreign || foreign === zeroAddress) {
+      set(null)
+      return _.noop
     }
-    loading.decrement('balance')
-    return res
+    loading.increment('balance')
+    let cancelled = false
+    const cleanup = () => {
+      if (cancelled) return
+      cancelled = true
+      loading.decrement('balance')
+    }
+    tick()
+      .then(async () => {
+        if (cancelled) return
+        const result = await multicallErc20({
+          client: input.clientFromChain(toChainId),
+          chain: chainsMetadata[toChainId],
+          target: foreign,
+        }).catch(() => null)
+        if (cancelled) return
+        let res = backupAssetIn
+        if (result) {
+          const [name, symbol, decimals] = result
+          res = {
+            name,
+            symbol,
+            decimals,
+            chainId: Number(toChainId),
+            address: foreign,
+          } as Token
+          res.logoURI = imageLinks.image(res)
+        } else {
+          // assumptions
+          res = {
+            ...assetIn,
+            chainId: Number(toChainId),
+            address: zeroAddress,
+            name: `${assetIn.name} from Pulsechain`,
+            symbol: `w${assetIn.symbol}`,
+          } as Token
+        }
+        set(res)
+      })
+      .catch(console.error)
+      .then(cleanup)
+    return cleanup
   },
-  null,
+  null as Token | null,
 )
 
 /** this value represents the balance on of the asset going into the bridge */
@@ -240,22 +257,23 @@ export const priceCorrective = derived(
       cancelled = true
       loading.decrement('gas')
     }
-    chainEvents
-      .tokenBridgeInfo([
-        $flippedBridgeKey,
-        {
-          ...$assetOut,
-          address: paymentToken,
-        },
-      ])
-      .then((result) => {
+    tick()
+      .then(async () => {
+        if (cancelled) return
+        const result = await chainEvents.tokenBridgeInfo([
+          $flippedBridgeKey,
+          {
+            ...$assetOut,
+            address: paymentToken,
+          },
+        ])
         const reversePairing = result?.toHome || result?.toForeign
         const paymentTokenFromBridgeStart =
           reversePairing?.foreign === zeroAddress ? reversePairing?.home : reversePairing?.foreign
         if (cancelled) return [[], []] as [FetchResult[], FetchResult[]]
         // console.log(assetInAddress, paymentTokenFromBridgeStart)
         // console.log($assetOut!.address, paymentToken)
-        return Promise.all([
+        const results = await Promise.all([
           readAmountOut(
             {
               $assetInAddress: $assetIn.address,
@@ -265,15 +283,8 @@ export const priceCorrective = derived(
             },
             $latestBaseFeePerGas,
             [
-              [
-                assetInAddress,
-                paymentTokenFromBridgeStart!,
-              ],
-              [
-                assetInAddress,
-                nativeAssetOut[fromChain],
-                paymentTokenFromBridgeStart!,
-              ],
+              [assetInAddress, paymentTokenFromBridgeStart!],
+              [assetInAddress, nativeAssetOut[fromChain], paymentTokenFromBridgeStart!],
             ],
           ),
           readAmountOut(
@@ -285,20 +296,11 @@ export const priceCorrective = derived(
             },
             $latestBaseFeePerGas,
             [
-              [
-                $assetOut!.address,
-                paymentToken,
-              ],
-              [
-                $assetOut!.address,
-                nativeAssetOut[toChain],
-                paymentToken,
-              ],
+              [$assetOut!.address, paymentToken],
+              [$assetOut!.address, nativeAssetOut[toChain], paymentToken],
             ],
           ),
         ])
-      })
-      .then((results) => {
         if (cancelled) return
         const max = (amountsOut: (bigint | undefined)[]) => {
           return _(amountsOut)
@@ -440,7 +442,9 @@ export const foreignDataParam = derived(
       ? null
       : $assetLink.toForeign
         ? $feeDirectorStructEncoded
-        : ($router ? concatHex([$router, $feeDirectorStructEncoded]) : null)
+        : $router
+          ? concatHex([$router, $feeDirectorStructEncoded])
+          : null
   },
 )
 export const foreignCalldata = derived(

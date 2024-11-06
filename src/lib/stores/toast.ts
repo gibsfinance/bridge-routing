@@ -11,6 +11,10 @@ export type Message = {
 
 export const messages = writable<Message[]>([])
 
+export const removeMessage = (msg: Message) => {
+  messages.update((msgs) => msgs.filter((m) => m !== msg))
+}
+
 export const addMessage = (msg: Message) => {
   messages.update((msgs) => [...msgs, msg])
   setTimeout(() => {
@@ -21,8 +25,4 @@ export const addMessage = (msg: Message) => {
 export const uri = (chainId: Chains, type: 'tx' | 'address' = 'tx', suffix: string) => {
   const url = chainsMetadata[Chains.PLS].blockExplorers?.default.url
   return `${url}/${chainId === Chains.V4PLS ? '#/' : ''}${type}/${suffix}`
-}
-
-export const removeMessage = (msg: Message) => {
-  messages.update((msgs) => msgs.filter((m) => m !== msg))
 }

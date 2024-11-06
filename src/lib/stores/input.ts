@@ -338,7 +338,6 @@ export const loadFeeFor = async ($bridgeKey: BridgeKey) => {
   if (!path || (s && s.feeManager)) {
     return s
   }
-  loading.increment('fee')
   const $multicall = get(path.feeManager === 'from' ? fromChainMulticall : toChainMulticall)
 
   const [feeManagerResponse] = await $multicall.read.aggregate3([
@@ -411,12 +410,11 @@ export const loadFeeFor = async ($bridgeKey: BridgeKey) => {
     feeF2H: BigInt(feeF2H.returnData),
   } as PathwayExtendableConfig
   settings.set($bridgeKey, setting)
-  loading.decrement('fee')
   return setting
 }
 
-export const bridgeFee = asyncDerived([bridgeKey], async ([$bridgeKey]) => {
-  return loadFeeFor($bridgeKey)
+export const bridgeFee = derived([bridgeKey], ([$bridgeKey], set) => {
+  return loading.loadsAfterTick('fee', () => loadFeeFor($bridgeKey), set)
 })
 
 export const destinationSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) =>

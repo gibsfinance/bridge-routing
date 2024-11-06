@@ -2,15 +2,15 @@ import * as input from './input'
 import { multicallRead } from '$lib/utils'
 import * as abis from './abis'
 import { type PublicClient, type Block, getContract, erc20Abi, type Hex, zeroAddress } from 'viem'
-import { derived, type Readable } from 'svelte/store'
+import { derived, type Readable, type Stores } from 'svelte/store'
 import { loading } from './loading'
 import { walletAccount } from './auth/store'
 import { Chains } from './auth/types'
 import type { Token } from '$lib/types'
 import { chainsMetadata } from './auth/constants'
 import { nativeAssetOut, pathway } from './config'
-import { asyncDerived } from '@square/svelte-store'
 import _ from 'lodash'
+import { tick } from 'svelte'
 
 export const destinationPublicClient = derived(
   [input.bridgeKey, input.forcedRefresh],
@@ -275,14 +275,18 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
 
 type TokenBridgeInfo = Awaited<ReturnType<typeof tokenBridgeInfo>>
 
-export const assetLink = asyncDerived([input.bridgeKey, input.assetIn], async ([$bridgeKey, $assetIn]) => {
-  if (!$assetIn) {
-    return null
-  }
-  return loading.loads('token', () => tokenBridgeInfo([$bridgeKey, $assetIn]))
-})
+export const assetLink = derived<Stores, null | TokenBridgeInfo>(
+  [input.bridgeKey, input.assetIn],
+  ([$bridgeKey, $assetIn], set) => {
+    if (!$assetIn) {
+      set(null)
+      return _.noop
+    }
+    return loading.loadsAfterTick('token', () => tokenBridgeInfo([$bridgeKey, $assetIn]), set)
+  },
+)
 
-export const tokenOriginationChainId = asyncDerived([assetLink], async ([$assetLink]) => {
+export const tokenOriginationChainId = derived<Stores, Chains | undefined>([assetLink], ([$assetLink], set) => {
   return $assetLink?.originationChainId
 })
 
@@ -316,15 +320,19 @@ export const approval = derived(
     }
     const $bridgeAddress = pathway($bridgeKey)!.from
     let cancelled = false
-    const getApproval = () =>
-      checkApproval([$walletAccount, $bridgeAddress, $assetLink, $publicClient]).then((approval) => {
+    const cleanup = () => {
+      cancelled = true
+    }
+    tick()
+      .then(async () => {
+        if (cancelled) return
+        const approval = await checkApproval([$walletAccount, $bridgeAddress, $assetLink, $publicClient])
         if (cancelled) return
         set(approval)
       })
-    getApproval()
-    return () => {
-      cancelled = true
-    }
+      .catch(console.error)
+      .then(cleanup)
+    return cleanup
   },
   0n,
 )

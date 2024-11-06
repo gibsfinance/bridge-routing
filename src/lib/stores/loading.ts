@@ -1,3 +1,4 @@
+import { tick } from 'svelte'
 import { get, writable } from 'svelte/store'
 
 const loadingCounter = writable({
@@ -54,5 +55,27 @@ export const loading = {
       loading.decrement(key)
       throw err
     }
+  },
+  loadsAfterTick: (key: string, ...conditions: ((a: any) => any)[]) => {
+    loading.increment(key)
+    let cancelled = false
+    const cleanup = () => {
+      if (cancelled) {
+        return
+      }
+      cancelled = true
+      loading.decrement(key)
+    }
+    tick().then(async () => {
+      if (cancelled) return
+      let arg: any = null
+      for (const condition of conditions) {
+        if (cancelled) return
+        arg = await condition(arg)
+      }
+      cleanup()
+      return arg
+    })
+    return cleanup
   },
 }
