@@ -12,7 +12,6 @@ export type Message = {
 export const messages = writable<Message[]>([])
 
 export const addMessage = (msg: Message) => {
-  console.log('addMessage', msg)
   messages.update((msgs) => [...msgs, msg])
   setTimeout(() => {
     removeMessage(msg)
