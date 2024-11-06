@@ -23,6 +23,6 @@ export const addMessage = (msg: Message) => {
 }
 
 export const uri = (chainId: Chains, type: 'tx' | 'address' = 'tx', suffix: string) => {
-  const url = chainsMetadata[Chains.PLS].blockExplorers?.default.url
+  const url = chainsMetadata[chainId].blockExplorers?.default?.url
   return `${url}/${chainId === Chains.V4PLS ? '#/' : ''}${type}/${suffix}`
 }

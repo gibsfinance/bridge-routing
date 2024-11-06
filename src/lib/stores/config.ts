@@ -191,8 +191,8 @@ export const testnetPathways = {
   [Provider.PULSECHAIN]: {
     [Chains.V4PLS]: {
       [Chains.SEP]: {
-        from: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
-        to: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
+        from: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
+        to: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
         nativeRouter: '0x78c38e4536a39A78910fEa9D7c80fDd0aAF89661',
         router: '0xc00d0c5bb41977BE773c0bfdA2a2dB61309e1f79',
         usesExtraParam: false,
@@ -217,8 +217,8 @@ export const testnetPathways = {
     },
     [Chains.SEP]: {
       [Chains.V4PLS]: {
-        from: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
-        to: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
+        from: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
+        to: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
         nativeRouter: '0x4e33d534FB1699f52a6d4C0BB2CF5fDC85d90bDC',
         usesExtraParam: false,
         requiresDelivery: false,

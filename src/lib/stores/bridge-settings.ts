@@ -483,6 +483,7 @@ export const calldata = derived(
           })
     }
     if (!$foreignDataParam) return null
+    console.log($assetLink, path)
     if ($assetLink?.toForeign) {
       if (!$router) return null
       return path.usesExtraParam

@@ -162,6 +162,8 @@
     if ($assetIn.address === zeroAddress) {
       value = $amountToBridge
       toAddress = $bridgePathway.nativeRouter
+    } else if (!tokenInfo.toForeign) {
+      toAddress = $assetIn.address
     }
     return await $walletClient!.sendTransaction({
       data: $calldata,
