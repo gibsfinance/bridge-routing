@@ -22,10 +22,10 @@ export const addMessage = (msg: Message) => {
   }, msg.timeout || 20_000)
 }
 
-// const uri = (chainId: Chains, type: 'tx' | 'address' = 'tx', suffix: string) => {
-//   const url = chainsMetadata[Chains.PLS].blockExplorers?.default.url
-//   return `${url}/${chainId === Chains.V4PLS ? '#/' : ''}${type}/${suffix}`
-// }
+export const uri = (chainId: Chains, type: 'tx' | 'address' = 'tx', suffix: string) => {
+  const url = chainsMetadata[Chains.PLS].blockExplorers?.default.url
+  return `${url}/${chainId === Chains.V4PLS ? '#/' : ''}${type}/${suffix}`
+}
 
 // const loop = () => {
 //   addMessage({

@@ -16,9 +16,9 @@
   import { tokenBridgeInfo, assetLink, approval } from '$lib/stores/chain-events'
   import { loading } from '$lib/stores/loading'
   import { get } from 'svelte/store'
-  import { addMessage } from '$lib/stores/toast'
+  import { addMessage, removeMessage, uri } from '$lib/stores/toast'
 
-  const { walletClient, assetIn, clientFromChain, bridgeKey, router, bridgePathway, fromChainId, recipient } = input
+  const { walletClient, assetIn, clientFromChain, bridgeKey, bridgePathway, fromChainId } = input
 
   let disabledByClick = false
   $: tokenBalance = $fromTokenBalance || 0n
@@ -26,7 +26,6 @@
     disabledByClick || BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n || $amountToBridge > tokenBalance
 
   const { connect } = useAuth()
-  let hashes: Hex[] = []
 
   const transactionButtonPress = (fn: () => Promise<Hex | undefined>) => async () => {
     disabledByClick = true
@@ -37,14 +36,20 @@
       if (!txHash) {
         return
       }
-      // console.log('hash', txHash)
+      const msg = {
+        message: 'Submitted: ' + txHash.slice(0, 6) + '...' + txHash.slice(-4),
+        link: uri($fromChainId, 'tx', txHash),
+        label: 'submit-tx',
+      }
+      addMessage(msg)
       const receipt = await clientFromChain($fromChainId).waitForTransactionReceipt({
         hash: txHash,
       })
+      removeMessage(msg)
       addMessage({
-        message: 'Submitted: ' + txHash.slice(0, 6) + '...' + txHash.slice(-4),
-        link: chainsMetadata[$fromChainId].blockExplorers?.default.url + '/tx/' + txHash,
-        label: 'submit-tx',
+        message: 'Confirmed: ' + txHash.slice(0, 6) + '...' + txHash.slice(-4),
+        link: uri($fromChainId, 'tx', txHash),
+        label: 'confirm-tx',
       })
       if (fn === initiateBridge && amountInBefore === get(input.amountIn)) {
         input.amountIn.set('')
