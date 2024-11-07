@@ -36,10 +36,9 @@
         {#if !!asset}
           <Tooltip show={hovering}>{utils.nativeName(asset, unwrap)}</Tooltip>
         {/if}
-        {balance === null ? '' : humanReadableNumber(balance, asset?.decimals || 18)}&nbsp;{utils.nativeSymbol(
-          asset,
-          unwrap,
-        )}
+        <span class="max-w-[175px] overflow-hidden overflow-ellipsis"
+          >{balance === null ? '' : humanReadableNumber(balance, asset?.decimals || 18)}</span
+        >{utils.nativeSymbol(asset, unwrap)}
       </div>
     </Hover>
     {#if showMax}
