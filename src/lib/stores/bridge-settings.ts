@@ -61,7 +61,7 @@ export const assetOut = derived(
     }
     const client = input.clientFromChain(toChainId)
     return loading.loadsAfterTick(
-      'balance',
+      'assetout',
       async () => {
         return client.getCode({ address: foreign })
       },
