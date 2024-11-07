@@ -193,7 +193,7 @@ export const testnetPathways = {
       [Chains.SEP]: {
         from: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
         to: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
-        nativeRouter: '0x78c38e4536a39A78910fEa9D7c80fDd0aAF89661',
+        nativeRouter: '0x56Eb994d5E3ef578A8a91688829685e84F89c8dB',
         router: '0xD99F470C7A88f7379977c67b730D682B11077349',
         usesExtraParam: false,
         requiresDelivery: true,

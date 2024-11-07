@@ -470,6 +470,20 @@ export const calldata = derived(
     if (!$walletAccount || !isAddress($walletAccount)) return null
     if (!$assetIn) return null
     if ($assetIn.address === zeroAddress) {
+      if (path.feeManager === 'from') {
+        if (!$foreignDataParam) return null
+        return path.usesExtraParam
+          ? encodeFunctionData({
+              abi: abis.nativeRouterExtraInput,
+              functionName: 'wrapAndRelayTokensAndCall',
+              args: [$recipient, $foreignDataParam, $walletAccount],
+            })
+          : encodeFunctionData({
+              abi: abis.nativeRouter,
+              functionName: 'wrapAndRelayTokensAndCall',
+              args: [$recipient, $foreignDataParam],
+            })
+      }
       return path.usesExtraParam
         ? encodeFunctionData({
             abi: abis.nativeRouterExtraInput,

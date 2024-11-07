@@ -28,9 +28,13 @@ export const feeManager = parseAbi([
   'function FOREIGN_TO_HOME_FEE() public view returns(bytes32)',
   'function getFee(bytes32, address) public view returns(uint256)',
 ])
-export const nativeRouter = parseAbi(['function wrapAndRelayTokens(address receiver) external payable'])
+export const nativeRouter = parseAbi([
+  'function wrapAndRelayTokens(address receiver) external payable',
+  'function wrapAndRelayTokensAndCall(address receiver, bytes calldata data) external payable',
+])
 export const nativeRouterExtraInput = parseAbi([
   'function wrapAndRelayTokens(address receiver, address sender) external payable',
+  'function wrapAndRelayTokensAndCall(address receiver, bytes calldata data, address sender) external payable',
 ])
 export const univ2Router = parseAbi([
   'function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns(uint256[] memory)',
