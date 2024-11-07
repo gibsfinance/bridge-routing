@@ -2,7 +2,7 @@
   import SmallInput from './SmallInput.svelte'
   import { ensToAddress, walletAccount } from '$lib/stores/auth/store'
   import { isAddress, zeroAddress, getAddress } from 'viem'
-  import { unwrap, calldata } from '$lib/stores/bridge-settings'
+  import { unwrap, transactionInputs } from '$lib/stores/bridge-settings'
   import * as input from '$lib/stores/input'
   import { Chains } from '$lib/stores/auth/types'
   import Warning from './Warning.svelte'
@@ -40,7 +40,7 @@
       loading.decrement('ens')
     }
   }
-  $: nonZeroXCalldata = $calldata?.slice(2) || ''
+  $: nonZeroXCalldata = $transactionInputs?.data?.slice(2) || ''
   const lockRecipient = () => {
     const current = $recipientLockedToAccount
     recipientLockedToAccount.set(!current)

@@ -452,7 +452,7 @@ export const foreignCalldata = derived(
  * it also contains calldata that is shuttled over to the foreign network
  * to be executed there after validator signatures are provided
  */
-export const calldata = derived(
+export const transactionInputs = derived(
   [
     walletAccount,
     input.recipient,
@@ -469,10 +469,21 @@ export const calldata = derived(
     if (!$recipient || !isAddress($recipient)) return null
     if (!$walletAccount || !isAddress($walletAccount)) return null
     if (!$assetIn) return null
+    if (!$assetLink) return null
+    let value = 0n
+    // we are moving "from" this side, so we need to use the "from" address
+    let toAddress = path.from
+    if ($assetIn.address === zeroAddress) {
+      value = $amountToBridge
+      toAddress = path.nativeRouter
+    } else if (!$assetLink.toForeign) {
+      toAddress = $assetIn.address
+    }
+    let data = '0x' as Hex
     if ($assetIn.address === zeroAddress) {
       if (path.feeManager === 'from') {
         if (!$foreignDataParam) return null
-        return path.usesExtraParam
+        data = path.usesExtraParam
           ? encodeFunctionData({
               abi: abis.nativeRouterExtraInput,
               functionName: 'wrapAndRelayTokensAndCall',
@@ -483,45 +494,53 @@ export const calldata = derived(
               functionName: 'wrapAndRelayTokensAndCall',
               args: [$recipient, $foreignDataParam],
             })
+      } else {
+        data = path.usesExtraParam
+          ? encodeFunctionData({
+              abi: abis.nativeRouterExtraInput,
+              functionName: 'wrapAndRelayTokens',
+              args: [$recipient, $walletAccount],
+            })
+          : encodeFunctionData({
+              abi: abis.nativeRouter,
+              functionName: 'wrapAndRelayTokens',
+              args: [$recipient],
+            })
       }
-      return path.usesExtraParam
-        ? encodeFunctionData({
-            abi: abis.nativeRouterExtraInput,
-            functionName: 'wrapAndRelayTokens',
-            args: [$recipient, $walletAccount],
-          })
-        : encodeFunctionData({
-            abi: abis.nativeRouter,
-            functionName: 'wrapAndRelayTokens',
-            args: [$recipient],
-          })
+    } else {
+      if (!$foreignDataParam) return null
+      if ($assetLink?.toForeign) {
+        if (!$router) return null
+        data = path.usesExtraParam
+          ? encodeFunctionData({
+              abi: abis.inputBridgeExtraInput,
+              functionName: 'relayTokensAndCall',
+              args: [$assetIn.address, $router, $amountToBridge, $foreignDataParam, $walletAccount],
+            })
+          : encodeFunctionData({
+              abi: abis.inputBridge,
+              functionName: 'relayTokensAndCall',
+              args: [$assetIn.address, $router, $amountToBridge, $foreignDataParam],
+            })
+      } else {
+        data = path.usesExtraParam
+          ? encodeFunctionData({
+              abi: abis.erc677ExtraInput,
+              functionName: 'transferAndCall',
+              args: [path.from, $amountToBridge, $foreignDataParam, $walletAccount],
+            })
+          : encodeFunctionData({
+              abi: abis.erc677,
+              functionName: 'transferAndCall',
+              args: [path.from, $amountToBridge, $foreignDataParam],
+            })
+      }
     }
-    if (!$foreignDataParam) return null
-    if ($assetLink?.toForeign) {
-      if (!$router) return null
-      return path.usesExtraParam
-        ? encodeFunctionData({
-            abi: abis.inputBridgeExtraInput,
-            functionName: 'relayTokensAndCall',
-            args: [$assetIn.address, $router, $amountToBridge, $foreignDataParam, $walletAccount],
-          })
-        : encodeFunctionData({
-            abi: abis.inputBridge,
-            functionName: 'relayTokensAndCall',
-            args: [$assetIn.address, $router, $amountToBridge, $foreignDataParam],
-          })
+    return {
+      to: toAddress,
+      value,
+      data,
     }
-    return path.usesExtraParam
-      ? encodeFunctionData({
-          abi: abis.erc677ExtraInput,
-          functionName: 'transferAndCall',
-          args: [path.from, $amountToBridge, $foreignDataParam, $walletAccount],
-        })
-      : encodeFunctionData({
-          abi: abis.erc677,
-          functionName: 'transferAndCall',
-          args: [path.from, $amountToBridge, $foreignDataParam],
-        })
   },
 )
 

@@ -193,8 +193,8 @@ export const testnetPathways = {
       [Chains.SEP]: {
         from: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
         to: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
-        nativeRouter: '0x56Eb994d5E3ef578A8a91688829685e84F89c8dB',
-        router: '0xD99F470C7A88f7379977c67b730D682B11077349',
+        nativeRouter: '0x10816656cebf43943aeD362bd4ce584515EB7EA9',
+        router: '0x554FaEdf41d12FcEE68822E424412F15d3bd6D06',
         usesExtraParam: false,
         requiresDelivery: true,
         toHome: false,
@@ -219,7 +219,7 @@ export const testnetPathways = {
       [Chains.V4PLS]: {
         from: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
         to: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
-        nativeRouter: '0x4e33d534FB1699f52a6d4C0BB2CF5fDC85d90bDC',
+        nativeRouter: '0x554FaEdf41d12FcEE68822E424412F15d3bd6D06',
         usesExtraParam: false,
         requiresDelivery: false,
         toHome: true,

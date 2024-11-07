@@ -8,7 +8,7 @@
     amountToBridge,
     foreignDataParam,
     foreignCalldata,
-    calldata,
+    transactionInputs,
   } from '$lib/stores/bridge-settings'
   import { type Hex, getContract, erc20Abi, maxUint256, zeroAddress } from 'viem'
   import Loading from './Loading.svelte'
@@ -152,23 +152,12 @@
       return
     }
     const tokenInfo = await tokenBridgeInfo([$bridgeKey, $assetIn])
-    if (!tokenInfo || !$assetIn || !$calldata) {
+    if (!tokenInfo || !$assetIn || !$transactionInputs) {
       return
     }
     const options = opts()
-    let value = 0n
-    // we are moving "from" this side, so we need to use the "from" address
-    let toAddress = $bridgePathway.from
-    if ($assetIn.address === zeroAddress) {
-      value = $amountToBridge
-      toAddress = $bridgePathway.nativeRouter
-    } else if (!tokenInfo.toForeign) {
-      toAddress = $assetIn.address
-    }
     return await $walletClient!.sendTransaction({
-      data: $calldata,
-      to: toAddress,
-      value,
+      ...$transactionInputs,
       ...options,
     })
     // if ($bridgePathway?.usesExtraParam) {
