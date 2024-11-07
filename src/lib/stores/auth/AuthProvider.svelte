@@ -91,9 +91,8 @@
         // wait for visibility state change, then switch
       }
     }
-    const $walletAccount = get(walletAccount)
-    if (get(recipientLockedToAccount) && $walletAccount) {
-      recipient.set($walletAccount)
+    if (get(recipientLockedToAccount)) {
+      recipient.set(walletState[0].accounts[0].address)
     }
     $walletClient = createWalletClient({
       chain: chainsMetadata[$fromChainId],
