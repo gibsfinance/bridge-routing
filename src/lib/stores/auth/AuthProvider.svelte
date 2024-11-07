@@ -7,10 +7,9 @@
   import { onMount, setContext } from 'svelte'
   import { CONTEXT_KEY } from './methods'
   import type { ChainWithDecimalId } from '@web3-onboard/common'
-  import { createWalletClient, custom, zeroAddress } from 'viem'
+  import { createWalletClient, custom, zeroAddress, getAddress } from 'viem'
   import gibsIcon from '$lib/images/1FAF0.svg'
   import { recipient, fromChainId, walletClient, recipientLockedToAccount } from '../input'
-  import { walletAccount } from './store'
   import { get } from 'svelte/store'
   const walletConnect = walletConnectModule({
     projectId: '1f8a963aa1809cada8560d560360107d',
