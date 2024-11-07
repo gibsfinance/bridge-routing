@@ -112,6 +112,8 @@ export const recipient = {
   ...recipientStore,
 }
 
+export const recipientLockedToAccount = writable(true)
+
 export type BridgeKey = [Provider, Chains, Chains]
 
 export const defaultBridgeKey = [Provider.PULSECHAIN, Chains.PLS, Chains.ETH] as BridgeKey

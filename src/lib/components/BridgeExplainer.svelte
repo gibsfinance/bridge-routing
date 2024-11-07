@@ -13,7 +13,7 @@
 
 <BlurryImage image_url="url({futureBridge})" blur="9px" brightness="75%" min_height="auto">
   <div class="text-white">
-    <div class="container m-auto text-xl text-center drop-shadow-lg md:max-w-3xl">
+    <div class="container m-auto text-xl text-center drop-shadow-lg sm:max-w-3xl">
       <p class="text-left">
         Introducing "Token Delivery" for PulseChain to EVM Omnibridges. With a minimal implementations, and commitment
         to security, <a href="delivery" class="underline">gibs.finance/delivery</a>

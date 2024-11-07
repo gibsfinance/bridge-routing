@@ -9,14 +9,19 @@
   import { ensTld, isEns } from '$lib/stores/ens'
   import { normalize } from 'viem/ens'
   import { loading } from '$lib/stores/loading'
-  const { recipient, canChangeUnwrap, router, bridgePathway } = input
+  import LockIcon from './LockIcon.svelte'
+  const { recipient, canChangeUnwrap, router, bridgePathway, recipientLockedToAccount } = input
   const updateDestination = async (e: CustomEvent) => {
     let addr = e.detail.value
-    if (addr === 'me' && $walletAccount) {
-      recipient.set($walletAccount)
+    if (addr === 'me') {
+      if ($walletAccount) {
+        recipient.set($walletAccount)
+      }
+      return
     }
     if (isAddress(addr)) {
       recipient.set(getAddress(addr))
+      recipientLockedToAccount.set(false)
       return
     }
     if (isEns(addr)) {
@@ -30,29 +35,37 @@
       })
       if (resolved) {
         recipient.set(resolved)
+        recipientLockedToAccount.set(false)
       }
       loading.decrement('ens')
     }
   }
   $: nonZeroXCalldata = $calldata?.slice(2) || ''
+  const lockRecipient = () => {
+    const current = $recipientLockedToAccount
+    recipientLockedToAccount.set(!current)
+    if (!current && $walletAccount) {
+      recipient.set($walletAccount)
+    }
+  }
 </script>
 
 <div class="my-2 text-sm shadow-sm rounded-lg">
-  <div class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-col md:flex-row relative">
-    <span>Recipient</span>
+  <div class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-col sm:flex-row relative">
+    <button type="button" on:click={lockRecipient}>Recipient <LockIcon locked={$recipientLockedToAccount} /></button>
     <SmallInput
       editOnLeft
       value={recipient}
       on:input={updateDestination}
-      class="font-mono text-xs md:text-sm mr-auto md:mr-0" />
+      class="font-mono text-xs sm:text-sm mr-auto sm:mr-0" />
     <Warning
       show={!(isAddress($recipient || '') && $recipient?.length === 42 && $recipient !== zeroAddress)}
       tooltip="Address is not valid. Casing influences the checksum of the address." />
   </div>
   {#if $router}
-    <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed">
+    <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row disabled cursor-not-allowed">
       <span>Router</span>
-      <span class="font-mono text-xs md:text-sm">{$router}</span>
+      <span class="font-mono text-xs sm:text-sm">{$router}</span>
     </div>
   {/if}
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row">
@@ -68,19 +81,19 @@
       }} />
   </div>
   <div
-    class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed"
+    class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row disabled cursor-not-allowed"
     class:rounded-b-lg={!nonZeroXCalldata}>
     <span>To (Bridge)</span>
-    <span class="font-mono text-xs md:text-sm">{$bridgePathway?.to || zeroAddress}</span>
+    <span class="font-mono text-xs sm:text-sm">{$bridgePathway?.to || zeroAddress}</span>
   </div>
   {#if nonZeroXCalldata}
-    <div class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row">
+    <div class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row">
       <span class="whitespace-pre">Data&nbsp;&nbsp;<span class="font-mono">0x</span></span>
       <textarea
         name="calldata"
         id="calldata"
         disabled
-        class="bg-transparent outline-none resize-none flex flex-grow cursor-not-allowed font-mono text-xs md:text-sm -mr-3 pr-3 max-h-24"
+        class="bg-transparent outline-none resize-none flex flex-grow cursor-not-allowed font-mono text-xs sm:text-sm -mr-3 pr-3 max-h-24"
         rows={4}>{nonZeroXCalldata}</textarea>
     </div>
   {/if}

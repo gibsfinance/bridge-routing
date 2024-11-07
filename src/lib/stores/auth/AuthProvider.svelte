@@ -9,7 +9,9 @@
   import type { ChainWithDecimalId } from '@web3-onboard/common'
   import { createWalletClient, custom, zeroAddress } from 'viem'
   import gibsIcon from '$lib/images/1FAF0.svg'
-  import { recipient, fromChainId, walletClient } from '../input'
+  import { recipient, fromChainId, walletClient, recipientLockedToAccount } from '../input'
+  import { walletAccount } from './store'
+  import { get } from 'svelte/store'
   const walletConnect = walletConnectModule({
     projectId: '1f8a963aa1809cada8560d560360107d',
     requiredChains: Object.values(Chains).map((cId) => Number(cId)),
@@ -88,6 +90,10 @@
       } else {
         // wait for visibility state change, then switch
       }
+    }
+    const $walletAccount = get(walletAccount)
+    if (get(recipientLockedToAccount) && $walletAccount) {
+      recipient.set($walletAccount)
     }
     $walletClient = createWalletClient({
       chain: chainsMetadata[$fromChainId],
