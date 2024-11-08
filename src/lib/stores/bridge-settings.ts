@@ -746,15 +746,13 @@ export const assetSources = (asset: Token | null) => {
           address: info.tokenAddress,
         },
       ]
-      const inChain = `0x${Number(asset.chainId).toString(16)}` as Chains
-      if (address === nativeAssetOut[inChain]) {
+      if (address === nativeAssetOut[toChain(asset.chainId)]) {
         otherSide.push({
           chainId: asset.chainId,
           address: zeroAddress,
         })
       }
-      const chain = `0x${Number(chainId).toString(16)}` as Chains
-      if (info.tokenAddress === nativeAssetOut[chain]) {
+      if (info.tokenAddress === nativeAssetOut[toChain(+chainId)]) {
         otherSide.push({
           chainId: Number(chainId),
           address: zeroAddress,
@@ -771,3 +769,5 @@ export const assetSources = (asset: Token | null) => {
     .value() as unknown as string[]
   return imageLinks.images(sources)
 }
+
+const toChain = (chainId: number) => `0x${Number(chainId).toString(16)}` as Chains
