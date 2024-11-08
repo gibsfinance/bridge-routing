@@ -105,7 +105,12 @@
 <label
   class="border flex flex-row items-center m-6 px-2 h-fit rounded-lg border-slate-400 focus:ring-1 focus:ring-slate-200"
   for={searchInputId}>
-  <Input autoFocus id={searchInputId} size="md" placeholder="0x... or name/symbol" bind:value={searchValue} />
+  <Input
+    autoFocus
+    id={searchInputId}
+    size="md"
+    placeholder="0x... or name/symbol"
+    bind:value={searchValue} />
   <Icon icon="ic:baseline-search" height="1.5em" width="1.5em" class="cursor-text" />
 </label>
 <div class="max-h-72 overflow-y-scroll">
@@ -123,7 +128,8 @@
                 <TokenIcon visible={everLoaded} src={assetSources(token)} />
               </Lazy>
             </span>
-            <span class="pl-2 leading-8 whitespace-pre overflow-ellipsis w-full text-left">{token.name}</span>
+            <span class="pl-2 leading-8 whitespace-pre overflow-ellipsis w-full text-left"
+              >{token.name}</span>
             <Tooltip positionFlow="below" position="right" show={hovering}>{token.address}</Tooltip>
           </button>
         </Hover>

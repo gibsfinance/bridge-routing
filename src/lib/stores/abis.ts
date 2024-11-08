@@ -15,7 +15,9 @@ export const inputBridgeExtraInput = parseAbi([
   'function relayTokensAndCall(address token, address _receiver, uint256 _value, bytes memory _data, address _senderOrigin) external',
   'function relayTokens(address token, address _receiver, uint256 _value, address _senderOrigin) external',
 ])
-export const erc677 = parseAbi(['function transferAndCall(address, uint256, bytes calldata) external'])
+export const erc677 = parseAbi([
+  'function transferAndCall(address, uint256, bytes calldata) external',
+])
 export const erc677ExtraInput = parseAbi([
   'function transferAndCall(address, uint256, bytes calldata, address sender) external',
 ])

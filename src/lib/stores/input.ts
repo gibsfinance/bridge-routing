@@ -22,12 +22,17 @@ import {
 import { countDecimals, humanReadableNumber, isZero, stripNonNumber } from '$lib/stores/utils'
 import { ChainIdToKey, Chains, Provider } from './auth/types'
 import { settings, type PathwayExtendableConfig } from './fee-manager'
-import { defaultAssetIn, nativeAssetOut, nativeTokenName, nativeTokenSymbol, pathway } from './config'
+import {
+  defaultAssetIn,
+  nativeAssetOut,
+  nativeTokenName,
+  nativeTokenSymbol,
+  pathway,
+} from './config'
 import type { Token, TokenList, TokenOut } from '$lib/types'
 import _ from 'lodash'
 import { chainsMetadata } from './auth/constants'
 import { windowLoaded } from './window'
-import { asyncDerived } from '@square/svelte-store'
 import { multicallErc20 } from '$lib/utils'
 
 export const forcedRefresh = writable(0n)
@@ -176,66 +181,142 @@ export const bridgableTokensResponses = derived(
 
 const blacklist = new Set<Hex>(['0xA882606494D86804B5514E07e6Bd2D6a6eE6d68A'])
 
-export const bridgableTokens = derived([bridgeKey, bridgableTokensResponses], ([$bridgeKey, $responses]) => {
-  if (!$bridgeKey) return []
-  const conf = pathway($bridgeKey)
-  const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token
-  const sortedList = _($responses)
-    .sortBy(['name', 'chainId'])
-    .uniqBy(({ chainId, address }) => `${chainId}-${getAddress(address)}`)
-    .map((item) => {
-      if (defaultAssetIn && defaultAssetIn.address === item.address) {
-        return defaultAssetIn
-      }
-      return item
-    })
-    .filter((tkn) => tkn.chainId === Number($bridgeKey[1]))
-    .value()
-  let list: Token[] = []
-  if (sortedList.length) {
-    const bridgedWrappedAssetOut = sortedList.find((tkn) => tkn.address === nativeAssetOut[$bridgeKey[1]])
-    list = _([
-      {
-        chainId: Number($bridgeKey[1]),
-        address: zeroAddress as Hex,
-        name: nativeTokenName[$bridgeKey[1]],
-        decimals: 18,
-        symbol: nativeTokenSymbol[$bridgeKey[1]],
-        logoURI: '',
-        extensions: bridgedWrappedAssetOut
-          ? {
-              wrapped: {
-                address: bridgedWrappedAssetOut.address,
-              },
-              bridgeInfo: {
-                [Number($bridgeKey[2])]: {
-                  tokenAddress: bridgedWrappedAssetOut.extensions?.bridgeInfo?.[Number($bridgeKey[2])]?.tokenAddress,
-                },
-              },
-            }
-          : null,
-      } as Token,
-    ])
-      .concat(sortedList)
-      .uniqBy(({ chainId, address }) => getAddress(address, chainId))
-      .filter((tkn) => !blacklist.has(tkn.address))
+export const bridgableTokens = derived(
+  [bridgeKey, bridgableTokensResponses],
+  ([$bridgeKey, $responses]) => {
+    if (!$bridgeKey) return []
+    const conf = pathway($bridgeKey)
+    const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token
+    const sortedList = _($responses)
+      .sortBy(['name', 'chainId'])
+      .uniqBy(({ chainId, address }) => `${chainId}-${getAddress(address)}`)
+      .map((item) => {
+        if (defaultAssetIn && defaultAssetIn.address === item.address) {
+          return defaultAssetIn
+        }
+        return item
+      })
+      .filter((tkn) => tkn.chainId === Number($bridgeKey[1]))
       .value()
-  }
-  // console.log(list.slice(0, 2))
-  list.forEach((token) => {
-    // register on a central cache so that tokens that are gotten from onchain
-    // still have all extensions
-    // registerExtensions(token, token.extensions)
-    if (!token.logoURI) {
-      token.logoURI = imageLinks.image(token)
+    let list: Token[] = []
+    if (sortedList.length) {
+      const bridgedWrappedAssetOut = sortedList.find(
+        (tkn) => tkn.address === nativeAssetOut[$bridgeKey[1]],
+      )
+      list = _([
+        {
+          chainId: Number($bridgeKey[1]),
+          address: zeroAddress as Hex,
+          name: nativeTokenName[$bridgeKey[1]],
+          decimals: 18,
+          symbol: nativeTokenSymbol[$bridgeKey[1]],
+          logoURI: '',
+          extensions: bridgedWrappedAssetOut
+            ? {
+                wrapped: {
+                  address: bridgedWrappedAssetOut.address,
+                },
+                bridgeInfo: {
+                  [Number($bridgeKey[2])]: {
+                    tokenAddress:
+                      bridgedWrappedAssetOut.extensions?.bridgeInfo?.[Number($bridgeKey[2])]
+                        ?.tokenAddress,
+                  },
+                },
+              }
+            : null,
+        } as Token,
+      ])
+        .concat(sortedList)
+        .uniqBy(({ chainId, address }) => getAddress(address, chainId))
+        .filter((tkn) => !blacklist.has(tkn.address))
+        .value()
     }
-  })
-  return list
-})
+    // console.log(list.slice(0, 2))
+    list.forEach((token) => {
+      // register on a central cache so that tokens that are gotten from onchain
+      // still have all extensions
+      // registerExtensions(token, token.extensions)
+      if (!token.logoURI) {
+        token.logoURI = imageLinks.image(token)
+      }
+    })
+    return list
+  },
+)
 
 export const assetInAddress = derived([bridgeKey, page], ([$bridgeKey, $page]) => {
-  return $bridgeKey && getAddress($page.params.assetInAddress || defaultAssetIn($bridgeKey)!.address)
+  return (
+    $bridgeKey && getAddress($page.params.assetInAddress || defaultAssetIn($bridgeKey)!.address)
+  )
 })
+
+const unwrapStore = writable(true)
+
+export const unwrap = {
+  ...unwrapStore,
+}
+
+export const isNative = ($asset: Token | TokenOut | null, $bridgeKey: BridgeKey | null) => {
+  if (!$bridgeKey || !$asset) {
+    return false
+  }
+  return (
+    ($asset.address === zeroAddress || !!nativeAssetOut[$asset.chainId as unknown as Chains]) &&
+    !$asset.name.includes(' from Pulsechain')
+  )
+}
+const isUnwrappable = ($asset: Token | null, $bridgeKey: BridgeKey | null) => {
+  if (!$bridgeKey || !$asset) {
+    return false
+  }
+  const [, , toChain] = $bridgeKey
+  return nativeAssetOut[toChain] === $asset.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
+}
+export const walletClient = writable<WalletClient | undefined>()
+
+const clientCache = new Map<Chains, { key: string; client: PublicClient }>([])
+
+export const config = {
+  batch: {
+    wait: 10,
+    batchSize: 10,
+  },
+}
+
+export const clientFromChain = ($chainId: Chains) => {
+  const urls = _.compact(get(rpcs.store).get($chainId) || [])
+  const key = rpcs.key($chainId, urls)
+  const existing = clientCache.get($chainId)
+  if (existing && existing.key === key) {
+    return existing.client
+  }
+  const client = createPublicClient({
+    chain: chainsMetadata[$chainId],
+    transport: fallback(
+      urls.map((rpc) =>
+        http(rpc, {
+          batch: {
+            wait: 10,
+          },
+        }),
+      ),
+      { rank: true },
+    ),
+  })
+  clientCache.set($chainId, {
+    key,
+    client,
+  })
+  return client
+}
+
+export const fromPublicClient = derived([fromChainId, forcedRefresh], ([$fromChainId]) =>
+  clientFromChain($fromChainId),
+)
+export const toPublicClient = derived([toChainId, forcedRefresh], ([$toChainId]) =>
+  clientFromChain($toChainId),
+)
 
 const getAsset = async ($bridgeKey: BridgeKey, $assetInAddress: Hex) => {
   const asset = await multicallErc20({
@@ -288,104 +369,34 @@ export const assetIn = derived(
   null as Token | null,
 )
 
-// export const assetIn = derived(
-//   [assetInAddress, bridgeKey, bridgableTokens, customTokens.tokens],
-//   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens]) => {
-//     const $assetIn = $bridgableTokens.length
-//       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
-//         _.find($customTokens || [], { address: $assetInAddress }) ||
-//         defaultAssetIn($bridgeKey)
-//       : null
-//     console.log($assetIn)
-//     return $assetIn as Token | null
-//   },
-// )
-
-const unwrapStore = writable(true)
-
-export const unwrap = {
-  ...unwrapStore,
-}
-
-export const isNative = ($asset: Token | TokenOut | null, $bridgeKey: BridgeKey | null) => {
-  if (!$bridgeKey || !$asset) {
-    return false
-  }
-  return (
-    ($asset.address === zeroAddress || !!nativeAssetOut[$asset.chainId as unknown as Chains]) &&
-    !$asset.name.includes(' from Pulsechain')
-  )
-}
-const isUnwrappable = ($asset: Token | null, $bridgeKey: BridgeKey | null) => {
-  if (!$bridgeKey || !$asset) {
-    return false
-  }
-  const [, , toChain] = $bridgeKey
-  return nativeAssetOut[toChain] === $asset.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
-}
 export const canChangeUnwrap = derived(
   [assetIn, bridgeKey],
   ([$assetIn, $bridgeKey]) => !!$assetIn && isUnwrappable($assetIn, $bridgeKey),
 )
 
-export const walletClient = writable<WalletClient | undefined>()
-
-const clientCache = new Map<Chains, { key: string; client: PublicClient }>([])
-
-export const config = {
-  batch: {
-    wait: 10,
-    batchSize: 10,
+export const fromChainMulticall = derived(
+  [fromChainId, fromPublicClient],
+  ([$fromChainId, $publicClient]) => {
+    const metadata = chainsMetadata[$fromChainId]
+    return getContract({
+      abi: multicall3Abi,
+      client: $publicClient,
+      address: metadata.contracts!.multicall3!.address,
+    })
   },
-}
+)
 
-export const clientFromChain = ($chainId: Chains) => {
-  const urls = _.compact(get(rpcs.store).get($chainId) || [])
-  const key = rpcs.key($chainId, urls)
-  const existing = clientCache.get($chainId)
-  if (existing && existing.key === key) {
-    return existing.client
-  }
-  const client = createPublicClient({
-    chain: chainsMetadata[$chainId],
-    transport: fallback(
-      urls.map((rpc) =>
-        http(rpc, {
-          batch: {
-            wait: 10,
-          },
-        }),
-      ),
-      { rank: true },
-    ),
-  })
-  clientCache.set($chainId, {
-    key,
-    client,
-  })
-  return client
-}
-
-export const fromPublicClient = derived([fromChainId, forcedRefresh], ([$fromChainId]) => clientFromChain($fromChainId))
-export const toPublicClient = derived([toChainId, forcedRefresh], ([$toChainId]) => clientFromChain($toChainId))
-
-export const fromChainMulticall = derived([fromChainId, fromPublicClient], ([$fromChainId, $publicClient]) => {
-  const metadata = chainsMetadata[$fromChainId]
-  return getContract({
-    abi: multicall3Abi,
-    client: $publicClient,
-    address: metadata.contracts!.multicall3!.address,
-  })
-})
-
-export const toChainMulticall = derived([toChainId, toPublicClient], ([$toChainId, $publicClient]) => {
-  const metadata = chainsMetadata[$toChainId]
-  return getContract({
-    abi: multicall3Abi,
-    client: $publicClient,
-    address: metadata.contracts!.multicall3!.address,
-  })
-})
+export const toChainMulticall = derived(
+  [toChainId, toPublicClient],
+  ([$toChainId, $publicClient]) => {
+    const metadata = chainsMetadata[$toChainId]
+    return getContract({
+      abi: multicall3Abi,
+      client: $publicClient,
+      address: metadata.contracts!.multicall3!.address,
+    })
+  },
+)
 
 export const loadFeeFor = async ($bridgeKey: BridgeKey) => {
   if (!$bridgeKey) {
@@ -418,7 +429,9 @@ export const loadFeeFor = async ($bridgeKey: BridgeKey) => {
     throw new Error('unable to read feeManager')
   }
   const feeManager = (
-    returnData.startsWith('0x000000000000000000000000') ? `0x${returnData.slice(26)}` : `0x${returnData.slice(-40)}`
+    returnData.startsWith('0x000000000000000000000000')
+      ? `0x${returnData.slice(26)}`
+      : `0x${returnData.slice(-40)}`
   ) as Hex
   const [keyH2F, keyF2H] = await $multicall.read.aggregate3([
     [
@@ -485,7 +498,10 @@ export const destinationSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) =>
 /** the estimated gas that will be consumed by running the foreign transaction */
 export const estimatedGas = writable(400_000n)
 /** the first recipient of the tokens (router) */
-export const destinationRouter = derived([bridgeKey], ([$bridgeKey]) => pathway($bridgeKey)?.destinationRouter || null)
+export const destinationRouter = derived(
+  [bridgeKey],
+  ([$bridgeKey]) => pathway($bridgeKey)?.destinationRouter || null,
+)
 /** the address of the bridge proxy contract on home */
 // export const bridgeAddress = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].homeBridge as Hex)
 // export const foreignBridgeAddress = derived(

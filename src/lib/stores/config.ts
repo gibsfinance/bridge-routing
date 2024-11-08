@@ -18,11 +18,17 @@ export const nativeAssetOut = {
 } as Record<Chains, Hex>
 
 export const uniV2Routers = {
-  [Chains.PLS]: ['0x98bf93ebf5c380C0e6Ae8e192A7e2AE08edAcc02', '0x165C3410fC91EF562C50559f7d2289fEbed552d9'],
+  [Chains.PLS]: [
+    '0x98bf93ebf5c380C0e6Ae8e192A7e2AE08edAcc02',
+    '0x165C3410fC91EF562C50559f7d2289fEbed552d9',
+  ],
   [Chains.ETH]: ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d'],
   [Chains.BNB]: ['0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F'],
   [Chains.SEP]: ['0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3'],
-  [Chains.V4PLS]: ['0xDaE9dd3d1A52CfCe9d5F2fAC7fDe164D500E50f7', '0x636f6407B90661b73b1C0F7e24F4C79f624d0738'],
+  [Chains.V4PLS]: [
+    '0xDaE9dd3d1A52CfCe9d5F2fAC7fDe164D500E50f7',
+    '0x636f6407B90661b73b1C0F7e24F4C79f624d0738',
+  ],
 } as Record<Chains, Hex[]>
 
 export const nativeTokenSymbol = {
@@ -54,7 +60,10 @@ export type Pathway = {
   requiresDelivery: boolean
 }
 
-export type DeepPathwayConfig = Record<Provider, Partial<Record<Chains, Partial<Record<Chains, Pathway>>>>>
+export type DeepPathwayConfig = Record<
+  Provider,
+  Partial<Record<Chains, Partial<Record<Chains, Pathway>>>>
+>
 
 export const pathways = {
   [Provider.PULSECHAIN]: {
@@ -271,7 +280,9 @@ export const validBridgeKeys = derived([isProd], ([$isProd]) => {
 
 export const pathway = (bridgeKey: BridgeKey | null) => {
   if (!bridgeKey) return
-  return _.get(pathways, bridgeKey) || (!get(isProd) ? _.get(testnetPathways, bridgeKey) : undefined)
+  return (
+    _.get(pathways, bridgeKey) || (!get(isProd) ? _.get(testnetPathways, bridgeKey) : undefined)
+  )
 }
 
 export const defaultAssetIn = ($bridgeKey: BridgeKey | null) => {

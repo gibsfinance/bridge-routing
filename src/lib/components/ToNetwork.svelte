@@ -36,7 +36,8 @@
   export let destinationNetwork!: VisualChain
   export let asset: TokenOut | null = null
 
-  const { feeType, assetInAddress, destinationSupportsEIP1559, bridgePathway, shouldDeliver } = input
+  const { feeType, assetInAddress, destinationSupportsEIP1559, bridgePathway, shouldDeliver } =
+    input
 
   const handleDeliveryToggle = (e: CustomEvent<boolean>) => {
     shouldDeliver.set(e.detail)
@@ -71,7 +72,8 @@
       return
     }
     const numDecimals = 6n
-    const lowResLimit = ($latestBaseFeePerGas * ($fee + oneEther)) / (10n ** (11n - numDecimals) * 10n * oneEther)
+    const lowResLimit =
+      ($latestBaseFeePerGas * ($fee + oneEther)) / (10n ** (11n - numDecimals) * 10n * oneEther)
     let lim = lowResLimit * 10n ** (18n - numDecimals)
     lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset!.decimals))
     if (lim > $amountAfterBridgeFee) {
@@ -139,7 +141,12 @@
 
 <div class="shadow-md rounded-lg">
   <div class="bg-slate-100 py-2 px-3 rounded-t-lg hover:z-10">
-    <NetworkSummary network={destinationNetwork} inChain={false} asset={out} balance={$toTokenBalance} unwrap={$unwrap} />
+    <NetworkSummary
+      network={destinationNetwork}
+      inChain={false}
+      asset={out}
+      balance={$toTokenBalance}
+      unwrap={$unwrap} />
   </div>
   <div class="bg-slate-100 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
@@ -221,8 +228,9 @@
             Cost&nbsp;{#if $feeType === input.FeeType.GAS_TIP || $feeType === input.FeeType.FIXED}Limit&nbsp;<LockIcon
                 locked={costLimitLocked} />{/if}
             <Tooltip position="right" positionFlow="above" show={hovering}
-              >Allows cost limit to float with the destination chain's base fee. While unlocked the number in the ui may
-              change. Once a transaction is sent, the number in that transaction's calldata is fixed</Tooltip>
+              >Allows cost limit to float with the destination chain's base fee. While unlocked the
+              number in the ui may change. Once a transaction is sent, the number in that
+              transaction's calldata is fixed</Tooltip>
           </button>
         </Hover>
         <Hover let:hovering let:handlers>
@@ -258,10 +266,16 @@
   <div class="rounded-b-lg bg-slate-100 mt-[1px] py-1 hover:z-10">
     <div class="flex flex-row px-3 leading-10 justify-between">
       <div class="flex flex-row">
-        <button type="button" name="transaction-settings" class="flex mr-2" on:click={() => showToolbox('settings')}
-          >⚙️</button>
-        <button type="button" name="transaction-details" class="flex" on:click={() => showToolbox('details')}
-          >📐</button>
+        <button
+          type="button"
+          name="transaction-settings"
+          class="flex mr-2"
+          on:click={() => showToolbox('settings')}>⚙️</button>
+        <button
+          type="button"
+          name="transaction-details"
+          class="flex"
+          on:click={() => showToolbox('details')}>📐</button>
       </div>
       <span class="text-xl sm:text-2xl leading-10 flex items-center self-center">
         {#if $feeType === input.FeeType.GAS_TIP}~&nbsp;{/if}
@@ -269,8 +283,8 @@
           {expectedAmountOut}
         </span>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
         <Tooltip
-          >Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee
-          fluctuates on ethereum</Tooltip>
+          >Estimated tokens to be delivered. If the base fee is used, then this value will change as
+          the base fee fluctuates on ethereum</Tooltip>
       </span>
     </div>
   </div>

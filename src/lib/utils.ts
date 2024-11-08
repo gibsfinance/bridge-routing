@@ -16,7 +16,11 @@ import _ from 'lodash'
 
 export type Erc20Metadata = [string, string, number]
 
-export const erc20MetadataCalls = [{ functionName: 'name' }, { functionName: 'symbol' }, { functionName: 'decimals' }]
+export const erc20MetadataCalls = [
+  { functionName: 'name' },
+  { functionName: 'symbol' },
+  { functionName: 'decimals' },
+]
 
 export const multicallRead = async <T>({
   chain,

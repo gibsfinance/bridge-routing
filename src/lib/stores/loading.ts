@@ -9,7 +9,8 @@ const loadingCounter = writable({
   },
   isResolved(key?: string | string[]) {
     if (!key) return this.resolved
-    if (Array.isArray(key)) return key.reduce((total, k) => total + (this.categories[k] || 0), 0) === 0
+    if (Array.isArray(key))
+      return key.reduce((total, k) => total + (this.categories[k] || 0), 0) === 0
     return !this.categories[key as string]
   },
 })
@@ -23,7 +24,9 @@ setInterval(() => {
 
 export type Cleanup = () => void
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Condition<T = any, R = any> = ((a: T) => void) | ((a: T, cleanup: Cleanup) => R | Promise<R>)
+export type Condition<T = any, R = any> =
+  | ((a: T) => void)
+  | ((a: T, cleanup: Cleanup) => R | Promise<R>)
 
 export const loading = {
   ...loadingCounter,

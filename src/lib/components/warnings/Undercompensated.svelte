@@ -12,7 +12,9 @@
 
 {#if $amountAfterBridgeFee}
   {#if !$estimatedNetworkCost && $bridgePathway?.requiresDelivery}
-    <Warning show tooltip="Unable to compute network cost. Executor will probably not deliver these tokens." />
+    <Warning
+      show
+      tooltip="Unable to compute network cost. Executor will probably not deliver these tokens." />
   {:else}
     <Warning
       show={$amountAfterBridgeFee > 0n &&

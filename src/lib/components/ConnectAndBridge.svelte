@@ -23,7 +23,10 @@
   let disabledByClick = false
   $: tokenBalance = $fromTokenBalance || 0n
   $: disabled =
-    disabledByClick || BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n || $amountToBridge > tokenBalance
+    disabledByClick ||
+    BigInt($walletAccount || 0n) === 0n ||
+    $amountToBridge === 0n ||
+    $amountToBridge > tokenBalance
 
   const { connect } = useAuth()
 

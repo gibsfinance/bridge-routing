@@ -15,7 +15,9 @@
   <div
     class="img w-full {bg_color}"
     style="--blur: {blur}; --size: {size}; --brightness: {brightness}; --rect: {rect}; --opacity: {opacity}; min-height: {min_height}; height: {height}; background-image: {image_url}">
-    <div class="relative flex justify-center w-full {containerClassName}" style="min-height: {min_height};">
+    <div
+      class="relative flex justify-center w-full {containerClassName}"
+      style="min-height: {min_height};">
       <slot />
     </div>
   </div>

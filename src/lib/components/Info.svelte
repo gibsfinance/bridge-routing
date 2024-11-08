@@ -32,7 +32,8 @@
     href="https://github.com/orgs/gibsfinance/repositories"
     target="_blank"
     class="mr-2">
-    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
+    <button
+      class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="fe:github-alt" height="1.5em" width="1.5em" />
     </button>
   </a>
@@ -41,17 +42,24 @@
     href={`https://${domain}/address/${$destinationRouter}#code`}
     target="_blank"
     class="mr-2">
-    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
+    <button
+      class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon {icon} height="1.5em" width="1.5em" />
     </button>
   </a>
   <a aria-label="x.com profile" href="https://x.com/gibsfinance" target="_blank" class="mr-2">
-    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
+    <button
+      class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="ri:twitter-fill" height="1.25em" width="1.25em" />
     </button>
   </a>
-  <a href="https://t.me/+6ejcIlIAbL5lYzFh" target="_blank" class="mr-2" aria-label="a link to the telegram channel">
-    <button class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500">
+  <a
+    href="https://t.me/+6ejcIlIAbL5lYzFh"
+    target="_blank"
+    class="mr-2"
+    aria-label="a link to the telegram channel">
+    <button
+      class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="line-md:telegram" height="1.25em" width="1.25em" />
     </button>
   </a>

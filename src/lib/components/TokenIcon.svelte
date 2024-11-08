@@ -28,5 +28,9 @@
       class:invisible={!loaded}
       class:absolute={true} />
   {/if}
-  <Icon icon="ph:question" height={size} width={size} class={`${className} ${!loaded ? '' : 'invisible'}`} />
+  <Icon
+    icon="ph:question"
+    height={size}
+    width={size}
+    class={`${className} ${!loaded ? '' : 'invisible'}`} />
 </div>

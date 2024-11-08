@@ -23,7 +23,6 @@ import { uniV2Routers, nativeAssetOut, whitelisted, pathway } from './config'
 import * as abis from './abis'
 import * as imageLinks from './image-links'
 import { isZero, stripNonNumber } from './utils'
-import { latestBaseFeePerGas, type TokenBridgeInfo } from './chain-events'
 import { settings } from './fee-manager'
 
 const backupAssetIn = {
@@ -46,7 +45,10 @@ export const assetOut = derived(
     const toChainId = $bridgeKey[2]
     const assetIn = {
       ...$assetIn,
-      address: $assetIn.address === zeroAddress ? nativeAssetOut[$bridgeKey[1]] : getAddress($assetIn.address),
+      address:
+        $assetIn.address === zeroAddress
+          ? nativeAssetOut[$bridgeKey[1]]
+          : getAddress($assetIn.address),
     }
     // if there is no asset link, then the token is native and has not yet been bridged
     if (!assetLink) {
@@ -121,13 +123,24 @@ export const assetOut = derived(
 )
 
 /** this value represents the balance on of the asset going into the bridge */
-export const fromTokenBalance = chainEvents.watchTokenBalance(input.fromChainId, input.assetIn)
+export const fromTokenBalance = chainEvents.watchTokenBalance(
+  input.fromChainId,
+  input.assetIn,
+  chainEvents.origination.block,
+)
 /** this value represents the balance of the asset coming out on the other side of the bridge */
-export const toTokenBalance = chainEvents.watchTokenBalance(input.toChainId, assetOut)
+export const toTokenBalance = chainEvents.watchTokenBalance(
+  input.toChainId,
+  assetOut,
+  chainEvents.destination.block,
+)
 
-export const unwrap = derived([input.unwrap, input.canChangeUnwrap], ([$unwrapSetting, $canChangeUnwrap]) => {
-  return $canChangeUnwrap && $unwrapSetting
-})
+export const unwrap = derived(
+  [input.unwrap, input.canChangeUnwrap],
+  ([$unwrapSetting, $canChangeUnwrap]) => {
+    return $canChangeUnwrap && $unwrapSetting
+  },
+)
 
 export const oneEther = 10n ** 18n
 
@@ -159,10 +172,13 @@ export const desiredCompensationRatio = derived(
 
 export const desiredExcessCompensationPercentage = derived(
   [desiredExcessCompensationBasisPoints],
-  ([$desiredExcessCompensationBasisPoints]) => formatUnits($desiredExcessCompensationBasisPoints, 2),
+  ([$desiredExcessCompensationBasisPoints]) =>
+    formatUnits($desiredExcessCompensationBasisPoints, 2),
 )
 
-const oneTokenInt = derived([input.assetIn], ([$assetIn]) => ($assetIn ? 10n ** BigInt($assetIn.decimals) : 1n))
+const oneTokenInt = derived([input.assetIn], ([$assetIn]) =>
+  $assetIn ? 10n ** BigInt($assetIn.decimals) : 1n,
+)
 
 type FetchResult = bigint[] | Hex
 const fetchCache = new Map<
@@ -229,8 +245,27 @@ export const amountToBridge = derived(
   },
 )
 export const priceCorrective = derived(
-  [input.assetIn, input.bridgeKey, oneTokenInt, assetOut, amountToBridge, latestBaseFeePerGas, input.flippedBridgeKey],
-  ([$assetIn, $bridgeKey, $oneTokenInt, $assetOut, $amountToBridge, $latestBaseFeePerGas, $flippedBridgeKey], set) => {
+  [
+    input.assetIn,
+    input.bridgeKey,
+    oneTokenInt,
+    assetOut,
+    amountToBridge,
+    chainEvents.destination.latestBaseFeePerGas,
+    input.flippedBridgeKey,
+  ],
+  (
+    [
+      $assetIn,
+      $bridgeKey,
+      $oneTokenInt,
+      $assetOut,
+      $amountToBridge,
+      $latestBaseFeePerGas,
+      $flippedBridgeKey,
+    ],
+    set,
+  ) => {
     if (!$assetIn) {
       set(0n)
       return
@@ -256,7 +291,8 @@ export const priceCorrective = derived(
     }
     const [, fromChain, toChain] = $bridgeKey
     const paymentToken = nativeAssetOut[toChain]
-    const assetInAddress = $assetIn.address === zeroAddress ? nativeAssetOut[fromChain] : $assetIn.address
+    const assetInAddress =
+      $assetIn.address === zeroAddress ? nativeAssetOut[fromChain] : $assetIn.address
     return loading.loadsAfterTick(
       'gas',
       async () =>
@@ -267,7 +303,7 @@ export const priceCorrective = derived(
             address: paymentToken,
           },
         ]),
-      async (result: TokenBridgeInfo) => {
+      async (result: chainEvents.TokenBridgeInfo) => {
         const reversePairing = result?.toHome || result?.toForeign
         const paymentTokenFromBridgeStart =
           reversePairing?.foreign === zeroAddress ? reversePairing?.home : reversePairing?.foreign
@@ -332,7 +368,13 @@ export const priceCorrective = derived(
  * on the foreign network, given current gas conditions
  */
 export const estimatedNetworkCost = derived(
-  [input.bridgePathway, input.estimatedGas, latestBaseFeePerGas, priceCorrective, oneTokenInt],
+  [
+    input.bridgePathway,
+    input.estimatedGas,
+    chainEvents.destination.latestBaseFeePerGas,
+    priceCorrective,
+    oneTokenInt,
+  ],
   ([$bridgePathway, $estimatedGas, $latestBaseFeePerGas, $priceCorrective, $oneTokenInt]) => {
     if (!$priceCorrective || !$bridgePathway?.requiresDelivery) {
       return 0n
@@ -362,15 +404,21 @@ export const bridgeCost = derived(
   ([$amountToBridge, $bridgeFee]) => ($amountToBridge * $bridgeFee) / oneEther,
 )
 /** the number of tokens available after they have crossed the bridge */
-export const amountAfterBridgeFee = derived([amountToBridge, bridgeCost], ([$amountToBridge, $bridgeCost]) => {
-  const afterFee = $amountToBridge - $bridgeCost
-  if (afterFee < 0n) return 0n
-  return afterFee
-})
+export const amountAfterBridgeFee = derived(
+  [amountToBridge, bridgeCost],
+  ([$amountToBridge, $bridgeCost]) => {
+    const afterFee = $amountToBridge - $bridgeCost
+    if (afterFee < 0n) return 0n
+    return afterFee
+  },
+)
 
-export const limitFromPercent = derived([fee, amountAfterBridgeFee], ([$fee, $amountAfterBridgeFee]) => {
-  return ($amountAfterBridgeFee * $fee) / oneEther
-})
+export const limitFromPercent = derived(
+  [fee, amountAfterBridgeFee],
+  ([$fee, $amountAfterBridgeFee]) => {
+    return ($amountAfterBridgeFee * $fee) / oneEther
+  },
+)
 
 /** the estimated network cost + tip */
 export const baseFeeReimbersement = derived(
@@ -414,8 +462,26 @@ export const feeTypeSettings = derived([input.feeType, unwrap], ([$feeType, $unw
 
 /** the encoded struct to be passed to the foreign router */
 export const feeDirectorStructEncoded = derived(
-  [input.bridgePathway, input.recipient, feeTypeSettings, limit, fee, input.feeType, assetOut, priceCorrective],
-  ([$bridgePathway, $recipient, $feeTypeSettings, $limit, $fee, $feeType, $assetOut, $priceCorrective]) => {
+  [
+    input.bridgePathway,
+    input.recipient,
+    feeTypeSettings,
+    limit,
+    fee,
+    input.feeType,
+    assetOut,
+    priceCorrective,
+  ],
+  ([
+    $bridgePathway,
+    $recipient,
+    $feeTypeSettings,
+    $limit,
+    $fee,
+    $feeType,
+    $assetOut,
+    $priceCorrective,
+  ]) => {
     if (!$assetOut || !$bridgePathway) {
       return null
     }
@@ -428,15 +494,21 @@ export const feeDirectorStructEncoded = derived(
     if (!isAddress($recipient)) {
       return null
     }
-    return encodeAbiParameters(abis.feeDeliveryStruct, [[$recipient, $feeTypeSettings, $limit, multiplier]])
+    return encodeAbiParameters(abis.feeDeliveryStruct, [
+      [$recipient, $feeTypeSettings, $limit, multiplier],
+    ])
   },
 )
 
-export const interactingWithBridgeToken = derived([input.assetIn, chainEvents.assetLink], ([$assetIn, $assetLink]) => {
-  return $assetLink
-    ? $assetLink.toForeign?.foreign === $assetIn?.address || $assetLink.toHome?.home === $assetIn?.address
-    : false
-})
+export const interactingWithBridgeToken = derived(
+  [input.assetIn, chainEvents.assetLink],
+  ([$assetIn, $assetLink]) => {
+    return $assetLink
+      ? $assetLink.toForeign?.foreign === $assetIn?.address ||
+          $assetLink.toHome?.home === $assetIn?.address
+      : false
+  },
+)
 /**
  * the full calldata defined in the home bridge's _data prop
  * to be used to call on the foreign router
@@ -596,12 +668,23 @@ export const transactionInputs = derived(
           ? encodeFunctionData({
               abi: abis.inputBridgeExtraInput,
               functionName: 'relayTokensAndCall',
-              args: [$assetIn.address, $destinationRouter, $amountToBridge, $feeDirectorStructEncoded, $walletAccount],
+              args: [
+                $assetIn.address,
+                $destinationRouter,
+                $amountToBridge,
+                $feeDirectorStructEncoded,
+                $walletAccount,
+              ],
             })
           : encodeFunctionData({
               abi: abis.inputBridge,
               functionName: 'relayTokensAndCall',
-              args: [$assetIn.address, $destinationRouter, $amountToBridge, $feeDirectorStructEncoded],
+              args: [
+                $assetIn.address,
+                $destinationRouter,
+                $amountToBridge,
+                $feeDirectorStructEncoded,
+              ],
             })
       } else {
         data = $bridgePathway.usesExtraParam

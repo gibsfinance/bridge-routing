@@ -1,5 +1,9 @@
 <script lang="ts">
-  import Onboard, { type ConnectOptions, type DisconnectOptions, type WalletState } from '@web3-onboard/core'
+  import Onboard, {
+    type ConnectOptions,
+    type DisconnectOptions,
+    type WalletState,
+  } from '@web3-onboard/core'
   import { chainsMetadata } from './constants'
   import injectedWallet from '@web3-onboard/injected-wallets'
   import walletConnectModule from '@web3-onboard/walletconnect'

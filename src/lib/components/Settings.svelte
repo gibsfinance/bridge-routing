@@ -10,7 +10,8 @@
   import { normalize } from 'viem/ens'
   import { loading } from '$lib/stores/loading'
   import LockIcon from './LockIcon.svelte'
-  const { recipient, canChangeUnwrap, destinationRouter, bridgePathway, recipientLockedToAccount } = input
+  const { recipient, canChangeUnwrap, destinationRouter, bridgePathway, recipientLockedToAccount } =
+    input
   const updateDestination = async (e: CustomEvent) => {
     let addr = e.detail.value
     if (addr === 'me') {
@@ -51,19 +52,26 @@
 </script>
 
 <div class="my-2 text-sm shadow-sm rounded-lg">
-  <div class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-col sm:flex-row relative">
-    <button type="button" on:click={lockRecipient}>Recipient <LockIcon locked={$recipientLockedToAccount} /></button>
+  <div
+    class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-col sm:flex-row relative">
+    <button type="button" on:click={lockRecipient}
+      >Recipient <LockIcon locked={$recipientLockedToAccount} /></button>
     <SmallInput
       editOnLeft
       value={recipient}
       on:input={updateDestination}
       class="font-mono text-xs sm:text-sm mr-auto sm:mr-0" />
     <Warning
-      show={!(isAddress($recipient || '') && $recipient?.length === 42 && $recipient !== zeroAddress)}
+      show={!(
+        isAddress($recipient || '') &&
+        $recipient?.length === 42 &&
+        $recipient !== zeroAddress
+      )}
       tooltip="Address is not valid. Casing influences the checksum of the address." />
   </div>
   {#if $destinationRouter}
-    <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row disabled cursor-not-allowed">
+    <div
+      class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row disabled cursor-not-allowed">
       <span>Router</span>
       <span class="font-mono text-xs sm:text-sm">{$destinationRouter}</span>
     </div>
@@ -87,7 +95,8 @@
     <span class="font-mono text-xs sm:text-sm">{$bridgePathway?.to || zeroAddress}</span>
   </div>
   {#if nonZeroXCalldata}
-    <div class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row">
+    <div
+      class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row">
       <span class="whitespace-pre">Data&nbsp;&nbsp;<span class="font-mono">0x</span></span>
       <textarea
         name="calldata"

@@ -42,7 +42,8 @@
       <span class="flex flex-row justify-between grow">
         <span>-{formatEther(fee * 100n)}%</span>
         <span class="flex flex-row items-end self-end">
-          <Loading key="gas">{humanReadableNumber(afterBridge, asset.decimals)}</Loading>&nbsp;{asset.symbol}
+          <Loading key="gas">{humanReadableNumber(afterBridge, asset.decimals)}</Loading
+          >&nbsp;{asset.symbol}
         </span>
       </span>
     </div>
@@ -56,14 +57,15 @@
               {humanReadableNumber($estimatedNetworkCost, asset.decimals)}
             </Loading>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
             <Tooltip positionFlow="above" position="left" show={hovering}
-              >the estimated cost to put this transaction on chain in terms of the token being bridged at current gas
-              rates</Tooltip>
+              >the estimated cost to put this transaction on chain in terms of the token being
+              bridged at current gas rates</Tooltip>
           </span>
         </Hover>
       </span>
     </div>
     {#if $fromChainId === Chains.PLS || $fromChainId === Chains.V4PLS}
-      <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
+      <div
+        class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
         <span class="w-32">
           {#if $feeType === 'gas+%'}Estimated
           {/if}Cost
@@ -93,7 +95,8 @@
       </div>
     {/if}
     {#if $feeType !== 'gas+%'}
-      <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
+      <div
+        class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
         <span class="w-32">Delivered</span>
         <span class="flex flex-row items-end self-end">
           <Loading key="gas">
@@ -108,11 +111,13 @@
       <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10">
         <span class="w-32">Estimated Delivery</span>
         <span class="flex flex-row items-end self-end">
-          ~&nbsp;<Loading key="gas">{humanReadableNumber(estimated < 0n ? 0n : estimated, asset.decimals)}</Loading
+          ~&nbsp;<Loading key="gas"
+            >{humanReadableNumber(estimated < 0n ? 0n : estimated, asset.decimals)}</Loading
           >&nbsp;{utils.nativeSymbol(asset, $unwrap)}
         </span>
       </div>
-      <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
+      <div
+        class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
         <span class="w-32">Minimum</span>
         <span class="flex flex-row justify-between grow">
           <span>&gt;=</span>
@@ -127,7 +132,8 @@
           tooltip="Many of your tokens are being lost to fees, try increasing the number of input tokens or decreasing the fee limits" />
       </div>
     {/if}
-    <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10 rounded-b-lg">
+    <div
+      class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10 rounded-b-lg">
       <span class="w-32">Equation</span>
       <span class="flex flex-row justify-end grow">
         <span class="flex flex-row items-end self-end font-mono text-right">

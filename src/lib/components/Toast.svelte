@@ -15,7 +15,9 @@
             target="_blank">
             {msg.message}
           </a>
-          <button on:click={() => removeMessage(msg)} class="size-8 flex justify-center items-center">&times;</button>
+          <button
+            on:click={() => removeMessage(msg)}
+            class="size-8 flex justify-center items-center">&times;</button>
         </div>
       </div>
     {/each}

@@ -24,7 +24,8 @@
 </script>
 
 <div class="relative z-10 modal-box" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <div class="fixed inset-0 bg-neutral-900 bg-opacity-70 transition-opacity" aria-hidden="true"></div>
+  <div class="fixed inset-0 bg-neutral-900 bg-opacity-70 transition-opacity" aria-hidden="true"
+  ></div>
 
   <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
     <div

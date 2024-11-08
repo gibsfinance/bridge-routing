@@ -10,7 +10,10 @@
   export let asset!: Token
   export let tokenSize = 10
   export let networkSize = 5
-  $: chain = asset.address !== zeroAddress && $tokenOriginationChainId && chainsMetadata[$tokenOriginationChainId]
+  $: chain =
+    asset.address !== zeroAddress &&
+    $tokenOriginationChainId &&
+    chainsMetadata[$tokenOriginationChainId]
   $: src = assetSources(asset)
   $: size = tokenSize * 4
 </script>

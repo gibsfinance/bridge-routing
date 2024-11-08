@@ -35,18 +35,23 @@
       <span class="leading-8 ml-1">{network.name}</span>
       <Icon icon="mingcute:down-fill" class="flex size-5" />
     </summary>
-    <ul class="dropdown-content absolute z-[1] px-0 pt-0 shadow bg-slate-50 pb-1 -mt-1 -mx-2 top-0 left-0 w-60">
+    <ul
+      class="dropdown-content absolute z-[1] px-0 pt-0 shadow bg-slate-50 pb-1 -mt-1 -mx-2 top-0 left-0 w-60">
       {#each reorderedBridgeKeys as o}
         <li class="hover:bg-slate-200 items-center flex flex-row">
           <button
             class="px-2 flex flex-row h-10 flex-grow items-center"
             on:click={async () => {
               dropdown.open = false
-              const tokenAddressIn = o === $partnerBridgeKey ? $assetOut?.address : zeroAddress || zeroAddress
+              const tokenAddressIn =
+                o === $partnerBridgeKey ? $assetOut?.address : zeroAddress || zeroAddress
               await goto(`/delivery/${toPath(o)}/${tokenAddressIn}`)
               return
             }}>
-            <StaticNetworkImage network={chainsMetadata[o[bridgeKeyIndex]]} provider={o[0]} {size} />
+            <StaticNetworkImage
+              network={chainsMetadata[o[bridgeKeyIndex]]}
+              provider={o[0]}
+              {size} />
             <span class="px-2 flex flex-grow">{chainsMetadata[o[bridgeKeyIndex]].name}</span>
           </button>
         </li>

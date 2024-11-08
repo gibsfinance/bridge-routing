@@ -17,74 +17,160 @@ export const destinationPublicClient = derived(
   ([$bridgeKey]) => $bridgeKey && input.clientFromChain($bridgeKey[2]),
 )
 
-export const block = derived<[Readable<PublicClient | null>], null | Block>(
-  [destinationPublicClient],
-  ([$destinationPublicClient], set) => {
-    if (!$destinationPublicClient) {
-      set(null)
-      return
-    }
-    let decremented = false
-    const decrement = () => {
-      if (decremented) return
-      decremented = true
-      loading.decrement('gas')
-    }
-    loading.increment('gas')
-    const cleanup = $destinationPublicClient.watchBlocks({
-      emitOnBegin: true,
-      onBlock: async (block: Block) => {
-        set(block)
-        decrement()
-      },
-      onError: (err: Error) => {
-        console.log('err during block collection', err)
-        decrement()
-        set(null)
-      },
-    })
-    return () => {
-      cleanup()
-      decrement()
-    }
-  },
-  null,
-)
+type ChainState = {
+  publicClient: Readable<PublicClient | null>
+  block: Readable<null | Block>
+  latestBaseFeePerGas: Readable<bigint>
+}
 
-/** the block.baseFeePerGas on the latest block */
-export const latestBaseFeePerGas = derived(
-  [block, destinationPublicClient],
-  ([$block, $destinationPublicClient], set) => {
-    if (!$block) {
-      set(0n)
-      return
-    }
-    let perGas = $block.baseFeePerGas
-    let cancelled = false
-    if (!perGas) {
-      const minWei = 3_000_000_000n
-      perGas = minWei
-      $destinationPublicClient
-        .getGasPrice()
-        .catch(() => 0n)
-        .then((result) => {
-          if (cancelled) {
-            return
-          }
-          if (result < minWei) {
-            result = minWei
-          }
-          set(result)
-        })
-    } else {
-      set(perGas)
-    }
-    return () => {
-      cancelled = true
-    }
-  },
-  0n,
-)
+const createChainState = (index: 1 | 2) => {
+  const publicClient = derived(
+    [input.bridgeKey, input.forcedRefresh],
+    ([$bridgeKey]) => $bridgeKey && input.clientFromChain($bridgeKey[index]),
+  )
+  const block = derived<[Readable<PublicClient | null>], null | Block>(
+    [publicClient],
+    ([$publicClient], set) => {
+      if (!$publicClient) {
+        set(null)
+        return
+      }
+      let decremented = false
+      const decrement = () => {
+        if (decremented) return
+        decremented = true
+        loading.decrement('gas')
+      }
+      loading.increment('gas')
+      const cleanup = $publicClient.watchBlocks({
+        emitOnBegin: true,
+        onBlock: async (block: Block) => {
+          set(block)
+          decrement()
+        },
+        onError: (err: Error) => {
+          console.log('err during block collection', err)
+          decrement()
+          set(null)
+        },
+      })
+      return () => {
+        cleanup()
+        decrement()
+      }
+    },
+    null,
+  )
+  return {
+    publicClient,
+    block,
+    latestBaseFeePerGas: derived(
+      [block, publicClient],
+      ([$block, $publicClient], set) => {
+        if (!$block) {
+          set(0n)
+          return
+        }
+        let perGas = $block.baseFeePerGas
+        let cancelled = false
+        if (!perGas) {
+          const minWei = 3_000_000_000n
+          perGas = minWei
+          $publicClient
+            .getGasPrice()
+            .catch(() => 0n)
+            .then((result) => {
+              if (cancelled) {
+                return
+              }
+              if (result < minWei) {
+                result = minWei
+              }
+              set(result)
+            })
+        } else {
+          set(perGas)
+        }
+        return () => {
+          cancelled = true
+        }
+      },
+      0n,
+    ),
+  } as ChainState
+}
+
+export const origination = createChainState(1)
+export const destination = createChainState(2)
+
+// export const block = derived<[Readable<PublicClient | null>], null | Block>(
+//   [destinationPublicClient],
+//   ([$destinationPublicClient], set) => {
+//     if (!$destinationPublicClient) {
+//       set(null)
+//       return
+//     }
+//     let decremented = false
+//     const decrement = () => {
+//       if (decremented) return
+//       decremented = true
+//       loading.decrement('gas')
+//     }
+//     loading.increment('gas')
+//     const cleanup = $destinationPublicClient.watchBlocks({
+//       emitOnBegin: true,
+//       onBlock: async (block: Block) => {
+//         set(block)
+//         decrement()
+//       },
+//       onError: (err: Error) => {
+//         console.log('err during block collection', err)
+//         decrement()
+//         set(null)
+//       },
+//     })
+//     return () => {
+//       cleanup()
+//       decrement()
+//     }
+//   },
+//   null,
+// )
+
+// /** the block.baseFeePerGas on the latest block */
+// export const latestBaseFeePerGas = derived(
+//   [block, destinationPublicClient],
+//   ([$block, $destinationPublicClient], set) => {
+//     if (!$block) {
+//       set(0n)
+//       return
+//     }
+//     let perGas = $block.baseFeePerGas
+//     let cancelled = false
+//     if (!perGas) {
+//       const minWei = 3_000_000_000n
+//       perGas = minWei
+//       $destinationPublicClient
+//         .getGasPrice()
+//         .catch(() => 0n)
+//         .then((result) => {
+//           if (cancelled) {
+//             return
+//           }
+//           if (result < minWei) {
+//             result = minWei
+//           }
+//           set(result)
+//         })
+//     } else {
+//       set(perGas)
+//     }
+//     return () => {
+//       cancelled = true
+//     }
+//   },
+//   0n,
+// )
 
 export const getTokenBalance = (
   $chainId: Chains,
@@ -105,11 +191,15 @@ export const getTokenBalance = (
   return loading.loadsAfterTick('balance', getBalance, set)
 }
 
-export const watchTokenBalance = (chainId: Readable<Chains>, tokenStore: Readable<Token | TokenOut | null>) =>
+export const watchTokenBalance = (
+  chainId: Readable<Chains>,
+  tokenStore: Readable<Token | TokenOut | null>,
+  ticker: Readable<unknown>, // usually a block
+) =>
   derived(
-    [walletAccount, chainId, tokenStore, block, input.unwrap],
-    ([$walletAccount, $chainId, $asset, $block], set) => {
-      if (!$block || !$asset || !$walletAccount || $walletAccount === zeroAddress) {
+    [walletAccount, chainId, tokenStore, ticker, input.unwrap],
+    ([$walletAccount, $chainId, $asset, $ticker], set) => {
+      if (!$ticker || !$asset || !$walletAccount || $walletAccount === zeroAddress) {
         set(null)
         return () => {}
       }
@@ -169,7 +259,10 @@ const links = _.memoize(
   ({ chainId, target, address }) => `${chainId}-${target}-${address}`.toLowerCase(),
 )
 
-export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, Token | null]): Promise<null | {
+export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [
+  input.BridgeKey,
+  Token | null,
+]): Promise<null | {
   originationChainId: Chains
   toForeign?: {
     home: Hex
@@ -185,7 +278,8 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
     return null
   }
   const [, fromChain, toChain] = $bridgeKey
-  const assetInAddress = $assetIn.address === zeroAddress ? nativeAssetOut[fromChain] : $assetIn.address
+  const assetInAddress =
+    $assetIn.address === zeroAddress ? nativeAssetOut[fromChain] : $assetIn.address
   const args = [assetInAddress]
   const mappings = await links({
     chainId: fromChain,
@@ -282,9 +376,12 @@ export const assetLink = derived<Stores, null | TokenBridgeInfo>(
   },
 )
 
-export const tokenOriginationChainId = derived<Stores, Chains | undefined>([assetLink], ([$assetLink]) => {
-  return $assetLink?.originationChainId
-})
+export const tokenOriginationChainId = derived<Stores, Chains | undefined>(
+  [assetLink],
+  ([$assetLink]) => {
+    return $assetLink?.originationChainId
+  },
+)
 
 const checkApproval = async ([$walletAccount, $bridgeAddress, $assetLink, $publicClient]: [
   Hex | undefined,
@@ -309,7 +406,14 @@ const checkApproval = async ([$walletAccount, $bridgeAddress, $assetLink, $publi
 }
 
 export const approval = derived(
-  [walletAccount, input.bridgeKey, assetLink, input.fromPublicClient, input.forcedRefresh, block],
+  [
+    walletAccount,
+    input.bridgeKey,
+    assetLink,
+    input.fromPublicClient,
+    input.forcedRefresh,
+    origination.block,
+  ],
   ([$walletAccount, $bridgeKey, $assetLink, $publicClient], set) => {
     if (!$bridgeKey || !$assetLink || !$walletAccount) {
       return
@@ -322,7 +426,12 @@ export const approval = derived(
     tick()
       .then(async () => {
         if (cancelled) return
-        const approval = await checkApproval([$walletAccount, $bridgeAddress, $assetLink, $publicClient])
+        const approval = await checkApproval([
+          $walletAccount,
+          $bridgeAddress,
+          $assetLink,
+          $publicClient,
+        ])
         if (cancelled) return
         set(approval)
       })

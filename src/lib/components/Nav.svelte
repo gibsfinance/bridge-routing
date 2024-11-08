@@ -36,7 +36,10 @@
         on:keypress={gotoHome}
         on:click={gotoHome}
         class="link leading-8 pr-2 text-white font-italiana uppercase flex flex-row">
-        <img src={gibs} alt="a yellow hand with index finger and thub rubbing together" class="size-8" />
+        <img
+          src={gibs}
+          alt="a yellow hand with index finger and thub rubbing together"
+          class="size-8" />
         <span class="leading-8 text-2xl">Gibs&nbsp;</span>
         <Loading />
       </span>
@@ -44,13 +47,20 @@
         <ul class="flex flex-row items-center grow text-white justify-end">
           <li class="flex flex-row">
             {#if $bridgeKey[2] === Chains.ETH}
-              <VersionedLink domain="bridge.pulsechain.com" path="/#/transactions" let:direct let:path>
+              <VersionedLink
+                domain="bridge.pulsechain.com"
+                path="/#/transactions"
+                let:direct
+                let:path>
                 <a
                   aria-label="to recent bridge transactions on ethereum"
                   href="{direct}{path}"
                   target="_blank"
                   class="link">
-                  <button type="button" name="transactions" class="text-white flex items-center justify-center">
+                  <button
+                    type="button"
+                    name="transactions"
+                    class="text-white flex items-center justify-center">
                     {txnText}&nbsp;<Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
                   </button>
                 </a>
@@ -61,7 +71,10 @@
                 href="https://tokensex.link/explorer"
                 target="_blank"
                 class="link">
-                <button type="button" name="transactions" class="text-white flex items-center justify-center">
+                <button
+                  type="button"
+                  name="transactions"
+                  class="text-white flex items-center justify-center">
                   {txnText}&nbsp;<Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
                 </button>
               </a>
@@ -80,7 +93,10 @@
                 class="link"
                 on:keypress={gotoNativeDelivery}
                 on:click={gotoNativeDelivery}
-                >Delivery&nbsp;<Icon icon="icon-park-outline:bridge-one" height="1.6em" width="1.6em" /></button>
+                >Delivery&nbsp;<Icon
+                  icon="icon-park-outline:bridge-one"
+                  height="1.6em"
+                  width="1.6em" /></button>
             </li>
           {/if}
         </ul>

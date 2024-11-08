@@ -42,7 +42,13 @@
 
 <div class="shadow-md rounded-lg">
   <div class="bg-slate-100 py-2 px-3 rounded-t-lg">
-    <NetworkSummary {network} {asset} inChain balance={$fromTokenBalance} showMax on:max-balance={handleMaxBalance} />
+    <NetworkSummary
+      {network}
+      {asset}
+      inChain
+      balance={$fromTokenBalance}
+      showMax
+      on:max-balance={handleMaxBalance} />
   </div>
   <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
     <span class="flex flex-grow relative max-w-[70%]">
@@ -60,7 +66,10 @@
         show={$amountToBridge < $minAmount && $amountToBridge > 0n}
         disabled={$focused}
         position="left"
-        tooltip="Input is too low, must be at least {formatUnits($minAmount, asset?.decimals || 18)}" />
+        tooltip="Input is too low, must be at least {formatUnits(
+          $minAmount,
+          asset?.decimals || 18,
+        )}" />
     </span>
 
     <Hover let:handlers let:hovering>
@@ -72,7 +81,11 @@
           <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
           <span class="ml-2">{asset?.symbol || ''}</span>
         {/if}
-        <Icon icon="mingcute:right-fill" height="1em" width="1em" class="flex icon transition-all" />
+        <Icon
+          icon="mingcute:right-fill"
+          height="1em"
+          width="1em"
+          class="flex icon transition-all" />
         <Tooltip show={hovering}>{asset?.name || ''}</Tooltip>
       </button>
     </Hover>

@@ -7,7 +7,12 @@ export const countDecimals = (v: string) => {
   return d ? d.length : 0
 }
 
-export const humanReadableNumber = (num = 0n, decimals = 18, decimalCount: null | number = null, truncLen = false) => {
+export const humanReadableNumber = (
+  num = 0n,
+  decimals = 18,
+  decimalCount: null | number = null,
+  truncLen = false,
+) => {
   let n = num === 0n ? '0.0' : formatUnits(num, decimals)
   const len = truncLen ? Math.min(n.length, 20) : n.length
   // console.log(num, n, len)

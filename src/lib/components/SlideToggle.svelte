@@ -17,7 +17,11 @@
 </script>
 
 <div class="s s--slider" style="font-size:{size}px">
-  <button role="switch" aria-checked={checked} aria-labelledby={`switch-${uniqueID}`} on:click={handleClick}></button>
+  <button
+    role="switch"
+    aria-checked={checked}
+    aria-labelledby={`switch-${uniqueID}`}
+    on:click={handleClick}></button>
 </div>
 
 <style type="postcss">
