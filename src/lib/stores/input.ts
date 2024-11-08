@@ -144,8 +144,8 @@ export const bridgableTokensResponses = derived(
   [windowLoaded],
   ([$windowLoaded], set) => {
     // let cancelled = false
+    set([])
     if (!$windowLoaded) {
-      set([])
       return
     }
     return loading.loadsAfterTick(
@@ -361,6 +361,7 @@ export const assetIn = derived(
       set($assetIn)
       return _.noop
     }
+    // set(null)
     return loading.loadsAfterTick(
       'assetIn',
       () => getAsset($bridgeKey[1], $assetInAddress),
@@ -496,6 +497,7 @@ export const loadFeeFor = async ($bridgeKey: BridgeKey) => {
 export const bridgeFee = derived(
   [bridgeKey],
   ([$bridgeKey], set) => {
+    set(null)
     return loading.loadsAfterTick('fee', () => loadFeeFor($bridgeKey), set)
   },
   null as PathwayExtendableConfig | null,

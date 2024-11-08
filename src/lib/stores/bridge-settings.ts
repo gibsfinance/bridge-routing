@@ -10,6 +10,8 @@ import {
   concatHex,
   encodeFunctionData,
   getAddress,
+  getContract,
+  erc20Abi,
 } from 'viem'
 import { walletAccount } from './auth/store'
 import { Chains } from './auth/types'
@@ -75,13 +77,19 @@ export const assetOut = derived(
       return _.noop
     }
     const client = input.clientFromChain(toChainId)
+    set(null)
     return loading.loadsAfterTick(
       'assetout',
       async () => {
-        return client.getCode({ address: foreign })
+        const contract = getContract({
+          address: foreign,
+          abi: erc20Abi,
+          client,
+        })
+        return contract.read.totalSupply().catch(() => -1n)
       },
-      async (data: Hex, cleanup: Cleanup) => {
-        if (data === '0x') {
+      async (data: bigint, cleanup: Cleanup) => {
+        if (data < 0n) {
           cleanup()
           return null
         }
@@ -120,6 +128,15 @@ export const assetOut = derived(
     )
   },
   null as TokenOut | null,
+)
+
+export const networkSwitchAssetOutAddress = derived(
+  [input.toChainId, assetOut, input.unwrap],
+  ([$toChainId, $assetOut, $unwrap]) => {
+    if (!$assetOut) return null
+    if (!$unwrap) return $assetOut.address
+    return nativeAssetOut[$toChainId] === $assetOut.address ? zeroAddress : $assetOut.address
+  },
 )
 
 /** this value represents the balance on of the asset going into the bridge */
@@ -293,6 +310,7 @@ export const priceCorrective = derived(
     const paymentToken = nativeAssetOut[toChain]
     const assetInAddress =
       $assetIn.address === zeroAddress ? nativeAssetOut[fromChain] : $assetIn.address
+    set(0n)
     return loading.loadsAfterTick(
       'gas',
       async () =>
@@ -340,7 +358,7 @@ export const priceCorrective = derived(
             : [[], []],
         ])
       },
-      async (results: [FetchResult[], FetchResult[]]) => {
+      (results: [FetchResult[], FetchResult[]]) => {
         const max = (amountsOut: (bigint | undefined)[]) => {
           return _(amountsOut)
             .compact()
@@ -728,6 +746,13 @@ export const assetSources = (asset: Token | null) => {
           address: info.tokenAddress,
         },
       ]
+      const inChain = `0x${Number(asset.chainId).toString(16)}` as Chains
+      if (address === nativeAssetOut[inChain]) {
+        otherSide.push({
+          chainId: asset.chainId,
+          address: zeroAddress,
+        })
+      }
       const chain = `0x${Number(chainId).toString(16)}` as Chains
       if (info.tokenAddress === nativeAssetOut[chain]) {
         otherSide.push({

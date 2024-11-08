@@ -188,6 +188,7 @@ export const getTokenBalance = (
             abi: erc20Abi,
             client: $publicClient,
           }).read.balanceOf([$walletAccount])
+  set(null)
   return loading.loadsAfterTick('balance', getBalance, set)
 }
 
@@ -368,8 +369,8 @@ export type TokenBridgeInfo = Awaited<ReturnType<typeof tokenBridgeInfo>>
 export const assetLink = derived<Stores, null | TokenBridgeInfo>(
   [input.bridgeKey, input.assetIn],
   ([$bridgeKey, $assetIn], set) => {
+    set(null)
     if (!$assetIn) {
-      set(null)
       return _.noop
     }
     return loading.loadsAfterTick('token', () => tokenBridgeInfo([$bridgeKey, $assetIn]), set)

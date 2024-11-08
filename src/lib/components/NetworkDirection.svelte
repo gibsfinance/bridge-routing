@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation'
   import { useAuth } from '$lib/stores/auth/methods'
   import { toPath, validBridgeKey, flippedBridgeKey, toChainId } from '$lib/stores/input'
-  import { assetOut } from '$lib/stores/bridge-settings'
+  import { networkSwitchAssetOutAddress } from '$lib/stores/bridge-settings'
   import { walletAccount } from '$lib/stores/auth/store'
 
   const { switchChain } = useAuth()
@@ -13,8 +13,8 @@
     await goto(`/delivery/${toPath($flippedBridgeKey)}/${flippedAddressIn}`)
   }
   $: flippedIsValid = validBridgeKey([$flippedBridgeKey])
-  $: flippedAddressIn = $assetOut?.address || zeroAddress
-  $: disabled = !flippedIsValid
+  $: flippedAddressIn = $networkSwitchAssetOutAddress
+  $: disabled = !flippedIsValid || !$networkSwitchAssetOutAddress
 </script>
 
 <div class="h-0 w-full flex relative my-1">
