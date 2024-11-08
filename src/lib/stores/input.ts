@@ -318,13 +318,14 @@ export const toPublicClient = derived([toChainId, forcedRefresh], ([$toChainId])
   clientFromChain($toChainId),
 )
 
-const getAsset = async ($bridgeKey: BridgeKey, $assetInAddress: Hex) => {
+const getAsset = async ($chainId: Chains, $assetInAddress: Hex) => {
   const asset = await multicallErc20({
-    client: clientFromChain($bridgeKey[1]),
-    chain: chainsMetadata[$bridgeKey[1]],
+    client: clientFromChain($chainId),
+    chain: chainsMetadata[$chainId],
     target: $assetInAddress,
-  })
+  }).catch(() => null)
   if (!asset) {
+    console.log('getAsset failed', $assetInAddress)
     return null
   }
   const [name, symbol, decimals] = asset
@@ -333,9 +334,9 @@ const getAsset = async ($bridgeKey: BridgeKey, $assetInAddress: Hex) => {
     symbol,
     decimals,
     address: $assetInAddress,
-    chainId: $bridgeKey[1],
+    chainId: $chainId,
     logoURI: imageLinks.image({
-      chainId: Number($bridgeKey[1]),
+      chainId: Number($chainId),
       address: $assetInAddress,
     }),
   }
@@ -354,7 +355,7 @@ export const assetIn = derived(
     }
     return loading.loadsAfterTick(
       'assetIn',
-      () => getAsset($bridgeKey, $assetInAddress),
+      () => getAsset($bridgeKey[1], $assetInAddress),
       (result: Token | null) => {
         if (!result) {
           return defaultAssetIn($bridgeKey)

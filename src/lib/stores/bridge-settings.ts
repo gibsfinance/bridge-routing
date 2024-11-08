@@ -722,15 +722,27 @@ export const assetSources = (asset: Token | null) => {
       if (!info.tokenAddress) {
         return null
       }
-      return {
-        chainId: Number(chainId),
-        address: info.tokenAddress,
+      const otherSide = [
+        {
+          chainId: Number(chainId),
+          address: info.tokenAddress,
+        },
+      ]
+      const chain = `0x${Number(chainId).toString(16)}` as Chains
+      if (info.tokenAddress === nativeAssetOut[chain]) {
+        otherSide.push({
+          chainId: Number(chainId),
+          address: zeroAddress,
+        })
       }
+      return otherSide
     }),
-  ]).compact()
+  ])
+    .flatten()
+    .compact()
   const sources = inputs
     .sortBy([(a: MinTokenInfo) => a.chainId])
     .map((a: MinTokenInfo) => `${a.chainId}/${a.address}`)
-    .value()
+    .value() as unknown as string[]
   return imageLinks.images(sources)
 }

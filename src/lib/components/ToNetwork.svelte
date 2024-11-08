@@ -24,7 +24,7 @@
     toTokenBalance,
     bridgeFee,
   } from '$lib/stores/bridge-settings'
-  import { latestBaseFeePerGas } from '$lib/stores/chain-events'
+  import { destination } from '$lib/stores/chain-events'
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import SmallInput from './SmallInput.svelte'
   import * as utils from '$lib/utils'
@@ -38,6 +38,7 @@
 
   const { feeType, assetInAddress, destinationSupportsEIP1559, bridgePathway, shouldDeliver } =
     input
+  const { latestBaseFeePerGas } = destination
 
   const handleDeliveryToggle = (e: CustomEvent<boolean>) => {
     shouldDeliver.set(e.detail)
