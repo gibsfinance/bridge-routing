@@ -66,7 +66,6 @@
           }
       tkns = tkns.filter(filter)
     }
-    console.log('tkns', tkns, allChains)
     if (allChains) return tkns
     const [inside, outside] = _.partition(tkns, onlyFromCurrentNetwork)
     return inside
@@ -95,7 +94,6 @@
   }
   const tokens = customTokens.tokens
   $: subset = getSubset($tokens.concat($bridgableTokens), searchValue, showAllTokens, showAllChains)
-  $: console.log('subset', subset)
   $: inputIsAddress = isAddress(searchValue)
   $: addButtonDisabled = !inputIsAddress || !!subset.length
   $: searchValueHex = inputIsAddress ? (searchValue as Hex) : null

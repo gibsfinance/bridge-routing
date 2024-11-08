@@ -319,6 +319,9 @@ export const toPublicClient = derived([toChainId, forcedRefresh], ([$toChainId])
 )
 
 const getAsset = async ($chainId: Chains, $assetInAddress: Hex) => {
+  if ($assetInAddress === zeroAddress) {
+    return null
+  }
   const asset = await multicallErc20({
     client: clientFromChain($chainId),
     chain: chainsMetadata[$chainId],
@@ -345,13 +348,18 @@ const getAsset = async ($chainId: Chains, $assetInAddress: Hex) => {
 export const assetIn = derived(
   [assetInAddress, bridgeKey, bridgableTokens, customTokens.tokens],
   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens], set) => {
+    // console.log($bridgableTokens)
+    // if (!$bridgableTokens.length) {
+    //   set(null)
+    //   return _.noop
+    // }
     const $assetIn = $bridgableTokens.length
       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
         _.find($customTokens || [], { address: $assetInAddress })
       : null
     if ($assetIn) {
       set($assetIn)
-      return
+      return _.noop
     }
     return loading.loadsAfterTick(
       'assetIn',
