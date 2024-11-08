@@ -28,14 +28,20 @@
   import { Chains, type VisualChain } from '$lib/stores/auth/types'
   import SmallInput from './SmallInput.svelte'
   import * as utils from '$lib/utils'
-  import type { Token } from '$lib/types'
+  import type { Token, TokenOut } from '$lib/types'
   import Tooltip from './Tooltip.svelte'
   import { hover } from '$lib/modifiers/hover'
   import Hover from './Hover.svelte'
+  import SlideToggle from './SlideToggle.svelte'
   export let destinationNetwork!: VisualChain
-  export let asset: Token | null = null
+  export let asset: TokenOut | null = null
 
-  const { feeType, assetInAddress, destinationSupportsEIP1559, bridgePathway } = input
+  const { feeType, assetInAddress, destinationSupportsEIP1559, bridgePathway, shouldDeliver } = input
+
+  const handleDeliveryToggle = (e: CustomEvent<boolean>) => {
+    shouldDeliver.set(e.detail)
+  }
+
   const dispatch = createEventDispatcher()
   const showToolbox = (type: string) => {
     dispatch('toggle', type)
@@ -128,11 +134,12 @@
       true,
     )
   const fromChainId = input.fromChainId
+  $: out = asset as Token
 </script>
 
 <div class="shadow-md rounded-lg">
   <div class="bg-slate-100 py-2 px-3 rounded-t-lg hover:z-10">
-    <NetworkSummary network={destinationNetwork} inChain={false} {asset} balance={$toTokenBalance} unwrap={$unwrap} />
+    <NetworkSummary network={destinationNetwork} inChain={false} asset={out} balance={$toTokenBalance} unwrap={$unwrap} />
   </div>
   <div class="bg-slate-100 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
@@ -150,10 +157,10 @@
   {#if $fromChainId === Chains.PLS || $fromChainId === Chains.V4PLS}
     <div class="bg-slate-100 mt-[1px] py-1 relative hover:z-10">
       <div class="flex flex-row px-3 leading-8 justify-between">
-        <span class="flex items-center">
-          <span class="mr-1"
-            >{#if large}Delivery Fee{:else}Deliv.{/if}</span
-          >&nbsp;
+        <span class="flex items-center flex-row gap-2">
+          <span
+            >{#if large}Delivery{:else}Deliv.{/if}</span
+          ><SlideToggle checked={$shouldDeliver} size={20} on:change={handleDeliveryToggle} />
           <FeeTypeToggle
             active={$feeType}
             options={feeTypeOptions}

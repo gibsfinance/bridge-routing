@@ -44,7 +44,8 @@ export const nativeTokenName = {
 export type Pathway = {
   from: Hex
   to: Hex
-  router?: Hex
+  autoDelivers: boolean
+  destinationRouter: Hex | null
   nativeRouter: Hex
   defaultAssetIn: Token
   usesExtraParam: boolean
@@ -59,9 +60,10 @@ export const pathways = {
   [Provider.PULSECHAIN]: {
     [Chains.PLS]: {
       [Chains.ETH]: {
+        autoDelivers: false,
         from: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
         to: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
-        router: '0x0560e1392185bf554E1e0044cD752aeA83F37C6E',
+        destinationRouter: '0x0560e1392185bf554E1e0044cD752aeA83F37C6E',
         nativeRouter: '0xf868dA5a5D5f799CEe2205d8FD1f5aD2c4A28499',
         usesExtraParam: false,
         feeManager: 'from',
@@ -85,9 +87,11 @@ export const pathways = {
     },
     [Chains.ETH]: {
       [Chains.PLS]: {
+        autoDelivers: true,
         from: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
         to: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
         nativeRouter: '0x8AC4ae65b3656e26dC4e0e69108B392283350f55',
+        destinationRouter: null,
         feeManager: 'to',
         usesExtraParam: false,
         toHome: true,
@@ -112,9 +116,10 @@ export const pathways = {
   [Provider.TOKENSEX]: {
     [Chains.PLS]: {
       [Chains.BNB]: {
+        autoDelivers: false,
         from: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
         to: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
-        router: '0xC985f38b9d082692C6744C628026305E3f202fE1',
+        destinationRouter: '0xC985f38b9d082692C6744C628026305E3f202fE1',
         nativeRouter: '0x3B0e59054b34Fc91e6Fa4C5600F661a183409AF1',
         feeManager: 'from',
         usesExtraParam: true,
@@ -138,9 +143,11 @@ export const pathways = {
     },
     [Chains.BNB]: {
       [Chains.PLS]: {
+        autoDelivers: true,
         from: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
         to: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
         nativeRouter: '0x814622879684979C63Fcb753580D89bD1C940E3b',
+        destinationRouter: null,
         feeManager: 'to',
         usesExtraParam: true,
         toHome: true,
@@ -191,10 +198,11 @@ export const testnetPathways = {
   [Provider.PULSECHAIN]: {
     [Chains.V4PLS]: {
       [Chains.SEP]: {
+        autoDelivers: false,
         from: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
         to: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
-        nativeRouter: '0x10816656cebf43943aeD362bd4ce584515EB7EA9',
-        router: '0x554FaEdf41d12FcEE68822E424412F15d3bd6D06',
+        nativeRouter: '0xA59bc0f0F2a8684cB0B15ab60493d483a40E8310',
+        destinationRouter: '0xA24799eC9643c9e16B86A15F2b7241490EbfeF81',
         usesExtraParam: false,
         requiresDelivery: true,
         toHome: false,
@@ -217,9 +225,11 @@ export const testnetPathways = {
     },
     [Chains.SEP]: {
       [Chains.V4PLS]: {
+        autoDelivers: true,
         from: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
         to: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
-        nativeRouter: '0x554FaEdf41d12FcEE68822E424412F15d3bd6D06',
+        nativeRouter: '0xA24799eC9643c9e16B86A15F2b7241490EbfeF81',
+        destinationRouter: '0xA59bc0f0F2a8684cB0B15ab60493d483a40E8310',
         usesExtraParam: false,
         requiresDelivery: false,
         toHome: true,

@@ -21,6 +21,10 @@ setInterval(() => {
   }
 }, 4_000)
 
+export type Cleanup = () => void
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Condition<T = any, R = any> = ((a: T) => void) | ((a: T, cleanup: Cleanup) => R | Promise<R>)
+
 export const loading = {
   ...loadingCounter,
   increment: (key?: string | null) => {
@@ -45,7 +49,7 @@ export const loading = {
       return l
     })
   },
-  loadsAfterTick: (key: string | null, ...conditions: ((a: any, cleanup: () => void) => any)[]) => {
+  loadsAfterTick: (key: string | null, ...conditions: Condition[]) => {
     loading.increment(key)
     let cancelled = false
     const cleanup = () => {
@@ -55,7 +59,7 @@ export const loading = {
       cancelled = true
       loading.decrement(key)
     }
-    let current = tick()
+    let current = tick() as Promise<unknown>
     for (const condition of conditions) {
       current = current.then((arg) => {
         if (cancelled) return

@@ -10,7 +10,7 @@
   import { normalize } from 'viem/ens'
   import { loading } from '$lib/stores/loading'
   import LockIcon from './LockIcon.svelte'
-  const { recipient, canChangeUnwrap, router, bridgePathway, recipientLockedToAccount } = input
+  const { recipient, canChangeUnwrap, destinationRouter, bridgePathway, recipientLockedToAccount } = input
   const updateDestination = async (e: CustomEvent) => {
     let addr = e.detail.value
     if (addr === 'me') {
@@ -62,10 +62,10 @@
       show={!(isAddress($recipient || '') && $recipient?.length === 42 && $recipient !== zeroAddress)}
       tooltip="Address is not valid. Casing influences the checksum of the address." />
   </div>
-  {#if $router}
+  {#if $destinationRouter}
     <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row disabled cursor-not-allowed">
       <span>Router</span>
-      <span class="font-mono text-xs sm:text-sm">{$router}</span>
+      <span class="font-mono text-xs sm:text-sm">{$destinationRouter}</span>
     </div>
   {/if}
   <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row">

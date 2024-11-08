@@ -13,8 +13,8 @@ import {
 } from 'viem'
 import { walletAccount } from './auth/store'
 import { Chains } from './auth/types'
-import { loading } from './loading'
-import type { Token } from '../types'
+import { loading, type Cleanup } from './loading'
+import type { Token, TokenOut } from '../types'
 import * as chainEvents from './chain-events'
 import { chainsMetadata } from './auth/constants'
 import { multicallErc20, multicallRead, type Erc20Metadata } from '$lib/utils'
@@ -25,7 +25,6 @@ import * as imageLinks from './image-links'
 import { isZero, stripNonNumber } from './utils'
 import { latestBaseFeePerGas, type TokenBridgeInfo } from './chain-events'
 import { settings } from './fee-manager'
-import { tick } from 'svelte'
 
 const backupAssetIn = {
   address: zeroAddress,
@@ -49,6 +48,7 @@ export const assetOut = derived(
       ...$assetIn,
       address: $assetIn.address === zeroAddress ? nativeAssetOut[$bridgeKey[1]] : getAddress($assetIn.address),
     }
+    // if there is no asset link, then the token is native and has not yet been bridged
     if (!assetLink) {
       set(null)
       return _.noop
@@ -56,7 +56,20 @@ export const assetOut = derived(
     const { toHome, toForeign } = assetLink
     const foreign = toHome?.foreign || toForeign?.foreign
     if (!foreign || foreign === zeroAddress) {
-      set(null)
+      set({
+        address: null,
+        decimals: $assetIn.decimals,
+        chainId: $assetIn.chainId,
+        name: `${$assetIn.name} from Pulsechain`,
+        symbol: `w${$assetIn.symbol}`,
+        extensions: {
+          bridgeInfo: {
+            [$assetIn.chainId]: {
+              tokenAddress: $assetIn.address,
+            },
+          },
+        },
+      })
       return _.noop
     }
     const client = input.clientFromChain(toChainId)
@@ -65,7 +78,7 @@ export const assetOut = derived(
       async () => {
         return client.getCode({ address: foreign })
       },
-      async (data: Hex, cleanup) => {
+      async (data: Hex, cleanup: Cleanup) => {
         if (data === '0x') {
           cleanup()
           return null
@@ -76,7 +89,8 @@ export const assetOut = derived(
           target: foreign,
         }).catch(() => null)
       },
-      (result: Erc20Metadata | null) => {
+      (r: Erc20Metadata | null) => {
+        const result = r as Erc20Metadata | null
         let res = backupAssetIn
         if (result) {
           const [name, symbol, decimals] = result
@@ -103,7 +117,7 @@ export const assetOut = derived(
       set,
     )
   },
-  null as Token | null,
+  null as TokenOut | null,
 )
 
 /** this value represents the balance on of the asset going into the bridge */
@@ -150,7 +164,6 @@ export const desiredExcessCompensationPercentage = derived(
 
 const oneTokenInt = derived([input.assetIn], ([$assetIn]) => ($assetIn ? 10n ** BigInt($assetIn.decimals) : 1n))
 
-let priceCorrectiveGuard = {}
 type FetchResult = bigint[] | Hex
 const fetchCache = new Map<
   string,
@@ -274,19 +287,21 @@ export const priceCorrective = derived(
               [assetInAddress, nativeAssetOut[fromChain], paymentTokenFromBridgeStart!],
             ],
           ),
-          readAmountOut(
-            {
-              $assetInAddress: $assetOut.address,
-              $oneTokenInt: amountToBridge,
-              chain: toChain,
-              $bridgeKey,
-            },
-            $latestBaseFeePerGas,
-            [
-              [$assetOut!.address, paymentToken],
-              [$assetOut!.address, nativeAssetOut[toChain], paymentToken],
-            ],
-          ),
+          $assetOut.address
+            ? readAmountOut(
+                {
+                  $assetInAddress: $assetOut.address,
+                  $oneTokenInt: amountToBridge,
+                  chain: toChain,
+                  $bridgeKey,
+                },
+                $latestBaseFeePerGas,
+                [
+                  [$assetOut!.address, paymentToken],
+                  [$assetOut!.address, nativeAssetOut[toChain], paymentToken],
+                ],
+              )
+            : [[], []],
         ])
       },
       async (results: [FetchResult[], FetchResult[]]) => {
@@ -399,9 +414,9 @@ export const feeTypeSettings = derived([input.feeType, unwrap], ([$feeType, $unw
 
 /** the encoded struct to be passed to the foreign router */
 export const feeDirectorStructEncoded = derived(
-  [input.recipient, feeTypeSettings, limit, fee, input.feeType, assetOut, priceCorrective],
-  ([$recipient, $feeTypeSettings, $limit, $fee, $feeType, $assetOut, $priceCorrective]) => {
-    if (!$assetOut) {
+  [input.bridgePathway, input.recipient, feeTypeSettings, limit, fee, input.feeType, assetOut, priceCorrective],
+  ([$bridgePathway, $recipient, $feeTypeSettings, $limit, $fee, $feeType, $assetOut, $priceCorrective]) => {
+    if (!$assetOut || !$bridgePathway) {
       return null
     }
     let multiplier = 0n
@@ -416,39 +431,67 @@ export const feeDirectorStructEncoded = derived(
     return encodeAbiParameters(abis.feeDeliveryStruct, [[$recipient, $feeTypeSettings, $limit, multiplier]])
   },
 )
+
+export const interactingWithBridgeToken = derived([input.assetIn, chainEvents.assetLink], ([$assetIn, $assetLink]) => {
+  return $assetLink
+    ? $assetLink.toForeign?.foreign === $assetIn?.address || $assetLink.toHome?.home === $assetIn?.address
+    : false
+})
 /**
  * the full calldata defined in the home bridge's _data prop
  * to be used to call on the foreign router
  */
 export const foreignDataParam = derived(
-  [chainEvents.assetLink, input.router, feeDirectorStructEncoded],
-  ([$assetLink, $router, $feeDirectorStructEncoded]) => {
-    return !$feeDirectorStructEncoded || !$assetLink
-      ? null
-      : $assetLink.toForeign
-        ? $feeDirectorStructEncoded
-        : $router
-          ? concatHex([$router, $feeDirectorStructEncoded])
-          : null
-  },
-)
-export const foreignCalldata = derived(
-  [assetOut, amountAfterBridgeFee, feeDirectorStructEncoded],
-  ([$assetOut, $amountAfterBridgeFee, $feeDirectorStructEncoded]) => {
-    if (!$feeDirectorStructEncoded || !$assetOut) {
+  [
+    input.bridgePathway,
+    input.assetIn,
+    chainEvents.assetLink,
+    input.destinationRouter,
+    feeDirectorStructEncoded,
+    input.recipient,
+    input.shouldDeliver,
+  ],
+  ([
+    $bridgePathway,
+    $assetIn,
+    $assetLink,
+    $destinationRouter,
+    $feeDirectorStructEncoded,
+    $recipient,
+    $shouldDeliver,
+  ]) => {
+    if (!$bridgePathway || !$assetIn) {
       return null
     }
-    return encodeFunctionData({
-      abi: abis.outputRouter,
-      functionName: 'onTokenBridged',
-      args: [$assetOut.address, $amountAfterBridgeFee, $feeDirectorStructEncoded],
-    })
+    if (!$destinationRouter || !$feeDirectorStructEncoded || !$assetLink) {
+      return null
+    }
+    if (!$bridgePathway.autoDelivers && !$shouldDeliver) {
+      return $recipient
+    }
+    return concatHex([$destinationRouter, $feeDirectorStructEncoded])
   },
 )
+// export const foreignCalldata = derived(
+//   [assetOut, input.shouldDeliver, amountAfterBridgeFee, feeDirectorStructEncoded],
+//   ([$assetOut, $shouldDeliver, $amountAfterBridgeFee, $feeDirectorStructEncoded]) => {
+//     if (!$feeDirectorStructEncoded || !$assetOut) {
+//       return null
+//     }
+//     if (!$shouldDeliver) {
+//       return '0x' as Hex
+//     }
+//     return encodeFunctionData({
+//       abi: abis.outputRouter,
+//       functionName: 'onTokenBridged',
+//       args: [$assetOut.address, $amountAfterBridgeFee, $feeDirectorStructEncoded],
+//     })
+//   },
+// )
 
 /**
- * the calldata that will be signed over by the user's wallet
- * this calldata transfers to the bridge address and the user's amount that they wish to bridge before fees
+ * the inputs to the transaction that will be signed over by the user's wallet
+ * this transaction transfers to the relevant bridge address and the user's amount that they wish to bridge before fees
  * it also contains calldata that is shuttled over to the foreign network
  * to be executed there after validator signatures are provided
  */
@@ -457,45 +500,82 @@ export const transactionInputs = derived(
     walletAccount,
     input.recipient,
     input.assetIn,
-    input.router,
+    input.destinationRouter,
+    input.shouldDeliver,
     chainEvents.assetLink,
-    input.bridgeKey,
+    input.bridgePathway,
     amountToBridge,
     foreignDataParam,
+    feeDirectorStructEncoded,
+    interactingWithBridgeToken,
   ],
-  ([$walletAccount, $recipient, $assetIn, $router, $assetLink, $bridgeKey, $amountToBridge, $foreignDataParam]) => {
-    const path = pathway($bridgeKey)
-    if (!path) return null
+  ([
+    $walletAccount,
+    $recipient,
+    $assetIn,
+    $destinationRouter,
+    $shouldDeliver,
+    $assetLink,
+    $bridgePathway,
+    $amountToBridge,
+    $foreignDataParam,
+    $feeDirectorStructEncoded,
+    $interactingWithBridgeToken,
+  ]) => {
+    // check that path / bridge key is valid
+    if (!$bridgePathway) return null
+    // check that recipient is valid
     if (!$recipient || !isAddress($recipient)) return null
+    // check that wallet account is valid
     if (!$walletAccount || !isAddress($walletAccount)) return null
+    // check that asset in is valid
     if (!$assetIn) return null
+    // check that asset link is valid
     if (!$assetLink) return null
     let value = 0n
-    // we are moving "from" this side, so we need to use the "from" address
-    let toAddress = path.from
-    if ($assetIn.address === zeroAddress) {
-      value = $amountToBridge
-      toAddress = path.nativeRouter
-    } else if (!$assetLink.toForeign) {
-      toAddress = $assetIn.address
-    }
+    // we are moving "from" this side, so we need to call a function on the "from" address
+    // only relevant for the relayTokens(AndCall) pathway outside of native tokens
+    let toAddress = $bridgePathway.from
     let data = '0x' as Hex
-    if ($assetIn.address === zeroAddress) {
-      if (path.feeManager === 'from') {
-        if (!$foreignDataParam) return null
-        data = path.usesExtraParam
+    if ($interactingWithBridgeToken) {
+      // when interacting with a bridged token, we need to call the token address directly
+      toAddress = $assetIn.address
+      value = 0n
+      // if we want delivery of the tokens (going from home to foreign) then we need to have the foreign data param
+      // and it needs to start with the destination router
+      if (!$foreignDataParam) return null
+      data = $bridgePathway.usesExtraParam
+        ? encodeFunctionData({
+            abi: abis.erc677ExtraInput,
+            functionName: 'transferAndCall',
+            args: [$bridgePathway.from, $amountToBridge, $foreignDataParam, $walletAccount],
+          })
+        : encodeFunctionData({
+            abi: abis.erc677,
+            functionName: 'transferAndCall',
+            args: [$bridgePathway.from, $amountToBridge, $foreignDataParam],
+          })
+    } else if ($assetIn.address === zeroAddress) {
+      value = $amountToBridge
+      toAddress = $bridgePathway.nativeRouter
+      if ($bridgePathway.feeManager === 'from' && $shouldDeliver) {
+        // transferring native to foreign
+        if (!$feeDirectorStructEncoded) return null
+        if (!$destinationRouter) return null
+        data = $bridgePathway.usesExtraParam
           ? encodeFunctionData({
               abi: abis.nativeRouterExtraInput,
-              functionName: 'wrapAndRelayTokensAndCall',
-              args: [$recipient, $foreignDataParam, $walletAccount],
+              functionName: 'relayTokensAndCall',
+              args: [$destinationRouter, $feeDirectorStructEncoded, $walletAccount],
             })
           : encodeFunctionData({
               abi: abis.nativeRouter,
-              functionName: 'wrapAndRelayTokensAndCall',
-              args: [$recipient, $foreignDataParam],
+              functionName: 'relayTokensAndCall',
+              args: [$destinationRouter, $feeDirectorStructEncoded],
             })
       } else {
-        data = path.usesExtraParam
+        // delivery always occurs when moving from foreign to home
+        data = $bridgePathway.usesExtraParam
           ? encodeFunctionData({
               abi: abis.nativeRouterExtraInput,
               functionName: 'wrapAndRelayTokens',
@@ -508,31 +588,32 @@ export const transactionInputs = derived(
             })
       }
     } else {
-      if (!$foreignDataParam) return null
-      if ($assetLink?.toForeign) {
-        if (!$router) return null
-        data = path.usesExtraParam
+      // tokens native to this side, entering the bridge
+      if ($shouldDeliver && !$bridgePathway.autoDelivers) {
+        if (!$feeDirectorStructEncoded) return null
+        if (!$destinationRouter) return null
+        data = $bridgePathway.usesExtraParam
           ? encodeFunctionData({
               abi: abis.inputBridgeExtraInput,
               functionName: 'relayTokensAndCall',
-              args: [$assetIn.address, $router, $amountToBridge, $foreignDataParam, $walletAccount],
+              args: [$assetIn.address, $destinationRouter, $amountToBridge, $feeDirectorStructEncoded, $walletAccount],
             })
           : encodeFunctionData({
               abi: abis.inputBridge,
               functionName: 'relayTokensAndCall',
-              args: [$assetIn.address, $router, $amountToBridge, $foreignDataParam],
+              args: [$assetIn.address, $destinationRouter, $amountToBridge, $feeDirectorStructEncoded],
             })
       } else {
-        data = path.usesExtraParam
+        data = $bridgePathway.usesExtraParam
           ? encodeFunctionData({
-              abi: abis.erc677ExtraInput,
-              functionName: 'transferAndCall',
-              args: [path.from, $amountToBridge, $foreignDataParam, $walletAccount],
+              abi: abis.inputBridgeExtraInput,
+              functionName: 'relayTokens',
+              args: [$assetIn.address, $recipient, $amountToBridge, $walletAccount],
             })
           : encodeFunctionData({
-              abi: abis.erc677,
-              functionName: 'transferAndCall',
-              args: [path.from, $amountToBridge, $foreignDataParam],
+              abi: abis.inputBridge,
+              functionName: 'relayTokens',
+              args: [$assetIn.address, $recipient, $amountToBridge],
             })
       }
     }

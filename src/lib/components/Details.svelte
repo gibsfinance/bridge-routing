@@ -13,7 +13,7 @@
   import { humanReadableNumber } from '$lib/stores/utils'
   import * as utils from '$lib/utils'
   import Loading from './Loading.svelte'
-  import type { Token } from '$lib/types'
+  import type { TokenMetadata } from '$lib/types'
   import * as input from '$lib/stores/input'
   import { pathway } from '$lib/stores/config'
   import Hover from './Hover.svelte'
@@ -27,7 +27,7 @@
   $: afterBridge = $amountToBridge - ($amountToBridge * fee) / oneEther
   $: estimated = afterBridge - $estimatedCost
   $: minimumDelivered = afterBridge - $limit
-  export let asset: Token | null = null
+  export let asset: TokenMetadata | null = null
   const fromChainId = input.fromChainId
 </script>
 

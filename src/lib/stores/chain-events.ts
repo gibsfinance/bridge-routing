@@ -6,7 +6,7 @@ import { derived, type Readable, type Stores } from 'svelte/store'
 import { loading } from './loading'
 import { walletAccount } from './auth/store'
 import { Chains } from './auth/types'
-import type { Token } from '$lib/types'
+import type { Token, TokenOut } from '$lib/types'
 import { chainsMetadata } from './auth/constants'
 import { nativeAssetOut, pathway } from './config'
 import _ from 'lodash'
@@ -105,7 +105,7 @@ export const getTokenBalance = (
   return loading.loadsAfterTick('balance', getBalance, set)
 }
 
-export const watchTokenBalance = (chainId: Readable<Chains>, tokenStore: Readable<Token | null>) =>
+export const watchTokenBalance = (chainId: Readable<Chains>, tokenStore: Readable<Token | TokenOut | null>) =>
   derived(
     [walletAccount, chainId, tokenStore, block, input.unwrap],
     ([$walletAccount, $chainId, $asset, $block], set) => {
@@ -113,7 +113,12 @@ export const watchTokenBalance = (chainId: Readable<Chains>, tokenStore: Readabl
         set(null)
         return () => {}
       }
-      const unwatch = getTokenBalance($chainId, $asset, $walletAccount, set)
+      if (!$asset.address) {
+        set(null)
+        return () => {}
+      }
+      const $a = $asset as Token
+      const unwatch = getTokenBalance($chainId, $a, $walletAccount, set)
       return () => {
         unwatch()
       }
@@ -168,10 +173,10 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
   originationChainId: Chains
   toForeign?: {
     home: Hex
-    foreign?: Hex
+    foreign: Hex | null
   }
   toHome?: {
-    home: Hex
+    home: Hex | null
     foreign: Hex
   }
 }> => {
@@ -245,7 +250,23 @@ export const tokenBridgeInfo = async ([$bridgeKey, $assetIn]: [input.BridgeKey, 
       },
     }
   }
-  return null
+  // the token has not been bridged yet
+  return {
+    originationChainId: fromChain,
+    ...(fromChain === Chains.PLS || fromChain === Chains.V4PLS
+      ? {
+          toForeign: {
+            foreign: null,
+            home: assetInAddress,
+          },
+        }
+      : {
+          toHome: {
+            foreign: assetInAddress,
+            home: null,
+          },
+        }),
+  }
 }
 
 export type TokenBridgeInfo = Awaited<ReturnType<typeof tokenBridgeInfo>>
@@ -261,7 +282,7 @@ export const assetLink = derived<Stores, null | TokenBridgeInfo>(
   },
 )
 
-export const tokenOriginationChainId = derived<Stores, Chains | undefined>([assetLink], ([$assetLink], set) => {
+export const tokenOriginationChainId = derived<Stores, Chains | undefined>([assetLink], ([$assetLink]) => {
   return $assetLink?.originationChainId
 })
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import { bridgeKey, router } from '$lib/stores/input'
+  import { bridgeKey, destinationRouter } from '$lib/stores/input'
   import { Chains } from '$lib/stores/auth/types'
   import { type as modalType } from '$lib/stores/modal'
   const openModal = () => {
@@ -38,7 +38,7 @@
   </a>
   <a
     aria-label="router code on block explorer"
-    href={`https://${domain}/address/${$router}#code`}
+    href={`https://${domain}/address/${$destinationRouter}#code`}
     target="_blank"
     class="mr-2">
     <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">

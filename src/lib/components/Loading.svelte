@@ -5,11 +5,10 @@
   export let key: string | string[] | undefined = undefined
   let className = ''
   export { className as class }
-  export let keepSpace = false
   $: loaded = $loading.isResolved(key)
 </script>
 
-{#if loaded && !keepSpace}
+{#if loaded}
   <slot />
 {:else}
   <Loader class={className} {loaded} />

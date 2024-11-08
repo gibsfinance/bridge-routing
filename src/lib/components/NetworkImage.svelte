@@ -3,7 +3,8 @@
   import Icon from '@iconify/svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { flippedTokenAddressIn, bridgeKey, partnerBridgeKey, toPath } from '$lib/stores/input'
+  import { bridgeKey, partnerBridgeKey, toPath } from '$lib/stores/input'
+  import { assetOut } from '$lib/stores/bridge-settings'
   import { goto } from '$app/navigation'
   import { page } from '$app/stores'
   import _ from 'lodash'
@@ -41,7 +42,7 @@
             class="px-2 flex flex-row h-10 flex-grow items-center"
             on:click={async () => {
               dropdown.open = false
-              const tokenAddressIn = o === $partnerBridgeKey ? $flippedTokenAddressIn : zeroAddress || zeroAddress
+              const tokenAddressIn = o === $partnerBridgeKey ? $assetOut?.address : zeroAddress || zeroAddress
               await goto(`/delivery/${toPath(o)}/${tokenAddressIn}`)
               return
             }}>

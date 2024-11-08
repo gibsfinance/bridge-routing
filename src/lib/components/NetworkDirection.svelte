@@ -2,7 +2,8 @@
   import { zeroAddress } from 'viem'
   import { goto } from '$app/navigation'
   import { useAuth } from '$lib/stores/auth/methods'
-  import { flippedTokenAddressIn, toPath, validBridgeKey, flippedBridgeKey, toChainId } from '$lib/stores/input'
+  import { toPath, validBridgeKey, flippedBridgeKey, toChainId } from '$lib/stores/input'
+  import { assetOut } from '$lib/stores/bridge-settings'
   import { walletAccount } from '$lib/stores/auth/store'
 
   const { switchChain } = useAuth()
@@ -12,7 +13,7 @@
     await goto(`/delivery/${toPath($flippedBridgeKey)}/${flippedAddressIn}`)
   }
   $: flippedIsValid = validBridgeKey([$flippedBridgeKey])
-  $: flippedAddressIn = $flippedTokenAddressIn || zeroAddress
+  $: flippedAddressIn = $assetOut?.address || zeroAddress
   $: disabled = !flippedIsValid
 </script>
 

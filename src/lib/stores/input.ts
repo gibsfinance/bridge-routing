@@ -23,11 +23,12 @@ import { countDecimals, humanReadableNumber, isZero, stripNonNumber } from '$lib
 import { ChainIdToKey, Chains, Provider } from './auth/types'
 import { settings, type PathwayExtendableConfig } from './fee-manager'
 import { defaultAssetIn, nativeAssetOut, nativeTokenName, nativeTokenSymbol, pathway } from './config'
-import type { Token, TokenList } from '$lib/types'
+import type { Token, TokenList, TokenOut } from '$lib/types'
 import _ from 'lodash'
 import { chainsMetadata } from './auth/constants'
 import { windowLoaded } from './window'
 import { asyncDerived } from '@square/svelte-store'
+import { multicallErc20 } from '$lib/utils'
 
 export const forcedRefresh = writable(0n)
 
@@ -236,17 +237,69 @@ export const assetInAddress = derived([bridgeKey, page], ([$bridgeKey, $page]) =
   return $bridgeKey && getAddress($page.params.assetInAddress || defaultAssetIn($bridgeKey)!.address)
 })
 
+const getAsset = async ($bridgeKey: BridgeKey, $assetInAddress: Hex) => {
+  const asset = await multicallErc20({
+    client: clientFromChain($bridgeKey[1]),
+    chain: chainsMetadata[$bridgeKey[1]],
+    target: $assetInAddress,
+  })
+  if (!asset) {
+    return null
+  }
+  const [name, symbol, decimals] = asset
+  return {
+    name,
+    symbol,
+    decimals,
+    address: $assetInAddress,
+    chainId: $bridgeKey[1],
+    logoURI: imageLinks.image({
+      chainId: Number($bridgeKey[1]),
+      address: $assetInAddress,
+    }),
+  }
+}
+
 export const assetIn = derived(
   [assetInAddress, bridgeKey, bridgableTokens, customTokens.tokens],
-  ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens]) => {
+  ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens], set) => {
     const $assetIn = $bridgableTokens.length
       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
-        _.find($customTokens || [], { address: $assetInAddress }) ||
-        defaultAssetIn($bridgeKey)
+        _.find($customTokens || [], { address: $assetInAddress })
       : null
-    return $assetIn as Token | null
+    if ($assetIn) {
+      set($assetIn)
+      return
+    }
+    return loading.loadsAfterTick(
+      'assetIn',
+      () => getAsset($bridgeKey, $assetInAddress),
+      (result: Token | null) => {
+        if (!result) {
+          return defaultAssetIn($bridgeKey)
+        }
+        return result
+      },
+      set,
+    )
+    //   ||
+    // defaultAssetIn($bridgeKey)
   },
+  null as Token | null,
 )
+
+// export const assetIn = derived(
+//   [assetInAddress, bridgeKey, bridgableTokens, customTokens.tokens],
+//   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens]) => {
+//     const $assetIn = $bridgableTokens.length
+//       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
+//         _.find($customTokens || [], { address: $assetInAddress }) ||
+//         defaultAssetIn($bridgeKey)
+//       : null
+//     console.log($assetIn)
+//     return $assetIn as Token | null
+//   },
+// )
 
 const unwrapStore = writable(true)
 
@@ -254,7 +307,7 @@ export const unwrap = {
   ...unwrapStore,
 }
 
-export const isNative = ($asset: Token | null, $bridgeKey: BridgeKey | null) => {
+export const isNative = ($asset: Token | TokenOut | null, $bridgeKey: BridgeKey | null) => {
   if (!$bridgeKey || !$asset) {
     return false
   }
@@ -418,9 +471,13 @@ export const loadFeeFor = async ($bridgeKey: BridgeKey) => {
   return setting
 }
 
-export const bridgeFee = derived([bridgeKey], ([$bridgeKey], set) => {
-  return loading.loadsAfterTick('fee', () => loadFeeFor($bridgeKey), set)
-})
+export const bridgeFee = derived(
+  [bridgeKey],
+  ([$bridgeKey], set) => {
+    return loading.loadsAfterTick('fee', () => loadFeeFor($bridgeKey), set)
+  },
+  null as PathwayExtendableConfig | null,
+)
 
 export const destinationSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) =>
   $bridgeKey[2] === Chains.BNB ? false : true,
@@ -428,7 +485,7 @@ export const destinationSupportsEIP1559 = derived([bridgeKey], ([$bridgeKey]) =>
 /** the estimated gas that will be consumed by running the foreign transaction */
 export const estimatedGas = writable(400_000n)
 /** the first recipient of the tokens (router) */
-export const router = derived([bridgeKey], ([$bridgeKey]) => pathway($bridgeKey)?.router || null)
+export const destinationRouter = derived([bridgeKey], ([$bridgeKey]) => pathway($bridgeKey)?.destinationRouter || null)
 /** the address of the bridge proxy contract on home */
 // export const bridgeAddress = derived([bridgeKey], ([$bridgeKey]) => destinationChains[$bridgeKey].homeBridge as Hex)
 // export const foreignBridgeAddress = derived(
@@ -436,35 +493,37 @@ export const router = derived([bridgeKey], ([$bridgeKey]) => pathway($bridgeKey)
 //   ([$bridgeKey]) => destinationChains[$bridgeKey].to as Hex,
 // )
 
+export const shouldDeliver = writable(true)
+
 export const toPath = ($bridgeKey: BridgeKey) => {
   const [provider, fromChain, toChain] = $bridgeKey
   return `${provider}/${ChainIdToKey.get(fromChain)!}/${ChainIdToKey.get(toChain)!}` as const
 }
 
-/**
- * the address of the token coming out on the other side of the bridge (foreign)
- * this address should only be used for presentational purposes
- * to put this into the calldata would produce bad outcomes
- */
-export const flippedTokenAddressIn = asyncDerived(
-  [bridgeKey, assetInAddress, bridgableTokens, unwrap],
-  async ([$bridgeKey, $assetInAddress, $bridgableTokens, $unwrap]) => {
-    const [, fromChain, toChain] = $bridgeKey
-    const assetInAddress = $assetInAddress === zeroAddress ? nativeAssetOut[fromChain] : getAddress($assetInAddress)
-    const token = $bridgableTokens.find(
-      (tkn) => getAddress(tkn.address) === assetInAddress && Number(fromChain) === tkn.chainId,
-    )
-    const known = token?.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
-    if (!known) {
-      // check at the bridge
-      return null
-    }
-    if (nativeAssetOut[toChain] === known && $unwrap) {
-      return zeroAddress
-    }
-    return known
-  },
-)
+// /**
+//  * the address of the token coming out on the other side of the bridge (foreign)
+//  * this address should only be used for presentational purposes
+//  * to put this into the calldata would produce bad outcomes
+//  */
+// export const flippedTokenAddressIn = asyncDerived(
+//   [bridgeKey, assetInAddress, bridgableTokens, unwrap],
+//   async ([$bridgeKey, $assetInAddress, $bridgableTokens, $unwrap]) => {
+//     const [, fromChain, toChain] = $bridgeKey
+//     const assetInAddress = $assetInAddress === zeroAddress ? nativeAssetOut[fromChain] : getAddress($assetInAddress)
+//     const token = $bridgableTokens.find(
+//       (tkn) => getAddress(tkn.address) === assetInAddress && Number(fromChain) === tkn.chainId,
+//     )
+//     const known = token?.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
+//     if (!known) {
+//       // check at the bridge
+//       return null
+//     }
+//     if (nativeAssetOut[toChain] === known && $unwrap) {
+//       return zeroAddress
+//     }
+//     return known
+//   },
+// )
 
 export const flippedBridgeKey = derived([bridgeKey], ([$bridgeKey]) => {
   const provider = $bridgeKey[0]

@@ -16,15 +16,20 @@ export type Extensions = {
   bridgeInfo?: Record<number, PerNetworkBridgeLink>
 }
 
-export type Token = {
-  address: Hex
+export type TokenMetadata = {
   name: string
   symbol: string
   decimals: number
+}
+
+export type Token = TokenMetadata & {
+  address: Hex
   chainId: number
   logoURI?: string
   extensions?: Extensions
 }
+
+export type TokenOut = Omit<Token, 'address'> & { address: Hex | null }
 
 export type TokenList = {
   tokens: Token[]

@@ -92,8 +92,8 @@ export const multicallErc20 = _.memoize(
   ({ target, chain }) => getAddress(target, chain.id),
 )
 
-export const nativeSymbol = (asset: types.Token | null, unwrap = false) =>
+export const nativeSymbol = (asset: { symbol: string } | null, unwrap = false) =>
   asset ? (unwrap ? asset.symbol.slice(1) : asset.symbol) : ''
 
-export const nativeName = (asset: types.Token | null, unwrap = false) =>
+export const nativeName = (asset: { name: string } | null, unwrap = false) =>
   asset ? (unwrap ? asset.name.split('Wrapped ').join('') : asset.name) : ''

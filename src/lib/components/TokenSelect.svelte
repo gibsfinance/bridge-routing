@@ -30,8 +30,8 @@
     modalStore.type.set(null)
   }
   const addCustom = (newToken: Token) => {
-    customTokens.tokens.update((tkns) => tkns.concat(newToken))
-    searchValue = ''
+    customTokens.tokens.update((tkns) => _(tkns).concat(newToken).uniqBy('address').value())
+    // searchValue = ''
     // use token as focus in bridge settings stores
   }
   const selectToken = (token: Token) => {
@@ -66,12 +66,13 @@
           }
       tkns = tkns.filter(filter)
     }
+    console.log('tkns', tkns, allChains)
     if (allChains) return tkns
     const [inside, outside] = _.partition(tkns, onlyFromCurrentNetwork)
     return inside
   }
 
-  const onlyFromCurrentNetwork = (tkn: Token) => !!tkn.extensions?.bridgeInfo?.[Number($bridgeKey[2])]?.tokenAddress
+  const onlyFromCurrentNetwork = (tkn: Token) => tkn.chainId === Number($fromChainId) // || !!tkn.extensions?.bridgeInfo?.[Number($bridgeKey[2])]?.tokenAddress
 
   const loadViaMulticall = async (target: Hex | null) => {
     if (!target) {
@@ -94,6 +95,7 @@
   }
   const tokens = customTokens.tokens
   $: subset = getSubset($tokens.concat($bridgableTokens), searchValue, showAllTokens, showAllChains)
+  $: console.log('subset', subset)
   $: inputIsAddress = isAddress(searchValue)
   $: addButtonDisabled = !inputIsAddress || !!subset.length
   $: searchValueHex = inputIsAddress ? (searchValue as Hex) : null

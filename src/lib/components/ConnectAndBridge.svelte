@@ -7,7 +7,7 @@
     fromTokenBalance,
     amountToBridge,
     foreignDataParam,
-    foreignCalldata,
+    // foreignCalldata,
     transactionInputs,
   } from '$lib/stores/bridge-settings'
   import { type Hex, getContract, erc20Abi, maxUint256, zeroAddress } from 'viem'
@@ -63,7 +63,7 @@
   }
 
   const initiateBridge = async () => {
-    if (!$foreignCalldata || !$foreignDataParam) {
+    if (!$foreignDataParam) {
       return
     }
     // TODO: add tracing call on foreign network to show that the bridge will be successful
@@ -267,7 +267,7 @@
         class:shadow-md={!disabled}
         {disabled}
         on:click={sendInitiateBridge}>
-        <div class="size-5"></div>&nbsp;Bridge&nbsp;<Loading key="user" keepSpace class="my-[10px]" />
+        <div class="size-5"></div>&nbsp;Bridge&nbsp;<Loading key="user" class="my-[10px]" />
       </button>
     {:else}
       <button
@@ -283,7 +283,7 @@
         <div class="size-5"></div>&nbsp;Approve {!$assetIn
           ? ''
           : humanReadableNumber($amountToBridge, $assetIn.decimals)}
-        {$assetIn?.symbol}&nbsp;<Loading key="user" keepSpace class="my-[10px]" />
+        {$assetIn?.symbol}&nbsp;<Loading key="user" class="my-[10px]" />
       </button>
     {/if}
   {:else}
