@@ -188,7 +188,7 @@ export const getTokenBalance = (
             abi: erc20Abi,
             client: $publicClient,
           }).read.balanceOf([$walletAccount])
-  set(null)
+  // set(null)
   return loading.loadsAfterTick('balance', getBalance, set)
 }
 
