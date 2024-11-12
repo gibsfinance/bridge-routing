@@ -40,8 +40,8 @@
   }
 </script>
 
-<div class="shadow-md rounded-lg">
-  <div class="bg-slate-100 py-2 px-3 rounded-t-lg">
+<div class="shadow-sm rounded-lg hover:shadow transition-shadow">
+  <div class="bg-slate-50 py-2 px-3 rounded-t-lg">
     <NetworkSummary
       {network}
       {asset}
@@ -50,7 +50,7 @@
       showMax
       on:max-balance={handleMaxBalance} />
   </div>
-  <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
+  <div class="flex flex-row mt-[1px] bg-slate-50 rounded-b-lg text-xl justify-between">
     <span class="flex flex-grow relative max-w-[70%]">
       <input
         class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-xl sm:text-2xl w-full"

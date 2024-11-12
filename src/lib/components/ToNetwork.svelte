@@ -140,8 +140,8 @@
   $: out = asset as Token
 </script>
 
-<div class="shadow-md rounded-lg">
-  <div class="bg-slate-100 py-2 px-3 rounded-t-lg hover:z-10">
+<div class="shadow-sm rounded-lg hover:shadow transition-shadow">
+  <div class="bg-slate-50 py-2 px-3 rounded-t-lg hover:z-10">
     <NetworkSummary
       network={destinationNetwork}
       inChain={false}
@@ -149,7 +149,7 @@
       balance={$toTokenBalance}
       unwrap={$unwrap} />
   </div>
-  <div class="bg-slate-100 mt-[1px] py-1">
+  <div class="bg-slate-50 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <span>Bridge Fee</span>
       <Hover let:handlers let:hovering>
@@ -163,7 +163,7 @@
     </div>
   </div>
   {#if $fromChainId === Chains.PLS || $fromChainId === Chains.V4PLS}
-    <div class="bg-slate-100 mt-[1px] py-1 relative hover:z-10">
+    <div class="bg-slate-50 mt-[1px] py-1 relative hover:z-10">
       <div class="flex flex-row px-3 leading-8 justify-between">
         <span class="flex items-center flex-row gap-2">
           <span
@@ -215,7 +215,7 @@
       </div>
       <UndercompensatedWarning />
     </div>
-    <div class="bg-slate-100 mt-[1px] py-1 relative hover:z-10">
+    <div class="bg-slate-50 mt-[1px] py-1 relative hover:z-10">
       <div class="flex flex-row px-3 leading-8 justify-between">
         <Hover let:hovering let:handlers>
           <button
@@ -264,7 +264,7 @@
       </div>
     </div>
   {/if}
-  <div class="rounded-b-lg bg-slate-100 mt-[1px] py-1 hover:z-10">
+  <div class="rounded-b-lg bg-slate-50 mt-[1px] py-1 hover:z-10">
     <div class="flex flex-row px-3 leading-10 justify-between">
       <div class="flex flex-row">
         <button

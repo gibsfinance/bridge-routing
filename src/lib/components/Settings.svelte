@@ -51,9 +51,9 @@
   }
 </script>
 
-<div class="my-2 text-sm shadow-sm rounded-lg">
+<div class="my-2 text-sm shadow-sm rounded-lg hover:shadow transition-shadow">
   <div
-    class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-col sm:flex-row relative">
+    class="bg-slate-50 rounded-t-lg py-2 px-3 justify-between flex flex-col sm:flex-row relative">
     <button type="button" on:click={lockRecipient}
       >Recipient <LockIcon locked={$recipientLockedToAccount} /></button>
     <SmallInput
@@ -71,12 +71,12 @@
   </div>
   {#if $destinationRouter}
     <div
-      class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row disabled cursor-not-allowed">
+      class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row disabled cursor-not-allowed">
       <span>Router</span>
       <span class="font-mono text-xs sm:text-sm">{$destinationRouter}</span>
     </div>
   {/if}
-  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row">
+  <div class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row">
     <span>Unwrap</span>
     <input
       type="checkbox"
@@ -89,14 +89,14 @@
       }} />
   </div>
   <div
-    class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row disabled cursor-not-allowed"
+    class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row disabled cursor-not-allowed"
     class:rounded-b-lg={!nonZeroXCalldata}>
     <span>To (Bridge)</span>
     <span class="font-mono text-xs sm:text-sm">{$bridgePathway?.to || zeroAddress}</span>
   </div>
   {#if nonZeroXCalldata}
     <div
-      class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row">
+      class="bg-slate-50 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-col sm:flex-row">
       <span class="whitespace-pre">Data&nbsp;&nbsp;<span class="font-mono">0x</span></span>
       <textarea
         name="calldata"
