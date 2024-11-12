@@ -150,6 +150,7 @@ export const toTokenBalance = chainEvents.watchTokenBalance(
   input.toChainId,
   assetOut,
   chainEvents.destination.block,
+  true,
 )
 
 export const unwrap = derived(

@@ -196,10 +196,11 @@ export const watchTokenBalance = (
   chainId: Readable<Chains>,
   tokenStore: Readable<Token | TokenOut | null>,
   ticker: Readable<unknown>, // usually a block
+  shouldUnwrap = false,
 ) =>
   derived(
     [walletAccount, chainId, tokenStore, ticker, input.unwrap],
-    ([$walletAccount, $chainId, $asset, $ticker], set) => {
+    ([$walletAccount, $chainId, $asset, $ticker, $unwrap], set) => {
       if (!$ticker || !$asset || !$walletAccount || $walletAccount === zeroAddress) {
         set(null)
         return () => {}
@@ -209,7 +210,14 @@ export const watchTokenBalance = (
         return () => {}
       }
       const $a = $asset as Token
-      const unwatch = getTokenBalance($chainId, $a, $walletAccount, set)
+      const token =
+        shouldUnwrap && $unwrap
+          ? {
+              ...$a,
+              address: zeroAddress,
+            }
+          : $a
+      const unwatch = getTokenBalance($chainId, token, $walletAccount, set)
       return () => {
         unwatch()
       }
