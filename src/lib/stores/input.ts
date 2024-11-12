@@ -266,7 +266,10 @@ export const isNative = ($asset: Token | TokenOut | null, $bridgeKey: BridgeKey 
     !$asset.name.includes(' from Pulsechain')
   )
 }
-const isUnwrappable = ($asset: Token | null, $bridgeKey: BridgeKey | null) => {
+export const isUnwrappable = (
+  $asset: Pick<Token, 'extensions'> | null,
+  $bridgeKey: BridgeKey | null,
+) => {
   if (!$bridgeKey || !$asset) {
     return false
   }
@@ -348,11 +351,6 @@ const getAsset = async ($chainId: Chains, $assetInAddress: Hex) => {
 export const assetIn = derived(
   [assetInAddress, bridgeKey, bridgableTokens, customTokens.tokens],
   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens], set) => {
-    // console.log($bridgableTokens)
-    // if (!$bridgableTokens.length) {
-    //   set(null)
-    //   return _.noop
-    // }
     const $assetIn = $bridgableTokens.length
       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
         _.find($customTokens || [], { address: $assetInAddress })
@@ -361,20 +359,18 @@ export const assetIn = derived(
       set($assetIn)
       return _.noop
     }
-    // set(null)
+    set(null)
     return loading.loadsAfterTick(
       'assetIn',
       () => getAsset($bridgeKey[1], $assetInAddress),
       (result: Token | null) => {
-        if (!result) {
+        if (!result && $bridgableTokens.length) {
           return defaultAssetIn($bridgeKey)
         }
         return result
       },
       set,
     )
-    //   ||
-    // defaultAssetIn($bridgeKey)
   },
   null as Token | null,
 )
@@ -552,9 +548,9 @@ export const toPath = ($bridgeKey: BridgeKey) => {
 //   },
 // )
 
-export const flippedBridgeKey = derived([bridgeKey], ([$bridgeKey]) => {
-  const provider = $bridgeKey[0]
-  const fromChain = $bridgeKey[1]
-  const toChain = $bridgeKey[2]
+export const flipBridgeKey = ($bridgeKey: BridgeKey) => {
+  const [provider, fromChain, toChain] = $bridgeKey
   return [provider, toChain, fromChain] as BridgeKey
-})
+}
+
+export const flippedBridgeKey = derived([bridgeKey], ([$bridgeKey]) => flipBridgeKey($bridgeKey))

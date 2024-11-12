@@ -127,7 +127,7 @@
 
   $: bridgeFeeDecimals = humanReadableNumber($bridgeFee * 100n)
   $: decimals = asset?.decimals || 18
-  $: large = $windowStore.innerHeight > 600 && $windowStore.innerWidth >= 768
+  $: large = $windowStore.innerWidth >= 512
   $: expectedAmountOut =
     $amountToBridge &&
     humanReadableNumber(

@@ -14,7 +14,7 @@ import {
   erc20Abi,
 } from 'viem'
 import { walletAccount } from './auth/store'
-import { Chains } from './auth/types'
+import { Chains, toChain } from './auth/types'
 import { loading, type Cleanup } from './loading'
 import type { Token, TokenOut } from '../types'
 import * as chainEvents from './chain-events'
@@ -57,9 +57,8 @@ export const assetOut = derived(
       set(null)
       return _.noop
     }
-    const { toHome, toForeign } = assetLink
-    const foreign = toHome?.foreign || toForeign?.foreign
-    if (!foreign || foreign === zeroAddress) {
+    const { assetOutAddress } = assetLink
+    if (!assetOutAddress) {
       set({
         address: null,
         decimals: $assetIn.decimals,
@@ -82,13 +81,16 @@ export const assetOut = derived(
       'assetout',
       async () => {
         const contract = getContract({
-          address: foreign,
+          address: assetOutAddress,
           abi: erc20Abi,
           client,
         })
-        return contract.read.totalSupply().catch(() => -1n)
+        return contract.read.totalSupply().catch(() => {
+          return -1n
+        })
       },
       async (data: bigint, cleanup: Cleanup) => {
+        // console.log('fetching asset out', data)
         if (data < 0n) {
           cleanup()
           return null
@@ -96,7 +98,7 @@ export const assetOut = derived(
         return await multicallErc20({
           client: input.clientFromChain(toChainId),
           chain: chainsMetadata[toChainId],
-          target: foreign,
+          target: assetOutAddress,
         }).catch(() => null)
       },
       (r: Erc20Metadata | null) => {
@@ -109,7 +111,7 @@ export const assetOut = derived(
             symbol,
             decimals,
             chainId: Number(toChainId),
-            address: foreign,
+            address: assetOutAddress,
           } as Token
           res.logoURI = imageLinks.image(res)
         } else {
@@ -214,22 +216,26 @@ setInterval(() => {
     }
   }
 }, 3_000)
+
+/**
+ * check the prices that each router offers for the given paths
+ * @param assetInAddress the address of the asset going into the bridge
+ * @param oneTokenInt the number of tokens to push into the bridge (before fees)
+ * @param chain the chain of the asset going into the bridge
+ * @param bridgeKey the bridge key
+ * @param blockNumber the block number to use for the price
+ * @param paths the paths to check
+ * @returns the prices as bigint for each path, hex whenever the price is not available
+ */
 const readAmountOut = (
-  {
-    $oneTokenInt,
-    $assetInAddress,
-    chain,
-    $bridgeKey,
-  }: {
-    $oneTokenInt: bigint
-    $assetInAddress: Hex
-    chain: Chains
-    $bridgeKey: input.BridgeKey
-  },
-  baseFee: bigint,
+  $assetInAddress: Hex,
+  $oneTokenInt: bigint,
+  chain: Chains,
+  $bridgeKey: input.BridgeKey,
+  blockNumber: bigint,
   paths: Hex[][],
 ): Promise<FetchResult[]> => {
-  const key = `${chain}-${$bridgeKey}-${baseFee}-${$assetInAddress}-${$oneTokenInt}`
+  const key = `${chain}-${$bridgeKey}-${blockNumber}-${$assetInAddress}-${$oneTokenInt}`
   const res = fetchCache.get(key)
   if (res) {
     return res.result
@@ -264,31 +270,15 @@ export const amountToBridge = derived(
 )
 export const priceCorrective = derived(
   [
-    input.assetIn,
     input.bridgeKey,
     oneTokenInt,
+    chainEvents.assetLink,
     assetOut,
     amountToBridge,
-    chainEvents.destination.latestBaseFeePerGas,
-    input.flippedBridgeKey,
+    chainEvents.destination.block,
   ],
-  (
-    [
-      $assetIn,
-      $bridgeKey,
-      $oneTokenInt,
-      $assetOut,
-      $amountToBridge,
-      $latestBaseFeePerGas,
-      $flippedBridgeKey,
-    ],
-    set,
-  ) => {
-    if (!$assetIn) {
-      set(0n)
-      return
-    }
-    if (!$assetOut || input.isNative($assetOut, $bridgeKey)) {
+  ([$bridgeKey, $oneTokenInt, $assetLink, $assetOut, $amountToBridge, $block], set) => {
+    if (!$assetLink?.assetOutAddress || !$assetOut || !$assetOut.address) {
       set(oneEther)
       return
     }
@@ -308,55 +298,54 @@ export const priceCorrective = derived(
       return (last * $oneTokenInt) / amountToBridge
     }
     const [, fromChain, toChain] = $bridgeKey
-    const paymentToken = nativeAssetOut[toChain]
-    const assetInAddress =
-      $assetIn.address === zeroAddress ? nativeAssetOut[fromChain] : $assetIn.address
+    // const destinationToken = nativeAssetOut[fromChain]
+    // measure the amount of the destination token that needs to be used to cover the cost of the bridge
+    const measurementToken = nativeAssetOut[toChain]
+    if (!pathway($bridgeKey)?.requiresDelivery) {
+      set(oneEther)
+      return
+    }
+    // signal that the price corrective cannot be calculated yet
     set(0n)
     return loading.loadsAfterTick(
       'gas',
       async () =>
+        // fetch the token bridge info for the token that is about to be spent by the delivery service
         await chainEvents.tokenBridgeInfo([
-          $flippedBridgeKey,
+          input.flipBridgeKey($bridgeKey),
           {
             ...$assetOut,
-            address: paymentToken,
+            address: measurementToken,
           },
         ]),
-      async (result: chainEvents.TokenBridgeInfo) => {
-        const reversePairing = result?.toHome || result?.toForeign
-        const paymentTokenFromBridgeStart =
-          reversePairing?.foreign === zeroAddress ? reversePairing?.home : reversePairing?.foreign
-        // console.log(assetInAddress, paymentTokenFromBridgeStart)
-        // console.log($assetOut!.address, paymentToken)
+      async (paymentTokenResult: chainEvents.TokenBridgeInfo) => {
+        // for a bridge going from foreign to home,
+        // use the destination token as the measurement token for the home side
+        const homeBridgedPaymentToken = paymentTokenResult!.assetOutAddress!
         return await Promise.all([
           readAmountOut(
-            {
-              $assetInAddress: $assetIn.address,
-              $oneTokenInt: amountToBridge,
-              chain: fromChain,
-              $bridgeKey,
-            },
-            $latestBaseFeePerGas,
+            $assetLink.assetInAddress,
+            amountToBridge,
+            fromChain,
+            $bridgeKey,
+            $block!.number!,
             [
-              [assetInAddress, paymentTokenFromBridgeStart!],
-              [assetInAddress, nativeAssetOut[fromChain], paymentTokenFromBridgeStart!],
+              // check the direct route
+              [$assetLink.assetInAddress, homeBridgedPaymentToken],
+              // might have heavier liquidity going through the native asset on the home side
+              [$assetLink.assetInAddress, nativeAssetOut[fromChain], homeBridgedPaymentToken],
             ],
           ),
-          $assetOut.address
-            ? readAmountOut(
-                {
-                  $assetInAddress: $assetOut.address,
-                  $oneTokenInt: amountToBridge,
-                  chain: toChain,
-                  $bridgeKey,
-                },
-                $latestBaseFeePerGas,
-                [
-                  [$assetOut!.address, paymentToken],
-                  [$assetOut!.address, nativeAssetOut[toChain], paymentToken],
-                ],
-              )
-            : [[], []],
+          readAmountOut(
+            $assetOut.address!, //
+            amountToBridge,
+            toChain, //
+            $bridgeKey, //
+            $block!.number!,
+            // only the direct route is available.
+            // might be able to create a whitelist for this at some point
+            [[$assetOut!.address!, measurementToken]],
+          ),
         ])
       },
       (results: [FetchResult[], FetchResult[]]) => {
@@ -557,7 +546,7 @@ export const foreignDataParam = derived(
     if (!$destinationRouter || !$feeDirectorStructEncoded || !$assetLink) {
       return null
     }
-    if (!$bridgePathway.autoDelivers && !$shouldDeliver) {
+    if ($bridgePathway.requiresDelivery && !$shouldDeliver) {
       return $recipient
     }
     return concatHex([$destinationRouter, $feeDirectorStructEncoded])
@@ -680,7 +669,7 @@ export const transactionInputs = derived(
       }
     } else {
       // tokens native to this side, entering the bridge
-      if ($shouldDeliver && !$bridgePathway.autoDelivers) {
+      if ($shouldDeliver && $bridgePathway.requiresDelivery) {
         if (!$feeDirectorStructEncoded) return null
         if (!$destinationRouter) return null
         data = $bridgePathway.usesExtraParam
@@ -770,5 +759,3 @@ export const assetSources = (asset: Token | null) => {
     .value() as unknown as string[]
   return imageLinks.images(sources)
 }
-
-const toChain = (chainId: number) => `0x${Number(chainId).toString(16)}` as Chains

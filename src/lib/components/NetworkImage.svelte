@@ -32,7 +32,7 @@
   <details class="dropdown relative flex flex-grow justify-center" bind:this={dropdown}>
     <summary class="flex flex-row justify-items-center items-center space-x-2 select-none">
       <StaticNetworkImage {network} {size} {provider} />
-      <span class="leading-8 ml-1">{network.name}</span>
+      <span class="leading-8 ml-1 whitespace-pre">{network.name}</span>
       <Icon icon="mingcute:down-fill" class="flex size-5" />
     </summary>
     <ul

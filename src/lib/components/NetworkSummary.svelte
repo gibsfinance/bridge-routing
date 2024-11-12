@@ -1,6 +1,6 @@
 <script lang="ts">
   import { humanReadableNumber } from '$lib/stores/utils'
-  import type { VisualChain } from '$lib/stores/auth/types'
+  import { toChain, type VisualChain } from '$lib/stores/auth/types'
   import NetworkImage from './NetworkImage.svelte'
   import { createEventDispatcher } from 'svelte'
   import * as utils from '$lib/utils'
@@ -39,7 +39,7 @@
         {/if}
         <span
           class="max-w-[175px] overflow-hidden overflow-ellipsis"
-          class:opacity-60={!$loading.isResolved('balance')}
+          class:opacity-60={!$loading.isResolved(`balance-${toChain(network.id)}`)}
           >{balance === null ? '' : humanReadableNumber(balance, asset?.decimals || 18)}</span
         >{utils.nativeSymbol(asset, unwrap)}
       </div>

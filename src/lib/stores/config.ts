@@ -50,7 +50,6 @@ export const nativeTokenName = {
 export type Pathway = {
   from: Hex
   to: Hex
-  autoDelivers: boolean
   destinationRouter: Hex | null
   nativeRouter: Hex
   defaultAssetIn: Token
@@ -69,7 +68,6 @@ export const pathways = {
   [Provider.PULSECHAIN]: {
     [Chains.PLS]: {
       [Chains.ETH]: {
-        autoDelivers: false,
         from: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
         to: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
         destinationRouter: '0x5df881304F6D4279B46f7aB001d55f025bAF1bc5',
@@ -96,7 +94,6 @@ export const pathways = {
     },
     [Chains.ETH]: {
       [Chains.PLS]: {
-        autoDelivers: true,
         from: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
         to: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
         nativeRouter: '0x5df881304F6D4279B46f7aB001d55f025bAF1bc5',
@@ -125,7 +122,6 @@ export const pathways = {
   [Provider.TOKENSEX]: {
     [Chains.PLS]: {
       [Chains.BNB]: {
-        autoDelivers: false,
         from: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
         to: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
         destinationRouter: '0x9c50EfD36dF2DBD310fBC981d6D8478cF3484B85',
@@ -152,7 +148,6 @@ export const pathways = {
     },
     [Chains.BNB]: {
       [Chains.PLS]: {
-        autoDelivers: true,
         from: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
         to: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
         nativeRouter: '0x9c50EfD36dF2DBD310fBC981d6D8478cF3484B85',
@@ -207,7 +202,6 @@ export const testnetPathways = {
   [Provider.PULSECHAIN]: {
     [Chains.V4PLS]: {
       [Chains.SEP]: {
-        autoDelivers: false,
         from: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
         to: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
         nativeRouter: '0xCA1BDc038909038C4B3cbab0EA0ec3cC2839F106',
@@ -234,7 +228,6 @@ export const testnetPathways = {
     },
     [Chains.SEP]: {
       [Chains.V4PLS]: {
-        autoDelivers: true,
         from: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
         to: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
         nativeRouter: '0xCb4057d7DA4CE521B93b71186DfE11f9FBC3e3b1',

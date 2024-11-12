@@ -154,8 +154,7 @@
     if (!$bridgePathway) {
       return
     }
-    const tokenInfo = await tokenBridgeInfo([$bridgeKey, $assetIn])
-    if (!tokenInfo || !$assetIn || !$transactionInputs) {
+    if (!$assetLink || !$assetIn || !$transactionInputs) {
       return
     }
     const options = opts()
@@ -259,7 +258,7 @@
 
 <div>
   {#if $walletAccount}
-    {#if ($assetLink && ($assetLink.toHome || ($assetLink.toForeign && $approval >= $amountToBridge))) || isNative}
+    {#if $assetLink?.originationChainId !== $fromChainId || $approval >= $amountToBridge || isNative}
       <button
         data-testid={testId}
         class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-center"
@@ -270,28 +269,20 @@
         class:shadow-md={!disabled}
         {disabled}
         on:click={sendInitiateBridge}>
-        <div class="size-5"></div>&nbsp;Bridge&nbsp;<Loading key="user" class="my-[10px]" />
+        <div class="size-5"></div>&nbsp;Bridge&nbsp;<div class="size-5"><Loading key="user" /></div>
       </button>
     {:else}
       <button
         data-testid={testId}
-        class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-center"
-        class:hover:bg-purple-500={!disabled}
-        class:bg-purple-600={!disabled}
-        class:bg-purple-400={disabled}
-        class:cursor-not-allowed={disabled}
-        class:shadow-md={!disabled}
-        {disabled}
+        class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-center hover:bg-purple-500 bg-purple-600 shadow-md"
         on:click={sendIncreaseApproval}>
-        <div class="size-5"></div>&nbsp;Approve {!$assetIn
-          ? ''
-          : humanReadableNumber($amountToBridge, $assetIn.decimals)}
-        {$assetIn?.symbol}&nbsp;<Loading key="user" class="my-[10px]" />
+        <div class="size-5"></div>&nbsp;Approve
+        {$assetIn?.symbol}&nbsp;<div class="size-5"><Loading key="user" /></div>
       </button>
     {/if}
   {:else}
     <button
-      class="p-2 bg-purple-600 text-white w-full rounded-lg hover:bg-purple-500 active:bg-purple-500"
+      class="px-2 leading-10 bg-purple-600 text-white w-full rounded-lg hover:bg-purple-500 active:bg-purple-500"
       data-testid={testId}
       on:click={() => connect()}>
       Sign In
