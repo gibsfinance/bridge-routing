@@ -1,34 +1,44 @@
 import { Chains } from '$lib/stores/auth/types'
 import { chainsMetadata } from './auth/constants'
-import { get, writable } from 'svelte/store'
+import { derived, get, writable } from 'svelte/store'
 import _ from 'lodash'
+import { isProd } from './config'
+
+type RPCEntry = [Chains, string[]]
 
 type RPCData = Map<Chains, string[]>
 
-const defaultData = new Map([
-  [Chains.PLS, [chainsMetadata[Chains.PLS].rpcUrls.default.http[0]]],
-  [Chains.ETH, [chainsMetadata[Chains.ETH].rpcUrls.default.http[0]]],
-  [Chains.BNB, [chainsMetadata[Chains.BNB].rpcUrls.default.http[0]]],
-  [Chains.V4PLS, [chainsMetadata[Chains.V4PLS].rpcUrls.default.http[0]]],
-  [Chains.SEP, [chainsMetadata[Chains.SEP].rpcUrls.default.http[0]]],
-])
+const prodRpc = [
+  [Chains.PLS, [...chainsMetadata[Chains.PLS].rpcUrls.default.http]],
+  [Chains.ETH, [...chainsMetadata[Chains.ETH].rpcUrls.default.http]],
+  [Chains.BNB, [...chainsMetadata[Chains.BNB].rpcUrls.default.http]],
+] as RPCEntry[]
+
+const testnetRpc = [
+  [Chains.V4PLS, [...chainsMetadata[Chains.V4PLS].rpcUrls.default.http]],
+  [Chains.SEP, [...chainsMetadata[Chains.SEP].rpcUrls.default.http]],
+] as RPCEntry[]
+
+const defaultData = derived(
+  [isProd],
+  ([$isProd]) => new Map([...prodRpc, ...($isProd ? [] : testnetRpc)]),
+)
 
 export const key = (c: Chains, l: string[]) => `${c},${(l as string[]).join(',')}`
 
-const entries = new Map(defaultData.entries())
 const serializer = {
   stringify(obj: RPCData) {
     return [...obj.entries()].map(([c, l]) => key(c, l)).join('\n')
   },
   parse(entry: string | null) {
     if (!entry) {
-      return entries
+      return get(defaultData)
     }
     const stored = entry.split('\n').map((ro) => {
       const [chain, ...list] = ro.split(',')
       return [chain as Chains, _.compact(list)] as const
     }) as [Chains, string[]][]
-    return new Map([...defaultData.entries()].concat(stored))
+    return new Map([...get(defaultData).entries()].concat(stored))
   },
 }
 const localStorageKey = 'rpcs'
@@ -75,11 +85,11 @@ export const add = (chain: Chains, addition = ($rpcs: string[]) => [''].concat($
 }
 
 export const hasDefault = (chain: Chains, list: string[]) => {
-  const defaultRpc = defaultData.get(chain)?.[0] as string
+  const defaultRpc = get(defaultData).get(chain)?.[0] as string
   if (!defaultRpc) return false
   return list.includes(defaultRpc)
 }
 
 export const restoreDefault = (chain: Chains) => {
-  add(chain, (l) => l.concat(defaultData.get(chain) as string[]))
+  add(chain, (l) => l.concat(get(defaultData).get(chain) as string[]))
 }
