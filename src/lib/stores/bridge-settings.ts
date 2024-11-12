@@ -1,4 +1,4 @@
-import { derived } from 'svelte/store'
+import { derived, writable } from 'svelte/store'
 import * as input from '$lib/stores/input'
 import {
   zeroAddress,
@@ -759,3 +759,5 @@ export const assetSources = (asset: Token | null) => {
     .value() as unknown as string[]
   return imageLinks.images(sources)
 }
+
+export const details = writable<null | 'settings' | 'details'>(null)

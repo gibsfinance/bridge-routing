@@ -6,19 +6,14 @@
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import Settings from './Settings.svelte'
   import Details from './Details.svelte'
-  import { assetOut } from '$lib/stores/bridge-settings'
+  import { assetOut, details } from '$lib/stores/bridge-settings'
   import * as input from '$lib/stores/input'
   const { fromChainId, toChainId, assetIn } = input
   $: originationNetwork = chainsMetadata[$fromChainId]
   $: destinationNetwork = chainsMetadata[$toChainId]
-  let dropdowns: Record<string, boolean> = {}
   const toggleDropdowns = (e: CustomEvent) => {
-    for (const k of Object.keys(dropdowns)) {
-      if (k !== e.detail) {
-        dropdowns[k] = false
-      }
-    }
-    dropdowns[e.detail] = !dropdowns[e.detail]
+    if ($details === e.detail) details.set(null)
+    else details.set(e.detail)
   }
 </script>
 
@@ -26,10 +21,10 @@
   <FromNetwork network={originationNetwork} asset={$assetIn} value={input.amountIn} />
   <NetworkDirection />
   <ToNetwork {destinationNetwork} on:toggle={toggleDropdowns} asset={$assetOut} />
-  {#if dropdowns.settings}
+  {#if $details === 'settings'}
     <Settings />
   {/if}
-  {#if dropdowns.details}
+  {#if $details === 'details'}
     <Details asset={$assetOut} />
   {/if}
   <div class="mt-4">

@@ -3,13 +3,16 @@
   import Icon from '@iconify/svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { bridgeKey, partnerBridgeKey, toPath } from '$lib/stores/input'
+  import { walletAccount } from '$lib/stores/auth/store'
+  import { toChainId, bridgeKey, partnerBridgeKey, toPath } from '$lib/stores/input'
   import { assetOut } from '$lib/stores/bridge-settings'
   import { goto } from '$app/navigation'
   import { page } from '$app/stores'
   import _ from 'lodash'
   import { validBridgeKeys } from '$lib/stores/config'
   import { zeroAddress } from 'viem'
+  import { useAuth } from '$lib/stores/auth/methods'
+  const { switchChain } = useAuth()
   $: provider = $page.params.provider
 
   let dropdown!: HTMLDetailsElement
@@ -45,6 +48,7 @@
               dropdown.open = false
               const tokenAddressIn =
                 o === $partnerBridgeKey ? $assetOut?.address : zeroAddress || zeroAddress
+              if ($walletAccount) await switchChain($toChainId)
               await goto(`/delivery/${toPath(o)}/${tokenAddressIn}`)
               return
             }}>

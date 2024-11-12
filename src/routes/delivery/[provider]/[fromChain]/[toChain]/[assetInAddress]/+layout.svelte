@@ -16,10 +16,16 @@
   }
 </script>
 
-<div class="bg-slate-950 flex min-h-[100vh] w-full">
+<div class="bg-slate-950 flex custom-height w-full">
   {#if $navigating}
     <Loading />
   {:else}
     <slot />
   {/if}
 </div>
+
+<style lang="postcss">
+  .custom-height {
+    /* min-height: calc(100vh - 100px); */
+  }
+</style>

@@ -10,7 +10,7 @@
 </script>
 
 <Hover let:handlers let:hovering>
-  <span use:hover={handlers} class="flex text-center font-mono font-thin leading-8">
+  <span use:hover={handlers} class="flex text-center font-mono font-thin leading-8 relative">
     <Tooltip show={hovering}>{timestamp}</Tooltip>
     v{appVersion}@{isLocal ? 'local' : env.version}
   </span>

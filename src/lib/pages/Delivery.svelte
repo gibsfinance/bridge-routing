@@ -8,7 +8,7 @@
 <main class="flex flex-col box-border w-full h-fit min-h-screen bg-slate-950">
   <AuthProvider>
     <Nav />
-    <div class="flex flex-col mt-10 min-h-screen">
+    <div class="flex flex-col mt-10">
       <slot />
     </div>
     <Footer />

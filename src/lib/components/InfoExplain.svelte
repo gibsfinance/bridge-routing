@@ -17,8 +17,13 @@
         >The only difference is that the final router contract on Ethereum has been swapped out.</li>
       <li>
         This modified implementation allows the runner's actions to be measured and creates an
-        economic incentive to deliver tokens, maintaining privacy for the end user (you).
+        economic incentive to deliver tokens, maintaining privacy for the end user (you) by not
+        requiring you to fund new bridges to networks where you do not have gas.
       </li>
+      <li
+        >This does not mean that the transaction is untraceable. The destination address is written
+        on the originating blockchain. It only means that you are not required to fund on the
+        destination network from another address that has gas.</li>
       <li>
         If, for any reason, your transaction is not run in a timely manner, you can always use
         <VersionedLink domain="bridge.pulsechain.com" path="/#/transactions" />
