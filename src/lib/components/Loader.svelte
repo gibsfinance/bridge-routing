@@ -1,7 +1,6 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
 
-  // export let size = 'sm'
   let className = ''
   export { className as class }
   export let loaded = false

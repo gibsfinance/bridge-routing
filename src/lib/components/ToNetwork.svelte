@@ -184,34 +184,38 @@
               }}><LockIcon locked={deliveryFeeLocked} /></button
             >{/if}
         </span>
-        <Hover let:handlers let:hovering>
-          <button
-            use:hover={handlers}
-            type="button"
-            name="fee-amount"
-            class="flex flex-row strike tooltip tooltip-top tooltip-left-toward-center items-center relative"
-            class:line-through={$feeType === input.FeeType.FIXED}
-            on:click={focusOnInputChild}>
-            <Tooltip show={hovering} positionFlow="above"
-              >{$feeType === input.FeeType.FIXED
-                ? 'Fee uses fixed value defined in cost limit'
-                : $feeType === input.FeeType.GAS_TIP
-                  ? `Percentage of gas used * ${$destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber($estimatedNetworkCost, asset?.decimals || 18)} ${utils.nativeSymbol(asset, $unwrap)}`
-                  : 'the percentage of bridged tokens after the bridge fee'}</Tooltip>
-            {#if $feeType !== input.FeeType.FIXED}
-              <span class:hidden={$feeType !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><span
-                class="flex items-center"
-                class:opacity-60={!$loading.isResolved('gas')}
-                ><SmallInput
-                  value={input.fee}
-                  suffix="%"
-                  on:input={() => {
-                    deliveryFeeLocked = true
-                  }} />
-              </span>
-            {/if}
-          </button>
-        </Hover>
+        {#if $shouldDeliver}
+          <Hover let:handlers let:hovering>
+            <button
+              use:hover={handlers}
+              type="button"
+              name="fee-amount"
+              class="flex flex-row strike tooltip tooltip-top tooltip-left-toward-center items-center relative"
+              class:line-through={$feeType === input.FeeType.FIXED}
+              on:click={focusOnInputChild}>
+              <Tooltip show={hovering} positionFlow="above"
+                >{$feeType === input.FeeType.FIXED
+                  ? 'Fee uses fixed value defined in cost limit'
+                  : $feeType === input.FeeType.GAS_TIP
+                    ? `Percentage of gas used * ${$destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber($estimatedNetworkCost, asset?.decimals || 18)} ${utils.nativeSymbol(asset, $unwrap)}`
+                    : 'the percentage of bridged tokens after the bridge fee'}</Tooltip>
+              {#if $feeType !== input.FeeType.FIXED}
+                <span class:hidden={$feeType !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><span
+                  class="flex items-center"
+                  class:opacity-60={!$loading.isResolved('gas')}
+                  ><SmallInput
+                    value={input.fee}
+                    suffix="%"
+                    on:input={() => {
+                      deliveryFeeLocked = true
+                    }} />
+                </span>
+              {/if}
+            </button>
+          </Hover>
+        {:else}
+          <span class="flex items-end self-end">0.0%</span>
+        {/if}
       </div>
       <UndercompensatedWarning />
     </div>
@@ -234,33 +238,39 @@
               transaction's calldata is fixed</Tooltip>
           </button>
         </Hover>
-        <Hover let:hovering let:handlers>
-          <button
-            use:hover={handlers}
-            type="button"
-            name="cost-limit"
-            class="flex flex-row items-end self-end relative"
-            on:click={focusOnInputChild}>
-            <span class="flex items-center" class:opacity-60={!$loading.isResolved('gas')}>
-              {#if $feeType === input.FeeType.PERCENT}
-                <span
-                  >{humanReadableNumber($limitFromPercent, asset?.decimals || 18)}
-                  {utils.nativeSymbol(asset, $unwrap)}</span>
-              {:else}
-                <SmallInput
-                  value={input.limit}
-                  suffix="&nbsp;{utils.nativeSymbol(asset, $unwrap)}"
-                  on:input={() => {
-                    costLimitLocked = true
-                  }} />
-              {/if}
-            </span>
-            <Tooltip positionFlow="above" position="left" show={hovering}
-              >{$feeType === input.FeeType.FIXED || $feeType === input.FeeType.PERCENT
-                ? 'The fixed fee to tip if the validator does the work'
-                : 'The max you are willing to tip to the address'}</Tooltip>
-          </button>
-        </Hover>
+        {#if $shouldDeliver}
+          <Hover let:hovering let:handlers>
+            <button
+              use:hover={handlers}
+              type="button"
+              name="cost-limit"
+              class="flex flex-row items-end self-end relative"
+              on:click={focusOnInputChild}>
+              <span class="flex items-center" class:opacity-60={!$loading.isResolved('gas')}>
+                {#if $feeType === input.FeeType.PERCENT}
+                  <span
+                    >{humanReadableNumber($limitFromPercent, asset?.decimals || 18)}
+                    {utils.nativeSymbol(asset, $unwrap)}</span>
+                {:else}
+                  <SmallInput
+                    value={input.limit}
+                    suffix="&nbsp;{utils.nativeSymbol(asset, $unwrap)}"
+                    on:input={() => {
+                      costLimitLocked = true
+                    }} />
+                {/if}
+              </span>
+              <Tooltip positionFlow="above" position="left" show={hovering}
+                >{$feeType === input.FeeType.FIXED || $feeType === input.FeeType.PERCENT
+                  ? 'The fixed fee to tip if the validator does the work'
+                  : 'The max you are willing to tip to the address'}</Tooltip>
+            </button>
+          </Hover>
+        {:else}
+          <span class="flex items-end self-end">
+            <span>0.0&nbsp;{utils.nativeSymbol(asset, $unwrap)}</span>
+          </span>
+        {/if}
       </div>
     </div>
   {/if}

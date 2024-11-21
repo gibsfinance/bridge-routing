@@ -18,6 +18,7 @@ import {
   parseUnits,
   fallback,
   type PublicClient,
+  webSocket,
 } from 'viem'
 import { countDecimals, humanReadableNumber, isZero, stripNonNumber } from '$lib/stores/utils'
 import { ChainIdToKey, Chains, Provider } from './auth/types'
@@ -38,6 +39,11 @@ import { multicallErc20 } from '$lib/utils'
 export const forcedRefresh = writable(0n)
 
 export const incrementForcedRefresh = () => forcedRefresh.update((current) => current + 1n)
+
+// leave this here to help with testing. it is useful
+// to be able to force a refresh to see what happens to the ui
+// to see what is affected by incrementing this value
+// ;(window as any).incrementForcedRefresh = incrementForcedRefresh
 
 const limitStore = writable('0')
 
@@ -298,11 +304,19 @@ export const clientFromChain = ($chainId: Chains) => {
     chain: chainsMetadata[$chainId],
     transport: fallback(
       urls.map((rpc) =>
-        http(rpc, {
-          batch: {
-            wait: 10,
-          },
-        }),
+        rpc.startsWith('http')
+          ? http(rpc, {
+              batch: {
+                wait: 10,
+              },
+            })
+          : webSocket(rpc, {
+              keepAlive: true,
+              reconnect: true,
+              retryDelay: 250,
+              retryCount: 10,
+              timeout: 4_000,
+            }),
       ),
       { rank: true },
     ),

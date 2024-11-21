@@ -448,8 +448,9 @@ export const clampedReimbersement = derived(
 )
 /** the estimated cost given the choice for a fixed fee, limit and incentive fee */
 export const estimatedCost = derived(
-  [input.feeType, limit, limitFromPercent, clampedReimbersement],
-  ([$feeType, $limit, $limitFromPercent, $clampedReimbersement]) => {
+  [input.feeType, limit, limitFromPercent, clampedReimbersement, input.shouldDeliver],
+  ([$feeType, $limit, $limitFromPercent, $clampedReimbersement, $shouldDeliver]) => {
+    if (!$shouldDeliver) return 0n
     if ($feeType === input.FeeType.PERCENT) {
       return $limitFromPercent
     }
@@ -511,10 +512,16 @@ export const feeDirectorStructEncoded = derived(
 export const interactingWithBridgeToken = derived(
   [input.assetIn, chainEvents.assetLink],
   ([$assetIn, $assetLink]) => {
-    return $assetLink
-      ? $assetLink.toForeign?.foreign === $assetIn?.address ||
-          $assetLink.toHome?.home === $assetIn?.address
-      : false
+    const { toForeign, toHome } = $assetLink || {}
+    const { foreign } = toForeign || {}
+    const { home } = toHome || {}
+    let assetInAddress = $assetIn?.address
+    if (!assetInAddress) return false
+    assetInAddress = getAddress(assetInAddress)
+    return !!(
+      (foreign && getAddress(foreign) === assetInAddress) ||
+      (home && getAddress(home) === assetInAddress)
+    )
   },
 )
 /**

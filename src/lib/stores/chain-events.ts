@@ -54,6 +54,7 @@ const createChainState = (index: 1 | 2) => {
         },
       })
       return () => {
+        // $publicClient.unwatchBlocks(cleanup)
         cleanup()
         decrement()
       }

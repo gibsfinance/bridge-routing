@@ -20,13 +20,13 @@
   import { hover } from '$lib/modifiers/hover'
   import Tooltip from './Tooltip.svelte'
   import { Chains } from '$lib/stores/auth/types'
-  const { bridgeFee, bridgeKey, feeType, fee: inputFee } = input
+  const { bridgeFee, bridgeKey, feeType, fee: inputFee, shouldDeliver } = input
   const oneEther = 10n ** 18n
   $: path = pathway($bridgeKey)
   $: fee = (path?.toHome ? $bridgeFee?.feeF2H : $bridgeFee?.feeH2F) || 0n
   $: afterBridge = $amountToBridge - ($amountToBridge * fee) / oneEther
-  $: estimated = afterBridge - $estimatedCost
-  $: minimumDelivered = afterBridge - $limit
+  $: estimated = $shouldDeliver ? afterBridge - $estimatedCost : afterBridge
+  $: minimumDelivered = $shouldDeliver ? afterBridge - $limit : afterBridge
   export let asset: TokenMetadata | null = null
   const fromChainId = input.fromChainId
 </script>
@@ -54,7 +54,7 @@
         <Hover let:handlers let:hovering>
           <span use:hover={handlers} class="flex flex-row items-end self-end relative">
             <Loading key="gas">
-              {humanReadableNumber($estimatedNetworkCost, asset.decimals)}
+              {humanReadableNumber($shouldDeliver ? $estimatedNetworkCost : 0n, asset.decimals)}
             </Loading>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
             <Tooltip positionFlow="above" position="left" show={hovering}
               >the estimated cost to put this transaction on chain in terms of the token being
@@ -64,8 +64,7 @@
       </span>
     </div>
     {#if $fromChainId === Chains.PLS || $fromChainId === Chains.V4PLS}
-      <div
-        class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
+      <div class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
         <span class="w-32">
           {#if $feeType === 'gas+%'}Estimated
           {/if}Cost
@@ -95,8 +94,7 @@
       </div>
     {/if}
     {#if $feeType !== 'gas+%'}
-      <div
-        class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
+      <div class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
         <span class="w-32">Delivered</span>
         <span class="flex flex-row items-end self-end">
           <Loading key="gas">
@@ -116,8 +114,7 @@
           >&nbsp;{utils.nativeSymbol(asset, $unwrap)}
         </span>
       </div>
-      <div
-        class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
+      <div class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
         <span class="w-32">Minimum</span>
         <span class="flex flex-row justify-between grow">
           <span>&gt;=</span>
