@@ -69,7 +69,7 @@
     return formatUnits(target, 18)
   }
   const gasPercentFeeFromNetworkInputs = () => {
-    if ($priceCorrective === 0n) {
+    if ($priceCorrective === 0n || !asset) {
       return
     }
     const numDecimals = 6n
