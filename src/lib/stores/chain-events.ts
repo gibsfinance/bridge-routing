@@ -2,7 +2,7 @@ import * as input from './input'
 import { multicallRead } from '$lib/utils'
 import * as abis from './abis'
 import { type PublicClient, type Block, getContract, erc20Abi, type Hex, zeroAddress } from 'viem'
-import { derived, type Readable, type Stores } from 'svelte/store'
+import { derived, type Readable, type Stores, readable } from 'svelte/store'
 import { loading } from './loading'
 import { walletAccount } from './auth/store'
 import { Chains } from './auth/types'
@@ -15,6 +15,32 @@ export const destinationPublicClient = derived(
   [input.bridgeKey, input.forcedRefresh],
   ([$bridgeKey]) => $bridgeKey && input.clientFromChain($bridgeKey[2]),
 )
+
+type PartialFinalizedBlocks = Partial<Record<Chains, bigint>>
+
+const watchFinalizedBlocks = (
+  chainId: Chains,
+  update: (v: (r: PartialFinalizedBlocks) => PartialFinalizedBlocks) => void,
+) => {
+  const client = input.clientFromChain(chainId)
+  return client.watchBlocks({
+    blockTag: 'finalized',
+    emitOnBegin: true,
+    onBlock: (block) => {
+      // set(block.number)
+      update((v) => ({ ...v, [chainId]: block.number }))
+    },
+  })
+}
+
+export const finalizedBlocks = readable({} as PartialFinalizedBlocks, (_set, update) => {
+  const cleanups = Object.keys(chainsMetadata).map((chain) => {
+    return watchFinalizedBlocks(chain as Chains, update)
+  })
+  return () => {
+    cleanups.forEach((cleanup) => cleanup())
+  }
+})
 
 type ChainState = {
   publicClient: Readable<PublicClient | null>

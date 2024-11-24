@@ -18,7 +18,8 @@
   import { get } from 'svelte/store'
   import { addMessage, removeMessage, uri } from '$lib/stores/toast'
 
-  const { walletClient, assetIn, clientFromChain, bridgeKey, bridgePathway, fromChainId } = input
+  const { walletClient, assetIn, clientFromChain, shouldDeliver, bridgePathway, fromChainId } =
+    input
 
   let disabledByClick = false
   $: tokenBalance = $fromTokenBalance || 0n
@@ -203,7 +204,10 @@
         class:shadow-md={!disabled}
         {disabled}
         on:click={sendInitiateBridge}>
-        <div class="size-5"></div>&nbsp;Bridge&nbsp;<div class="size-5"><Loading key="user" /></div>
+        <div class="size-5"></div
+        >&nbsp;Bridge{#if $shouldDeliver && $bridgePathway?.requiresDelivery}
+          &nbsp;+&nbsp;Deliver{:else if !$shouldDeliver && $bridgePathway?.requiresDelivery}&nbsp;Only{/if}&nbsp;<div
+          class="size-5"><Loading key="user" /></div>
       </button>
     {:else}
       <button

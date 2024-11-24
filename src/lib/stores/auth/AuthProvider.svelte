@@ -134,6 +134,7 @@
   }
 
   async function switchChain(chain: string | Chains) {
+    // console.log('switchChain', chain)
     await onboard.setChain({ chainId: chain })
   }
 
