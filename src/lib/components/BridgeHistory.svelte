@@ -21,7 +21,9 @@ map out the progress of each bridge and display it to the user
   </div>
 {:else if $bridges.length}
   <!-- bridges found -->
-  <BridgeHistoryTable bridges={$bridges} />
+  <div class="flex w-full justify-center">
+    <BridgeHistoryTable bridges={$bridges} />
+  </div>
 {:else}
   <div class="flex w-full items-center justify-center">
     <h5 class="text-center">No bridges found. Try to bridge now or check a different address.</h5>

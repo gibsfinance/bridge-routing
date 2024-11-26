@@ -7,50 +7,76 @@ import type { Query } from '$lib/gql/graphql'
 import { gql, GraphQLClient } from 'graphql-request'
 import { indexer } from '$lib/config'
 import type { UserRequestForAffirmation, UserRequestForSignature } from '../gql/graphql'
+import _ from 'lodash'
 
 export type Bridge = UserRequestForSignature | UserRequestForAffirmation
 
 const client = new GraphQLClient(indexer)
 
+const fragmentBridge = (addFeeDirector: boolean) => gql`{
+  originationChainId
+  destinationChainId
+  from
+  to
+  orderId
+  requiredSignatures
+  bridge {
+    bridgeId
+    provider
+    chainId
+  }
+  transaction {
+    hash
+    from
+    to
+    block {
+      chainId
+      timestamp
+    }
+  }
+  signatures {
+    items {
+      transaction {
+        block {
+          timestamp
+        }
+      }
+    }
+  }
+  messageId
+  messageHash
+  encodedData${
+    addFeeDirector
+      ? gql`
+  feeDirector {
+    feeType
+    unwrapped
+    recipient
+    multiplier
+    limit
+  }`
+      : ''
+  }
+  delivery {
+    transaction {
+      hash
+      from
+      block {
+        chainId
+        timestamp
+      }
+    }
+  }
+}`
+
 const queries = {
   getBridgesUnderAccount: gql`
-    query V($where: UserRequestForSignatureFilter) {
-      userRequestForSignatures(where: $where) {
-        items {
-          from
-          to
-          bridge {
-            bridgeId
-            provider
-            chainId
-          }
-          transaction {
-            hash
-            from
-            to
-            block {
-              chainId
-            }
-          }
-          messageId
-          messageHash
-          encodedData
-          feeDirector {
-            feeType
-            unwrapped
-            recipient
-            multiplier
-            limit
-          }
-          delivery {
-            transaction {
-              hash
-              block {
-                chainId
-              }
-            }
-          }
-        }
+    query V($whereSig: UserRequestForSignatureFilter, $whereAff: UserRequestForAffirmationFilter) {
+      userRequestForAffirmations(where: $whereAff, limit: 1000) {
+        items ${fragmentBridge(false)}
+      }
+      userRequestForSignatures(where: $whereSig, limit: 1000) {
+        items ${fragmentBridge(true)}
       }
     }
   `,
@@ -63,18 +89,25 @@ export const bridges = derived<Stores, null | Bridge[]>(
       return set(null)
     }
     const account = getAddress($walletAccount)
+    const filter = {
+      OR: [{ from: account }, { to: account }],
+    }
     loading.loadsAfterTick(
       `bridges-${account}`,
       () => {
         return client
           .request<Query>(queries.getBridgesUnderAccount, {
-            where: {
-              OR: [{ from: account }, { to: account }],
-            },
+            whereAff: filter,
+            whereSig: filter,
           })
           .then((data) => {
-            console.log(data.userRequestForSignatures.items)
-            return data.userRequestForSignatures.items
+            return _.sortBy(
+              ([] as Bridge[]).concat(
+                data.userRequestForSignatures.items,
+                data.userRequestForAffirmations.items,
+              ),
+              [(r) => -BigInt(r.orderId)],
+            )
           })
       },
       set,

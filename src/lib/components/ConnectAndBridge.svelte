@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { humanReadableNumber } from '$lib/stores/utils'
+  import { ellipsis, humanReadableNumber } from '$lib/stores/utils'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { useAuth } from '$lib/stores/auth/methods'
   import { walletAccount } from '$lib/stores/auth/store'
@@ -41,7 +41,12 @@
         return
       }
       const msg = {
-        message: 'Submitted: ' + txHash.slice(0, 6) + '...' + txHash.slice(-4),
+        message:
+          'Submitted: ' +
+          ellipsis(txHash, {
+            length: 4,
+            prefixLength: 2,
+          }),
         link: uri($fromChainId, 'tx', txHash),
         label: 'submit-tx',
       }
@@ -51,7 +56,12 @@
       })
       removeMessage(msg)
       addMessage({
-        message: 'Confirmed: ' + txHash.slice(0, 6) + '...' + txHash.slice(-4),
+        message:
+          'Confirmed: ' +
+          ellipsis(txHash, {
+            length: 4,
+            prefixLength: 2,
+          }),
         link: uri($fromChainId, 'tx', txHash),
         label: 'confirm-tx',
       })
@@ -227,16 +237,3 @@
     </button>
   {/if}
 </div>
-<!-- {#each hashes as txHash}
-  <div class="toast mb-16">
-    <div class="alert alert-info bg-purple-400 text-slate-100">
-      <a
-        href="{chainsMetadata[Chains.PLS].blockExplorers?.default.url}/tx/{txHash}"
-        class="underline"
-        aria-label="transaction details"
-        target="_blank">
-        Submitted: {txHash.slice(0, 6)}...{txHash.slice(-4)}
-      </a>
-    </div>
-  </div>
-{/each} -->

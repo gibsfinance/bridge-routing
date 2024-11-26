@@ -1,6 +1,9 @@
 import _ from 'lodash'
 import { formatUnits, parseUnits } from 'viem'
 
+export const ellipsis = (v: string, { length = 8, prefixLength = 0 } = {}) =>
+  `${v.slice(0, length + prefixLength)}...${v.slice(-length)}`
+
 export const countDecimals = (v: string) => {
   if (!v) return 0
   const [, d] = v.split('.')

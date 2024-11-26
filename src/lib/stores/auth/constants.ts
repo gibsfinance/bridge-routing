@@ -3,6 +3,7 @@ import type { ChainsMetadata } from './types'
 import { Chains } from './types'
 import * as imageLinks from '$lib/stores/image-links'
 import bnbNetworkUrl from '$lib/images/networks/0x38.png'
+import plsV4NetworkUrl from '$lib/images/networks/0x3af.png'
 
 /**
  * all of the chains that are enabled in this dapp
@@ -69,7 +70,7 @@ export const chainsMetadata = {
     ...pulsechainV4,
     name: 'Pulsechain V4',
     chainId: Chains.V4PLS,
-    icon: imageLinks.network(pulsechainV4.id),
+    icon: plsV4NetworkUrl,
     alt: 'a pink blue and purple hexagon with an ekg line running horizontally',
     rpcUrls: {
       default: {

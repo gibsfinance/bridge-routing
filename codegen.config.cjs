@@ -5,7 +5,7 @@ module.exports = {
   generates: {
     './src/lib/gql/': {
       preset: 'client',
-      plugins: ['typescript', 'typescript-operations'],
+      plugins: ['typescript-operations'],
     },
   },
 }

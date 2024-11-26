@@ -97,11 +97,16 @@ export const directDomain = derived(
         if (direct) {
           return [domain, direct] as const
         }
-        return fetch(`https://${domain}/version.json`)
+        const d = domain.startsWith('http') ? domain : `https://${domain}`
+        if (!d.includes('pulsechain')) {
+          return [domain, ''] as const
+        }
+        return fetch(`${d}/version.json`)
           .then((res) => res.json())
           .then((j) => {
             return [domain, j.ipfs_gateways[0] as string] as const
           })
+          .catch(() => [domain, ''] as const)
       }),
     ).then((entries) => {
       if (cancelled) return
