@@ -6,38 +6,44 @@
   import Nav from '$lib/components/Nav.svelte'
   import Footer from '$lib/components/Footer.svelte'
   import Loader from '$lib/components/Loader.svelte'
-  onMount(() => {
-    firstMount.set(true)
-  })
+  import Delivery from '$lib/pages/Delivery.svelte'
+  // onMount(() => {
+  //   firstMount.set(true)
+  // })
 </script>
 
-<svelte:head>
+<!-- <svelte:head>
   <meta name="robots" content="noindex nofollow" />
   <html lang="en" />
-</svelte:head>
+</svelte:head> -->
 
 <!--
   importing in this way allows the scripts to be loaded in parallel
   and for us to show a loader until loading is complete
 -->
-<div class="app bg-slate-950">
-  {#await import('$lib/pages/Delivery.svelte')}
-    <div class="app">
-      <Nav />
-      <main class="flex flex-col box-border w-full min-h-screen bg-slate-950 text-white mt-10">
-        <div class="flex grow items-center justify-center">
-          <Loader loaded={false} />
-        </div>
-        <Footer />
-      </main>
-    </div>
-  {:then c}
+<!-- <div class="app bg-slate-950"> -->
+<!-- {#await import('$lib/pages/Delivery.svelte')} -->
+<!--
+  <div class="app">
+    <Nav />
+    <main class="flex flex-col box-border w-full min-h-screen bg-slate-950 text-white mt-10">
+      <div class="flex grow items-center justify-center">
+        <Loader loaded={false} />
+      </div>
+      <Footer />
+    </main>
+  </div>
+   -->
+<!-- {:then c} -->
+<!--
     <svelte:component this={c.default}>
       <slot />
     </svelte:component>
-  {/await}
-</div>
+     -->
+<!-- {/await} -->
+<!-- </div> -->
 
+<!--
 <style>
   .app {
     position: relative;
@@ -55,3 +61,4 @@
     @apply -translate-x-0 left-0 right-auto;
   }
 </style>
+-->

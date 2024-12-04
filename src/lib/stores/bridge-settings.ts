@@ -385,7 +385,7 @@ export const estimatedNetworkCost = derived(
     if (!$priceCorrective || !$bridgePathway?.requiresDelivery) {
       return 0n
     }
-    return ($estimatedGas * $latestBaseFeePerGas * $oneTokenInt) / $priceCorrective
+    return BigInt(($estimatedGas * $latestBaseFeePerGas * $oneTokenInt) / $priceCorrective)
   },
 )
 /** the maximum number of tokens that the user wishes to pay in fees */

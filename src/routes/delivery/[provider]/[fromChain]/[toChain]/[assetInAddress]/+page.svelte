@@ -1,14 +1,14 @@
 <script lang="ts">
-  import BlurryImage from '$lib/components/BlurryImage.svelte'
-  import Bridge from '$lib/components/Bridge.svelte'
-  import bridgeImageFuzzyWebP from '$lib/images/bridge-fuzzy.webp'
-  import BridgeFooter from '$lib/components/BridgeFooter.svelte'
-  import { windowStore } from '$lib/stores/window'
-  import BridgeHistory from '$lib/components/BridgeHistory.svelte'
+  // import BlurryImage from '$lib/components/BlurryImage.svelte'
+  // import Bridge from '$lib/components/Bridge.svelte'
+  // import bridgeImageFuzzyWebP from '$lib/images/bridge-fuzzy.webp'
+  // import BridgeFooter from '$lib/components/BridgeFooter.svelte'
+  // import { windowStore } from '$lib/stores/window'
+  // import BridgeHistory from '$lib/components/BridgeHistory.svelte'
 
-  $: large = $windowStore.innerHeight > 600 && $windowStore.innerWidth >= 768
+  // $: large = $windowStore.innerHeight > 600 && $windowStore.innerWidth >= 768
 </script>
-
+<!--
 <div class="flex flex-col w-full">
   <div class="flex w-full">
     <BlurryImage
@@ -32,3 +32,4 @@
     <BridgeHistory />
   </div>
 </div>
+-->

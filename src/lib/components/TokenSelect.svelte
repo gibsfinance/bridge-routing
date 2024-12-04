@@ -17,7 +17,7 @@
   import Hover from './Hover.svelte'
   import { hover } from '$lib/modifiers/hover'
   import Tooltip from './Tooltip.svelte'
-  import { uniqBy, partition } from 'lodash'
+  import _ from 'lodash'
 
   const { bridgableTokens, fromPublicClient, fromChainId } = input
 
@@ -27,10 +27,10 @@
   }
   let custom!: Token
   const doClose = () => {
-    modalStore.type.set(null)
+    modalStore.type.set('')
   }
   const addCustom = (newToken: Token) => {
-    customTokens.tokens.update((tkns) => uniqBy(tkns.concat(newToken), 'address'))
+    customTokens.tokens.update((tkns) => _.uniqBy(tkns.concat(newToken), 'address'))
     // searchValue = ''
     // use token as focus in bridge settings stores
   }
@@ -67,7 +67,7 @@
       tkns = tkns.filter(filter)
     }
     if (allChains) return tkns
-    const [inside, outside] = partition(tkns, onlyFromCurrentNetwork)
+    const [inside, outside] = _.partition(tkns, onlyFromCurrentNetwork)
     return inside
   }
 

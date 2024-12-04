@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Toast from '$lib/components/Toast.svelte'
+  // import Toast from '$lib/components/Toast.svelte'
 </script>
 
 <svelte:head>
@@ -7,4 +7,4 @@
 </svelte:head>
 <slot />
 
-<Toast />
+<!-- <Toast /> -->

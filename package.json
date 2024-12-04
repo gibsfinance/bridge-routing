@@ -10,37 +10,21 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test:unit": "playwright test",
-    "prettier": "prettier --check . --write",
-    "lint": "bun run prettier && bun run eslint",
-    "eslint": "eslint \"./**/*.ts\" --ignore-pattern \".svelte-kit\" -c .eslintrc.mjs",
-    "codegen": "bun gql-gen generate --config codegen.config.cjs",
+    "lint": "prettier --check . && eslint \"./**/*.ts\" --ignore-pattern \".svelte-kit\" -c .eslintrc.mjs",
     "format": "prettier --write ."
   },
-  "engines": {
-    "node": "20.15.1"
-  },
   "devDependencies": {
-    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
-    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@graphql-codegen/cli": "^5.0.3",
-    "@graphql-codegen/typescript": "^4.1.1",
-    "@graphql-codegen/typescript-operations": "^4.3.1",
-    "@graphql-codegen/typescript-resolvers": "^4.4.0",
     "@playwright/test": "^1.33.0",
-    "@rollup/plugin-commonjs": "^28.0.1",
     "@sveltejs/adapter-auto": "^3.2.0",
     "@sveltejs/kit": "^2.5.8",
     "@sveltejs/vite-plugin-svelte": "^3.1.0",
     "@types/eslint": "^8.56.10",
-    "@types/lodash": "^4.17.13",
-    "@types/node": "^22.9.1",
+    "@types/lodash": "^4.17.4",
+    "@types/node": "^22.8.7",
     "@typescript-eslint/eslint-plugin": "^7.17.0",
     "@typescript-eslint/parser": "^7.17.0",
     "@web3-onboard/common": "^2.3.4",
-    "assert": "^2.1.0",
     "autoprefixer": "^10.4.19",
-    "browserify-zlib": "^0.2.0",
-    "crypto-browserify": "^3.12.1",
     "daisyui": "^4.11.1",
     "eslint": "^9.2.0",
     "eslint-config-prettier": "^9.1.0",
@@ -51,8 +35,6 @@
     "postcss-nesting": "^12.1.4",
     "prettier": "^3.3.3",
     "prettier-plugin-svelte": "^3.2.7",
-    "rollup-plugin-polyfill-node": "^0.13.0",
-    "stream-browserify": "^3.0.0",
     "svelte-check": "^3.7.1",
     "tailwindcss": "^3.4.3",
     "tslib": "^2.5.0",
@@ -80,6 +62,6 @@
     "svelte": "^4.2.17",
     "svelte-lazy": "^1.2.7",
     "sveltekit-search-params": "^2.1.2",
-    "viem": "^2.21.53"
+    "viem": "^2.10.9"
   }
 }
