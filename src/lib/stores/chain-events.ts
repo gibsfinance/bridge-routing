@@ -9,8 +9,7 @@ import { Chains } from './auth/types'
 import type { Token, TokenOut } from '$lib/types'
 import { chainsMetadata } from './auth/constants'
 import { nativeAssetOut, pathway } from './config'
-import noop from 'lodash/noop'
-import memoize from 'lodash/memoize'
+import { noop, memoize } from 'lodash'
 
 export const destinationPublicClient = derived(
   [input.bridgeKey, input.forcedRefresh],

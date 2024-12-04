@@ -17,8 +17,7 @@
   import Hover from './Hover.svelte'
   import { hover } from '$lib/modifiers/hover'
   import Tooltip from './Tooltip.svelte'
-  import uniqBy from 'lodash/uniqBy'
-  import partition from 'lodash/partition'
+  import { uniqBy, partition } from 'lodash'
 
   const { bridgableTokens, fromPublicClient, fromChainId } = input
 

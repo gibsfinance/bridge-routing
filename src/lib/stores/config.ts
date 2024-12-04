@@ -5,7 +5,7 @@ import { Chains, Provider } from './auth/types'
 import { derived, get, readable } from 'svelte/store'
 import { windowLoaded } from './window'
 import type { BridgeKey } from './input'
-import ldget from 'lodash/get'
+import { get as ldget } from 'lodash'
 
 export const isProd = readable(__PROD__)
 

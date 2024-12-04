@@ -1,5 +1,5 @@
 import { derived, get, readable, writable } from 'svelte/store'
-import isEqual from 'lodash/isEqual'
+import { isEqual } from 'lodash'
 
 export const windowIsAvailable = typeof window !== 'undefined'
 

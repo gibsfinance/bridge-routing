@@ -12,7 +12,7 @@ import {
   getAddress,
 } from 'viem'
 import * as types from './types'
-import memoize from 'lodash/memoize'
+import { memoize } from 'lodash'
 
 export type Erc20Metadata = [string, string, number]
 

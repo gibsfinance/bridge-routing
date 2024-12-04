@@ -3,7 +3,7 @@ import { Chains, Provider } from './auth/types'
 import type { BridgeKey } from './input'
 import { writable } from 'svelte/store'
 import { get } from 'svelte/store'
-import ldget from 'lodash/get'
+import { get as ldget } from 'lodash'
 
 export type PathwayExtendableConfig = {
   feeManager: Hex

@@ -8,7 +8,7 @@
   import { assetOut } from '$lib/stores/bridge-settings'
   import { goto } from '$app/navigation'
   import { page } from '$app/stores'
-  import isEqual from 'lodash/isEqual'
+  import { isEqual } from 'lodash'
   import { validBridgeKeys } from '$lib/stores/config'
   import { zeroAddress } from 'viem'
   import { useAuth } from '$lib/stores/auth/methods'
