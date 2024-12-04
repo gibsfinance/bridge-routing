@@ -37,6 +37,7 @@ const fragmentBridge = (addFeeDirector: boolean) => gql`{
   signatures {
     items {
       transaction {
+        hash
         block {
           timestamp
         }
@@ -94,7 +95,7 @@ export const bridges = derived<Stores, null | Bridge[]>(
     }
     loading.loadsAfterTick(
       `bridges-${account}`,
-      () => {
+      async () => {
         return client
           .request<Query>(queries.getBridgesUnderAccount, {
             whereAff: filter,

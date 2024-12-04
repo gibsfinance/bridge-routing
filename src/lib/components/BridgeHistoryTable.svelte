@@ -7,7 +7,13 @@
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import ExplorerLink from './ExplorerLink.svelte'
   import Icon from '@iconify/svelte'
-  import type { UserRequestForSignature } from '$lib/gql/graphql'
+  import { deliverBridge } from '$lib/stores/delivery'
+  import { useAuth } from '$lib/stores/auth/methods'
+  import { flippedBridgeKey, fromChainId, toPath } from '$lib/stores/input'
+  import { goto } from '$app/navigation'
+  import { get } from 'svelte/store'
+  import { networkSwitchAssetOutAddress } from '$lib/stores/bridge-settings'
+    import { transactionButtonPress } from '$lib/stores/transaction'
 
   export let bridges: Bridge[] = []
   const network = (chainId: string | number | undefined) => {
@@ -19,31 +25,22 @@
   }
   const getBridgeStatus = (bridge: Bridge) => {
     const chainId = toChain(bridge!.bridge!.chainId)
-    if (bridge.delivery?.transaction?.hash) return 'Delivered'
-    if (bridge.signatures?.items?.length === bridge.requiredSignatures) return 'Signed'
-    if (bridge.block?.number <= ($finalizedBlocks[chainId] || 0n)) return 'Finalized'
+    if (bridge.delivery?.transaction?.hash) {
+      return 'Delivered'
+    }
+    if (bridge.signatures?.items?.length === Number(bridge.requiredSignatures)) {
+      return 'Signed'
+    }
+    if (bridge.block?.number <= ($finalizedBlocks[chainId] || 0n)) {
+      return 'Finalized'
+    }
     return 'Pending'
   }
   // display / decimal / data length
   $: dL = 6
   let opened: Record<string, boolean> = {}
-  const deliverBridge = (bridge: Bridge) => {
-    // entry
-    //       ? entry.safeExecuteSignaturesWithAutoGasLimit(
-    //         signer.address,
-    //         event.encodedData,
-    //         signatures,
-    //         overrides,
-    //       )
-    //       : foreignAmb.safeExecuteSignaturesWithAutoGasLimit(
-    //         event.encodedData,
-    //         signatures,
-    //         overrides,
-    //       )
-    bridge.signatures?.items.map((sig) => {
-      // console.log(sig)
-    })
-  }
+
+  const { switchChain } = useAuth()
 </script>
 
 <div
@@ -53,7 +50,7 @@
       <span class="text-left w-48">From</span>
       <span class="text-left w-24">Origination</span>
       <span class="text-center w-28">Status</span>
-      <span class="text-left w-40">Destination</span>
+      <span class="text-left w-36">Destination</span>
       <span class="text-right w-8"></span>
     </div>
   </div>
@@ -62,6 +59,7 @@
       {@const status = getBridgeStatus(bridge)}
       {@const isDelivered = !!bridge.delivery?.transaction?.hash}
       {@const initiationSeconds = Number(bridge.transaction?.block?.timestamp)}
+      {@const originationChainId = toChain(bridge.originationChainId)}
       <div class="flex flex-col">
         <div class="flex flex-row w-full h-10 gap-4">
           <span class="flex flex-row w-48 items-center">
@@ -74,8 +72,8 @@
                 network={network(bridge.originationChainId)}
                 provider={bridge.bridge?.provider} />
               <ExplorerLink
-                chainId={toChain(bridge.originationChainId)}
-                path={`${toChain(bridge.originationChainId) === Chains.V4PLS ? '/#' : ''}/tx/${bridge.transaction?.hash || ''}`} />
+                chainId={originationChainId}
+                path={`${originationChainId === Chains.V4PLS ? '/#' : ''}/tx/${bridge.transaction?.hash || ''}`} />
             </div>
           </span>
           <span class="flex flex-row w-28 items-center justify-center">
@@ -83,7 +81,7 @@
               <span>{status}</span>
             </div>
           </span>
-          <span class="flex flex-row w-40">
+          <span class="flex flex-row w-36">
             <div class="flex flex-row items-center gap-2">
               <StaticNetworkImage
                 network={network(bridge.destinationChainId)}
@@ -94,12 +92,28 @@
                   chainId={toChain(bridge.destinationChainId)}
                   path={`${toChain(bridge.destinationChainId) === Chains.V4PLS ? '/#' : ''}/tx/${bridge.delivery?.transaction?.hash || ''}`} />
               {:else if status === 'Signed'}
-                <button
-                  type="button"
-                  class="px-4 py-0.5 text-white rounded active:bg-purple-500 leading-8 flex items-center justify-center hover:bg-purple-500 bg-purple-600 shadow-md"
-                  on:click={() => {
-                    deliverBridge(bridge)
-                  }}>Deliver</button>
+                {@const canDeliver = $fromChainId === toChain(bridge.destinationChainId)}
+                {#if !canDeliver}
+                  <button
+                    type="button"
+                    title="Switch to destination chain"
+                    class="px-4 py-0.5 text-white rounded leading-8 flex items-center justify-center shadow-md bg-purple-600 active:bg-purple-500 hover:bg-purple-500"
+                    on:click={async () => {
+                      await switchChain(toChain(bridge.destinationChainId))
+                      const scrollTop = document.scrollingElement?.scrollTop
+                      await goto(
+                        `/delivery/${toPath(get(flippedBridgeKey))}/${get(networkSwitchAssetOutAddress)}`,
+                      )
+                      if (scrollTop) scrollTo(0, scrollTop)
+                    }}>Switch</button>
+                {:else}
+                {@const deliverBridgeTransaction = transactionButtonPress(() => deliverBridge(bridge))}
+                  <button
+                    type="button"
+                    disabled={!canDeliver}
+                    class="px-4 py-0.5 text-white rounded leading-8 flex items-center justify-center shadow-md bg-purple-600 active:bg-purple-500 hover:bg-purple-500"
+                    on:click={deliverBridgeTransaction}>Deliver</button>
+                {/if}
               {/if}
             </div>
           </span>

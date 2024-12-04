@@ -53,7 +53,13 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{js,ts}'],
   },
   optimizeDeps: {
-    exclude: ['@ethersproject/hash', 'wrtc', 'http', 'viem'],
+    exclude: [
+      '@ethersproject/hash',
+      'wrtc',
+      'http',
+      // causes ox and event emitter to fail to import
+      // 'viem',
+    ],
     include: [
       '@web3-onboard/core',
       '@web3-onboard/gas',

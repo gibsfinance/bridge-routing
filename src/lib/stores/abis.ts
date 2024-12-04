@@ -24,6 +24,10 @@ export const erc677ExtraInput = parseAbi([
 export const outputRouter = parseAbi([
   'function onTokenBridged(address _token, uint256 _value, bytes memory _data) external payable',
   'function WETH() external view returns(address)',
+  'function bridge() external view returns(address)',
+])
+export const outputBridge = parseAbi([
+  'function bridgeContract() external view returns(address)',
 ])
 export const feeManager = parseAbi([
   'function HOME_TO_FOREIGN_FEE() public view returns(bytes32)',
@@ -42,3 +46,10 @@ export const univ2Router = parseAbi([
   'function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns(uint256[] memory)',
 ])
 export const feeDeliveryStruct = parseAbiParameters('(address, uint256, uint256, uint256)')
+
+export const relayTokensDirect = parseAbi([
+  'function safeExecuteSignaturesWithAutoGasLimit(bytes calldata data, bytes calldata signatures) external',
+])
+export const homeAmb = parseAbi([
+  'function submitSignature(bytes message, bytes signature) external',
+])

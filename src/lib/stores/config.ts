@@ -52,6 +52,7 @@ export type Pathway = {
   to: Hex
   destinationRouter: Hex | null
   nativeRouter: Hex
+  validator: Hex
   defaultAssetIn: Token
   usesExtraParam: boolean
   feeManager: 'from' | 'to'
@@ -72,6 +73,7 @@ export const pathways = {
         to: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
         destinationRouter: '0x5df881304F6D4279B46f7aB001d55f025bAF1bc5',
         nativeRouter: '0x612Da68aA7BcA625dD2F27f252cddB573674991A',
+        validator: '0x5ECfE77502317F3677f23C3b8Ab17929ACE3D74E',
         usesExtraParam: false,
         feeManager: 'from',
         toHome: false,
@@ -98,6 +100,7 @@ export const pathways = {
         to: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
         nativeRouter: '0x5df881304F6D4279B46f7aB001d55f025bAF1bc5',
         destinationRouter: '0x612Da68aA7BcA625dD2F27f252cddB573674991A',
+        validator: '0x5ECfE77502317F3677f23C3b8Ab17929ACE3D74E',
         feeManager: 'to',
         usesExtraParam: false,
         toHome: true,
@@ -126,6 +129,7 @@ export const pathways = {
         to: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
         destinationRouter: '0x9c50EfD36dF2DBD310fBC981d6D8478cF3484B85',
         nativeRouter: '0x553569B7760d8e4afFA80aBFc9860Dc85F60397c',
+        validator: '0xc3c3d5d3ba946a2eb3906878ebe187418b0b524e',
         feeManager: 'from',
         usesExtraParam: true,
         toHome: false,
@@ -152,6 +156,7 @@ export const pathways = {
         to: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
         nativeRouter: '0x9c50EfD36dF2DBD310fBC981d6D8478cF3484B85',
         destinationRouter: '0x553569B7760d8e4afFA80aBFc9860Dc85F60397c',
+        validator: '0xc3c3d5d3ba946a2eb3906878ebe187418b0b524e',
         feeManager: 'to',
         usesExtraParam: true,
         toHome: true,
@@ -206,6 +211,7 @@ export const testnetPathways = {
         to: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
         nativeRouter: '0xCA1BDc038909038C4B3cbab0EA0ec3cC2839F106',
         destinationRouter: '0xCb4057d7DA4CE521B93b71186DfE11f9FBC3e3b1',
+        validator: '0xDcd4D88552c86114b2ca029F7F8d4e1a7951d051',
         usesExtraParam: false,
         requiresDelivery: true,
         toHome: false,
@@ -232,6 +238,7 @@ export const testnetPathways = {
         to: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
         nativeRouter: '0xCb4057d7DA4CE521B93b71186DfE11f9FBC3e3b1',
         destinationRouter: '0xCA1BDc038909038C4B3cbab0EA0ec3cC2839F106',
+        validator: '0xDcd4D88552c86114b2ca029F7F8d4e1a7951d051',
         usesExtraParam: false,
         requiresDelivery: false,
         toHome: true,

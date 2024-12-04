@@ -451,7 +451,7 @@ export type QueryRelayMessagesArgs = {
 
 
 export type QueryRequiredSignaturesChangeArgs = {
-  id: Scalars['String']['input'];
+  orderId: Scalars['String']['input'];
 };
 
 
@@ -541,7 +541,7 @@ export type QueryUserRequestForSignaturesArgs = {
 
 
 export type QueryValidatorStatusArgs = {
-  orderId: Scalars['BigInt']['input'];
+  orderId: Scalars['String']['input'];
   validatorId: Scalars['String']['input'];
 };
 
@@ -640,10 +640,9 @@ export type RelayMessagePage = {
 export type RequiredSignaturesChange = {
   __typename?: 'RequiredSignaturesChange';
   bridgeId: Scalars['String']['output'];
-  id: Scalars['String']['output'];
   logIndex: Scalars['Float']['output'];
-  orderId: Scalars['BigInt']['output'];
-  requiredSignatures: Scalars['Float']['output'];
+  orderId: Scalars['String']['output'];
+  requiredSignatures: Scalars['BigInt']['output'];
   transaction?: Maybe<Transaction>;
   transactionId: Scalars['String']['output'];
 };
@@ -661,16 +660,6 @@ export type RequiredSignaturesChangeFilter = {
   bridgeId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   bridgeId_not_starts_with?: InputMaybe<Scalars['String']['input']>;
   bridgeId_starts_with?: InputMaybe<Scalars['String']['input']>;
-  id?: InputMaybe<Scalars['String']['input']>;
-  id_contains?: InputMaybe<Scalars['String']['input']>;
-  id_ends_with?: InputMaybe<Scalars['String']['input']>;
-  id_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-  id_not?: InputMaybe<Scalars['String']['input']>;
-  id_not_contains?: InputMaybe<Scalars['String']['input']>;
-  id_not_ends_with?: InputMaybe<Scalars['String']['input']>;
-  id_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-  id_not_starts_with?: InputMaybe<Scalars['String']['input']>;
-  id_starts_with?: InputMaybe<Scalars['String']['input']>;
   logIndex?: InputMaybe<Scalars['Float']['input']>;
   logIndex_gt?: InputMaybe<Scalars['Float']['input']>;
   logIndex_gte?: InputMaybe<Scalars['Float']['input']>;
@@ -679,22 +668,24 @@ export type RequiredSignaturesChangeFilter = {
   logIndex_lte?: InputMaybe<Scalars['Float']['input']>;
   logIndex_not?: InputMaybe<Scalars['Float']['input']>;
   logIndex_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
-  orderId?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  orderId_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_not?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  requiredSignatures?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_gt?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_gte?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_in?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
-  requiredSignatures_lt?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_lte?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_not?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
+  orderId?: InputMaybe<Scalars['String']['input']>;
+  orderId_contains?: InputMaybe<Scalars['String']['input']>;
+  orderId_ends_with?: InputMaybe<Scalars['String']['input']>;
+  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  orderId_not?: InputMaybe<Scalars['String']['input']>;
+  orderId_not_contains?: InputMaybe<Scalars['String']['input']>;
+  orderId_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  orderId_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  orderId_starts_with?: InputMaybe<Scalars['String']['input']>;
+  requiredSignatures?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
+  requiredSignatures_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_not?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
   transactionId?: InputMaybe<Scalars['String']['input']>;
   transactionId_contains?: InputMaybe<Scalars['String']['input']>;
   transactionId_ends_with?: InputMaybe<Scalars['String']['input']>;
@@ -1010,7 +1001,7 @@ export type UserRequestForAffirmation = {
   messageId: Scalars['String']['output'];
   orderId: Scalars['String']['output'];
   originationChainId: Scalars['BigInt']['output'];
-  requiredSignatures: Scalars['Float']['output'];
+  requiredSignatures: Scalars['BigInt']['output'];
   signatures?: Maybe<SignedForAffirmationPage>;
   to: Scalars['String']['output'];
   transaction?: Maybe<Transaction>;
@@ -1132,14 +1123,14 @@ export type UserRequestForAffirmationFilter = {
   originationChainId_lte?: InputMaybe<Scalars['BigInt']['input']>;
   originationChainId_not?: InputMaybe<Scalars['BigInt']['input']>;
   originationChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  requiredSignatures?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_gt?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_gte?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_in?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
-  requiredSignatures_lt?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_lte?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_not?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
+  requiredSignatures?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
+  requiredSignatures_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_not?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
   to?: InputMaybe<Scalars['String']['input']>;
   to_contains?: InputMaybe<Scalars['String']['input']>;
   to_ends_with?: InputMaybe<Scalars['String']['input']>;
@@ -1186,7 +1177,7 @@ export type UserRequestForSignature = {
   messageId: Scalars['String']['output'];
   orderId: Scalars['String']['output'];
   originationChainId: Scalars['BigInt']['output'];
-  requiredSignatures: Scalars['Float']['output'];
+  requiredSignatures: Scalars['BigInt']['output'];
   signatures?: Maybe<SignedForUserRequestPage>;
   to: Scalars['String']['output'];
   transaction?: Maybe<Transaction>;
@@ -1308,14 +1299,14 @@ export type UserRequestForSignatureFilter = {
   originationChainId_lte?: InputMaybe<Scalars['BigInt']['input']>;
   originationChainId_not?: InputMaybe<Scalars['BigInt']['input']>;
   originationChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  requiredSignatures?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_gt?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_gte?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_in?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
-  requiredSignatures_lt?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_lte?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_not?: InputMaybe<Scalars['Float']['input']>;
-  requiredSignatures_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
+  requiredSignatures?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
+  requiredSignatures_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_not?: InputMaybe<Scalars['BigInt']['input']>;
+  requiredSignatures_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
   to?: InputMaybe<Scalars['String']['input']>;
   to_contains?: InputMaybe<Scalars['String']['input']>;
   to_ends_with?: InputMaybe<Scalars['String']['input']>;
@@ -1352,7 +1343,7 @@ export type ValidatorStatus = {
   bridge?: Maybe<BridgeSide>;
   bridgeId: Scalars['String']['output'];
   logIndex: Scalars['Float']['output'];
-  orderId: Scalars['BigInt']['output'];
+  orderId: Scalars['String']['output'];
   transaction?: Maybe<Transaction>;
   transactionId: Scalars['String']['output'];
   validatorId: Scalars['String']['output'];
@@ -1393,14 +1384,16 @@ export type ValidatorStatusFilter = {
   logIndex_lte?: InputMaybe<Scalars['Float']['input']>;
   logIndex_not?: InputMaybe<Scalars['Float']['input']>;
   logIndex_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
-  orderId?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
-  orderId_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_not?: InputMaybe<Scalars['BigInt']['input']>;
-  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']['input']>>>;
+  orderId?: InputMaybe<Scalars['String']['input']>;
+  orderId_contains?: InputMaybe<Scalars['String']['input']>;
+  orderId_ends_with?: InputMaybe<Scalars['String']['input']>;
+  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  orderId_not?: InputMaybe<Scalars['String']['input']>;
+  orderId_not_contains?: InputMaybe<Scalars['String']['input']>;
+  orderId_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  orderId_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  orderId_starts_with?: InputMaybe<Scalars['String']['input']>;
   transactionId?: InputMaybe<Scalars['String']['input']>;
   transactionId_contains?: InputMaybe<Scalars['String']['input']>;
   transactionId_ends_with?: InputMaybe<Scalars['String']['input']>;

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { ellipsis, humanReadableNumber } from '$lib/stores/utils'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { useAuth } from '$lib/stores/auth/methods'
   import { walletAccount } from '$lib/stores/auth/store'
@@ -7,19 +6,15 @@
     fromTokenBalance,
     amountToBridge,
     foreignDataParam,
-    // foreignCalldata,
     transactionInputs,
   } from '$lib/stores/bridge-settings'
   import { type Hex, getContract, erc20Abi, maxUint256, zeroAddress } from 'viem'
   import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input'
-  import { tokenBridgeInfo, assetLink, approval } from '$lib/stores/chain-events'
-  import { loading } from '$lib/stores/loading'
-  import { get } from 'svelte/store'
-  import { addMessage, removeMessage, uri } from '$lib/stores/toast'
+  import { assetLink, approval } from '$lib/stores/chain-events'
+  import { transactionButtonPress } from '$lib/stores/transaction'
 
-  const { walletClient, assetIn, clientFromChain, shouldDeliver, bridgePathway, fromChainId } =
-    input
+  const { walletClient, assetIn, shouldDeliver, bridgePathway, fromChainId, amountIn } = input
 
   let disabledByClick = false
   $: tokenBalance = $fromTokenBalance || 0n
@@ -30,51 +25,6 @@
     $amountToBridge > tokenBalance
 
   const { connect } = useAuth()
-
-  const transactionButtonPress = (fn: () => Promise<Hex | undefined>) => async () => {
-    disabledByClick = true
-    try {
-      loading.increment('user')
-      const amountInBefore = get(input.amountIn)
-      const txHash = await fn()
-      if (!txHash) {
-        return
-      }
-      const msg = {
-        message:
-          'Submitted: ' +
-          ellipsis(txHash, {
-            length: 4,
-            prefixLength: 2,
-          }),
-        link: uri($fromChainId, 'tx', txHash),
-        label: 'submit-tx',
-      }
-      addMessage(msg)
-      const receipt = await clientFromChain($fromChainId).waitForTransactionReceipt({
-        hash: txHash,
-      })
-      removeMessage(msg)
-      addMessage({
-        message:
-          'Confirmed: ' +
-          ellipsis(txHash, {
-            length: 4,
-            prefixLength: 2,
-          }),
-        link: uri($fromChainId, 'tx', txHash),
-        label: 'confirm-tx',
-      })
-      if (fn === initiateBridge && amountInBefore === get(input.amountIn)) {
-        input.amountIn.set('')
-      }
-      input.incrementForcedRefresh()
-      console.log(receipt)
-    } finally {
-      loading.decrement('user')
-      disabledByClick = false
-    }
-  }
 
   const initiateBridge = async () => {
     if (!$foreignDataParam) {
@@ -195,8 +145,19 @@
     const options = opts()
     return await contract.write.approve([$bridgePathway.from, maxUint256], options)
   }
-  const sendInitiateBridge = transactionButtonPress(initiateBridge)
+  let amountInBefore = ''
   const sendIncreaseApproval = transactionButtonPress(increaseApproval)
+  const sendInitiateBridge = transactionButtonPress(
+    () => {
+      amountInBefore = $amountIn
+      return initiateBridge()
+    },
+    () => {
+      if (amountInBefore === $amountIn) {
+        input.amountIn.set('')
+      }
+    },
+  )
   const testId = 'progression-button'
   $: isNative = $assetIn?.address === zeroAddress
 </script>

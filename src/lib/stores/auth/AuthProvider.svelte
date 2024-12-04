@@ -79,6 +79,7 @@
       return
     }
 
+    console.log(walletState[0].chains[0].id)
     if (
       Object.keys(chainsMetadata).findIndex((key) => {
         return key.toLowerCase() === walletState[0].chains[0].id.toLowerCase()
@@ -134,7 +135,7 @@
   }
 
   async function switchChain(chain: string | Chains) {
-    // console.log('switchChain', chain)
+    console.log('switchChain', chain)
     await onboard.setChain({ chainId: chain })
   }
 
