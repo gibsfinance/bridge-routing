@@ -16,6 +16,9 @@
     "codegen": "bun gql-gen generate --config codegen.config.cjs",
     "format": "prettier --write ."
   },
+  "engines": {
+    "node": "20.15.1"
+  },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
