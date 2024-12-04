@@ -39,7 +39,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ['@web3-onboard/*'],
+      external: ['@web3-onboard/*', 'Buffer'],
       plugins: [
         nodePolyfills({ include: ['crypto', 'http'] }),
         inject({ Buffer: ['Buffer', 'Buffer'] }),
