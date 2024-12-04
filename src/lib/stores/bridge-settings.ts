@@ -20,7 +20,12 @@ import type { Token, TokenOut } from '../types'
 import * as chainEvents from './chain-events'
 import { chainsMetadata } from './auth/constants'
 import { multicallErc20, multicallRead, type Erc20Metadata } from '$lib/utils'
-import _ from 'lodash'
+import noop from 'lodash/noop'
+import flatMap from 'lodash/flatMap'
+import isString from 'lodash/isString'
+import compact from 'lodash/compact'
+import flatten from 'lodash/flatten'
+import sortBy from 'lodash/sortBy'
 import { uniV2Routers, nativeAssetOut, whitelisted, pathway } from './config'
 import * as abis from './abis'
 import * as imageLinks from './image-links'
@@ -42,7 +47,7 @@ export const assetOut = derived(
   ([$bridgeKey, $assetIn, assetLink], set) => {
     if (!$bridgeKey || !$assetIn) {
       set(null)
-      return _.noop
+      return noop
     }
     const toChainId = $bridgeKey[2]
     const assetIn = {
@@ -55,7 +60,7 @@ export const assetOut = derived(
     // if there is no asset link, then the token is native and has not yet been bridged
     if (!assetLink) {
       set(null)
-      return _.noop
+      return noop
     }
     const { assetOutAddress } = assetLink
     if (!assetOutAddress) {
@@ -73,7 +78,7 @@ export const assetOut = derived(
           },
         },
       })
-      return _.noop
+      return noop
     }
     const client = input.clientFromChain(toChainId)
     set(null)
@@ -245,7 +250,7 @@ const readAmountOut = (
     client: input.clientFromChain(chain),
     abi: abis.univ2Router,
     // pulsex router
-    calls: _.flatMap(uniV2Routers[chain], (target) =>
+    calls: flatMap(uniV2Routers[chain], (target) =>
       paths.map((path) => ({
         functionName: 'getAmountsOut',
         allowFailure: true,
@@ -288,7 +293,7 @@ export const priceCorrective = derived(
       amountToBridge = parseUnits('10', $assetOut.decimals)
     }
     const outputFromRouter = (result: FetchResult) => {
-      if (_.isString(result)) {
+      if (isString(result)) {
         return 0n
       }
       if (!result.length) {
@@ -350,9 +355,7 @@ export const priceCorrective = derived(
       },
       (results: [FetchResult[], FetchResult[]]) => {
         const max = (amountsOut: (bigint | undefined)[]) => {
-          return _(amountsOut)
-            .compact()
-            .reduce((max, current) => (max < current ? current : max), 0n)
+          return compact(amountsOut).reduce((max, current) => (max < current ? current : max), 0n)
         }
         const [outputs, inputs] = results
         const outputAmounts = outputs.map(outputFromRouter)
@@ -730,40 +733,39 @@ export const assetSources = (asset: Token | null) => {
   }
   type MinTokenInfo = Pick<Token, 'chainId' | 'address'>
   const { chainId, address, extensions } = asset
-  const inputs = _([
-    { chainId, address },
-    extensions?.wrapped ? { chainId, address: extensions.wrapped.address } : null,
-    ...Object.entries(extensions?.bridgeInfo || {}).map(([chainId, info]) => {
-      if (!info.tokenAddress) {
-        return null
-      }
-      const otherSide = [
-        {
-          chainId: Number(chainId),
-          address: info.tokenAddress,
-        },
-      ]
-      if (address === nativeAssetOut[toChain(asset.chainId)]) {
-        otherSide.push({
-          chainId: asset.chainId,
-          address: zeroAddress,
-        })
-      }
-      if (info.tokenAddress === nativeAssetOut[toChain(+chainId)]) {
-        otherSide.push({
-          chainId: Number(chainId),
-          address: zeroAddress,
-        })
-      }
-      return otherSide
-    }),
-  ])
-    .flatten()
-    .compact()
-  const sources = inputs
-    .sortBy([(a: MinTokenInfo) => a.chainId])
-    .map((a: MinTokenInfo) => `${a.chainId}/${a.address}`)
-    .value() as unknown as string[]
+  const inputs = compact(
+    flatten([
+      { chainId, address },
+      extensions?.wrapped ? { chainId, address: extensions.wrapped.address } : null,
+      ...Object.entries(extensions?.bridgeInfo || {}).map(([chainId, info]) => {
+        if (!info.tokenAddress) {
+          return null
+        }
+        const otherSide = [
+          {
+            chainId: Number(chainId),
+            address: info.tokenAddress,
+          },
+        ]
+        if (address === nativeAssetOut[toChain(asset.chainId)]) {
+          otherSide.push({
+            chainId: asset.chainId,
+            address: zeroAddress,
+          })
+        }
+        if (info.tokenAddress === nativeAssetOut[toChain(+chainId)]) {
+          otherSide.push({
+            chainId: Number(chainId),
+            address: zeroAddress,
+          })
+        }
+        return otherSide
+      }),
+    ]),
+  )
+  const sources = sortBy(inputs, [(a: MinTokenInfo) => a.chainId]).map(
+    (a: MinTokenInfo) => `${a.chainId}/${a.address}`,
+  )
   return imageLinks.images(sources)
 }
 

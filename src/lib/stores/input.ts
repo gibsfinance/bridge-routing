@@ -31,10 +31,10 @@ import {
   pathway,
 } from './config'
 import type { Token, TokenList, TokenOut } from '$lib/types'
-import _ from 'lodash'
 import { chainsMetadata } from './auth/constants'
 import { windowLoaded } from './window'
 import { multicallErc20 } from '$lib/utils'
+import { keyBy, map, get as ldget, flatten, find, noop, compact, uniqBy, sortBy } from 'lodash'
 
 export const forcedRefresh = writable(0n)
 
@@ -170,14 +170,11 @@ export const bridgableTokensResponses = derived(
         return await Promise.all(results.map(async (r) => (await r.json()) as TokenList))
       },
       async (responses: TokenList[]) => {
-        return _(responses)
-          .map('tokens')
-          .flatten()
-          .keyBy(({ chainId, address }) => {
+        return Object.values(
+          keyBy(flatten(map(responses, 'tokens')), ({ chainId, address }) => {
             return getAddress(address, Number(chainId))
-          })
-          .values()
-          .value()
+          }),
+        )
       },
       set,
     )
@@ -192,10 +189,11 @@ export const bridgableTokens = derived(
   ([$bridgeKey, $responses]) => {
     if (!$bridgeKey) return []
     const conf = pathway($bridgeKey)
-    const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token
-    const sortedList = _($responses)
-      .sortBy(['name', 'chainId'])
-      .uniqBy(({ chainId, address }) => `${chainId}-${getAddress(address)}`)
+    const defaultAssetIn = ldget(conf, ['defaultAssetIn']) as Token
+    const sortedList = uniqBy(
+      sortBy($responses, ['name', 'chainId']),
+      ({ chainId, address }) => `${chainId}-${getAddress(address)}`,
+    )
       .map((item) => {
         if (defaultAssetIn && defaultAssetIn.address === item.address) {
           return defaultAssetIn
@@ -203,42 +201,39 @@ export const bridgableTokens = derived(
         return item
       })
       .filter((tkn) => tkn.chainId === Number($bridgeKey[1]))
-      .value()
     let list: Token[] = []
     if (sortedList.length) {
       const bridgedWrappedAssetOut = sortedList.find(
         (tkn) => tkn.address === nativeAssetOut[$bridgeKey[1]],
       )
-      list = _([
-        {
-          chainId: Number($bridgeKey[1]),
-          address: zeroAddress as Hex,
-          name: nativeTokenName[$bridgeKey[1]],
-          decimals: 18,
-          symbol: nativeTokenSymbol[$bridgeKey[1]],
-          logoURI: '',
-          extensions: bridgedWrappedAssetOut
-            ? {
-                wrapped: {
-                  address: bridgedWrappedAssetOut.address,
-                },
-                bridgeInfo: {
-                  [Number($bridgeKey[2])]: {
-                    tokenAddress:
-                      bridgedWrappedAssetOut.extensions?.bridgeInfo?.[Number($bridgeKey[2])]
-                        ?.tokenAddress,
+      list = uniqBy(
+        [
+          {
+            chainId: Number($bridgeKey[1]),
+            address: zeroAddress as Hex,
+            name: nativeTokenName[$bridgeKey[1]],
+            decimals: 18,
+            symbol: nativeTokenSymbol[$bridgeKey[1]],
+            logoURI: '',
+            extensions: bridgedWrappedAssetOut
+              ? {
+                  wrapped: {
+                    address: bridgedWrappedAssetOut.address,
                   },
-                },
-              }
-            : null,
-        } as Token,
-      ])
-        .concat(sortedList)
-        .uniqBy(({ chainId, address }) => getAddress(address, chainId))
-        .filter((tkn) => !blacklist.has(tkn.address))
-        .value()
+                  bridgeInfo: {
+                    [Number($bridgeKey[2])]: {
+                      tokenAddress:
+                        bridgedWrappedAssetOut.extensions?.bridgeInfo?.[Number($bridgeKey[2])]
+                          ?.tokenAddress,
+                    },
+                  },
+                }
+              : null,
+          } as Token,
+        ].concat(sortedList),
+        ({ chainId, address }) => getAddress(address, chainId),
+      ).filter((tkn) => !blacklist.has(tkn.address))
     }
-    // console.log(list.slice(0, 2))
     list.forEach((token) => {
       // register on a central cache so that tokens that are gotten from onchain
       // still have all extensions
@@ -294,7 +289,7 @@ export const config = {
 }
 
 export const clientFromChain = ($chainId: Chains) => {
-  const urls = _.compact(get(rpcs.store).get($chainId) || [])
+  const urls = compact(get(rpcs.store).get($chainId) || [])
   const key = rpcs.key($chainId, urls)
   const existing = clientCache.get($chainId)
   if (existing && existing.key === key) {
@@ -366,12 +361,12 @@ export const assetIn = derived(
   [assetInAddress, bridgeKey, bridgableTokens, customTokens.tokens],
   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens], set) => {
     const $assetIn = $bridgableTokens.length
-      ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
-        _.find($customTokens || [], { address: $assetInAddress })
+      ? find($bridgableTokens || [], { address: $assetInAddress }) ||
+        find($customTokens || [], { address: $assetInAddress })
       : null
     if ($assetIn) {
       set($assetIn)
-      return _.noop
+      return noop
     }
     set(null)
     return loading.loadsAfterTick(

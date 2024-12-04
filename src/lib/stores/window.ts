@@ -1,5 +1,5 @@
 import { derived, get, readable, writable } from 'svelte/store'
-import _ from 'lodash'
+import isEqual from 'lodash/isEqual'
 
 export const windowIsAvailable = typeof window !== 'undefined'
 
@@ -21,7 +21,7 @@ const w = readable(
     const updateIfDifferent = () => {
       const $w = get(w)
       const current = getCurrent()
-      if (_.isEqual(current, $w)) {
+      if (isEqual(current, $w)) {
         return
       }
       set(current)

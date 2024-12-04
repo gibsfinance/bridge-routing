@@ -1,6 +1,5 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import _ from 'lodash'
   export let src = ''
   export let alt = ''
   export let size = 32

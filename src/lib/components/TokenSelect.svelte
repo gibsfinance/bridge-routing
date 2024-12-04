@@ -3,7 +3,7 @@
   import * as customTokens from '$lib/stores/custom-tokens'
   import type { Token } from '$lib/types'
   import type { Hex } from 'viem'
-  import { createEventDispatcher, onMount } from 'svelte'
+  import { createEventDispatcher } from 'svelte'
   import TokenIcon from '$lib/components/TokenIcon.svelte'
   import * as modalStore from '$lib/stores/modal'
   import Lazy from '$lib/components/Lazy.svelte'
@@ -13,13 +13,14 @@
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { multicallErc20 } from '$lib/utils'
   import * as input from '$lib/stores/input'
-  import _ from 'lodash'
   import Input from './Input.svelte'
   import Hover from './Hover.svelte'
   import { hover } from '$lib/modifiers/hover'
   import Tooltip from './Tooltip.svelte'
+  import uniqBy from 'lodash/uniqBy'
+  import partition from 'lodash/partition'
 
-  const { bridgeKey, bridgableTokens, fromPublicClient, fromChainId } = input
+  const { bridgableTokens, fromPublicClient, fromChainId } = input
 
   const dispatch = createEventDispatcher()
   const submit = (token: Token) => {
@@ -30,7 +31,7 @@
     modalStore.type.set(null)
   }
   const addCustom = (newToken: Token) => {
-    customTokens.tokens.update((tkns) => _(tkns).concat(newToken).uniqBy('address').value())
+    customTokens.tokens.update((tkns) => uniqBy(tkns.concat(newToken), 'address'))
     // searchValue = ''
     // use token as focus in bridge settings stores
   }
@@ -67,7 +68,7 @@
       tkns = tkns.filter(filter)
     }
     if (allChains) return tkns
-    const [inside, outside] = _.partition(tkns, onlyFromCurrentNetwork)
+    const [inside, outside] = partition(tkns, onlyFromCurrentNetwork)
     return inside
   }
 

@@ -12,7 +12,7 @@ import {
   getAddress,
 } from 'viem'
 import * as types from './types'
-import _ from 'lodash'
+import memoize from 'lodash/memoize'
 
 export type Erc20Metadata = [string, string, number]
 
@@ -75,7 +75,7 @@ export const multicallRead = async <T>({
   }
 }
 
-export const multicallErc20 = _.memoize(
+export const multicallErc20 = memoize(
   async ({ client, target, chain }: { client: PublicClient; target: Hex; chain: Chain }) => {
     const options = {
       chain: chain,

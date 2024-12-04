@@ -1,9 +1,9 @@
 import type { Hex } from 'viem'
 import { Chains, Provider } from './auth/types'
 import type { BridgeKey } from './input'
-import _ from 'lodash'
 import { writable } from 'svelte/store'
 import { get } from 'svelte/store'
+import ldget from 'lodash/get'
 
 export type PathwayExtendableConfig = {
   feeManager: Hex
@@ -21,7 +21,7 @@ export const feeCache = writable<
 export const settings = {
   get($bridgeKey: null | BridgeKey) {
     if (!$bridgeKey) return
-    return _.get(get(feeCache), $bridgeKey) as PathwayExtendableConfig | undefined
+    return ldget(get(feeCache), $bridgeKey) as PathwayExtendableConfig | undefined
   },
   set($bridgeKey: null | BridgeKey, value: PathwayExtendableConfig) {
     if (!$bridgeKey) return

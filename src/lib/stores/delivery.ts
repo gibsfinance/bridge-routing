@@ -11,21 +11,41 @@ import { get } from 'svelte/store'
 import { walletAccount } from './auth/store'
 import { walletClient } from './input'
 
+const getSignatures = async (client: PublicClient, hashes: Hex[]) => {
+  const txs = await Promise.all(
+    hashes.map((h) => {
+      return client.getTransaction({ hash: h })
+    }),
+  )
+  const sigs = txs.map((tx) => {
+    const { args } = decodeFunctionData({
+      abi: abis.homeAmb,
+      data: tx.input,
+    })
+    const [signature] = args
+    return signature
+  })
+  return packSignatures(sigs.map((s) => signatureToVRS(s))) as Hex
+}
+
 export const deliverBridge = async (bridge: Bridge) => {
+  if (!bridge.bridge?.provider) {
+    return
+  }
   const path = pathway([
-    bridge.bridge?.provider! as unknown as Provider,
+    bridge.bridge!.provider! as unknown as Provider,
     toChain(bridge.originationChainId!),
     toChain(bridge.destinationChainId),
   ])
   if (!path) {
     return
   }
-  const sigs = bridge.signatures?.items!
+  const sigs = bridge.signatures!.items!
   const originationClient = inputs.clientFromChain(toChain(bridge.originationChainId))
   const destinationClient = inputs.clientFromChain(toChain(bridge.destinationChainId))
   const signatures = await getSignatures(
     originationClient,
-    sigs.map((s) => s.transaction?.hash! as Hex),
+    sigs.map((s) => s.transaction!.hash! as Hex),
   )
   const bridgeContract = await getContract({
     address: path.to,
@@ -47,21 +67,4 @@ export const deliverBridge = async (bridge: Bridge) => {
     [encodedData, signatures],
     options,
   )
-}
-
-const getSignatures = async (client: PublicClient, hashes: Hex[]) => {
-  const txs = await Promise.all(
-    hashes.map((h) => {
-      return client.getTransaction({ hash: h })
-    }),
-  )
-  const sigs = txs.map((tx) => {
-    const { args } = decodeFunctionData({
-      abi: abis.homeAmb,
-      data: tx.input,
-    })
-    const [signature] = args
-    return signature
-  })
-  return packSignatures(sigs.map((s) => signatureToVRS(s))) as Hex
 }

@@ -1,8 +1,8 @@
 import { Chains } from '$lib/stores/auth/types'
 import { chainsMetadata } from './auth/constants'
 import { derived, get, writable } from 'svelte/store'
-import _ from 'lodash'
 import { isProd } from './config'
+import { compact, isEqual } from 'lodash'
 
 type RPCEntry = [Chains, string[]]
 
@@ -36,7 +36,7 @@ const serializer = {
     }
     const stored = entry.split('\n').map((ro) => {
       const [chain, ...list] = ro.split(',')
-      return [chain as Chains, _.compact(list)] as const
+      return [chain as Chains, compact(list)] as const
     }) as [Chains, string[]][]
     return new Map([...get(defaultData).entries()].concat(stored))
   },
@@ -77,7 +77,7 @@ export const add = (chain: Chains, addition = ($rpcs: string[]) => [''].concat($
     }
     return !!val
   })
-  if (_.isEqual(before, filteredList)) {
+  if (isEqual(before, filteredList)) {
     return
   }
   $rpcs.set(chain, filteredList)

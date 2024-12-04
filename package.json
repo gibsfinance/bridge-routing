@@ -10,7 +10,9 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test:unit": "playwright test",
-    "lint": "prettier --check . && eslint \"./**/*.ts\" --ignore-pattern \".svelte-kit\" -c .eslintrc.mjs",
+    "prettier": "prettier --check . --write",
+    "lint": "bun run prettier && bun run eslint",
+    "eslint": "eslint \"./**/*.ts\" --ignore-pattern \".svelte-kit\" -c .eslintrc.mjs",
     "codegen": "bun gql-gen generate --config codegen.config.cjs",
     "format": "prettier --write ."
   },

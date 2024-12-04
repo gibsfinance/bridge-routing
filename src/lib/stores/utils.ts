@@ -1,5 +1,5 @@
-import _ from 'lodash'
 import { formatUnits, parseUnits } from 'viem'
+import { padEnd } from 'lodash'
 
 export const ellipsis = (v: string, { length = 8, prefixLength = 0 } = {}) =>
   `${v.slice(0, length + prefixLength)}...${v.slice(-length)}`
@@ -30,7 +30,7 @@ export const humanReadableNumber = (
     if (d) {
       let dec = d
       if (dec.length < decimalCount) {
-        dec = _.padEnd(dec, decimalCount, '0')
+        dec = padEnd(dec, decimalCount, '0')
       }
       n = `${i}.${dec}`
     } else {

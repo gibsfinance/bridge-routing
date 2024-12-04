@@ -5,7 +5,7 @@ import { Chains, Provider } from './auth/types'
 import { derived, get, readable } from 'svelte/store'
 import { windowLoaded } from './window'
 import type { BridgeKey } from './input'
-import _ from 'lodash'
+import ldget from 'lodash/get'
 
 export const isProd = readable(__PROD__)
 
@@ -281,13 +281,13 @@ export const validBridgeKeys = derived([isProd], ([$isProd]) => {
 export const pathway = (bridgeKey: BridgeKey | null) => {
   if (!bridgeKey) return
   return (
-    _.get(pathways, bridgeKey) || (!get(isProd) ? _.get(testnetPathways, bridgeKey) : undefined)
+    ldget(pathways, bridgeKey) || (!get(isProd) ? ldget(testnetPathways, bridgeKey) : undefined)
   )
 }
 
 export const defaultAssetIn = ($bridgeKey: BridgeKey | null) => {
   const conf = pathway($bridgeKey)
-  const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token | undefined
+  const defaultAssetIn = ldget(conf, ['defaultAssetIn']) as Token | undefined
   return defaultAssetIn
 }
 

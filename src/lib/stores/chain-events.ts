@@ -9,7 +9,8 @@ import { Chains } from './auth/types'
 import type { Token, TokenOut } from '$lib/types'
 import { chainsMetadata } from './auth/constants'
 import { nativeAssetOut, pathway } from './config'
-import _ from 'lodash'
+import noop from 'lodash/noop'
+import memoize from 'lodash/memoize'
 
 export const destinationPublicClient = derived(
   [input.bridgeKey, input.forcedRefresh],
@@ -174,8 +175,8 @@ export const watchTokenBalance = (
   )
 
   return derived(
-    [walletAccount, input.bridgeKey, chainId, tokenStore, ticker, input.unwrap],
-    ([$walletAccount, $bridgeKey, $chainId, $asset, $ticker, $unwrap], set) => {
+    [walletAccount, chainId, tokenStore, ticker, input.unwrap, input.bridgeKey],
+    ([$walletAccount, $chainId, $asset, $ticker, $unwrap], set) => {
       if (!$ticker || !$asset || !$walletAccount || $walletAccount === zeroAddress) {
         set(null)
         return () => {}
@@ -239,7 +240,7 @@ export const minAmount = derived(
   0n,
 )
 
-const links = _.memoize(
+const links = memoize(
   async ({ chainId, target, address }: { chainId: Chains; target: Hex; address: Hex }) => {
     return multicallRead<Hex[]>({
       client: input.clientFromChain(chainId),
@@ -366,7 +367,7 @@ export const assetLink = derived<Stores, null | TokenBridgeInfo>(
   ([$bridgeKey, $assetIn], set) => {
     set(null)
     if (!$assetIn) {
-      return _.noop
+      return noop
     }
     return loading.loadsAfterTick('token', () => tokenBridgeInfo([$bridgeKey, $assetIn]), set)
   },

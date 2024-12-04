@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { FormEventHandler } from 'svelte/elements'
   import Icon from '@iconify/svelte'
-  import _ from 'lodash'
   import { writable } from 'svelte/store'
   import { createEventDispatcher } from 'svelte'
 

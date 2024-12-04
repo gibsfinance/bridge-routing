@@ -26,9 +26,7 @@ export const outputRouter = parseAbi([
   'function WETH() external view returns(address)',
   'function bridge() external view returns(address)',
 ])
-export const outputBridge = parseAbi([
-  'function bridgeContract() external view returns(address)',
-])
+export const outputBridge = parseAbi(['function bridgeContract() external view returns(address)'])
 export const feeManager = parseAbi([
   'function HOME_TO_FOREIGN_FEE() public view returns(bytes32)',
   'function FOREIGN_TO_HOME_FEE() public view returns(bytes32)',

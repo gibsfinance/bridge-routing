@@ -1,4 +1,4 @@
-import { numberToHex } from "viem"
+import { numberToHex } from 'viem'
 
 export function strip0x(input: string) {
   return input.replace(/^0x/, '')
@@ -30,7 +30,7 @@ export function packSignatures(array: ReturnType<typeof signatureToVRS>[]) {
   let v = ''
   let r = ''
   let s = ''
-  array.forEach(e => {
+  array.forEach((e) => {
     v = v.concat(e.v)
     r = r.concat(e.r)
     s = s.concat(e.s)

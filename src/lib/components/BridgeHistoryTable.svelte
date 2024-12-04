@@ -13,7 +13,7 @@
   import { goto } from '$app/navigation'
   import { get } from 'svelte/store'
   import { networkSwitchAssetOutAddress } from '$lib/stores/bridge-settings'
-    import { transactionButtonPress } from '$lib/stores/transaction'
+  import { transactionButtonPress } from '$lib/stores/transaction'
 
   export let bridges: Bridge[] = []
   const network = (chainId: string | number | undefined) => {
@@ -107,7 +107,9 @@
                       if (scrollTop) scrollTo(0, scrollTop)
                     }}>Switch</button>
                 {:else}
-                {@const deliverBridgeTransaction = transactionButtonPress(() => deliverBridge(bridge))}
+                  {@const deliverBridgeTransaction = transactionButtonPress(() =>
+                    deliverBridge(bridge),
+                  )}
                   <button
                     type="button"
                     disabled={!canDeliver}

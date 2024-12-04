@@ -7,7 +7,7 @@ import type { Query } from '$lib/gql/graphql'
 import { gql, GraphQLClient } from 'graphql-request'
 import { indexer } from '$lib/config'
 import type { UserRequestForAffirmation, UserRequestForSignature } from '../gql/graphql'
-import _ from 'lodash'
+import { sortBy } from 'lodash'
 
 export type Bridge = UserRequestForSignature | UserRequestForAffirmation
 
@@ -102,7 +102,7 @@ export const bridges = derived<Stores, null | Bridge[]>(
             whereSig: filter,
           })
           .then((data) => {
-            return _.sortBy(
+            return sortBy(
               ([] as Bridge[]).concat(
                 data.userRequestForSignatures.items,
                 data.userRequestForAffirmations.items,
