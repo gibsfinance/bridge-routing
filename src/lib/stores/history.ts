@@ -19,7 +19,9 @@ const fragmentBridge = (addFeeDirector: boolean) => gql`{
   from
   to
   orderId
-  requiredSignatures
+  requiredSignatures {
+    value
+  }
   bridge {
     bridgeId
     provider

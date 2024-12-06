@@ -28,7 +28,7 @@
     if (bridge.delivery?.transaction?.hash) {
       return 'Delivered'
     }
-    if (bridge.signatures?.items?.length === Number(bridge.requiredSignatures)) {
+    if (bridge.signatures!.items!.length === Number(bridge.requiredSignatures!.value)) {
       return 'Signed'
     }
     if (bridge.block?.number <= ($finalizedBlocks[chainId] || 0n)) {
@@ -145,8 +145,9 @@
                 </div>
               </div>
               <div class="flex flex-col w-48">
-                <div class="font-bold flex w-full" title="Needed: {bridge.requiredSignatures}"
-                  >Started At</div>
+                <div
+                  class="font-bold flex w-full"
+                  title="Needed: {bridge.requiredSignatures?.value}">Started At</div>
                 <div class="flex w-full">
                   {new Date(initiationSeconds * 1_000).toISOString().slice(0, -5)}Z
                 </div>

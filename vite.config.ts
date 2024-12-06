@@ -18,7 +18,7 @@ export default defineConfig({
     // }),
   ],
   optimizeDeps: {
-    exclude: ['wrtc', 'http', 'viem'],
+    exclude: ['wrtc', 'http'],
     include: [
       '@web3-onboard/core',
       '@web3-onboard/gas',
