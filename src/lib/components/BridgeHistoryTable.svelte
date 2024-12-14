@@ -1,6 +1,6 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { Chains, toChain, type VisualChain } from '$lib/stores/auth/types'
+  import { Chains, toChain, toChainKey, type VisualChain } from '$lib/stores/auth/types'
   import { finalizedBlocks } from '$lib/stores/chain-events'
   import type { Bridge } from '$lib/stores/history'
   import { ellipsis } from '$lib/stores/utils'
@@ -9,11 +9,12 @@
   import Icon from '@iconify/svelte'
   import { deliverBridge } from '$lib/stores/delivery'
   import { useAuth } from '$lib/stores/auth/methods'
-  import { flippedBridgeKey, fromChainId, toPath } from '$lib/stores/input'
+  import { flippedBridgeKey, fromChainId, toPath, provider } from '$lib/stores/input'
   import { goto } from '$app/navigation'
   import { get } from 'svelte/store'
   import { networkSwitchAssetOutAddress } from '$lib/stores/bridge-settings'
   import { transactionButtonPress } from '$lib/stores/transaction'
+  import { zeroAddress } from 'viem'
 
   export let bridges: Bridge[] = []
   const network = (chainId: string | number | undefined) => {
@@ -28,10 +29,10 @@
     if (bridge.delivery?.transaction?.hash) {
       return 'Delivered'
     }
-    if (bridge.signatures!.items!.length === Number(bridge.requiredSignatures!.value)) {
+    if (bridge.signatures!.items!.length >= Number(bridge.requiredSignature!.value)) {
       return 'Signed'
     }
-    if (bridge.block?.number <= ($finalizedBlocks[chainId] || 0n)) {
+    if (bridge.transaction!.block!.number <= ($finalizedBlocks[chainId] || 0n)) {
       return 'Finalized'
     }
     return 'Pending'
@@ -60,6 +61,7 @@
       {@const isDelivered = !!bridge.delivery?.transaction?.hash}
       {@const initiationSeconds = Number(bridge.transaction?.block?.timestamp)}
       {@const originationChainId = toChain(bridge.originationChainId)}
+      {@const requiredSigs = bridge.requiredSignature?.value}
       <div class="flex flex-col">
         <div class="flex flex-row w-full h-10 gap-4">
           <span class="flex flex-row w-48 items-center">
@@ -102,7 +104,7 @@
                       await switchChain(toChain(bridge.destinationChainId))
                       const scrollTop = document.scrollingElement?.scrollTop
                       await goto(
-                        `/delivery/${toPath(get(flippedBridgeKey))}/${get(networkSwitchAssetOutAddress)}`,
+                        `/delivery/${get(provider)}/${toChainKey(bridge.destinationChainId)}/${toChainKey(bridge.originationChainId)}/${zeroAddress}`,
                       )
                       if (scrollTop) scrollTo(0, scrollTop)
                     }}>Switch</button>
@@ -145,9 +147,7 @@
                 </div>
               </div>
               <div class="flex flex-col w-48">
-                <div
-                  class="font-bold flex w-full"
-                  title="Needed: {bridge.requiredSignatures?.value}">Started At</div>
+                <div class="font-bold flex w-full" title="Needed: {requiredSigs}">Started At</div>
                 <div class="flex w-full">
                   {new Date(initiationSeconds * 1_000).toISOString().slice(0, -5)}Z
                 </div>

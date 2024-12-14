@@ -21,6 +21,8 @@ export const ChainIdToKey = new Map<Chains, ChainKey>(
 
 export const toChain = (chainId: number | string) => `0x${Number(chainId).toString(16)}` as Chains
 
+export const toChainKey = (chainId: number | string) => ChainIdToKey.get(toChain(chainId))
+
 export type VisualChain = Chain & {
   chainId: Chains
   icon: string
