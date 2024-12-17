@@ -22,6 +22,9 @@ const fragmentBridge = (addFeeDirector: boolean) => gql`{
   requiredSignatures {
     value
   }
+  token
+  handlingNative
+  deliveringNative
   bridge {
     bridgeId
     provider

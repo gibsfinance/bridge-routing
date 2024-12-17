@@ -9,12 +9,14 @@
   import Icon from '@iconify/svelte'
   import { deliverBridge } from '$lib/stores/delivery'
   import { useAuth } from '$lib/stores/auth/methods'
-  import { flippedBridgeKey, fromChainId, toPath, provider } from '$lib/stores/input'
+  import { fromChainId, provider } from '$lib/stores/input'
   import { goto } from '$app/navigation'
   import { get } from 'svelte/store'
-  import { networkSwitchAssetOutAddress } from '$lib/stores/bridge-settings'
   import { transactionButtonPress } from '$lib/stores/transaction'
-  import { zeroAddress } from 'viem'
+  import { isAddress, zeroAddress } from 'viem'
+  import Tooltip from './Tooltip.svelte'
+  import Hover from './Hover.svelte'
+  import { hover } from '$lib/modifiers/hover'
 
   export let bridges: Bridge[] = []
   const network = (chainId: string | number | undefined) => {
@@ -42,6 +44,41 @@
   let opened: Record<string, boolean> = {}
 
   const { switchChain } = useAuth()
+  type Detail = {
+    headline: string
+    type: 'text' | 'address' | 'duration'
+    body: string
+    startTime?: Date
+    endTime?: Date | null
+  }
+
+  let details: Detail[] = []
+  const showBridgeStepInfo = (bridge: Bridge, step: number) => {
+    let d: Detail[] = []
+    if (step === 4) {
+      console.log('bridge', bridge, step)
+    } else if (step === 3) {
+      // step 3
+    } else if (step === 2) {
+      // step 2
+    } else if (step === 1) {
+      // step 1
+    } else if (step === 0) {
+      // default - not hovering
+      d.push({ headline: 'From', body: bridge.from || '', type: 'address' })
+      d.push({ headline: 'Token', body: bridge.token || '', type: 'address' })
+      d.push({
+        headline: 'Duration',
+        type: 'duration',
+        body: '',
+        startTime: new Date(Number(bridge.transaction!.block!.timestamp) * 1_000),
+        endTime: bridge.delivery?.transaction?.block?.timestamp
+          ? new Date(Number(bridge.delivery?.transaction?.block?.timestamp) * 1_000)
+          : null,
+      })
+    }
+    return d
+  }
 </script>
 
 <div
@@ -62,6 +99,10 @@
       {@const initiationSeconds = Number(bridge.transaction?.block?.timestamp)}
       {@const originationChainId = toChain(bridge.originationChainId)}
       {@const requiredSigs = bridge.requiredSignatures?.value}
+      {@const step2Complete =
+        status === 'Finalized' || status === 'Signed' || status === 'Delivered'}
+      {@const step3Complete = status === 'Signed' || status === 'Delivered'}
+      {@const step4Complete = status === 'Delivered'}
       <div class="flex flex-col">
         <div class="flex flex-row w-full h-10 gap-4">
           <span class="flex flex-row w-48 items-center">
@@ -125,6 +166,7 @@
             class="flex flex-row size-8 items-center justify-center"
             class:rotate-90={!!opened[bridge.orderId]}
             on:click={() => {
+              details = showBridgeStepInfo(bridge, 0)
               opened = {
                 // ...opened, // allows others to be opened at the same time
                 [bridge.orderId]: !opened[bridge.orderId],
@@ -134,67 +176,61 @@
           </button>
         </div>
         <div
-          class="transition-all duration-150 flex flex-row overflow-hidden w-full translate-y"
+          class="transition-all duration-150 flex flex-col overflow-hidden w-full translate-y"
           class:h-0={!opened[bridge.orderId]}
-          class:h-20={!!opened[bridge.orderId] && !isDelivered}
-          class:h-32={!!opened[bridge.orderId] && isDelivered}>
-          <div class="flex flex-col w-full translate-y-4">
-            <div class="flex flex-row w-full">
-              <div class="flex flex-col w-48">
-                <div class="font-bold flex w-full">To</div>
-                <div class="font-mono flex w-full">
-                  {ellipsis(bridge.to || '', { length: dL, prefixLength: 2 })}
-                </div>
-              </div>
-              <div class="flex flex-col w-48">
-                <div class="font-bold flex w-full" title="Needed: {requiredSigs}">Started At</div>
-                <div class="flex w-full">
-                  {new Date(initiationSeconds * 1_000).toISOString().slice(0, -5)}Z
-                </div>
-              </div>
-              {#if status === 'Signed' || status === 'Delivered'}
+          class:h-32={!!opened[bridge.orderId]}>
+          <div class="flex flex-row w-full">
+            <ol class="flex flex-row w-full justify-between mt-6 pb-6">
+              <li class="h-0.5 flex flex-1 bg-green-500">
+                <span
+                  class="size-12 items-center justify-center flex rounded-full bg-green-500 border-green-500 text-white -mt-6">
+                  <Icon icon="material-symbols:check" width="32" height="32" />
+                </span>
+              </li>
+              <li class="h-0.5 flex flex-1" class:bg-green-500={step3Complete}>
+                <span
+                  class="size-12 items-center justify-center flex rounded-full border-green-500 text-white -mt-6"
+                  class:bg-green-500={step2Complete}>
+                  <Icon icon="material-symbols:check" width="32" height="32" />
+                </span>
+              </li>
+              <li class="h-0.5 flex flex-1" class:bg-green-500={step4Complete}>
+                <span
+                  class="size-12 items-center justify-center flex rounded-full border-green-500 text-white -mt-6"
+                  class:bg-green-500={step3Complete}>
+                  <Icon icon="material-symbols:check" width="32" height="32" />
+                </span>
+              </li>
+              <li class="h-0.5 flex w-12">
+                <Hover let:handlers let:hovering>
+                  {@const _info = hovering ? showBridgeStepInfo(bridge, 4) : ''}
+                  <span
+                    use:hover={handlers}
+                    class="size-12 items-center justify-center flex rounded-full border-green-500 text-white -mt-6"
+                    class:bg-green-500={step4Complete}>
+                    <Icon icon="material-symbols:check" width="32" height="32" />
+                    <Tooltip positionFlow="above" position="right" show={hovering}
+                      >The transaction was delivered to the destination chain</Tooltip>
+                  </span>
+                </Hover>
+              </li>
+            </ol>
+          </div>
+          <div class="flex flex-row w-full">
+            <div class="flex flex-row">
+              {#each details as detail}
                 <div class="flex flex-col w-48">
-                  <div
-                    class="font-bold flex w-full"
-                    title="Signed: {bridge.signatures?.items.length}">Signed At</div>
-                  <div class="flex w-full"
-                    >{new Date(
-                      bridge.signatures?.items[bridge.signatures?.items.length - 1].transaction
-                        ?.block?.timestamp * 1_000,
-                    )
-                      .toISOString()
-                      .slice(0, -5)}Z</div>
+                  <div class="font-bold flex w-full">{detail.headline}</div>
+                  <div class="font-mono flex w-full"
+                    >{#if detail.type === 'duration'}
+                      {detail.startTime?.toISOString().split('T')[1].split('.')[0]} -
+                      {detail.endTime?.toISOString().split('T')[1].split('.')[0]}
+                    {:else if detail.type === 'address'}{isAddress(detail.body)
+                        ? ellipsis(detail.body, { length: dL, prefixLength: 2 })
+                        : detail.body}{/if}</div>
                 </div>
-              {:else}
-                <div class="flex flex-col w-48"></div>
-              {/if}
+              {/each}
             </div>
-            {#if isDelivered}
-              {@const deliverySeconds = Number(bridge.delivery?.transaction?.block?.timestamp)}
-              {@const sDelta = deliverySeconds - initiationSeconds}
-              <div class="flex flex-row">
-                <div class="flex flex-col w-48">
-                  <div class="font-bold flex w-full">Delivered By</div>
-                  <div class="font-mono flex w-full">
-                    {ellipsis(bridge.delivery?.transaction?.from || '', {
-                      length: dL,
-                      prefixLength: 2,
-                    })}
-                  </div>
-                </div>
-                <div class="flex flex-col w-48">
-                  <div
-                    class="font-bold flex w-full"
-                    title="Duration: {Math.floor(sDelta / 60)}m {sDelta % 60}s">Delivered At</div>
-                  <div class="flex w-full">
-                    {new Date(deliverySeconds * 1_000).toISOString().slice(0, -5)}Z
-                  </div>
-                </div>
-                <div class="flex flex-col w-48">
-                  <!--  -->
-                </div>
-              </div>
-            {/if}
           </div>
         </div>
       </div>
