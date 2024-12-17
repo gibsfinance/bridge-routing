@@ -19,11 +19,11 @@ const fragmentBridge = (addFeeDirector: boolean) => gql`{
   from
   to
   orderId
-  requiredSignature {
+  requiredSignatures {
     value
   }
   bridge {
-    id
+    bridgeId
     provider
     chainId
   }
@@ -46,7 +46,6 @@ const fragmentBridge = (addFeeDirector: boolean) => gql`{
       }
     }
   }
-  id
   messageHash
   encodedData${
     addFeeDirector

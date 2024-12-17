@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { zeroAddress } from 'viem'
   import { goto } from '$app/navigation'
   import { useAuth } from '$lib/stores/auth/methods'
   import { toPath, validBridgeKey, flippedBridgeKey, toChainId } from '$lib/stores/input'

@@ -29,7 +29,7 @@
     if (bridge.delivery?.transaction?.hash) {
       return 'Delivered'
     }
-    if (bridge.signatures!.items!.length >= Number(bridge.requiredSignature!.value)) {
+    if (bridge.signatures!.items!.length >= Number(bridge.requiredSignatures!.value)) {
       return 'Signed'
     }
     if (bridge.transaction!.block!.number <= ($finalizedBlocks[chainId] || 0n)) {
@@ -61,7 +61,7 @@
       {@const isDelivered = !!bridge.delivery?.transaction?.hash}
       {@const initiationSeconds = Number(bridge.transaction?.block?.timestamp)}
       {@const originationChainId = toChain(bridge.originationChainId)}
-      {@const requiredSigs = bridge.requiredSignature?.value}
+      {@const requiredSigs = bridge.requiredSignatures?.value}
       <div class="flex flex-col">
         <div class="flex flex-row w-full h-10 gap-4">
           <span class="flex flex-row w-48 items-center">
