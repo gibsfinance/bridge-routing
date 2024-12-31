@@ -10,6 +10,10 @@ export const countDecimals = (v: string) => {
   return d ? d.length : 0
 }
 
+export const humanReadableDate = (date: Date) => {
+  return date.toISOString().split('T').join(' ').slice(0, -5)
+}
+
 export const humanReadableNumber = (
   num = 0n,
   decimals = 18,

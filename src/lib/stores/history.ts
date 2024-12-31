@@ -26,7 +26,7 @@ const fragmentBridge = (addFeeDirector: boolean) => gql`{
   handlingNative
   deliveringNative
   bridge {
-    bridgeId
+    id
     provider
     chainId
   }
@@ -39,7 +39,7 @@ const fragmentBridge = (addFeeDirector: boolean) => gql`{
       timestamp
     }
   }
-  signatures {
+  confirmedSignatures {
     items {
       transaction {
         hash
@@ -53,13 +53,13 @@ const fragmentBridge = (addFeeDirector: boolean) => gql`{
   encodedData${
     addFeeDirector
       ? gql`
-  feeDirector {
-    feeType
-    unwrapped
-    recipient
-    multiplier
-    limit
-  }`
+    feeDirector {
+      feeType
+      unwrapped
+      recipient
+      multiplier
+      limit
+    }`
       : ''
   }
   delivery {

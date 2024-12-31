@@ -1,4 +1,4 @@
-import { derived, writable } from 'svelte/store'
+import { derived, get, writable } from 'svelte/store'
 import * as input from '$lib/stores/input'
 import {
   zeroAddress,
@@ -762,6 +762,22 @@ export const assetSources = (asset: Token | null) => {
     (a: MinTokenInfo) => `${a.chainId}/${a.address}`,
   )
   return imageLinks.images(sources)
+}
+
+export const findAssetByUnique = (fromChainId: number, toChainId: number, address: Hex) => {
+  const $bridgeableTokens = get(input.bridgableTokens)
+  const addr = getAddress(address)
+  return $bridgeableTokens.find(
+    (t) =>
+      t.chainId === fromChainId &&
+      getAddress(t.address) === addr &&
+      ((t.extensions?.bridgeInfo?.[fromChainId]?.tokenAddress
+        ? getAddress(t.extensions.bridgeInfo[fromChainId].tokenAddress) === addr
+        : false) ||
+        (t.extensions?.bridgeInfo?.[toChainId]?.tokenAddress
+          ? getAddress(t.extensions.bridgeInfo[toChainId].tokenAddress) === addr
+          : false)),
+  )
 }
 
 export const details = writable<null | 'settings' | 'details'>(null)

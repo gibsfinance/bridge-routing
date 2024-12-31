@@ -40,7 +40,7 @@ export const deliverBridge = async (bridge: Bridge) => {
   if (!path) {
     return
   }
-  const sigs = bridge.signatures!.items!
+  const sigs = bridge.confirmedSignatures!.items!
   const originationClient = inputs.clientFromChain(toChain(bridge.originationChainId))
   const destinationClient = inputs.clientFromChain(toChain(bridge.destinationChainId))
   const signatures = await getSignatures(

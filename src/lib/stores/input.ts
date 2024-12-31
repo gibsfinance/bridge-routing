@@ -231,7 +231,7 @@ export const bridgableTokens = derived(
               : null,
           } as Token,
         ].concat(sortedList),
-        ({ chainId, address }) => getAddress(address, chainId),
+        ({ chainId, address }) => `${chainId}/${getAddress(address)}`,
       ).filter((tkn) => !blacklist.has(tkn.address))
     }
     list.forEach((token) => {
