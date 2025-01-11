@@ -184,6 +184,10 @@ export const bridgableTokensResponses = derived(
 
 const blacklist = new Set<Hex>(['0xA882606494D86804B5514E07e6Bd2D6a6eE6d68A'])
 
+// export const allTokens = derived([bridgableTokensResponses], ([$bridgeableTokensResponses]) => {
+//   return
+// })
+
 export const bridgableTokens = derived(
   [bridgeKey, bridgableTokensResponses],
   ([$bridgeKey, $responses]) => {

@@ -765,19 +765,28 @@ export const assetSources = (asset: Token | null) => {
 }
 
 export const findAssetByUnique = (fromChainId: number, toChainId: number, address: Hex) => {
-  const $bridgeableTokens = get(input.bridgableTokens)
+  const $bridgeableTokens = get(input.bridgableTokensResponses)
   const addr = getAddress(address)
-  return $bridgeableTokens.find(
-    (t) =>
-      t.chainId === fromChainId &&
-      getAddress(t.address) === addr &&
-      ((t.extensions?.bridgeInfo?.[fromChainId]?.tokenAddress
+  return (
+    $bridgeableTokens.find((t) => t.chainId === fromChainId && getAddress(t.address) === addr) ||
+    // $bridgeableTokens.find((t) => t.chainId === toChainId && getAddress(t.address) === addr) ||
+    $bridgeableTokens.find((t) =>
+      t.extensions?.bridgeInfo?.[fromChainId]?.tokenAddress
         ? getAddress(t.extensions.bridgeInfo[fromChainId].tokenAddress) === addr
-        : false) ||
-        (t.extensions?.bridgeInfo?.[toChainId]?.tokenAddress
-          ? getAddress(t.extensions.bridgeInfo[toChainId].tokenAddress) === addr
-          : false)),
+        : false,
+    )
   )
+  // return $bridgeableTokens.find(
+  //   (t) =>
+  //     (t.chainId === fromChainId && getAddress(t.address) === addr) ||
+  //     (t.chainId === toChainId && getAddress(t.address) === addr) ||
+  //     (t.extensions?.bridgeInfo?.[fromChainId]?.tokenAddress
+  //       ? getAddress(t.extensions.bridgeInfo[fromChainId].tokenAddress) === addr
+  //       : false) ||
+  //     (t.extensions?.bridgeInfo?.[toChainId]?.tokenAddress
+  //       ? getAddress(t.extensions.bridgeInfo[toChainId].tokenAddress) === addr
+  //       : false),
+  // )
 }
 
 export const details = writable<null | 'settings' | 'details'>(null)

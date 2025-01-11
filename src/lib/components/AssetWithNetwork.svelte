@@ -16,9 +16,13 @@
     chainsMetadata[$tokenOriginationChainId]
   $: src = assetSources(asset)
   $: size = tokenSize * 4
+  // $: console.log(asset)
 </script>
 
-<span class="token-image-container relative" style="--token-size: {tokenSize};">
+<span
+  class="token-image-container relative"
+  style="--token-size: {tokenSize};"
+  title={asset.symbol}>
   <TokenIcon visible {size} {src} class="overflow-hidden" />
   {#if chain && $loading.isResolved('token')}
     <img

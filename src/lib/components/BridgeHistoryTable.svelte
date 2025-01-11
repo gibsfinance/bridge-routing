@@ -108,22 +108,21 @@
     return d
   }
   const assetFromBridge = (bridge: Bridge) => {
-    return (
-      findAssetByUnique(
-        bridge.originationChainId,
-        bridge.destinationChainId,
-        bridge.token as Hex,
-      ) || {
-        chainId: Number(bridge.originationChainId),
-        address: bridge.token as Hex,
-        name: '',
-        symbol: '',
-        decimals: 0,
-        extensions: {
-          bridgeInfo: {},
-        },
-      }
+    return findAssetByUnique(
+      bridge.originationChainId,
+      bridge.destinationChainId,
+      bridge.token as Hex,
     )
+    //  || {
+    //   chainId: Number(bridge.originationChainId),
+    //   address: bridge.token as Hex,
+    //   name: '',
+    //   symbol: '',
+    //   decimals: 0,
+    //   extensions: {
+    //     bridgeInfo: {},
+    //   },
+    // }
   }
 </script>
 
@@ -151,6 +150,7 @@
           status === 'Finalized' || status === 'Signed' || status === 'Delivered'}
         {@const step3Complete = status === 'Signed' || status === 'Delivered'}
         {@const step4Complete = status === 'Delivered'}
+        {@const asset = assetFromBridge(bridge)}
         <div
           class="flex flex-col"
           use:hover={{
@@ -177,7 +177,11 @@
             </span>
             <span class="flex flex-row w-28 items-center">
               <div class="flex flex-row gap-2 items-center text-left">
-                <AssetWithNetwork asset={assetFromBridge(bridge)} tokenSize={8} networkSize={4} />
+                {#if asset}
+                  <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
+                  {:else}
+                  <span class="size-8"></span>
+                {/if}
                 <span>{status}</span>
               </div>
             </span>
