@@ -11,7 +11,7 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test:unit": "playwright test",
     "lint": "prettier --check . && eslint \"./**/*.ts\" --ignore-pattern \".svelte-kit\" -c .eslintrc.mjs",
-    "codegen": "bun gql-gen generate --config codegen.config.cjs",
+    "codegen": "pnpm gql-gen generate --config codegen.config.cjs",
     "format": "prettier --write ."
   },
   "devDependencies": {
