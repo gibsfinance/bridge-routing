@@ -4,8 +4,8 @@ import { parseAbi, parseAbiParameters } from 'viem'
 export const inputBridge = parseAbi([
   'function minPerTx(address token) external view returns(uint256)',
   'function foreignTokenAddress(address token) external view returns(address)',
-  'function bridgedTokenAddress(address token) external view returns(address)',
   'function homeTokenAddress(address token) external view returns(address)',
+  'function bridgedTokenAddress(address token) external view returns(address)',
   'function nativeTokenAddress(address token) external view returns(address)',
   'function feeManager() external view returns(address)',
   'function relayTokensAndCall(address token, address _receiver, uint256 _value, bytes memory _data) external',

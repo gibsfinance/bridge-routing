@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { directDomain, domains } from '$lib/stores/window'
+  import { domains, addDomain } from '$lib/stores/window.svelte'
   import Icon from '@iconify/svelte'
 
   export let domain = 'bridge.pulsechain.com'
   export let path = ''
-  $: domains.add(domain)
-  $: d = $directDomain.get(domain) || domain
+  $: addDomain(domain)
+  $: d = domains.get(domain) || domain
 </script>
 
 <slot direct={d} {path}>

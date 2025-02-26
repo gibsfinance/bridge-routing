@@ -22,7 +22,6 @@ export const humanReadableNumber = (
 ) => {
   let n = num === 0n ? '0.0' : formatUnits(num, decimals)
   const len = truncLen ? Math.min(n.length, 20) : n.length
-  // console.log(num, n, len)
   n = n.slice(0, len)
   // this line should only be hit when non zero values are passed
   if (n[n.length - 1] === '.') {
@@ -66,7 +65,7 @@ export const decimalValidation = (v: string, decimals = 18) => {
   }
   try {
     parseUnits(v, decimals)
-  } catch (err) {
+  } catch {
     return
   }
   const split = v.split('.')

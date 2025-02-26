@@ -1,6 +1,12 @@
 <script lang="ts">
-  export let screenReaderText = 'setting'
-  export let checked = false
+  //   export let screenReaderText = 'setting'
+  //   export let checked = false
+  type Props = {
+    screenReaderText?: string
+    checked?: boolean
+    onchange?: (checked: boolean) => void
+  }
+  let { screenReaderText = 'setting', checked = false, onchange }: Props = $props()
 </script>
 
 <!-- Enabled: "bg-indigo-600", Not Enabled: "bg-gray-200" -->
@@ -8,11 +14,12 @@
   type="button"
   class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent dark:bg-gray-600 transition-colors duration-200 ease-in-out focus:outline-none"
   class:bg-gray-200={!checked}
-  class:bg-purple-600={checked}
+  class:bg-tertiary-600={checked}
   class:dark:bg-gray-600={!checked}
   role="switch"
-  on:click={() => {
+  onclick={() => {
     checked = !checked
+    onchange?.(checked)
   }}
   aria-checked={checked}>
   <span class="sr-only">{screenReaderText}</span>

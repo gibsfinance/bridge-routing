@@ -1,45 +1,48 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import type { Token } from '$lib/types'
+  import type { Token } from '$lib/types.svelte'
   import TokenIcon from './TokenIcon.svelte'
-  import { assetSources } from '$lib/stores/bridge-settings'
-  import { tokenOriginationChainId } from '$lib/stores/chain-events'
-  import { loading } from '$lib/stores/loading'
+  import { assetSources } from '$lib/stores/bridge-settings.svelte'
+  import { tokenOriginationChainId } from '$lib/stores/chain-events.svelte'
+  import { loading } from '$lib/stores/loading.svelte'
   import { zeroAddress } from 'viem'
+  import { assetLink } from '$lib/stores/chain-events.svelte'
+  import Image from './Image.svelte'
 
-  export let asset!: Token
-  export let tokenSize = 10
-  export let networkSize = 5
-  $: chain =
-    asset.address !== zeroAddress &&
-    $tokenOriginationChainId &&
-    chainsMetadata[$tokenOriginationChainId]
-  $: src = assetSources(asset)
-  $: size = tokenSize * 4
-  // $: console.log(asset)
+  type Props = {
+    asset: Token
+    tokenSizeClasses?: string
+    networkSizeClasses?: string
+  }
+  const { asset, tokenSizeClasses = 'size-8', networkSizeClasses = 'size-4' }: Props = $props()
+  const tokenOriginationChain = $derived(tokenOriginationChainId(assetLink.value))
+  const chain = $derived(
+    asset.address !== zeroAddress && tokenOriginationChain && chainsMetadata[tokenOriginationChain],
+  )
+  const src = $derived(assetSources(asset))
+  const tokenClasses = $derived(`overflow-hidden absolute`)
+  const classes = $derived(`relative ${tokenSizeClasses}`)
 </script>
 
-<span
-  class="token-image-container relative"
-  style="--token-size: {tokenSize};"
-  title={asset.symbol}>
-  <TokenIcon visible {size} {src} class="overflow-hidden" />
-  {#if chain && $loading.isResolved('token')}
-    <img
-      class="network-image absolute -bottom-1 -right-1 bg-slate-100 rounded-full"
-      style="--network-size: {networkSize};"
+<span class={classes} title={asset.symbol}>
+  <TokenIcon visible sizeClasses={tokenSizeClasses} class={tokenClasses} {src} />
+  {#if chain && loading.isResolved('token')}
+    <Image
+      class="network-image absolute -right-1 -bottom-1 rounded-full bg-slate-100"
+      sizeClasses={networkSizeClasses}
       src={chain.icon}
       alt={chain.alt} />
   {/if}
 </span>
-
+<!--
 <style lang="postcss">
+  @reference "tailwindcss/theme";
   .token-image-container {
-    height: calc(var(--token-size) * 4px);
-    width: calc(var(--token-size) * 4px);
-    .network-image {
-      height: calc(var(--network-size) * 4px);
-      width: calc(var(--network-size) * 4px);
+    height: calc(var(--token-size));
+    width: calc(var(--token-size));
+    :global(.network-image) {
+      height: calc(var(--network-size));
+      width: calc(var(--network-size));
     }
   }
-</style>
+</style> -->

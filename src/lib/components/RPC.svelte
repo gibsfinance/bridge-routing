@@ -2,14 +2,50 @@
   import Icon from '@iconify/svelte'
   import GreenBadge from '$lib/components/Badge.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import * as rpcs from '$lib/stores/rpcs'
-  import { createEventDispatcher } from 'svelte'
   import Input from './Input.svelte'
   import Button from './Button.svelte'
-  const { store: rpcStore } = rpcs
-  const dispatch = createEventDispatcher()
-  const dispatchClose = () => dispatch('close')
-  const dispatchSubmit = () => dispatch('submit')
+  import { SvelteMap } from 'svelte/reactivity'
+  import type { Chains } from '$lib/stores/auth/types'
+  type Data = [Chains, string[]][]
+  type Props = {
+    data: Data
+    onsubmit: (data: Data) => void
+    onclose: () => void
+  }
+  const { onsubmit, onclose, data: startingData }: Props = $props()
+  const updated = $state<SvelteMap<Chains, string[]>>(new SvelteMap())
+  const buttonClasses =
+    'rounded-md bg-neutral-600 px-3 py-3 text-sm font-semibold text-white shadow-sm hover:bg-neutral-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 grow transition-all'
+  const data = new SvelteMap(startingData)
+  const rpcs = {
+    add: (chain: Chains) => {
+      const currentChainValue = updated.get(chain) ?? ([] as string[])
+      currentChainValue.push('')
+      updated.set(chain, currentChainValue)
+    },
+    remove: (chain: Chains, i: number) => {
+      const currentChainValue = updated.get(chain) ?? ([] as string[])
+      const updatedRPCs = currentChainValue.slice(0).splice(i, 1)
+      updated.set(chain, updatedRPCs)
+    },
+    update: (chain: Chains, i: number, value: string) => {
+      const currentChainValue = updated.get(chain) ?? ([] as string[])
+      currentChainValue[i] = value
+      updated.set(chain, currentChainValue)
+    },
+    restoreDefault: (chain: Chains) => {
+      const updatedRPCs = chainsMetadata[chain].rpcUrls.default.http.slice(0)
+      updated.set(chain, updatedRPCs)
+    },
+    hasDefault: (chain: Chains, list: string[]) => {
+      const defaultValues = chainsMetadata[chain].rpcUrls.default.http.slice(0)
+      const currentChainValue = updated.get(chain) ?? ([] as string[])
+      return (
+        currentChainValue.length === list.length &&
+        currentChainValue.every((value, index) => value === defaultValues[index])
+      )
+    },
+  }
 </script>
 
 <div class="flex flex-col h-full p-4">
@@ -21,11 +57,11 @@
     Endpoints will be used under the same public client, and will use batching where possible.
   </p>
   <div class="overflow-y-scroll flex flex-col max-h-72">
-    {#each $rpcStore as [chain, list]}
+    {#each data as [chain, list]}
       <div class="mt-3">
         <div class="flex flex-row">
           <label class="mb-3 flex flex-row items-center">
-            <button type="button" class="mx-3" on:click={() => rpcs.add(chain)}>
+            <button type="button" class="mx-3" onclick={() => rpcs.add(chain)}>
               <Icon icon="gridicons:add-outline" />
             </button>
             {chainsMetadata[chain].name}
@@ -36,15 +72,15 @@
             <li class="mb-3 flex w-full flex-grow">
               <label for="" class="relative flex flex-grow">
                 <Input
-                  bind:value={rpc}
+                  value={rpc}
                   class="border border-neutral-500 focus:border-neutral-600"
-                  on:blur={() => {
-                    rpcs.update(chain, i, rpc)
+                  oninput={(val) => {
+                    rpcs.update(chain, i, val)
                   }} />
                 <button
                   type="button"
                   class="absolute top-0 bottom-0 right-0 justify-center flex size-8 items-center"
-                  on:click={() => rpcs.remove(chain, i)}>
+                  onclick={() => rpcs.remove(chain, i)}>
                   <Icon icon="zondicons:close-outline" />
                 </button>
               </label>
@@ -53,12 +89,11 @@
           {#if !rpcs.hasDefault(chain, list)}
             <li class="mb-3 flex w-full flex-grow">
               <label class="flex text-sm">
-                <button
-                  type="button"
-                  class="btn btn-sm btn-neutral"
-                  on:click={() => {
+                <Button
+                  class={buttonClasses}
+                  onclick={() => {
                     rpcs.restoreDefault(chain)
-                  }}>Restore Default</button>
+                  }}>Restore Default</Button>
               </label>
             </li>
           {/if}
@@ -67,7 +102,7 @@
     {/each}
   </div>
   <div class="flex flex-row gap-3 pt-3">
-    <Button type="button" on:click={dispatchClose}>Close</Button>
-    <Button type="button" on:click={dispatchSubmit}>Reload</Button>
+    <Button class={buttonClasses} onclick={onclose}>Close</Button>
+    <Button class={buttonClasses} onclick={() => onsubmit([...data.entries()])}>Reload</Button>
   </div>
 </div>

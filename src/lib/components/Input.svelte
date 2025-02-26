@@ -1,15 +1,36 @@
 <script lang="ts">
-  import classnames from 'classnames'
   import { onMount } from 'svelte'
-  export let placeholder = ''
-  export let name = ''
-  export let id = ''
-  export let value = ''
-  export let size: 'sm' | 'md' | 'lg' = 'sm'
-  export let border = true
-  export let autoFocus = false
+  import classnames from 'classnames'
+
+  type Props = {
+    value: string
+    placeholder?: string
+    name?: string
+    id?: string
+    size?: 'sm' | 'md' | 'lg'
+    border?: boolean
+    autoFocus?: boolean
+    class?: string
+    onclick?: () => void
+    onblur?: () => void
+    onfocus?: () => void
+    oninput?: (e: string) => void
+  }
+  const {
+    value,
+    placeholder,
+    name,
+    id,
+    size,
+    border,
+    autoFocus,
+    class: className,
+    onclick,
+    onblur,
+    onfocus,
+    oninput,
+  }: Props = $props()
   const defaultClassName = 'block w-full rounded-md py-1 px-2 shadow-sm bg-transparent outline-none'
-  let className = defaultClassName
   let input!: HTMLInputElement
   export { className as class }
   onMount(() => {
@@ -22,14 +43,14 @@
 <input
   bind:this={input}
   type="text"
-  bind:value
+  {value}
   {name}
   {id}
   {placeholder}
-  on:click
-  on:blur
-  on:focus
-  on:input
+  {onclick}
+  {onblur}
+  {onfocus}
+  oninput={oninput ? (e) => oninput(e.currentTarget.value) : null}
   autocomplete="off"
   autocorrect="off"
   autocapitalize="off"

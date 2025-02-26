@@ -1,60 +1,61 @@
 <script lang="ts">
   import { humanReadableNumber } from '$lib/stores/utils'
-  import { toChain, type VisualChain } from '$lib/stores/auth/types'
+  import { Chains, toChain } from '$lib/stores/auth/types'
   import NetworkImage from './NetworkImage.svelte'
-  import { createEventDispatcher } from 'svelte'
-  import * as utils from '$lib/utils'
-  import type { Token } from '$lib/types'
-  import Hover from './Hover.svelte'
-  import { hover } from '$lib/modifiers/hover'
+  import * as utils from '$lib/utils.svelte'
+  import type { Token } from '$lib/types.svelte'
   import Tooltip from './Tooltip.svelte'
-  import { loading } from '$lib/stores/loading'
-  export let balance: bigint | null = null
-  export let asset: Token | null = null
-  export let network!: VisualChain
-  export let showMax = false
-  export let unwrap = false
-  export let inChain = false
-  $: disableMax = balance === 0n
-  const dispatch = createEventDispatcher()
+  import { loading } from '$lib/stores/loading.svelte'
+  import { chainIdToChain } from '$lib/stores/input.svelte'
+  type Props = {
+    balance: bigint | null
+    asset: Token | null
+    network: Chains
+    unwrap?: boolean
+    inChain: boolean
+    onmax?: () => void
+  }
+  const { balance, asset, network: providedNetwork, unwrap, inChain, onmax }: Props = $props()
+  const network = $derived(chainIdToChain(providedNetwork))
+  const showMax = $derived(!!onmax)
+  const disableMax = $derived(balance === 0n)
   const maxOutBalance = () => {
     if (disableMax) return
-    dispatch('max-balance')
+    onmax?.()
   }
+  const nameTooltip = $derived(utils.nativeName(asset, unwrap))
 </script>
 
 <div class="flex flex-row justify-between">
   <div class="flex flex-row">
-    <NetworkImage {network} {inChain} />
+    <NetworkImage network={providedNetwork} {inChain} sizeClasses="size-8" />
   </div>
-  <div class="flex flex-row">
-    <Hover let:handlers let:hovering>
+  <div class="flex flex-col justify-around">
+    <div class="flex flex-row">
       <div
-        use:hover={handlers}
-        class="text-xs leading-8 flex items-baseline self-end relative"
+        class="relative flex items-baseline self-end text-xs leading-6"
         class:mx-2={showMax}
         class:ml-2={!showMax}>
-        {#if !!asset}
-          <Tooltip show={hovering}>{utils.nativeName(asset, unwrap)}</Tooltip>
-        {/if}
-        <span
-          class="max-w-[175px] overflow-hidden overflow-ellipsis"
-          class:opacity-60={!$loading.isResolved(`balance-${toChain(network.id)}`)}
-          >{balance === null ? '' : humanReadableNumber(balance, asset?.decimals || 18)}</span
-        >{utils.nativeSymbol(asset, unwrap)}
+        <Tooltip tooltip={nameTooltip} placement="left">
+          <span
+            class="max-w-[175px] overflow-hidden overflow-ellipsis"
+            class:opacity-60={!loading.isResolved(`balance-${toChain(network.id)}`)}
+            >{balance === null ? '' : humanReadableNumber(balance, asset?.decimals ?? 18)}</span
+          >{utils.nativeSymbol(asset, unwrap)}
+        </Tooltip>
       </div>
-    </Hover>
-    {#if showMax}
-      <div class="text-white leading-8">
-        <button
-          class="uppercase rounded-md text-xs leading-6 px-2"
-          class:bg-purple-400={disableMax}
-          class:bg-purple-600={!disableMax}
-          class:hover:bg-purple-500={!disableMax}
-          on:click={maxOutBalance}>
-          max
-        </button>
-      </div>
-    {/if}
+      {#if showMax}
+        <div class="text-white flex">
+          <button
+            class="rounded-md px-2 text-xs uppercase leading-6 h-6 flex"
+            class:bg-tertiary-400={disableMax}
+            class:bg-tertiary-600={!disableMax}
+            class:hover:bg-tertiary-500={!disableMax}
+            onclick={maxOutBalance}>
+            max
+          </button>
+        </div>
+      {/if}
+    </div>
   </div>
 </div>

@@ -1,13 +1,13 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import type { Chains } from '$lib/stores/auth/types'
-  import { directDomain, domains } from '$lib/stores/window'
+  import { domains, addDomain } from '$lib/stores/window.svelte'
   import Icon from '@iconify/svelte'
 
   export let path = ''
   export let chainId: Chains
   $: explorer = chainsMetadata[chainId].blockExplorers?.default?.url || ''
-  $: if (explorer) domains.add(explorer)
+  $: if (explorer) addDomain(explorer)
   $: d = $directDomain.get(explorer) || ''
 </script>
 

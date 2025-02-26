@@ -1,22 +1,33 @@
 <script lang="ts">
-  import { type VisualChain } from '$lib/stores/auth/types'
+  import { Chains } from '$lib/stores/auth/types'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
   import ProviderIcon from './ProviderIcon.svelte'
+  import Image from './Image.svelte'
 
-  export let network!: VisualChain
-  export let size = 32
-  export let provider: string | null = null
+  type Props = {
+    network: Chains
+    sizeClasses?: string
+    provider?: string | null
+    providerSizeClasses?: string
+  }
+  const {
+    network,
+    sizeClasses = 'size-8',
+    providerSizeClasses = 'size-4',
+    provider = null,
+  }: Props = $props()
+  const visualChain = $derived(chainsMetadata[network])
+  const classes = $derived(`${sizeClasses} network-icon min-w-8`)
+  const providerWrapperClasses = $derived(
+    `${providerSizeClasses} absolute -bottom-1 -left-1 rounded-full`,
+  )
 </script>
 
 <div class="relative">
-  <img
-    class="network-icon min-w-8"
-    style:height={`${size}px`}
-    style:width={`${size}px`}
-    src={network.icon}
-    alt={network.alt} />
+  <Image class={classes} src={visualChain.icon} alt={visualChain.alt} />
   {#if provider}
-    <div class="absolute -bottom-1 -left-1 rounded-full">
-      <ProviderIcon {provider} size="16" />
+    <div class={providerWrapperClasses}>
+      <ProviderIcon {provider} sizeClasses={providerSizeClasses} />
     </div>
   {/if}
 </div>

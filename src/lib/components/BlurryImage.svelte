@@ -16,7 +16,7 @@
     class="img w-full {bg_color}"
     style="--blur: {blur}; --size: {size}; --brightness: {brightness}; --rect: {rect}; --opacity: {opacity}; min-height: {min_height}; height: {height}; background-image: {image_url}">
     <div
-      class="relative flex justify-center w-full {containerClassName}"
+      class="relative flex justify-center contents-container {containerClassName}"
       style="min-height: {min_height};">
       <slot />
     </div>
@@ -24,6 +24,7 @@
 </div>
 
 <style lang="postcss">
+  @reference "tailwindcss/theme";
   .img {
     border: solid var(--size) rgba(0, 0, 0, 0.45);
     background-position: 50% center;
@@ -34,6 +35,13 @@
     font-size: 2em;
     display: flex;
     @apply flex justify-center;
+    .contents-container {
+      margin-top: calc(var(--size) * -1);
+      margin-bottom: calc(var(--size) * -1);
+      margin-left: calc(var(--size) * -1);
+      margin-right: calc(var(--size) * -1);
+      width: calc(100% + var(--size) * 2);
+    }
 
     &:before {
       position: absolute;

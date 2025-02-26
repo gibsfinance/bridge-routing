@@ -1,53 +1,18 @@
-import { sveltekit } from '@sveltejs/kit/vite'
 import { defineConfig } from 'vitest/config'
-import pkg from './package.json'
+import { sveltekit } from '@sveltejs/kit/vite'
 import { ssp } from 'sveltekit-search-params/plugin'
-
-// import nodePolyfills from 'rollup-plugin-polyfill-node'
-
-// const MODE = process.env.NODE_ENV
-// const development = MODE === 'development'
 
 export default defineConfig({
   plugins: [
     ssp(),
     sveltekit(),
-    // development, &&
-    // nodePolyfills({
-    // 	include: ['node_modules/**/*.js', new RegExp('node_modules/.vite/.*js')],
+    // paraglide({
+    //   project: './project.inlang',
+    //   outdir: './src/lib/paraglide',
     // }),
   ],
-  optimizeDeps: {
-    exclude: ['wrtc', 'http'],
-    include: [
-      '@web3-onboard/core',
-      '@web3-onboard/gas',
-      '@web3-onboard/sequence',
-      'js-sha3',
-      '@ethersproject/bignumber',
-    ],
-  },
-  resolve: {
-    alias: {
-      // crypto: 'crypto-browserify',
-      // stream: 'stream-browserify',
-      assert: 'assert',
-    },
-  },
-  build: {
-    rollupOptions: {
-      external: ['@web3-onboard/*'],
-      // plugins: [nodePolyfills()],
-    },
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  },
+
   test: {
     include: ['src/**/*.{test,spec}.{js,ts}'],
-  },
-  define: {
-    __APP_VERSION__: JSON.stringify(pkg.version),
-    __PROD__: JSON.stringify(process.env.NODE_ENV === 'production'),
   },
 })

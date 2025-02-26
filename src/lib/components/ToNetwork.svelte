@@ -1,65 +1,49 @@
 <script lang="ts">
-  import * as input from '$lib/stores/input'
-  import { createEventDispatcher } from 'svelte'
+  import * as input from '$lib/stores/input.svelte'
   import { formatUnits, parseEther } from 'viem'
   import NetworkSummary from './NetworkSummary.svelte'
   import { humanReadableNumber } from '$lib/stores/utils'
   import Loading from '$lib/components/Loading.svelte'
-  import { loading } from '$lib/stores/loading'
+  import { loading } from '$lib/stores/loading.svelte'
   import LockIcon from '$lib/components/LockIcon.svelte'
-  import { windowStore } from '$lib/stores/window'
+  import { innerWidth } from 'svelte/reactivity/window'
   import UndercompensatedWarning from '$lib/components/warnings/Undercompensated.svelte'
   import FeeTypeToggle from '$lib/components/FeeTypeToggle.svelte'
-  import {
-    limitFromPercent,
-    priceCorrective,
-    amountAfterBridgeFee,
-    estimatedCost,
-    unwrap,
-    amountToBridge,
-    estimatedNetworkCost,
-    fee,
-    oneEther,
-    desiredExcessCompensationPercentage,
-    toTokenBalance,
-    bridgeFee,
-  } from '$lib/stores/bridge-settings'
-  import { destination } from '$lib/stores/chain-events'
-  import { Chains, type VisualChain } from '$lib/stores/auth/types'
+  import { bridgeSettings, oneEther } from '$lib/stores/bridge-settings.svelte'
+  import { toTokenBalance } from '$lib/stores/chain-events.svelte'
+  import { Chains } from '$lib/stores/auth/types'
   import SmallInput from './SmallInput.svelte'
-  import * as utils from '$lib/utils'
-  import type { Token, TokenOut } from '$lib/types'
+  import * as utils from '$lib/utils.svelte'
+  import type { Token, TokenOut } from '$lib/types.svelte'
   import Tooltip from './Tooltip.svelte'
-  import { hover } from '$lib/modifiers/hover'
-  import Hover from './Hover.svelte'
   import SlideToggle from './SlideToggle.svelte'
-  export let destinationNetwork!: VisualChain
-  export let asset: TokenOut | null = null
-
-  const { feeType, assetInAddress, destinationSupportsEIP1559, bridgePathway, shouldDeliver } =
-    input
-  const { latestBaseFeePerGas } = destination
-
-  const handleDeliveryToggle = (e: CustomEvent<boolean>) => {
-    shouldDeliver.set(e.detail)
+  import { bridgeKey } from '$lib/stores/input.svelte'
+  type Props = {
+    ontoggle: (type: string) => void
+    asset: TokenOut | null
   }
+  const { feeType, shouldDeliver } = input
+  const { asset = null, ontoggle = () => {} }: Props = $props()
+  const feeToCrossBridge = $derived(bridgeSettings.bridgeFee)
+  const destinationNetwork = $derived(bridgeKey.toChain)
+  const unwrap = $derived(bridgeSettings.unwrap)
 
-  const dispatch = createEventDispatcher()
   const showToolbox = (type: string) => {
-    dispatch('toggle', type)
+    ontoggle(type)
   }
   // lock toggles
-  let costLimitLocked = false
-  let deliveryFeeLocked = false
+  let costLimitLocked = $state(false)
+  let deliveryFeeLocked = $state(false)
   // fee math constants
   const scaledBasisPoint = parseEther('0.01')
   const max = parseEther('10')
   const min = parseEther('0.05')
   const percentFeeFromNetworkInputs = () => {
-    if (!$amountAfterBridgeFee || !$estimatedNetworkCost) {
+    if (!bridgeSettings.amountAfterBridgeFee || !bridgeSettings.estimatedNetworkCost) {
       return 0n
     }
-    const ratioOffset = ($estimatedNetworkCost * 25_000n) / $amountAfterBridgeFee
+    const ratioOffset =
+      (bridgeSettings.estimatedNetworkCost * 25_000n) / bridgeSettings.amountAfterBridgeFee
     let target = min + scaledBasisPoint * ratioOffset
     if (target > max) {
       target = max
@@ -69,38 +53,49 @@
     return formatUnits(target, 18)
   }
   const gasPercentFeeFromNetworkInputs = () => {
-    if ($priceCorrective === 0n || !asset) {
+    if (bridgeSettings.priceCorrective.value === 0n || !asset) {
       return
     }
     const numDecimals = 6n
     const lowResLimit =
-      ($latestBaseFeePerGas * ($fee + oneEther)) / (10n ** (11n - numDecimals) * 10n * oneEther)
+      (bridgeSettings.latestBaseFeePerGas * (bridgeSettings.fee + oneEther)) /
+      (10n ** (11n - numDecimals) * 10n * oneEther)
     let lim = lowResLimit * 10n ** (18n - numDecimals)
-    lim = (lim * oneEther) / $priceCorrective / (oneEther / 10n ** BigInt(asset!.decimals))
-    if (lim > $amountAfterBridgeFee) {
-      lim = $amountAfterBridgeFee
+    lim =
+      (lim * oneEther) /
+      bridgeSettings.priceCorrective.value /
+      (oneEther / 10n ** BigInt(asset!.decimals))
+    if (lim > bridgeSettings.amountAfterBridgeFee) {
+      lim = bridgeSettings.amountAfterBridgeFee
     }
     return humanReadableNumber(lim, asset!.decimals)
   }
   const reflowFees = () => {
-    if (!$bridgePathway?.requiresDelivery) {
-      input.fee.set('0')
+    if (!bridgeSettings.bridgePathway?.requiresDelivery) {
+      input.fee.value = '0'
       return
     }
-    if ($feeType === input.FeeType.PERCENT) {
+    if (input.feeType.value === input.FeeType.PERCENT) {
       if (!deliveryFeeLocked) {
-        input.fee.set(percentFeeFromNetworkInputs() || $desiredExcessCompensationPercentage)
+        input.fee.value =
+          percentFeeFromNetworkInputs() || bridgeSettings.desiredExcessCompensationPercentage
       }
     }
-    if ($feeType === input.FeeType.GAS_TIP || $feeType === input.FeeType.FIXED) {
+    if (
+      input.feeType.value === input.FeeType.GAS_TIP ||
+      input.feeType.value === input.FeeType.FIXED
+    ) {
       if (!costLimitLocked) {
         const floatingLimit = gasPercentFeeFromNetworkInputs()
         if (floatingLimit) {
-          input.limit.set(floatingLimit)
+          input.limit.value = floatingLimit
         }
       }
     } else if (asset) {
-      input.limit.set(formatUnits(($amountAfterBridgeFee * $fee) / oneEther, asset!.decimals))
+      input.limit.value = formatUnits(
+        (bridgeSettings.amountAfterBridgeFee * bridgeSettings.fee) / oneEther,
+        asset!.decimals,
+      )
     }
   }
   const feeTypeOptions = [
@@ -108,36 +103,44 @@
     { key: input.FeeType.GAS_TIP, text: '⛽+%' },
     { key: input.FeeType.PERCENT, text: '%' },
   ]
-  $: if (asset && $feeType === input.FeeType.GAS_TIP) {
-    input.limit.set(gasPercentFeeFromNetworkInputs() || '10')
-  }
-  $: if (
-    (deliveryFeeLocked || !deliveryFeeLocked) &&
-    (costLimitLocked || !costLimitLocked) &&
-    ($amountToBridge || !$amountToBridge) &&
-    ($fee || !$fee) &&
-    $feeType &&
-    $assetInAddress
-  ) {
-    reflowFees()
-  }
+  $effect(() => {
+    if (asset && feeType.value === input.FeeType.GAS_TIP) {
+      input.limit.value = gasPercentFeeFromNetworkInputs() || '10'
+    }
+  })
+  $effect(() => {
+    if (
+      (deliveryFeeLocked || !deliveryFeeLocked) &&
+      (costLimitLocked || !costLimitLocked) &&
+      (bridgeSettings.amountToBridge || !bridgeSettings.amountToBridge) &&
+      (bridgeSettings.fee || !bridgeSettings.fee) &&
+      feeType.value &&
+      bridgeSettings.assetInAddress
+    ) {
+      reflowFees()
+    }
+  })
   const focusOnInputChild = (e: any) => {
     e.currentTarget.querySelector('input')?.focus()
   }
 
-  $: bridgeFeeDecimals = humanReadableNumber($bridgeFee * 100n)
-  $: decimals = asset?.decimals || 18
-  $: large = $windowStore.innerWidth >= 512
-  $: expectedAmountOut =
-    $amountToBridge &&
-    humanReadableNumber(
-      $amountAfterBridgeFee - $estimatedCost > 0n ? $amountAfterBridgeFee - $estimatedCost : 0n,
-      decimals,
-      null,
-      true,
-    )
-  const fromChainId = input.fromChainId
-  $: out = asset as Token
+  const bridgeFeeDecimals = $derived(humanReadableNumber(feeToCrossBridge * 100n))
+  const decimals = $derived(asset?.decimals || 18)
+  const large = $derived(!!innerWidth.current && innerWidth.current >= 512)
+  const expectedAmountOut = $derived(
+    bridgeSettings.amountToBridge &&
+      humanReadableNumber(
+        bridgeSettings.amountAfterBridgeFee - bridgeSettings.estimatedCost > 0n
+          ? bridgeSettings.amountAfterBridgeFee - bridgeSettings.estimatedCost
+          : 0n,
+        decimals,
+        null,
+        true,
+      ),
+  )
+  const fromChainId = $derived(input.bridgeKey.fromChain)
+  const out = $derived(asset as Token)
+  const gasIsLoading = $derived(!loading.resolved)
 </script>
 
 <div class="shadow-sm rounded-lg hover:shadow transition-shadow">
@@ -146,73 +149,77 @@
       network={destinationNetwork}
       inChain={false}
       asset={out}
-      balance={$toTokenBalance}
-      unwrap={$unwrap} />
+      balance={toTokenBalance.value}
+      {unwrap} />
   </div>
   <div class="bg-slate-50 mt-[1px] py-1">
     <div class="flex flex-row px-3 leading-8 justify-between">
       <span>Bridge Fee</span>
-      <Hover let:handlers let:hovering>
-        <span
-          use:hover={handlers}
-          class="cursor-not-allowed tooltip tooltip-top tooltip-left-toward-center flex items-end self-end relative">
-          <Tooltip show={hovering}>Fee set on the bridge</Tooltip>
-          <Loading key="fee">{bridgeFeeDecimals}</Loading>%
-        </span>
-      </Hover>
+      <Tooltip tooltip="Fee set on the bridge" placement="left">
+        <span class="flex flex-row items-center align-baseline gap-1"
+          ><Loading key="bridge-fee">
+            {#snippet contents()}{bridgeFeeDecimals}{/snippet}
+          </Loading>%</span>
+      </Tooltip>
     </div>
   </div>
-  {#if $fromChainId === Chains.PLS || $fromChainId === Chains.V4PLS}
+  {#if fromChainId === Chains.PLS || fromChainId === Chains.V4PLS}
     <div class="bg-slate-50 mt-[1px] py-1 relative hover:z-10">
       <div class="flex flex-row px-3 leading-8 justify-between">
         <span class="flex items-center flex-row gap-2">
           <span
             >{#if large}Delivery{:else}Deliv.{/if}</span
-          ><SlideToggle checked={$shouldDeliver} size={20} on:change={handleDeliveryToggle} />
+          ><SlideToggle
+            checked={shouldDeliver.value}
+            onchange={({ checked }) => {
+              shouldDeliver.value = checked
+            }} />
           <FeeTypeToggle
-            active={$feeType}
+            active={feeType.value}
             options={feeTypeOptions}
-            on:change={(e) => {
-              feeType.set(e.detail.key)
-              input.fee.set($desiredExcessCompensationPercentage)
-            }} />{#if $feeType === input.FeeType.PERCENT}<button
+            onchange={(e) => {
+              feeType.value = e.key as input.FeeType
+              input.fee.value = bridgeSettings.desiredExcessCompensationPercentage
+            }} />{#if feeType.value === input.FeeType.PERCENT}<button
               type="button"
               name="toggle-delivery-fee"
               class="flex px-1"
-              on:click={() => {
+              onclick={() => {
                 deliveryFeeLocked = !deliveryFeeLocked
               }}><LockIcon locked={deliveryFeeLocked} /></button
             >{/if}
         </span>
-        {#if $shouldDeliver}
-          <Hover let:handlers let:hovering>
+        {#if shouldDeliver.value}
+          <Tooltip
+            placement="top"
+            tooltip={feeType.value === input.FeeType.FIXED
+              ? 'Fee uses fixed value defined in cost limit'
+              : feeType.value === input.FeeType.GAS_TIP
+                ? `Percentage of gas used * ${input.bridgeKey.destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber(bridgeSettings.estimatedNetworkCost, asset?.decimals || 18)} ${utils.nativeSymbol(asset, unwrap)}`
+                : 'The percentage of bridged tokens after the bridge fee'}>
             <button
-              use:hover={handlers}
               type="button"
               name="fee-amount"
               class="flex flex-row strike tooltip tooltip-top tooltip-left-toward-center items-center relative"
-              class:line-through={$feeType === input.FeeType.FIXED}
-              on:click={focusOnInputChild}>
-              <Tooltip show={hovering} positionFlow="above"
-                >{$feeType === input.FeeType.FIXED
-                  ? 'Fee uses fixed value defined in cost limit'
-                  : $feeType === input.FeeType.GAS_TIP
-                    ? `Percentage of gas used * ${$destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber($estimatedNetworkCost, asset?.decimals || 18)} ${utils.nativeSymbol(asset, $unwrap)}`
-                    : 'the percentage of bridged tokens after the bridge fee'}</Tooltip>
-              {#if $feeType !== input.FeeType.FIXED}
-                <span class:hidden={$feeType !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><span
+              class:line-through={feeType.value === input.FeeType.FIXED}
+              onclick={focusOnInputChild}>
+              {#if feeType.value !== input.FeeType.FIXED}
+                <span class:hidden={feeType.value !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><span
                   class="flex items-center"
-                  class:opacity-60={!$loading.isResolved('gas')}
+                  class:opacity-60={gasIsLoading}
                   ><SmallInput
-                    value={input.fee}
+                    value={input.fee.value}
+                    class="focus:ring-0 border-none"
+                    inputClass="text-lg"
                     suffix="%"
-                    on:input={() => {
+                    oninput={(e) => {
                       deliveryFeeLocked = true
+                      input.fee.value = e
                     }} />
                 </span>
               {/if}
             </button>
-          </Hover>
+          </Tooltip>
         {:else}
           <span class="flex items-end self-end">0.0%</span>
         {/if}
@@ -221,54 +228,52 @@
     </div>
     <div class="bg-slate-50 mt-[1px] py-1 relative hover:z-10">
       <div class="flex flex-row px-3 leading-8 justify-between">
-        <Hover let:hovering let:handlers>
+        <Tooltip
+          placement="top"
+          tooltip={"Allows cost limit to float with the destination chain's base fee. While unlocked the number in the ui may change. Once a transaction is sent, the number in that transaction's calldata is fixed"}>
           <button
-            use:hover={handlers}
             type="button"
             name="toggle-cost-limit"
             class="tooltip tooltip-top tooltip-right-toward-center relative"
-            on:click={() => {
+            onclick={() => {
               costLimitLocked = !costLimitLocked
             }}>
-            Cost&nbsp;{#if $feeType === input.FeeType.GAS_TIP || $feeType === input.FeeType.FIXED}Limit&nbsp;<LockIcon
+            Cost&nbsp;{#if feeType.value === input.FeeType.GAS_TIP || feeType.value === input.FeeType.FIXED}Limit&nbsp;<LockIcon
                 locked={costLimitLocked} />{/if}
-            <Tooltip position="right" positionFlow="above" show={hovering}
-              >Allows cost limit to float with the destination chain's base fee. While unlocked the
-              number in the ui may change. Once a transaction is sent, the number in that
-              transaction's calldata is fixed</Tooltip>
           </button>
-        </Hover>
-        {#if $shouldDeliver}
-          <Hover let:hovering let:handlers>
-            <button
-              use:hover={handlers}
+        </Tooltip>
+        {#if shouldDeliver.value}
+          <Tooltip
+            placement="top"
+            tooltip={feeType.value === input.FeeType.FIXED ||
+            feeType.value === input.FeeType.PERCENT
+              ? 'The fixed fee to tip if the validator does the work'
+              : 'The max you are willing to tip to the address'}>
+            <!-- <button
               type="button"
               name="cost-limit"
               class="flex flex-row items-end self-end relative"
-              on:click={focusOnInputChild}>
-              <span class="flex items-center" class:opacity-60={!$loading.isResolved('gas')}>
-                {#if $feeType === input.FeeType.PERCENT}
-                  <span
-                    >{humanReadableNumber($limitFromPercent, asset?.decimals || 18)}
-                    {utils.nativeSymbol(asset, $unwrap)}</span>
-                {:else}
-                  <SmallInput
-                    value={input.limit}
-                    suffix="&nbsp;{utils.nativeSymbol(asset, $unwrap)}"
-                    on:input={() => {
-                      costLimitLocked = true
-                    }} />
-                {/if}
-              </span>
-              <Tooltip positionFlow="above" position="left" show={hovering}
-                >{$feeType === input.FeeType.FIXED || $feeType === input.FeeType.PERCENT
-                  ? 'The fixed fee to tip if the validator does the work'
-                  : 'The max you are willing to tip to the address'}</Tooltip>
-            </button>
-          </Hover>
+              onclick={focusOnInputChild}> -->
+            <span class="flex items-center" class:opacity-60={gasIsLoading}>
+              {#if feeType.value === input.FeeType.PERCENT}
+                <span
+                  >{humanReadableNumber(bridgeSettings.limitFromPercent, asset?.decimals || 18)}
+                  {utils.nativeSymbol(asset, unwrap)}</span>
+              {:else}
+                <SmallInput
+                  value={input.limit.value}
+                  suffix="&nbsp;{utils.nativeSymbol(asset, unwrap)}"
+                  oninput={(e) => {
+                    costLimitLocked = true
+                    input.limit.value = e
+                  }} />
+              {/if}
+            </span>
+            <!-- </button> -->
+          </Tooltip>
         {:else}
           <span class="flex items-end self-end">
-            <span>0.0&nbsp;{utils.nativeSymbol(asset, $unwrap)}</span>
+            <span>0.0&nbsp;{utils.nativeSymbol(asset, unwrap)}</span>
           </span>
         {/if}
       </div>
@@ -281,22 +286,23 @@
           type="button"
           name="transaction-settings"
           class="flex mr-2"
-          on:click={() => showToolbox('settings')}>⚙️</button>
+          onclick={() => showToolbox('settings')}>⚙️</button>
         <button
           type="button"
           name="transaction-details"
           class="flex"
-          on:click={() => showToolbox('details')}>📐</button>
+          onclick={() => showToolbox('details')}>📐</button>
       </div>
-      <span class="text-xl sm:text-2xl leading-10 flex items-center self-center">
-        {#if $feeType === input.FeeType.GAS_TIP}~&nbsp;{/if}
-        <span class="flex items-center" class:opacity-60={!$loading.isResolved('gas')}>
-          {expectedAmountOut}
-        </span>&nbsp;{utils.nativeSymbol(asset, $unwrap)}
-        <Tooltip
-          >Estimated tokens to be delivered. If the base fee is used, then this value will change as
-          the base fee fluctuates on ethereum</Tooltip>
-      </span>
+      <Tooltip
+        placement="top"
+        tooltip="Estimated tokens to be delivered. If the base fee is used, then this value will change as the base fee fluctuates on ethereum">
+        <span class="text-xl sm:text-2xl leading-10 flex items-center self-center">
+          {#if feeType.value === input.FeeType.GAS_TIP}~&nbsp;{/if}
+          <span class="flex items-center" class:opacity-60={gasIsLoading}>
+            {expectedAmountOut}
+          </span>&nbsp;{utils.nativeSymbol(asset, unwrap)}
+        </span>
+      </Tooltip>
     </div>
   </div>
 </div>

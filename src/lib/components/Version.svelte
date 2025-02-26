@@ -1,17 +1,13 @@
 <script lang="ts">
   import * as env from '$app/environment'
-  import { page } from '$app/stores'
-  import { hover } from '$lib/modifiers/hover'
-  import Hover from './Hover.svelte'
+  import { page } from '$app/state'
   import Tooltip from './Tooltip.svelte'
-  const appVersion = __APP_VERSION__
-  const isLocal = $page.url.host.includes('localhost')
-  const timestamp = new Date(+env.version || 0).toISOString()
+  const isLocal = $derived(page.url.host.includes('localhost'))
+  const [semver, githash, timestamp] = env.version.split('_')
 </script>
 
-<Hover let:handlers let:hovering>
-  <span use:hover={handlers} class="flex text-center font-mono font-thin leading-8 relative">
-    <Tooltip show={hovering}>{timestamp}</Tooltip>
-    v{appVersion}@{isLocal ? 'local' : env.version}
-  </span>
-</Hover>
+<span class="relative flex text-center font-mono font-thin leading-8">
+  <Tooltip tooltip={timestamp} placement="top">
+    v{semver}@{isLocal ? 'local' : githash}
+  </Tooltip>
+</span>

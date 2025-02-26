@@ -1,99 +1,116 @@
 <script lang="ts">
   import NetworkSummary from './NetworkSummary.svelte'
-  import { formatUnits } from 'viem'
-  import type { VisualChain } from '$lib/stores/auth/types'
-  import { get, writable, type Writable } from 'svelte/store'
-  import { amountToBridge, fromTokenBalance } from '$lib/stores/bridge-settings'
+  import { formatUnits, parseUnits } from 'viem'
+  import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
+  import * as input from '$lib/stores/input.svelte'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import Warning from './Warning.svelte'
   import Icon from '@iconify/svelte'
-  import * as modalStore from '$lib/stores/modal'
-  import type { Token } from '$lib/types'
   import type { FormEventHandler } from 'svelte/elements'
-  import { minAmount } from '$lib/stores/chain-events'
-  import { stripNonNumber } from '$lib/stores/utils'
-  import Hover from './Hover.svelte'
-  import Tooltip from './Tooltip.svelte'
-  import { hover } from '$lib/modifiers/hover'
+  import { minAmount, fromTokenBalance } from '$lib/stores/chain-events.svelte'
+  import { humanReadableNumber, stripNonNumber } from '$lib/stores/utils'
+  import { bridgeKey } from '$lib/stores/input.svelte'
+  import ModalWrapper from './ModalWrapper.svelte'
+  import TokenSelect from './TokenSelect.svelte'
+  import { goto } from '$app/navigation'
+  import type { Token } from '$lib/types.svelte'
 
-  export let network!: VisualChain
-  export let asset!: Token | null
-  export let value!: Writable<string>
-  // when asset changs, reset to zero
-  $: if (asset) {
-    value.set('')
-  }
-  let val = ''
-  const focused = writable(false)
-  const openModal = () => {
-    modalStore.type.set('choosetoken')
+  let inputValue = $state('')
+  let focused = $state(false)
+
+  const chooseTokenSubmit = async (token: Token) => {
+    const bridgeKey = input.bridgeKey.value
+    const hashPath = `#/delivery/${input.toPath(bridgeKey)}/${token.address}`
+    await goto(hashPath)
+    const native = input.isNative(token, bridgeKey)
+    input.unwrap.value = native
+    input.fee.value = formatUnits(bridgeSettings.desiredExcessCompensationBasisPoints, 2)
   }
   const handleInput: FormEventHandler<HTMLInputElement> = (e) => {
-    value.set(e.currentTarget.value)
+    inputValue = e.currentTarget.value
   }
+  const decimals = $derived(bridgeSettings.assetIn.value?.decimals || 18)
   const handleMaxBalance = () => {
-    if (typeof $fromTokenBalance !== 'bigint') {
+    if (typeof fromTokenBalance.value !== 'bigint') {
       return
     }
-    const updated = formatUnits($fromTokenBalance, asset?.decimals || 18)
-    value.set(updated)
+    const updated = formatUnits(fromTokenBalance.value, decimals)
+    inputValue = updated
   }
+  const minTooltip = $derived(minAmount.value ? formatUnits(minAmount.value, decimals) : '...')
+  $effect(() => {
+    const inValue = stripNonNumber(inputValue)
+    input.amountIn.value = inValue
+  })
+  const showWarning = $derived(
+    !!minAmount.value &&
+      bridgeSettings.amountToBridge < minAmount.value &&
+      bridgeSettings.amountToBridge > 0n,
+  )
 </script>
 
-<div class="shadow-sm rounded-lg hover:shadow transition-shadow">
-  <div class="bg-slate-50 py-2 px-3 rounded-t-lg">
+<div class="rounded-lg shadow-sm transition-shadow hover:shadow">
+  <div class="rounded-t-lg bg-slate-50 px-3 py-2">
     <NetworkSummary
-      {network}
-      {asset}
+      network={bridgeKey.fromChain}
+      unwrap={false}
+      asset={bridgeSettings.assetIn.value}
       inChain
-      balance={$fromTokenBalance}
-      showMax
-      on:max-balance={handleMaxBalance} />
+      balance={fromTokenBalance.value}
+      onmax={handleMaxBalance} />
   </div>
-  <div class="flex flex-row mt-[1px] bg-slate-50 rounded-b-lg text-xl justify-between">
-    <span class="flex flex-grow relative max-w-[70%]">
+  <div class="mt-[1px] flex flex-row justify-between rounded-b-lg bg-slate-50 text-xl">
+    <span class="relative flex max-w-[70%] flex-grow">
       <input
-        class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-xl sm:text-2xl w-full"
+        class="w-full flex-grow bg-transparent border-none px-3 py-2 text-xl leading-8 placeholder-current outline-none hover:appearance-none focus:shadow-inner sm:text-2xl focus:ring-0"
         placeholder="0.0"
-        value={$focused ? val : $value}
-        on:focus={() => {
-          val = stripNonNumber(get(value))
-          focused.set(true)
+        value={inputValue}
+        onfocus={() => {
+          inputValue = stripNonNumber(inputValue)
+          focused = true
         }}
-        on:blur={() => focused.set(false)}
-        on:input={handleInput} />
+        onblur={() => {
+          const value = parseUnits(stripNonNumber(inputValue), decimals)
+          inputValue = humanReadableNumber(value, decimals)
+          focused = false
+        }}
+        oninput={handleInput} />
       <Warning
-        show={$amountToBridge < $minAmount && $amountToBridge > 0n}
-        disabled={$focused}
-        position="left"
-        tooltip="Input is too low, must be at least {formatUnits(
-          $minAmount,
-          asset?.decimals || 18,
-        )}" />
+        show={showWarning}
+        disabled={focused}
+        placement="left"
+        tooltip="Input is too low, must be at least {minTooltip}" />
     </span>
-
-    <Hover let:handlers let:hovering>
-      <button
-        use:hover={handlers}
-        class="leading-8 py-2 pr-3 pl-2 flex flex-row space-x-2 items-center open-modal-container relative"
-        on:click={openModal}>
-        {#if !!asset}
-          <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
-          <span class="ml-2">{asset?.symbol || ''}</span>
+    <ModalWrapper
+      triggerClasses="open-modal-container relative flex flex-row items-center py-2 pr-3 pl-2 leading-8">
+      {#snippet button()}
+        {#if !!bridgeSettings.assetIn.value}
+          <AssetWithNetwork asset={bridgeSettings.assetIn.value} />
+          <span class="ml-2">{bridgeSettings.assetIn.value?.symbol || ''}</span>
         {/if}
         <Icon
           icon="mingcute:right-fill"
           height="1em"
           width="1em"
-          class="flex icon transition-all" />
-        <Tooltip show={hovering}>{asset?.name || ''}</Tooltip>
-      </button>
-    </Hover>
+          class="icon flex transition-all ml-2" />
+      {/snippet}
+      {#snippet contents({ close })}
+        <TokenSelect
+          onsubmit={(tkn) => {
+            chooseTokenSubmit(tkn)
+            close()
+          }} />
+      {/snippet}
+    </ModalWrapper>
   </div>
 </div>
 
 <style lang="postcss">
+  @reference "tailwindcss/theme";
   :global(.open-modal-container:hover .icon) {
     @apply translate-x-1;
+  }
+  :global(.open-modal-container) {
+    @apply transition-all;
   }
 </style>

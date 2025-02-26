@@ -1,0 +1,14 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+.tooltip-container [data-part='arrow-tip'] {
+  @apply !bg-tertiary-500;
+}
+.disabled,
+button:disabled {
+  @apply opacity-75;
+}
+body {
+  font-family: Ariel, sans-serif;
+}

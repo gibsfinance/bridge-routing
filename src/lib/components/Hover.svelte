@@ -1,5 +1,7 @@
-<script lang="ts">
-  let hovering = false
+<!-- <script lang="ts">
+  import type { Snippet } from 'svelte'
+
+  let hovering = $state<boolean>(false)
   const handlers = {
     enter: () => {
       hovering = true
@@ -8,6 +10,18 @@
       hovering = false
     },
   }
-</script>
+  type Props = {
 
-<slot {handlers} {hovering} />
+    hoverable: Snippet<
+      [
+        {
+          handlers: typeof handlers
+          hovering: typeof hovering
+        },
+      ]
+    >
+  }
+  let { hoverable }: Props = $props()
+</script> -->
+
+<!-- {@render hoverable?.({ hovering, handlers })} -->

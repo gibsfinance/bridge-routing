@@ -7,7 +7,7 @@
     {#each $messages as msg}
       <div class="toast mb-4">
         <div
-          class="alert alert-info bg-purple-400 text-slate-100 py-2 px-3 rounded-md flex justify-between items-center">
+          class="alert alert-info bg-tertiary-400 text-slate-100 py-2 px-3 rounded-md flex justify-between items-center">
           <a
             href={msg.link}
             class="underline flex overflow-ellipsis whitespace-pre"

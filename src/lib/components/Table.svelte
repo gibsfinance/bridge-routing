@@ -8,8 +8,7 @@
   let itemsPerPage = 5
   let loading = true
 
-  $: currentPageRows = totalPages.length > 0 ? totalPages[page] : []
-  $: console.log('Page is', page)
+  const currentPageRows = $derived(totalPages.length > 0 ? totalPages[page] : [])
 
   const paginate = (items: string[]) => {
     const pages = Math.ceil(items.length / itemsPerPage)
@@ -76,7 +75,8 @@
   </ul>
 </nav>
 
-<style>
+<style lang="postcss">
+  @reference "tailwindcss/theme";
   nav > ul {
     list-style-type: none;
     display: flex;

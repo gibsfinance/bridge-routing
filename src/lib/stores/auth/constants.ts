@@ -1,6 +1,5 @@
-import { mainnet, pulsechain, bsc, sepolia, pulsechainV4 } from 'viem/chains'
-import type { ChainsMetadata } from './types'
-import { Chains } from './types'
+import { mainnet, pulsechain, bsc, sepolia, pulsechainV4 } from '@reown/appkit/networks'
+import { type ChainsMetadata, Chains } from './types'
 import * as imageLinks from '$lib/stores/image-links'
 import bnbNetworkUrl from '$lib/images/networks/0x38.png'
 import plsV4NetworkUrl from '$lib/images/networks/0x3af.png'

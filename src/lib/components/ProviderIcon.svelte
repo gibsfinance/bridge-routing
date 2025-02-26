@@ -1,9 +1,13 @@
 <script lang="ts">
   import tokensexProvider from '$lib/images/providers/tokensex.svg'
   import { chainsMetadata } from '$lib/stores/auth/constants'
+  import Image from './Image.svelte'
 
-  export let provider = 'pulsechain'
-  export let size = '28'
+  type Props = {
+    provider?: string
+    sizeClasses?: string
+  }
+  const { provider = 'pulsechain', sizeClasses = 'size-4' }: Props = $props()
 
   type Setting = {
     src: string
@@ -26,7 +30,9 @@
       },
     ],
   ])
-  $: settings = providerInfo.get(provider)!
+  const settings = $derived(providerInfo.get(provider))
 </script>
 
-<img height={size} width={size} src={settings.src} alt={settings.alt} />
+{#if settings}
+  <Image {sizeClasses} src={settings.src} alt={settings.alt} />
+{/if}

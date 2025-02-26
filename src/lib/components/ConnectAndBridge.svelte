@@ -1,33 +1,37 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { useAuth } from '$lib/stores/auth/methods'
-  import { walletAccount } from '$lib/stores/auth/store'
+  import { accountState, provider, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
+  import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import {
-    fromTokenBalance,
-    amountToBridge,
-    foreignDataParam,
-    transactionInputs,
-  } from '$lib/stores/bridge-settings'
-  import { type Hex, getContract, erc20Abi, maxUint256, zeroAddress } from 'viem'
+    type Hex,
+    getContract,
+    erc20Abi,
+    maxUint256,
+    zeroAddress,
+    createWalletClient,
+    encodeFunctionData,
+  } from 'viem'
   import Loading from './Loading.svelte'
-  import * as input from '$lib/stores/input'
-  import { assetLink, approval } from '$lib/stores/chain-events'
+  import * as input from '$lib/stores/input.svelte'
+  import { assetLink, fromTokenBalance } from '$lib/stores/chain-events.svelte'
   import { transactionButtonPress } from '$lib/stores/transaction'
+  import { connect } from '$lib/stores/auth/AuthProvider.svelte'
+  import { sendTransaction } from '@wagmi/core'
 
-  const { walletClient, assetIn, shouldDeliver, bridgePathway, fromChainId, amountIn } = input
+  const { walletClient, shouldDeliver } = input
 
-  let disabledByClick = false
-  $: tokenBalance = $fromTokenBalance || 0n
-  $: disabled =
+  let disabledByClick = $state(false)
+  const tokenBalance = $derived(fromTokenBalance.value || 0n)
+  const walletAccount = $derived(accountState.address)
+  const disabled = $derived(
     disabledByClick ||
-    BigInt($walletAccount || 0n) === 0n ||
-    $amountToBridge === 0n ||
-    $amountToBridge > tokenBalance
-
-  const { connect } = useAuth()
-
+      BigInt(walletAccount || 0n) === 0n ||
+      bridgeSettings.amountToBridge === 0n ||
+      bridgeSettings.amountToBridge > tokenBalance,
+  )
+  $inspect(provider.value)
   const initiateBridge = async () => {
-    if (!$foreignDataParam) {
+    if (!bridgeSettings.foreignDataParam) {
       return
     }
     // TODO: add tracing call on foreign network to show that the bridge will be successful
@@ -112,88 +116,91 @@
     //   console.error(err)
     //   throw err
     // }
-    if (!$bridgePathway) {
+    if (!bridgeSettings.bridgePathway) {
       return
     }
-    if (!$assetLink || !$assetIn || !$transactionInputs) {
+    if (!assetLink || !bridgeSettings.assetIn.value || !bridgeSettings.transactionInputs) {
       return
     }
     const options = opts()
-    return await $walletClient!.sendTransaction({
-      ...$transactionInputs,
+    return await sendTransaction(wagmiAdapter.wagmiConfig, {
+      ...bridgeSettings.transactionInputs,
       ...options,
     })
   }
   const opts = () => {
-    const account = $walletAccount as Hex
+    const account = walletAccount as Hex
     const options = {
       account,
       type: 'eip1559',
-      chain: chainsMetadata[$fromChainId],
+      chain: chainsMetadata[input.bridgeKey.fromChain],
     } as const
     return options
   }
   const increaseApproval = async () => {
-    if (!$bridgePathway || !$assetIn) {
+    if (!bridgeSettings.bridgePathway || !bridgeSettings.assetIn.value) {
       return
     }
-    const contract = getContract({
-      abi: erc20Abi,
-      address: $assetIn.address,
-      client: $walletClient!,
-    })
     const options = opts()
-    return await contract.write.approve([$bridgePathway.from, maxUint256], options)
+    return await sendTransaction(wagmiAdapter.wagmiConfig, {
+      ...options,
+      to: bridgeSettings.assetIn.value.address,
+      data: encodeFunctionData({
+        abi: erc20Abi,
+        functionName: 'approve',
+        args: [bridgeSettings.bridgePathway.from, maxUint256],
+      }),
+    })
   }
   let amountInBefore = ''
   const sendIncreaseApproval = transactionButtonPress(increaseApproval)
   const sendInitiateBridge = transactionButtonPress(
     () => {
-      amountInBefore = $amountIn
+      amountInBefore = input.amountIn.value!
       return initiateBridge()
     },
     () => {
-      if (amountInBefore === $amountIn) {
-        input.amountIn.set('')
+      if (amountInBefore === input.amountIn.value!) {
+        input.amountIn.value = ''
       }
     },
   )
   const testId = 'progression-button'
-  $: isNative = $assetIn?.address === zeroAddress
+  const isNative = $derived(bridgeSettings.assetIn.value?.address === zeroAddress)
 </script>
 
-<div>
-  {#if $walletAccount}
-    {#if $assetLink?.originationChainId !== $fromChainId || $approval >= $amountToBridge || isNative}
+<div class="flex w-full">
+  {#if walletAccount}
+    {#if assetLink.value?.originationChainId !== input.bridgeKey.fromChain || (bridgeSettings.approval.value && bridgeSettings.approval.value >= bridgeSettings.amountToBridge) || isNative}
       <button
         data-testid={testId}
-        class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-center"
-        class:hover:bg-purple-500={!disabled}
-        class:bg-purple-600={!disabled}
-        class:bg-purple-400={disabled}
+        class="px-2 text-white w-full rounded-lg active:bg-tertiary-500 leading-10 flex items-center justify-center"
+        class:hover:bg-tertiary-500={!disabled}
+        class:bg-tertiary-600={!disabled}
+        class:bg-tertiary-400={disabled}
         class:cursor-not-allowed={disabled}
         class:shadow-md={!disabled}
         {disabled}
-        on:click={sendInitiateBridge}>
+        onclick={sendInitiateBridge}>
         <div class="size-5"></div
-        >&nbsp;Bridge{#if $shouldDeliver && $bridgePathway?.requiresDelivery}
-          &nbsp;+&nbsp;Deliver{:else if !$shouldDeliver && $bridgePathway?.requiresDelivery}&nbsp;Only{/if}&nbsp;<div
+        >&nbsp;Bridge{#if shouldDeliver.value && bridgeSettings.bridgePathway?.requiresDelivery}
+          &nbsp;+&nbsp;Deliver{:else if !shouldDeliver.value && bridgeSettings.bridgePathway?.requiresDelivery}&nbsp;Only{/if}&nbsp;<div
           class="size-5"><Loading key="user" /></div>
       </button>
     {:else}
       <button
         data-testid={testId}
-        class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-center hover:bg-purple-500 bg-purple-600 shadow-md"
-        on:click={sendIncreaseApproval}>
+        class="px-2 text-white w-full rounded-lg active:bg-tertiary-500 leading-10 flex items-center justify-center hover:bg-tertiary-500 bg-tertiary-600 shadow-md"
+        onclick={sendIncreaseApproval}>
         <div class="size-5"></div>&nbsp;Approve
-        {$assetIn?.symbol}&nbsp;<div class="size-5"><Loading key="user" /></div>
+        {bridgeSettings.assetIn.value?.symbol}&nbsp;<div class="size-5"><Loading key="user" /></div>
       </button>
     {/if}
   {:else}
     <button
-      class="px-2 leading-10 bg-purple-600 text-white w-full rounded-lg hover:bg-purple-500 active:bg-purple-500"
+      class="px-2 leading-10 bg-tertiary-600 text-white w-full rounded-lg hover:bg-tertiary-500 active:bg-tertiary-500"
       data-testid={testId}
-      on:click={() => connect()}>
+      onclick={() => connect()}>
       Sign In
     </button>
   {/if}

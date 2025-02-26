@@ -1,52 +1,54 @@
 <script lang="ts">
-  import { type as modalType } from '$lib/stores/modal'
   import VersionedLink from '$lib/components/VersionedLink.svelte'
   import { goto } from '$app/navigation'
   import gibs from '$lib/images/1FAF0.svg'
   import { onMount } from 'svelte'
   import Icon from '@iconify/svelte'
   import Loading from './Loading.svelte'
-  import { page } from '$app/stores'
-  import { bridgeKey } from '$lib/stores/input'
+  import { page } from '$app/state'
+  import { bridgeKey } from '$lib/stores/input.svelte'
   import { Chains } from '$lib/stores/auth/types'
-  import { domains, windowStore } from '$lib/stores/window'
+  import { domains, addDomain } from '$lib/stores/window.svelte'
+  import { innerWidth } from 'svelte/reactivity/window'
+  import Image from './Image.svelte'
+  import ModalWrapper from './ModalWrapper.svelte'
+  import * as rpcs from '$lib/stores/rpcs.svelte'
+  import RPC from './RPC.svelte'
 
   onMount(() => {
-    domains.add('bridge.pulsechain.com')
+    addDomain('bridge.pulsechain.com')
   })
 
   const gotoHome = async () => {
-    await goto('/')
+    await goto('#/')
   }
   const gotoNativeDelivery = async () => {
-    await goto('/delivery')
+    await goto('#/delivery')
   }
-  const showRPCConfig = () => {
-    modalType.set('rpc')
-  }
-  $: txnText = $windowStore.innerWidth < 512 ? 'Txns' : 'Transactions'
+  const txnText = $derived(innerWidth.current && innerWidth.current < 512 ? 'Txns' : 'Transactions')
+  const destinationBridgeKey = $derived(bridgeKey.toChain)
+  const isDeliveryRoute = $derived(page.route.id?.includes('/delivery'))
 </script>
 
-<div class="h-10 -mb-10 z-40 flex">
-  <nav class="fixed h-10 leading-8 px-2 flex flex-row right-0 left-0 shadow-inner bg-slate-950">
-    <div class="max-w-5xl m-auto w-full flex justify-between">
-      <span
-        role="button"
-        tabindex="-1"
-        on:keypress={gotoHome}
-        on:click={gotoHome}
-        class="link leading-8 pr-2 text-white font-italiana uppercase flex flex-row">
-        <img
+<div class="z-40 -mb-10 flex h-10">
+  <nav class="fixed right-0 left-0 flex h-10 flex-row bg-slate-950 px-2 leading-8 shadow-inner">
+    <div class="m-auto flex w-full max-w-5xl justify-between">
+      <button
+        type="button"
+        onkeypress={gotoHome}
+        onclick={gotoHome}
+        class="link font-italiana flex flex-row pr-2 leading-8 text-white uppercase">
+        <Image
           src={gibs}
           alt="a yellow hand with index finger and thub rubbing together"
           class="size-8" />
-        <span class="leading-8 text-2xl">Gibs&nbsp;</span>
+        <span class="text-2xl leading-8">Gibs&nbsp;</span>
         <Loading />
-      </span>
-      <div class="items-center flex grow content-end">
-        <ul class="flex flex-row items-center grow text-white justify-end">
+      </button>
+      <div class="flex grow content-end items-center">
+        <ul class="flex grow flex-row items-center justify-end text-white">
           <li class="flex flex-row">
-            {#if $bridgeKey[2] === Chains.ETH}
+            {#if destinationBridgeKey === Chains.ETH}
               <VersionedLink
                 domain="bridge.pulsechain.com"
                 path="/#/transactions"
@@ -60,7 +62,7 @@
                   <button
                     type="button"
                     name="transactions"
-                    class="text-white flex items-center justify-center">
+                    class="flex items-center justify-center text-white">
                     {txnText}&nbsp;<Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
                   </button>
                 </a>
@@ -74,25 +76,37 @@
                 <button
                   type="button"
                   name="transactions"
-                  class="text-white flex items-center justify-center">
+                  class="flex items-center justify-center text-white">
                   {txnText}&nbsp;<Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
                 </button>
               </a>
             {/if}
           </li>
           <li class="flex flex-row pl-2">
-            <button type="button" name="rpc-settings" class="link" on:click={showRPCConfig}>
-              RPC&nbsp;<Icon icon="gravity-ui:plug-connection" height="1.2em" width="1.2em" />
-            </button>
+            <ModalWrapper triggerClasses="flex flex-row items-center px-2 py-1">
+              {#snippet button()}
+                RPC&nbsp;<Icon icon="gravity-ui:plug-connection" height="1.2em" width="1.2em" />
+              {/snippet}
+              {#snippet contents({ close })}
+                <RPC
+                  data={rpcs.store.entries()}
+                  onclose={close}
+                  onsubmit={(updates) => {
+                    updates.forEach(([chain, list]) => {
+                      rpcs.store.set(chain, list)
+                    })
+                  }} />
+              {/snippet}
+            </ModalWrapper>
           </li>
-          {#if !$page.route.id?.includes('/delivery')}
+          {#if !isDeliveryRoute}
             <li class="flex flex-row items-center pl-2">
               <button
                 type="button"
                 name="bridge"
                 class="link"
-                on:keypress={gotoNativeDelivery}
-                on:click={gotoNativeDelivery}
+                onkeypress={gotoNativeDelivery}
+                onclick={gotoNativeDelivery}
                 >Delivery&nbsp;<Icon
                   icon="icon-park-outline:bridge-one"
                   height="1.6em"
@@ -107,7 +121,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "tailwindcss/theme";
   .link {
-    @apply cursor-pointer px-2 py-1 flex flex-row items-center text-white;
+    @apply flex cursor-pointer flex-row items-center px-2 py-1 text-white;
   }
 </style>

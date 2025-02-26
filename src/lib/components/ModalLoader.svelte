@@ -1,39 +1,50 @@
-<script lang="ts">
-  import * as input from '$lib/stores/input'
-  import { desiredExcessCompensationBasisPoints } from '$lib/stores/bridge-settings'
+<!-- <script lang="ts">
+  import * as input from '$lib/stores/input.svelte'
   import { goto } from '$app/navigation'
-  import { type as modalType } from '$lib/stores/modal'
-  import type { Token } from '$lib/types'
+  import { type as modalType } from '$lib/stores/modal.svelte'
+  import type { Token } from '$lib/types.svelte'
   import InfoExplain from '$lib/components/InfoExplain.svelte'
   import ModalWrapper from '$lib/components/ModalWrapper.svelte'
   import TokenSelect from '$lib/components/TokenSelect.svelte'
   import RPCConfig from '$lib/components/RPC.svelte'
   import { formatUnits } from 'viem'
-  import { get } from 'svelte/store'
-  const chooseTokenSubmit = async (e: CustomEvent<Token>) => {
-    const $bridgeKey = get(input.bridgeKey)
-    await goto(`/delivery/${input.toPath($bridgeKey)}/${e.detail.address}`)
-    const native = input.isNative(e.detail, $bridgeKey)
-    input.unwrap.set(native)
-    input.fee.set(formatUnits($desiredExcessCompensationBasisPoints, 2))
+
+  import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
+  const chooseTokenSubmit = async (token: Token) => {
+    const bridgeKey = input.bridgeKey.value
+    await goto(`#/delivery/${input.toPath(bridgeKey)}/${token.address}`)
+    const native = input.isNative(token, bridgeKey)
+    input.unwrap.value = native
+    input.fee.value = formatUnits(bridgeSettings.desiredExcessCompensationBasisPoints, 2)
   }
+  const modalValue = $derived(modalType.value)
 </script>
 
-{#if $modalType === 'choosetoken'}
+{#if modalValue === 'choosetoken'}
   <ModalWrapper>
-    <TokenSelect on:submit={chooseTokenSubmit} />
+    {#snippet contents({ close })}
+      <TokenSelect
+        onsubmit={(e) => {
+          chooseTokenSubmit(e)
+          close()
+        }} />
+    {/snippet}
   </ModalWrapper>
-{:else if $modalType === 'rpc'}
-  <ModalWrapper let:close>
-    <RPCConfig
-      on:submit={(e) => {
-        close(e)
-        input.incrementForcedRefresh()
-      }}
-      on:close={close} />
-  </ModalWrapper>
-{:else if $modalType === 'info'}
+{:else if modalValue === 'rpc'}
   <ModalWrapper>
-    <InfoExplain />
+    {#snippet contents({ close })}
+      <RPCConfig
+        on:submit={(token) => {
+          input.incrementForcedRefresh()
+          close()
+        }}
+        on:close={close} />
+    {/snippet}
   </ModalWrapper>
-{/if}
+{:else if modalValue === 'info'}
+  <ModalWrapper>
+    {#snippet contents()}
+      <InfoExplain />
+    {/snippet}
+  </ModalWrapper>
+{/if} -->

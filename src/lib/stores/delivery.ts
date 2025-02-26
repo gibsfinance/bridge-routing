@@ -1,15 +1,12 @@
 import { decodeFunctionData, type Hex, type PublicClient, getContract } from 'viem'
-import { pathway } from './config'
+import { pathway } from '$lib/stores/config.svelte'
 import { toChain } from './auth/types'
 import { chainsMetadata } from './auth/constants'
-import * as inputs from './input'
+import * as inputs from './input.svelte'
 import { packSignatures, signatureToVRS } from './messages'
 import * as abis from './abis'
 import type { Bridge } from './history'
 import type { Provider } from './auth/types'
-import { get } from 'svelte/store'
-import { walletAccount } from './auth/store'
-import { walletClient } from './input'
 
 const getSignatures = async (client: PublicClient, hashes: Hex[]) => {
   const txs = await Promise.all(
@@ -28,7 +25,7 @@ const getSignatures = async (client: PublicClient, hashes: Hex[]) => {
   return packSignatures(sigs.map((s) => signatureToVRS(s))) as Hex
 }
 
-export const deliverBridge = async (bridge: Bridge) => {
+export const deliverBridge = async (account: Hex, bridge: Bridge) => {
   if (!bridge.bridge?.provider) {
     return
   }
@@ -53,7 +50,7 @@ export const deliverBridge = async (bridge: Bridge) => {
     client: destinationClient,
   }).read.bridgeContract()
   const options = {
-    account: get(walletAccount)!,
+    account,
     type: 'eip1559' as const,
     chain: chainsMetadata[toChain(bridge.destinationChainId)],
   } as const
@@ -61,7 +58,7 @@ export const deliverBridge = async (bridge: Bridge) => {
   const contract = getContract({
     address: bridgeContract,
     abi: abis.relayTokensDirect,
-    client: get(walletClient)!,
+    client: inputs.walletClient.value!,
   })
   return await contract.write.safeExecuteSignaturesWithAutoGasLimit(
     [encodedData, signatures],

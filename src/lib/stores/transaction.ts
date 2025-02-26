@@ -1,18 +1,18 @@
 import { addMessage, removeMessage } from './toast'
-import { get, writable } from 'svelte/store'
 import type { Hex } from 'viem'
-import { loading } from './loading'
+import { loading } from './loading.svelte'
 import { ellipsis } from './utils'
-import { clientFromChain, fromChainId, incrementForcedRefresh } from './input'
+import { bridgeKey, clientFromChain, incrementForcedRefresh } from './input.svelte'
 import { uri } from './toast'
 import { noop } from 'lodash'
+import { ProxyStore } from '$lib/types.svelte'
 
-export const disabledByTransaction = writable(false)
+export const disabledByTransaction = new ProxyStore<boolean>(false)
 
 export const transactionButtonPress =
   (fn: () => Promise<Hex | undefined>, afterFn: () => void = noop) =>
   async () => {
-    disabledByTransaction.set(true)
+    disabledByTransaction.value = true
     try {
       loading.increment('user')
       // const amountInBefore = get(input.amountIn)
@@ -27,11 +27,11 @@ export const transactionButtonPress =
             length: 4,
             prefixLength: 2,
           }),
-        link: uri(get(fromChainId), 'tx', txHash),
+        link: uri(bridgeKey.fromChain, 'tx', txHash),
         label: 'submit-tx',
       }
       addMessage(msg)
-      const receipt = await clientFromChain(get(fromChainId)).waitForTransactionReceipt({
+      const receipt = await clientFromChain(bridgeKey.fromChain).waitForTransactionReceipt({
         hash: txHash,
       })
       removeMessage(msg)
@@ -42,7 +42,7 @@ export const transactionButtonPress =
             length: 4,
             prefixLength: 2,
           }),
-        link: uri(get(fromChainId), 'tx', txHash),
+        link: uri(bridgeKey.fromChain, 'tx', txHash),
         label: 'confirm-tx',
       })
       incrementForcedRefresh()
@@ -50,6 +50,6 @@ export const transactionButtonPress =
       afterFn()
     } finally {
       loading.decrement('user')
-      disabledByTransaction.set(false)
+      disabledByTransaction.value = false
     }
   }

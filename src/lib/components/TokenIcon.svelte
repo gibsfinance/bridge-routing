@@ -1,35 +1,33 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  export let src = ''
-  export let alt = ''
-  export let size = 32
-  export let visible!: boolean
-  let className = ''
-  export { className as class }
-  let loaded: boolean | null = null
+  import Lazy from './Lazy.svelte'
+  import Image from './Image.svelte'
+  type Props = {
+    src: string
+    alt?: string
+    sizeClasses?: string
+    visible?: boolean
+    class?: string
+  }
+  const { src, alt, sizeClasses = 'size-8', class: className }: Props = $props()
+  let loaded: boolean | null = $state(null)
   const markLoaded = (val: boolean) => () => {
     loaded = val
   }
-  const markSuccess = markLoaded(true)
-  const markFailure = markLoaded(false)
+  const onload = markLoaded(true)
+  const onerror = markLoaded(false)
+  const classes = $derived(`${className}`)
+  const iconClass = $derived(`${className} ${sizeClasses} ${!loaded ? '' : 'invisible'}`)
 </script>
 
-<div class="grid grid-cols-1 grid-rows-1 relative" data-url={src}>
-  {#if visible || loaded !== null}
-    <img
-      on:load={markSuccess}
-      on:error={markFailure}
-      {src}
-      {alt}
-      height={size}
-      width={size}
-      class={className}
-      class:invisible={!loaded}
-      class:absolute={true} />
-  {/if}
-  <Icon
-    icon="ph:question"
-    height={size}
-    width={size}
-    class={`${className} ${!loaded ? '' : 'invisible'}`} />
-</div>
+<Lazy tag="div" class="grid grid-cols-1 grid-rows-1 relative h-full w-full">
+  {#snippet visible(isVisible)}
+    <span class="contents" data-url={src}>
+      {#if loaded === false}
+        <Icon icon="ph:question" class={iconClass} />
+      {:else if isVisible}
+        <Image {src} {alt} {onload} {onerror} class={classes} {sizeClasses} />
+      {/if}
+    </span>
+  {/snippet}
+</Lazy>

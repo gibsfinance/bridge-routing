@@ -1,19 +1,15 @@
 <script lang="ts">
-  import '$lib/styles/global.css'
-  import { onMount } from 'svelte'
-
-  import { firstMount } from '$lib/stores/window'
+  import '../app.css'
+  // import Delivery from '$lib/pages/Delivery.svelte'
   import Nav from '$lib/components/Nav.svelte'
   import Footer from '$lib/components/Footer.svelte'
   import Loader from '$lib/components/Loader.svelte'
-  onMount(() => {
-    firstMount.set(true)
-  })
+
+  const { children } = $props()
 </script>
 
 <svelte:head>
   <meta name="robots" content="noindex nofollow" />
-  <html lang="en" />
 </svelte:head>
 
 <!--
@@ -21,24 +17,26 @@
   and for us to show a loader until loading is complete
 -->
 <div class="app bg-slate-950">
-  {#await import('$lib/pages/Delivery.svelte')}
-    <div class="app">
-      <Nav />
-      <main class="flex flex-col box-border w-full min-h-screen bg-slate-950 text-white mt-10">
-        <div class="flex grow items-center justify-center">
-          <Loader loaded={false} />
-        </div>
-        <Footer />
-      </main>
-    </div>
-  {:then c}
-    <svelte:component this={c.default}>
-      <slot />
-    </svelte:component>
-  {/await}
+  <div class="app">
+    <Nav />
+    <main class="mt-10 box-border flex min-h-screen w-full flex-col bg-slate-950 text-white">
+      <!-- <div class="flex grow items-center justify-center">
+        <Loader loaded={false} />
+      </div> -->
+      {@render children()}
+      <Footer />
+    </main>
+  </div>
+  <!-- {#await import('$lib/pages/Delivery.svelte')}
+  {:then c} -->
+  <!-- <svelte:component this={c.default}> -->
+  <!-- <slot /> -->
+  <!-- </svelte:component> -->
+  <!-- {/await} -->
 </div>
 
-<style>
+<style lang="postcss">
+  @reference "tailwindcss/theme";
   .app {
     position: relative;
     display: flex;
@@ -49,9 +47,9 @@
     @apply max-w-96 whitespace-pre-line;
   }
   :global(.tooltip.tooltip-top.tooltip-left-toward-center::before) {
-    @apply -translate-x-0 right-0 left-auto;
+    @apply left-auto right-0 -translate-x-0;
   }
   :global(.tooltip.tooltip-top.tooltip-right-toward-center::before) {
-    @apply -translate-x-0 left-0 right-auto;
+    @apply left-0 right-auto -translate-x-0;
   }
 </style>

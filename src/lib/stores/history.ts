@@ -1,13 +1,11 @@
-import { derived, type Stores } from 'svelte/store'
-import * as input from './input'
-import { walletAccount } from './auth/store'
+import { loading } from './loading.svelte'
 import { getAddress } from 'viem'
-import { loading } from './loading'
 import type { Query } from '$lib/gql/graphql'
 import { gql, GraphQLClient } from 'graphql-request'
 import { indexer } from '$lib/config'
 import type { UserRequestForAffirmation, UserRequestForSignature } from '../gql/graphql'
 import { sortBy } from 'lodash'
+import type { UseAppKitAccountReturn } from '@reown/appkit'
 
 export type Bridge = UserRequestForSignature | UserRequestForAffirmation
 
@@ -87,36 +85,67 @@ const queries = {
   `,
 }
 
-export const bridges = derived<Stores, null | Bridge[]>(
-  [walletAccount, input.forcedRefresh],
-  ([$walletAccount], set) => {
-    if (!$walletAccount) {
-      return set(null)
+export const bridges = loading.loadsAfterTick<Bridge[]>(
+  'bridges',
+  async (accountState: UseAppKitAccountReturn | null | undefined) => {
+    if (!accountState) {
+      return null
     }
-    const account = getAddress($walletAccount)
+    const walletAccount = accountState.address
+    if (!walletAccount) {
+      return null
+    }
+    const account = getAddress(walletAccount)
     const filter = {
       OR: [{ from: account }, { to: account }],
     }
-    loading.loadsAfterTick(
-      `bridges-${account}`,
-      async () => {
-        return client
-          .request<Query>(queries.getBridgesUnderAccount, {
-            whereAff: filter,
-            whereSig: filter,
-          })
-          .then((data) => {
-            return sortBy(
-              ([] as Bridge[]).concat(
-                data.userRequestForSignatures.items,
-                data.userRequestForAffirmations.items,
-              ),
-              [(r) => -BigInt(r.orderId)],
-            )
-          })
-      },
-      set,
+    return client.request<Query>(queries.getBridgesUnderAccount, {
+      whereAff: filter,
+      whereSig: filter,
+    })
+  },
+  async (data: Query) => {
+    return sortBy(
+      ([] as Bridge[]).concat(
+        data.userRequestForSignatures.items,
+        data.userRequestForAffirmations.items,
+      ),
+      [(r) => -BigInt(r.orderId)],
     )
   },
-  null,
 )
+
+// export const bridges = (accountState: UseAppKitAccountReturn | null | undefined) =>
+//   loading.loadsAfterTick(
+//     'bridges',
+//     async (accountState: UseAppKitAccountReturn | null | undefined, controller: AbortController) => {
+//       if (!accountState) {
+//       return null
+//     }
+//     const walletAccount = connectedAddress(accountState)
+//     if (!walletAccount) {
+//       return null
+//     }
+//     const account = getAddress(walletAccount)
+//     const filter = {
+//       OR: [{ from: account }, { to: account }],
+//     }
+//     return client
+//       .request<Query>(queries.getBridgesUnderAccount, {
+//         whereAff: filter,
+//         whereSig: filter,
+//       })
+//       .then((data) => {
+//         if (controller.signal.aborted) {
+//           return null
+//         }
+//         return sortBy(
+//           ([] as Bridge[]).concat(
+//             data.userRequestForSignatures.items,
+//             data.userRequestForAffirmations.items,
+//           ),
+//           [(r) => -BigInt(r.orderId)],
+//         )
+//       })
+//   },
+// )

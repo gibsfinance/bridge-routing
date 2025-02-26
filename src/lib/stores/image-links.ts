@@ -1,14 +1,14 @@
 import { type Hex, getAddress } from 'viem'
 import { imageRoot } from '$lib/config'
 
-export const list = (path: string) => {
-  return `${imageRoot}/list${path}`
-}
-
 interface MinimalTokenInfo {
   chainId: number
   address: Hex
   logoURI?: string
+}
+
+export const list = (path: string) => {
+  return `${imageRoot}/list${path}`
 }
 
 export const network = (chainId: number) => `${imageRoot}/image/${Number(chainId)}`

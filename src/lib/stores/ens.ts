@@ -2,15 +2,9 @@ import { get, type Writable } from 'svelte/store'
 import { normalize } from 'viem/ens'
 
 import { writable } from 'svelte/store'
-import { getAddress, isAddress, zeroAddress, type Hex, type PublicClient } from 'viem'
+import { getAddress, isAddress, zeroAddress, type Hex } from 'viem'
 import { Chains, type ChainKey } from './auth/types'
-import { clientFromChain } from './input'
-
-export const ensToAddress = async (publicClient: PublicClient, ens: string) => {
-  return publicClient.getEnsAddress({
-    name: normalize(ens),
-  })
-}
+import { clientFromChain } from '$lib/stores/input.svelte'
 
 export const isEns = (val: string) => {
   return val.toLowerCase().match(/\w+\.(pls|eth|bnb)/gi)
