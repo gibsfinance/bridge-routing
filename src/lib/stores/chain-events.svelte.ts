@@ -711,10 +711,6 @@ export const watchWplsUSDPrice = loading.loadsAfterTick<bigint, Block>(
   },
 )
 
-export class WatchPrice {
-  // constructor(protected readonly token: Token) {}
-}
-
 // price is of
 export const priceInt = ({ v1, v2 }: PoolInfo, decimals: number) => {
   const wplsAmount = (v1.reserves?.wpls ?? 0n) + (v2.reserves?.wpls ?? 0n)
@@ -853,7 +849,7 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     const blockNumber = finalizedBlock.number
     params.finalizedBlock = finalizedBlock
     if (blockNumber < receipt!.blockNumber) {
-      console.log('tx has been mined', receipt?.transactionHash)
+      // console.log('tx has been mined', receipt?.transactionHash)
       return params
     }
     return {
@@ -882,7 +878,7 @@ export const liveBridgeStatus = loading.loadsAfterTick<
       },
     }) as Promise<SingleExecution>)
     if (executions[0]?.txHash) {
-      console.log('affirmed', executions[0].txHash)
+      // console.log('affirmed', executions[0].txHash)
       return {
         ...params,
         status: bridgeStatuses.AFFIRMED,
