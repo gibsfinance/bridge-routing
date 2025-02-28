@@ -36,6 +36,7 @@
     liveBridgeStatus,
     type BridgeStatus,
     bridgeStatuses,
+    type ContinuedLiveBridgeStatusParams,
   } from '$lib/stores/chain-events.svelte'
   import {
     amountIn,
@@ -55,6 +56,7 @@
   import { sendTransaction, waitForTransaction, waitForTransactionReceipt } from '@wagmi/core'
   import Loading from './Loading.svelte'
   import _ from 'lodash'
+  import Tooltip from './Tooltip.svelte'
   let tokenOutput = $state<Token>({
     logoURI: `https://gib.show/image/369/${zeroAddress}`,
     name: 'Pulse',
@@ -212,7 +214,7 @@
       ? 0n
       : (usdValueInt * amountIn.value) / 10n ** BigInt(tokenInput?.decimals ?? 18),
   )
-  let bridgeStatus = $state<BridgeStatus | null>(null)
+  let bridgeStatus = $state<ContinuedLiveBridgeStatusParams | null>(null)
   // test situation
   $effect(
     _.once(() => {
@@ -225,26 +227,48 @@
   })
   const incrementBridgeStatus = () => {
     if (bridgeStatus === null) {
-      bridgeStatus = bridgeStatuses.SUBMITTED
-    } else if (bridgeStatus === bridgeStatuses.SUBMITTED) {
-      bridgeStatus = bridgeStatuses.MINED
-    } else if (bridgeStatus === bridgeStatuses.MINED) {
-      bridgeStatus = bridgeStatuses.FINALIZED
-    } else if (bridgeStatus === bridgeStatuses.FINALIZED) {
-      bridgeStatus = bridgeStatuses.VALIDATING
-    } else if (bridgeStatus === bridgeStatuses.VALIDATING) {
-      bridgeStatus = bridgeStatuses.AFFIRMED
-    } else if (bridgeStatus === bridgeStatuses.AFFIRMED) {
+      bridgeStatus = {
+        bridgeKey,
+        hash: tx!,
+        ticker: destination.block!,
+        status: bridgeStatuses.SUBMITTED,
+        statusIndex: 0,
+      }
+    } else if (bridgeStatus.status === bridgeStatuses.SUBMITTED) {
+      bridgeStatus = {
+        ...bridgeStatus,
+        status: bridgeStatuses.MINED,
+        statusIndex: 1,
+      }
+    } else if (bridgeStatus.status === bridgeStatuses.MINED) {
+      bridgeStatus = {
+        ...bridgeStatus,
+        status: bridgeStatuses.FINALIZED,
+        statusIndex: 2,
+      }
+    } else if (bridgeStatus.status === bridgeStatuses.FINALIZED) {
+      bridgeStatus = {
+        ...bridgeStatus,
+        status: bridgeStatuses.VALIDATING,
+        statusIndex: 3,
+      }
+    } else if (bridgeStatus.status === bridgeStatuses.VALIDATING) {
+      bridgeStatus = {
+        ...bridgeStatus,
+        status: bridgeStatuses.AFFIRMED,
+        statusIndex: 4,
+      }
+    } else if (bridgeStatus.status === bridgeStatuses.AFFIRMED) {
       bridgeStatus = null
     }
   }
   const bridgeGoClassNames = $derived(
-    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-r rounded-l-none px-6' +
-      (bridgeStatus !== null ? ' rounded-b-none' : ''),
+    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-l-none px-6' +
+      (bridgeStatus !== null ? ' rounded-b-none' : ' rounded-r'),
   )
   const percentProgress = $derived.by(() => {
     if (bridgeStatus === null) return 0
-    switch (bridgeStatus) {
+    switch (bridgeStatus.status) {
       case bridgeStatuses.SUBMITTED:
         return 20
       case bridgeStatuses.MINED:
@@ -279,9 +303,22 @@
     })
     result.promise.then((liveResult) => {
       if (result.controller.signal.aborted) return
-      bridgeStatus = liveResult?.status ?? null
+      bridgeStatus = liveResult ?? null
     })
     return result.cleanup
+  })
+  const bridgeStatusETATooltip = $derived.by(() => {
+    switch (bridgeStatus?.status) {
+      case bridgeStatuses.SUBMITTED:
+        return 'This transaction is still being validated by the network.'
+      case bridgeStatuses.MINED:
+        return 'mined'
+      case bridgeStatuses.FINALIZED:
+        return '<20s'
+      case bridgeStatuses.VALIDATING:
+        return '<10s'
+    }
+    return null
   })
 </script>
 
@@ -363,7 +400,7 @@
       </header>
     </div>
     <div
-      class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow hover:shadow-lg transition-all duration-100">
+      class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow hover:shadow-lg transition-all duration-100 overflow-hidden">
       <header class="flex flex-row justify-between relative">
         <div class="flex flex-col w-1/2 gap-0">
           {#if accountState.address}
@@ -450,10 +487,10 @@
         </div>
       </header>
       <footer
-        class="shadow-inner h-0 transition-all duration-100 bg-surface-900-100 rounded-b overflow-hidden"
+        class="shadow-inner h-0 transition-all duration-100 bg-surface-900-100 rounded-b"
         class:h-6={bridgeStatus !== null}>
         <div
-          class="flex flex-row h-full bg-success-500 justify-end min-w-[150px] px-2 text-sm transition-all duration-100 relative"
+          class="flex flex-row items-center gap-1 h-full bg-success-500 justify-end min-w-[150px] text-sm transition-all duration-100 relative transition-delay-200"
           style="width: {percentProgress}%">
           <Button class="size-6 absolute top-0 left-0 bg-error-400" onclick={clearTxTracking}
             >&times;</Button>
@@ -461,8 +498,13 @@
             class="btn h-full p-0 capitalize flex-row gap-2 hover:filter-none"
             onclick={incrementBridgeStatus}>
             <Loading key="bridge-status-check" />
-            <span class="text-surface-contrast-950">{bridgeStatus?.toLowerCase()}</span>
+            <span class="text-surface-contrast-950">{bridgeStatus?.status?.toLowerCase()}</span>
           </Button>
+          {#if bridgeStatus?.status !== bridgeStatuses.AFFIRMED && bridgeStatusETATooltip}
+            <Tooltip placement="top" tooltip={bridgeStatusETATooltip}>
+              <Icon icon="mdi:clock" class="size-6 p-1 mr-1" />
+            </Tooltip>
+          {/if}
         </div>
       </footer>
     </div>

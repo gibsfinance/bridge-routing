@@ -736,6 +736,7 @@ export type ContinuedLiveBridgeStatusParams = LiveBridgeStatusParams & {
   status: BridgeStatus
   statusIndex: number
   receipt?: TransactionReceipt
+  finalizedBlock?: Block
 }
 const statusList = Object.values(bridgeStatuses)
 const statusToIndex = (status: BridgeStatus) => {
@@ -801,7 +802,9 @@ export const liveBridgeStatus = loading.loadsAfterTick<
   async (params: ContinuedLiveBridgeStatusParams) => {
     if (!params) return null
     const { statusIndex, receipt, bridgeKey } = params
-    if (statusIndex < statusToIndex(bridgeStatuses.MINED)) return params
+    if (statusIndex < statusToIndex(bridgeStatuses.MINED)) {
+      return params
+    }
 
     const client = input.clientFromChain(bridgeKey.fromChain)
     const finalizedBlock = await client.getBlock({
@@ -809,7 +812,10 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     })
     if (!finalizedBlock) return null // no finalized block found
     const blockNumber = finalizedBlock.number
-    if (blockNumber < receipt!.blockNumber) return params
+    params.finalizedBlock = finalizedBlock
+    if (blockNumber < receipt!.blockNumber) {
+      return params
+    }
     return {
       ...params,
       status: bridgeStatuses.FINALIZED,

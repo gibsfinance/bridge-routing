@@ -14,12 +14,6 @@ export const chainsMetadata = {
     chainId: Chains.PLS,
     icon: imageLinks.network(pulsechain.id),
     alt: 'a pink blue and purple hexagon with an ekg line running horizontally',
-    graphql: {
-      bridgeUrl: {
-        [Provider.PULSECHAIN]:
-          'https://graph.pulsechain.com/subgraphs/name/pulsechain/bridge/graphql',
-      },
-    },
     rpcUrls: {
       default: {
         http: ['https://rpc-pulsechain.g4mm4.io'],
@@ -44,12 +38,6 @@ export const chainsMetadata = {
     rpcUrls: {
       default: {
         http: ['https://rpc-ethereum.g4mm4.io'],
-      },
-    },
-    graphql: {
-      bridgeUrl: {
-        [Provider.PULSECHAIN]:
-          'https://graph.ethereum.pulsechain.com/subgraphs/name/ethereum/bridge/graphql',
       },
     },
   },
