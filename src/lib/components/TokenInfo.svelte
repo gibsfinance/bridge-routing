@@ -9,10 +9,11 @@
     truncate?: number
     reversed?: boolean
     externalGroup?: boolean
+    wrapperSizeClasses?: string
   }
-  const { token, truncate = 20, reversed = false, externalGroup = false }: Props = $props()
+  const { token, truncate = 20, reversed = false, externalGroup = false, wrapperSizeClasses = 'w-full h-full' }: Props = $props()
   const wrapperClasses = $derived(
-    classNames('flex w-full h-full', reversed ? 'flex-row-reverse' : 'flex-row'),
+    classNames('flex', wrapperSizeClasses, reversed ? 'flex-row-reverse' : 'flex-row'),
   )
   const textContainerClasses = $derived(
     classNames(

@@ -4,18 +4,22 @@
   import { domains, addDomain } from '$lib/stores/window.svelte'
   import Icon from '@iconify/svelte'
 
-  export let path = ''
-  export let chainId: Chains
-  $: explorer = chainsMetadata[chainId].blockExplorers?.default?.url || ''
-  $: if (explorer) addDomain(explorer)
-  $: d = $directDomain.get(explorer) || ''
+  type Props = {
+    size?: string
+    path: string
+    chain: Chains
+  }
+  const { size = '1.5em', path, chain }: Props = $props()
+  const explorer = $derived(chainsMetadata[chain]?.blockExplorers?.default?.url || '')
+  const d = $derived(domains.get(explorer) || '')
+  $effect(() => {
+    if (explorer) addDomain(explorer)
+  })
 </script>
 
-<slot direct={d} {path}>
-  <a
-    href="{d || explorer}{d ? '#' : ''}{path}"
-    aria-label="direct{d ? ' to ipfs' : ''} page for {explorer}"
-    target="_blank">
-    <Icon icon="gis:direct" class="inline mx-1" height="2em" width="2em" />
-  </a>
-</slot>
+<a
+  href="{d || explorer}{d ? '#' : ''}{path}"
+  aria-label="direct{d ? ' to ipfs' : ''} page for {explorer}"
+  target="_blank">
+  <Icon icon="gis:direct" class="inline mx-1" height={size} width={size} />
+</a>

@@ -22,7 +22,7 @@ const checkDomain = (domain: string) => {
   }
   const d = domain.startsWith('http') ? domain : `https://${domain}`
   if (!d.includes('pulsechain')) {
-    domains.set(domain, '')
+    // domains.set(domain, null)
     return
   }
   return fetch(`${d}/version.json`)

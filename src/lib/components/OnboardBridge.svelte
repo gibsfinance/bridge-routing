@@ -1,0 +1,483 @@
+<script lang="ts">
+  import TokenIcon from './TokenIcon.svelte'
+  import type { Token } from '$lib/types.svelte'
+  import { isHex, zeroAddress, type Hex } from 'viem'
+  import Button from './Button.svelte'
+  import Icon from '@iconify/svelte'
+  import { Chains, Provider } from '$lib/stores/auth/types'
+  import { accountState, modal, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
+  import {
+    assetSources,
+    bridgeSettings,
+    oneEther,
+    searchKnownAddresses,
+  } from '$lib/stores/bridge-settings.svelte'
+  import NumericInput from './NumericInput.svelte'
+  import VerticalDivider from './VerticalDivider.svelte'
+  import BalanceReadout from './BalanceReadout.svelte'
+  import Loader from './Loader.svelte'
+  import {
+    assetLink,
+    loadAssetLink,
+    loadPrice,
+    minAmount,
+    priceInt,
+    watchWplsUSDPrice,
+    liveBridgeStatus,
+    bridgeStatuses,
+    type ContinuedLiveBridgeStatusParams,
+    origination,
+    destination,
+  } from '$lib/stores/chain-events.svelte'
+  import {
+    amountIn,
+    bridgableTokens,
+    bridgeableTokensUnder,
+    bridgeFee,
+    loadFeeFor,
+    recipient,
+    bridgeKey,
+  } from '$lib/stores/input.svelte'
+  import { humanReadableNumber } from '$lib/stores/utils'
+  import AssetWithNetwork from './AssetWithNetwork.svelte'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
+  import { SvelteMap } from 'svelte/reactivity'
+  import { sendTransaction, waitForTransactionReceipt } from '@wagmi/core'
+  import Loading from './Loading.svelte'
+  import Tooltip from './Tooltip.svelte'
+  import ExplorerLink from './ExplorerLink.svelte'
+  import Input from './Input.svelte'
+  import { untrack } from 'svelte'
+  const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
+  // let bridgeAmount = $state(0n)
+  const bridgeAmount = $derived(amountIn.value ?? 0n)
+  const bridgeFeePercent = $derived(bridgeFee.value?.feeF2H ?? 0n)
+  const bridgeFeeAmount = $derived((bridgeFeePercent * bridgeAmount) / oneEther)
+  const outputAmount = $derived(bridgeAmount - bridgeFeeAmount)
+  const tokenInput = $derived(bridgeSettings.assetIn.value)
+
+  let editTxHash = $state(false)
+  let editTxHashValue = $state('')
+  $effect.pre(() => {
+    bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
+  })
+  $effect(() => {
+    if (!tokenInput) {
+      bridgeSettings.assetIn.value = {
+        logoURI: `https://gib.show/image/1/${zeroAddress}`,
+        name: 'Ether',
+        symbol: 'ETH',
+        decimals: 18,
+        chainId: 1,
+        address: zeroAddress,
+      }
+    }
+  })
+  $effect(() => {
+    if (!tokenInput) return
+    const tokensUnderBridgeKey = bridgeableTokensUnder({
+      tokens: bridgableTokens.value,
+      chain: bridgeKey.toChain,
+      partnerChain: bridgeKey.fromChain,
+    })
+    const link = loadAssetLink({
+      bridgeKey: bridgeKey.value,
+      assetIn: tokenInput,
+    })
+    link.promise.then((l) => {
+      if (link.controller.signal.aborted || !l?.assetOutAddress) return
+      // reverse the chains here because we are looking for the destination
+      let assetOut = searchKnownAddresses({
+        tokensUnderBridgeKey,
+        address: l?.assetOutAddress,
+        customTokens: [],
+      })
+      assetLink.value = l
+      bridgeSettings.assetOut.value = assetOut
+        ? {
+            ...assetOut,
+            logoURI: tokenInput.logoURI,
+          }
+        : null
+    })
+    return link.cleanup
+  })
+  $effect(() => {
+    const result = loadFeeFor(bridgeKey)
+    result.promise.then((fee) => {
+      if (result.controller.signal.aborted) return
+      bridgeFee.value = fee
+    })
+    return result.cleanup
+  })
+  $effect(() => {
+    recipient.value = accountState.address ?? zeroAddress
+  })
+  let tx: Hex | null = $state(null)
+  $effect(() => {
+    tx = localStorage.getItem('bridge-tx') as Hex | null
+  })
+  const bridgeTokens = async () => {
+    if (!accountState.address) return
+    const tx = await sendTransaction(wagmiAdapter.wagmiConfig, {
+      account: accountState.address,
+      ...bridgeSettings.transactionInputs,
+    })
+    setTxHash(tx)
+    incrementBridgeStatus()
+    waitForTransactionReceipt(wagmiAdapter.wagmiConfig, {
+      hash: tx,
+    }).then(() => {
+      incrementBridgeStatus()
+    })
+  }
+  const setTxHash = (hash: Hex) => {
+    tx = hash
+    localStorage.setItem('bridge-tx', hash)
+  }
+  let usdMultiplier = $state(0n)
+  const wplsTokenPrice = new SvelteMap<string, bigint>()
+  const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
+  const zeroUsdValue = '0.00'
+  $effect(() => origination.watch(bridgeKey.fromChain))
+  $effect(() => destination.watch(bridgeKey.toChain))
+  $effect(() => {
+    const block = destination.block
+    if (!block) return
+    const watcher = watchWplsUSDPrice(block)
+    watcher.promise.then((price) => {
+      if (watcher.controller.signal.aborted) {
+        // console.log('aborted')
+        return
+      }
+      usdMultiplier = price ?? 0n
+    })
+    return watcher.cleanup
+  })
+  $effect(() => {
+    const block = destination.block
+    if (!bridgedToken || !block) return
+    const price = loadPrice(bridgedToken, block)
+    price.promise
+      .then((priceResult) => {
+        if (price.controller.signal.aborted) {
+          return
+        }
+        if (!priceResult) {
+          wplsTokenPrice.set(key, 0n)
+        } else {
+          const price = priceInt(priceResult, bridgedToken.decimals)
+          wplsTokenPrice.set(key, price)
+        }
+      })
+      .catch(() => {
+        wplsTokenPrice.set(key, 0n)
+      })
+    return price.cleanup
+  })
+  const priceAsInt = $derived(wplsTokenPrice.get(key) ?? 0n)
+  const usdValueInt = $derived(
+    priceAsInt && usdMultiplier ? ((priceAsInt ?? 0n) * 10n ** 18n) / usdMultiplier : 0n,
+  )
+  const usdValueTokenAmount = $derived(
+    !amountIn.value
+      ? 0n
+      : (usdValueInt * amountIn.value) / 10n ** BigInt(tokenInput?.decimals ?? 18),
+  )
+  let bridgeStatus = $state<ContinuedLiveBridgeStatusParams | null>(null)
+  $effect(() => {
+    if (!bridgeSettings.assetIn.value) return
+    return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
+  })
+  const incrementBridgeStatus = () => {
+    if (bridgeStatus === null) {
+      bridgeStatus = {
+        bridgeKey,
+        hash: tx!,
+        ticker: destination.block!,
+        status: bridgeStatuses.SUBMITTED,
+        statusIndex: 0,
+      }
+    } else if (bridgeStatus.status === bridgeStatuses.SUBMITTED) {
+      bridgeStatus = {
+        ...bridgeStatus,
+        status: bridgeStatuses.MINED,
+        statusIndex: 1,
+      }
+    } else if (bridgeStatus.status === bridgeStatuses.MINED) {
+      bridgeStatus = {
+        ...bridgeStatus,
+        status: bridgeStatuses.FINALIZED,
+        statusIndex: 2,
+      }
+    } else if (bridgeStatus.status === bridgeStatuses.FINALIZED) {
+      bridgeStatus = {
+        ...bridgeStatus,
+        status: bridgeStatuses.VALIDATING,
+        statusIndex: 3,
+      }
+    } else if (bridgeStatus.status === bridgeStatuses.VALIDATING) {
+      bridgeStatus = {
+        ...bridgeStatus,
+        status: bridgeStatuses.AFFIRMED,
+        statusIndex: 4,
+      }
+    } else if (bridgeStatus.status === bridgeStatuses.AFFIRMED) {
+      bridgeStatus = null
+    }
+  }
+  const bridgeGoClassNames = $derived(
+    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-l-none px-6' +
+      (bridgeStatus !== null && !editTxHash ? ' rounded-b-none' : ' rounded-r'),
+  )
+  const percentProgress = $derived.by(() => {
+    if (bridgeStatus === null) return 0
+    switch (bridgeStatus.status) {
+      case bridgeStatuses.SUBMITTED:
+        return 20
+      case bridgeStatuses.MINED:
+        return 40
+      case bridgeStatuses.FINALIZED:
+        return 60
+      case bridgeStatuses.VALIDATING:
+        return 80
+      case bridgeStatuses.AFFIRMED:
+        return 100
+    }
+  })
+  const clearTxTracking = () => {
+    const localTx = localStorage.getItem('bridge-tx')
+    if (tx === localTx) {
+      console.log('clearing tx tracking', localTx, bridgeStatus?.deliveredHash)
+      localStorage.removeItem('bridge-tx')
+      tx = null
+    }
+    bridgeStatus = null
+  }
+  const disableBridgeButton = $derived(
+    // bridgeStatus !== null ||
+    !amountIn.value || !minAmount.value || amountIn.value < minAmount.value,
+  )
+  $effect(() => {
+    if (!tx || !destination.block) return
+    const result = liveBridgeStatus({
+      bridgeKey,
+      hash: tx,
+      ticker: destination.block,
+    })
+    result.promise.then((liveResult) => {
+      if (result.controller.signal.aborted) return
+      if (liveResult?.hash === tx) {
+        bridgeStatus = liveResult ?? null
+      }
+    })
+    return result.cleanup
+  })
+  const bridgeStatusETATooltip = $derived.by(() => {
+    const slotCount = 32n
+    const blockTime = 12n
+    switch (bridgeStatus?.status) {
+      case bridgeStatuses.SUBMITTED:
+        return 'This transaction is still being validated by the network.'
+      case bridgeStatuses.MINED:
+        const currentlyFinalizedBlock = bridgeStatus?.finalizedBlock?.number
+        const currentBlock = origination.block?.number
+        let estimatedFutureFinalizedBlock = currentlyFinalizedBlock
+        const minedBlock = bridgeStatus.receipt?.blockNumber
+        if (
+          !currentlyFinalizedBlock ||
+          !estimatedFutureFinalizedBlock ||
+          !minedBlock ||
+          !currentBlock
+        )
+          return 'mined'
+        let delta = minedBlock - currentBlock + 96n + 6n
+        if (delta < 0n) {
+          return '<20s'
+        }
+        delta += 3n
+        while (estimatedFutureFinalizedBlock < minedBlock) {
+          estimatedFutureFinalizedBlock += slotCount
+        }
+        if (estimatedFutureFinalizedBlock === currentlyFinalizedBlock) {
+          return '<20s'
+        }
+        const totalSeconds = delta * blockTime
+        const seconds = totalSeconds % 60n
+        const minutes = (totalSeconds - seconds) / 60n
+        if (minutes > 3n) {
+          return `<${minutes}m`
+        } else if (!minutes) {
+          return `<${seconds}s`
+        }
+        return `<${minutes}m ${seconds}s`
+      case bridgeStatuses.FINALIZED:
+        return '<20s'
+      case bridgeStatuses.VALIDATING:
+        return '<10s'
+    }
+    return null
+  })
+  $effect(() => {
+    if (bridgeStatus?.status === bridgeStatuses.AFFIRMED) {
+      const lastTxHash = untrack(() => bridgeStatus?.hash)
+      setTimeout(() => {
+        if (lastTxHash === localStorage.getItem('bridge-tx')) {
+          clearTxTracking()
+        }
+      }, 10_000)
+    }
+  })
+  let editTxInput: HTMLInputElement | null = $state(null)
+  const toggleEditTxHash = () => {
+    editTxHash = !editTxHash
+    editTxInput?.focus()
+  }
+</script>
+
+{#if tokenInput}
+  <div
+    class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
+    <header class="flex flex-row justify-between relative h-16">
+      <div class="flex flex-col w-1/2 gap-0">
+        {#if accountState.address}
+          <div class="flex gap-1 flex-row-reverse absolute top-0 left-0">
+            <BalanceReadout
+              token={tokenInput}
+              roundedClasses="rounded-tl"
+              hideSymbol
+              decimalLimit={9}
+              onmax={(balance) => {
+                amountIn.value = balance
+              }} />
+          </div>
+        {/if}
+        <Button
+          class="absolute size-6 bottom-0 left-0 flex justify-center items-center text-surface-contrast-50 group"
+          onclick={toggleEditTxHash}>
+          <Icon
+            icon="mdi:pencil"
+            class="w-full h-full p-1 text-surface-contrast-50 opacity-0 group-hover:opacity-100 transition-opacity duration-100" />
+        </Button>
+        <label
+          class="flex flex-row gap-1 w-full pl-4 pr-6 py-4 cursor-pointer text-surface-contrast-50 items-center group"
+          for="amount-to-bridge">
+          <div class="flex flex-col gap-0 w-full relative">
+            <NumericInput
+              id="amount-to-bridge"
+              class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right placeholder:text-gray-600 text-lg placeholder:text-lg leading-6 h-8"
+              value={bridgeAmount}
+              decimals={tokenInput.decimals}
+              oninput={(v) => {
+                amountIn.value = v
+              }} />
+            <span
+              class="text-xs w-full text-gray-500 text-right absolute -bottom-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none"
+              >${usdValueTokenAmount
+                ? humanReadableNumber(usdValueTokenAmount, { maxDecimals: 2 })
+                : zeroUsdValue}</span>
+          </div>
+          <span>{tokenInput.symbol}</span>
+          <TokenIcon src={assetSources(tokenInput)} />
+        </label>
+      </div>
+      <VerticalDivider>
+        <Icon
+          icon="gridicons:chevron-right"
+          class="text-surface-500 bg-surface-950-50 rounded-full w-full h-full ring-2 ring-current ring-inset p-0.5" />
+      </VerticalDivider>
+      <div
+        class="flex flex-col w-1/2 text-surface-contrast-50 items-start justify-center relative cursor-not-allowed">
+        {#if !bridgedToken}
+          <span class="flex pl-6"><Loader /></span>
+        {:else}
+          <span
+            class="flex flex-row items-center text-surface-contrast-50 w-full justify-end group">
+            <span class="flex flex-row-reverse gap-2 items-center ml-6 w-full text-right relative">
+              {#if accountState.address}
+                <div
+                  class="flex flex-row absolute w-full right-2 pl-6 text-xs leading-6 text-gray-500 gap-1 -top-4 text-right justify-end">
+                  <span>balance</span>
+                  <BalanceReadout
+                    token={bridgedToken}
+                    hideSymbol
+                    roundedClasses="rounded-md"
+                    decimalClasses="opacity-60" />
+                </div>
+              {/if}
+              <span class="flex flex-col gap-0 relative w-full text-left">
+                <span
+                  >{humanReadableNumber(outputAmount, {
+                    decimals: bridgedToken.decimals,
+                    maxDecimals: 9,
+                  })}
+                  {bridgedToken.symbol}</span>
+                <!-- <span class="text-xs text-gray-500"></span> -->
+                <span
+                  class="text-xs w-full text-gray-500 absolute -bottom-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none"
+                  >${usdValueTokenAmount
+                    ? humanReadableNumber(usdValueTokenAmount, { maxDecimals: 2 })
+                    : zeroUsdValue}</span>
+              </span>
+              <AssetWithNetwork asset={bridgedToken} network={Chains.PLS} />
+            </span>
+            <Button disabled={disableBridgeButton} class={bridgeGoClassNames} onclick={bridgeTokens}
+              >Go</Button>
+          </span>
+        {/if}
+      </div>
+    </header>
+    <footer
+      class="shadow-inner h-0 transition-all duration-100 bg-surface-900-100 rounded-b"
+      class:h-6={bridgeStatus !== null || editTxHash}>
+      {#if editTxHash}
+        <div class="h-full">
+          <Input
+            setref={(el) => {
+              editTxInput = el
+              el.focus()
+            }}
+            class="h-full px-2 py-0 text-sm text-surface-contrast-50 rounded-t-none"
+            value={editTxHashValue}
+            oninput={(v) => {
+              editTxHashValue = v
+              if (editTxHashValue.length === 66 && isHex(editTxHashValue)) {
+                setTxHash(editTxHashValue)
+                editTxHash = false
+              }
+            }} />
+        </div>
+      {:else}
+        <div
+          class="flex flex-row items-center gap-1 h-full bg-success-500 justify-end min-w-[150px] text-sm transition-all duration-100 relative transition-delay-200"
+          style="width: {percentProgress}%">
+          <Button class="h-full w-8 absolute top-0 left-0 bg-error-400" onclick={clearTxTracking}
+            >&times;</Button>
+          <ExplorerLink path={`/tx/${tx}`} chain={bridgeKey.fromChain} size="1.5em" />
+          <Button
+            class="btn h-full p-0 capitalize flex-row gap-2 hover:filter-none text-sm font-inter"
+            onclick={incrementBridgeStatus}>
+            <Loading key="bridge-status-check" />
+            <span class="text-surface-contrast-950">{bridgeStatus?.status?.toLowerCase()}</span>
+          </Button>
+          {#if bridgeStatus?.status !== bridgeStatuses.AFFIRMED && bridgeStatusETATooltip}
+            <Tooltip
+              placement="top"
+              tooltip={bridgeStatusETATooltip}
+              class="pr-1 items-center justify-center">
+              <Icon icon="mdi:clock" class="size-6 p-1 pointer-events-none" />
+            </Tooltip>
+          {/if}
+          {#if bridgeStatus?.status === bridgeStatuses.AFFIRMED && bridgeStatus.deliveredHash}
+            <span class="h-full w-8 flex items-center justify-start">
+              <ExplorerLink
+                path={`/tx/${bridgeStatus.deliveredHash}`}
+                chain={bridgeKey.toChain}
+                size="1.5em" />
+            </span>
+          {/if}
+        </div>
+      {/if}
+    </footer>
+  </div>
+{/if}

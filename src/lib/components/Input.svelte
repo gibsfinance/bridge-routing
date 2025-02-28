@@ -15,6 +15,7 @@
     onblur?: () => void
     onfocus?: () => void
     oninput?: (e: string) => void
+    setref?: (el: HTMLInputElement) => void
   }
   const {
     value,
@@ -29,13 +30,20 @@
     onblur,
     onfocus,
     oninput,
+    setref,
   }: Props = $props()
-  const defaultClassName = 'block w-full rounded-md py-1 px-2 shadow-xs bg-transparent outline-hidden'
+  const defaultClassName =
+    'block w-full rounded-md py-1 px-2 shadow-xs bg-transparent outline-hidden'
   let input!: HTMLInputElement
   export { className as class }
   onMount(() => {
     if (autoFocus) {
       input.focus()
+    }
+  })
+  $effect(() => {
+    if (setref) {
+      setref(input)
     }
   })
 </script>

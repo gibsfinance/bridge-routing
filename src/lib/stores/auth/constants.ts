@@ -89,8 +89,8 @@ export const chainsMetadata = {
 } as ChainsMetadata
 
 const PULSECHAIN_MAINNET_BRIDGE_GRAPHQL_URLS = {
-  foreign: 'https://graph.ethereum.pulsechain.com/subgraphs/name/ethereum/bridge/graphql',
-  home: 'https://graph.pulsechain.com/subgraphs/name/pulsechain/bridge/graphql',
+  foreign: 'https://graph.ethereum.pulsechain.com/subgraphs/name/ethereum/bridge',
+  home: 'https://graph.pulsechain.com/subgraphs/name/pulsechain/bridge',
 }
 
 export const bridgeGraphqlUrl = {
