@@ -408,7 +408,6 @@
                     maxDecimals: 9,
                   })}
                   {bridgedToken.symbol}</span>
-                <!-- <span class="text-xs text-gray-500"></span> -->
                 <span
                   class="text-xs w-full text-gray-500 absolute -bottom-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none"
                   >${usd.toCents(usdValueTokenAmount)}</span>
