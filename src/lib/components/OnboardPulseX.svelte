@@ -1,6 +1,6 @@
 <script lang="ts">
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
-  import { getPulseXQuote, type TradeType } from '$lib/stores/pulsex.svelte'
+  import { getPulseXQuote, type PulsexQuoteOutput, type TradeType } from '$lib/stores/pulsex.svelte'
   import Icon from '@iconify/svelte'
   import type { Token } from '$lib/types.svelte'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
@@ -12,6 +12,9 @@
   import { destination } from '$lib/stores/chain-events.svelte'
   import Loading from './Loading.svelte'
   import Button from './Button.svelte'
+  // import { sendTransaction } from '@wagmi/core'
+  // import { wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
+  // import * as SDK from '@pulsex/sdk'
   type Props = {
     tokenOut: Token
   }
@@ -29,6 +32,7 @@
   let amountInControl = $state(true)
   let amountToSwapIn = $state<bigint | null>(0n)
   let amountToSwapOut = $state<bigint | null>(null)
+  let quoteResult = $state<PulsexQuoteOutput | null>(null)
   $effect(() => {
     if (!tokenIn || !tokenOut || (!amountToSwapIn && !amountToSwapOut) || !destination.block) {
       // console.log('no quote', !tokenIn, !tokenOut, amountToSwapIn, amountToSwapOut)
@@ -42,6 +46,7 @@
     })
     quote.promise.then((result) => {
       if (quote.controller.signal.aborted || !result) return
+      quoteResult = result
       if (amountInControl) {
         amountToSwapOut = truncateValue(result.outputAmount.value, tokenOut.decimals)
       } else {
@@ -67,6 +72,17 @@
   const swapButtonClassNames = $derived(
     'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-4 w-16',
   )
+  const swapTokens = () => {
+    // SDK.
+    // sendTransaction(wagmiAdapter.wagmiConfig, {
+    // to: quoteResult?.outputAmount.address,
+    // value: quoteResult?.inputAmount.value,
+    // data: quoteResult?.calldata,
+    // })
+    // amountInControl = !amountInControl
+    // amountToSwapIn = null
+    // amountToSwapOut = null
+  }
 </script>
 
 <div
@@ -109,7 +125,7 @@
         <AssetWithNetwork asset={tokenOut} network={Chains.PLS} />
         <NumericInput
           paddingClass="px-0"
-          class="w-full input ring-0 focus:ring-0  placeholder:text-gray-600 placeholder: text-surface-contrast-50"
+          class="w-full input ring-0 focus:ring-0 placeholder:text-gray-600 placeholder: text-surface-contrast-50"
           value={amountToSwapOut}
           decimals={tokenOut.decimals}
           oninput={(v) => {
@@ -117,7 +133,7 @@
             amountToSwapOut = v
             amountToSwapIn = null
           }} />
-        <Button disabled class={swapButtonClassNames}>Swap</Button>
+        <Button disabled class={swapButtonClassNames} onclick={swapTokens}>Swap</Button>
       </div>
     {/if}
   </header>
