@@ -13,6 +13,9 @@ export default defineConfig({
     //   outdir: './src/lib/paraglide',
     // }),
   ],
+  preview: {
+    allowedHosts: ['gibsfinance.com', 'bridge-routing-staging.up.railway.app/'],
+  },
 
   test: {
     include: ['src/**/*.{test,spec}.{js,ts}'],
