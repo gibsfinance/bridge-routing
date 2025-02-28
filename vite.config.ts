@@ -24,4 +24,14 @@ export default defineConfig({
   test: {
     include: ['src/**/*.{test,spec}.{js,ts}'],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          lodash: ['lodash'],
+          viem: ['viem'],
+        },
+      },
+    },
+  },
 })

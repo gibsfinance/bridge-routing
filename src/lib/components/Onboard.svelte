@@ -63,7 +63,9 @@
   $effect.pre(() => {
     bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
   })
-  const networkMatches = $derived(accountState.chainId === Number(bridgeKey.fromChain))
+  const networkMatches = $derived(
+    !!accountState.chainId && accountState.chainId === Number(bridgeKey.fromChain),
+  )
   $effect(() => {
     if (!tokenInput) {
       bridgeSettings.assetIn.value = {
