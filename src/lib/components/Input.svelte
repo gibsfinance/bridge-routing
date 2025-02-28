@@ -11,6 +11,7 @@
     border?: boolean
     autoFocus?: boolean
     class?: string
+    roundedClass?: string
     onclick?: () => void
     onblur?: () => void
     onfocus?: () => void
@@ -26,14 +27,14 @@
     border,
     autoFocus,
     class: className,
+    roundedClass,
     onclick,
     onblur,
     onfocus,
     oninput,
     setref,
   }: Props = $props()
-  const defaultClassName =
-    'block w-full rounded-md py-1 px-2 shadow-xs bg-transparent outline-hidden'
+  const defaultClassName = 'block w-full py-1 px-2 shadow-xs bg-transparent outline-hidden'
   let input!: HTMLInputElement
   export { className as class }
   onMount(() => {
@@ -68,4 +69,4 @@
   class:text-md={size === 'md'}
   class:leading-8={size === 'md'}
   class:border-0={!border}
-  class={classnames(defaultClassName, className)} />
+  class={classnames(defaultClassName, className, roundedClass)} />

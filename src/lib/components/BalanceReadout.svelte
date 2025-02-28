@@ -5,7 +5,11 @@
   import { loading } from '$lib/stores/loading.svelte'
   import { toChain } from '$lib/stores/auth/types'
   import { chainIdToChain } from '$lib/stores/input.svelte'
-  import { ChainState, TokenBalanceWatcher } from '$lib/stores/chain-events.svelte'
+  import {
+    ChainState,
+    tokenBalanceLoadingKey,
+    TokenBalanceWatcher,
+  } from '$lib/stores/chain-events.svelte'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import classNames from 'classnames'
 
@@ -45,7 +49,7 @@
   })
   const balance = $derived(tokenBalance.value ?? 0n)
   const disableMax = $derived(balance === 0n)
-  const loadingKey = $derived(`balance-${toChain(network.id)}-${token.address}`.toLowerCase())
+  const loadingKey = $derived(tokenBalanceLoadingKey(chain, token, walletAccount ?? '0x'))
   const decimalClassNames = $derived(classNames(decimalClasses))
   const maxOutBalance = (event: MouseEvent) => {
     if (disableMax) return

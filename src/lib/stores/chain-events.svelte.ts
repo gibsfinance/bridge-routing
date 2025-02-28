@@ -30,6 +30,7 @@ const watchFinalizedBlocksForSingleChain = (chainId: Chains, onBlock: (block: Bl
   return client.watchBlocks({
     blockTag: 'finalized',
     emitOnBegin: true,
+    emitMissed: true,
     onBlock,
   })
 }
@@ -75,22 +76,19 @@ export class ChainState {
     this.set(null)
     this.chain = chain
     untrack(() => loading.increment('gas'))
-    let decremented = false
+    const decrement = _.once(() => {
+      untrack(() => loading.decrement('gas'))
+    })
     const cleanup = this.publicClient.watchBlocks({
       emitOnBegin: true,
+      emitMissed: true,
       onBlock: (block) => {
-        if (!decremented) {
-          decremented = true
-          untrack(() => loading.decrement('gas'))
-        }
+        decrement()
         this.set(block)
       },
     })
     return () => {
-      if (!decremented) {
-        decremented = true
-        untrack(() => loading.decrement('gas'))
-      }
+      decrement()
       cleanup()
     }
   }
@@ -99,9 +97,13 @@ export class ChainState {
 export const origination = new ChainState()
 export const destination = new ChainState()
 
-export const getTokenBalance = ($chainId: Chains, asset: Token | null, walletAccount: Hex) => {
-  if (!asset) return null
-  const publicClient = input.clientFromChain($chainId)
+export const getTokenBalance = (
+  chainId: Chains,
+  asset: Token | null,
+  walletAccount: Hex | null,
+) => {
+  if (!asset || !walletAccount) return null
+  const publicClient = input.clientFromChain(chainId)
   const getBalance =
     asset.address === zeroAddress
       ? () => publicClient.getBalance({ address: walletAccount })
@@ -113,7 +115,12 @@ export const getTokenBalance = ($chainId: Chains, asset: Token | null, walletAcc
           })
             .read.balanceOf([walletAccount])
             .catch(() => 0n)
-  return loading.loadsAfterTick<bigint | null>(`balance-${$chainId}`, getBalance)()
+  const key = tokenBalanceLoadingKey(chainId, asset, walletAccount)
+  return loading.loadsAfterTick<bigint | null>(key, getBalance)()
+}
+
+export const tokenBalanceLoadingKey = (chainId: Chains, token: Token, walletAccount: Hex) => {
+  return `balance-${chainId}-${token.address}-${walletAccount}`.toLowerCase()
 }
 
 // this is not the optimal way to do this, but these watchers

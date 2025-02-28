@@ -14,6 +14,7 @@
     onblur?: FormEventHandler<HTMLInputElement>
     onfocus?: FormEventHandler<HTMLInputElement>
     class?: ClassParam
+    paddingClass?: ClassParam
     placeholder?: string
   }
   const {
@@ -21,26 +22,35 @@
     value: startingValue = null,
     decimals = 18,
     placeholder = '0.0',
-    class:
-      className = 'w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right',
+    class: className = 'w-full input ring-0 focus:ring-0 text-surface-contrast-50 text-right',
+    paddingClass = 'py-0 px-0',
     ...props
   }: Props = $props()
-  const decimalValue = $derived(startingValue ? formatUnits(startingValue, decimals) : null)
   let focused = $state(false)
+  let selectionEnd = $state<number | null>(null)
+  const decimalValue = $derived(startingValue ? formatUnits(startingValue, decimals) : null)
   let value = $derived.by(() => {
-    if (focused || !decimalValue) return decimalValue
+    if (!decimalValue) return decimalValue
+    if (selectionEnd === null) return numberWithCommas(decimalValue)
     return numberWithCommas(decimalValue)
   })
-  const classes = $derived(classNames(className))
+  const classes = $derived(classNames(className, paddingClass))
   const oninput: FormEventHandler<HTMLInputElement> = (e) => {
     const val = (e.target as HTMLInputElement).value
     let bestGuess = startingValue
     try {
-      bestGuess = parseUnits(stripNonNumber(val), decimals)
+      const stripped = stripNonNumber(val)
+      bestGuess = parseUnits(stripped, decimals)
     } catch (err) {}
     // if the parsed value fails, then we use the previous value or the best guess
+    selectionEnd = (e.target as HTMLInputElement).selectionEnd
     props.oninput?.(bestGuess ?? 0n)
   }
+  let inputRef: HTMLInputElement | null = null
+  $effect(() => {
+    if (!focused || selectionEnd === null) return
+    inputRef?.setSelectionRange(selectionEnd, selectionEnd)
+  })
   const onfocus: FormEventHandler<HTMLInputElement> = (e) => {
     focused = true
     props.onfocus?.(e)
@@ -51,4 +61,13 @@
   }
 </script>
 
-<input type="text" {id} {placeholder} class={classes} {value} {oninput} {onblur} {onfocus} />
+<input
+  type="text"
+  bind:this={inputRef}
+  {id}
+  {placeholder}
+  class={classes}
+  {value}
+  {oninput}
+  {onblur}
+  {onfocus} />

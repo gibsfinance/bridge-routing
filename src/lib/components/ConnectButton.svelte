@@ -6,7 +6,6 @@
   import Icon from '@iconify/svelte'
   import { Chains } from '$lib/stores/auth/types'
   import { ellipsis, humanReadableNumber } from '$lib/stores/utils'
-  import { formatEther } from 'viem'
   const targetChain = $derived(chainsMetadata[accountState.chainIdHex as Chains])
   const shortBalance = $derived(
     humanReadableNumber(accountState.balance ?? 0n, {

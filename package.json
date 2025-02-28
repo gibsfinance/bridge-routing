@@ -58,6 +58,7 @@
     "@iconify/svelte": "^4.2.0",
     "@inlang/paraglide-sveltekit": "^0.15.5",
     "@lifi/widget": "^3.17.1",
+    "@pulsex/sdk": "^1.7.3",
     "@reown/appkit": "^1.6.8",
     "@reown/appkit-adapter-wagmi": "^1.6.8",
     "@tailwindcss/vite": "^4.0.9",

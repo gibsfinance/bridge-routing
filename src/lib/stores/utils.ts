@@ -96,3 +96,12 @@ export const tokenToPair = _.memoize(
   (token0, token1, factory, initCodeHash) =>
     `${token0}-${token1}-${factory}-${initCodeHash}`.toLowerCase(),
 )
+
+export const usd = {
+  zeroUsdValue: '0.00',
+  toCents(usdValueTokenAmount: bigint) {
+    return usdValueTokenAmount
+      ? humanReadableNumber(usdValueTokenAmount, { maxDecimals: 2 })
+      : this.zeroUsdValue
+  },
+}

@@ -33,6 +33,7 @@
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { SvelteMap } from 'svelte/reactivity'
   import OnboardBridge from './OnboardBridge.svelte'
+  import OnboardPulseX from './OnboardPulseX.svelte'
   let tokenOutput = $state<Token>({
     logoURI: `https://gib.show/image/369/${zeroAddress}`,
     name: 'Pulse',
@@ -126,18 +127,6 @@
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
   $effect(() => origination.watch(bridgeKey.fromChain))
   $effect(() => destination.watch(bridgeKey.toChain))
-  // $effect(() => {
-  //   const block = destination.block
-  //   if (!block) return
-  //   const watcher = watchWplsUSDPrice(block)
-  //   watcher.promise.then((price) => {
-  //     if (watcher.controller.signal.aborted) {
-  //       return
-  //     }
-  //     usdMultiplier = price ?? 0n
-  //   })
-  //   return watcher.cleanup
-  // })
   $effect(() => {
     const block = destination.block
     if (!bridgedToken || !block) return
@@ -252,5 +241,6 @@
       </header>
     </div>
     <OnboardBridge />
+    <OnboardPulseX tokenOut={tokenOutput} />
   </div>
 {/if}

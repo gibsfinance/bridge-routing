@@ -136,6 +136,7 @@ class AccountState {
     this.setupWatchBalanceCleanup = watchBlockNumber(wagmiAdapter.wagmiConfig, {
       chainId: this.chainId!,
       emitOnBegin: true,
+      // emitMissed: true,
       onBlockNumber: async () => {
         const balance = await getBalance(wagmiAdapter.wagmiConfig, {
           address,

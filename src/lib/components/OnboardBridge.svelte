@@ -38,7 +38,7 @@
     recipient,
     bridgeKey,
   } from '$lib/stores/input.svelte'
-  import { humanReadableNumber } from '$lib/stores/utils'
+  import { humanReadableNumber, usd } from '$lib/stores/utils'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { SvelteMap } from 'svelte/reactivity'
@@ -138,7 +138,6 @@
   let usdMultiplier = $state(0n)
   const wplsTokenPrice = new SvelteMap<string, bigint>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
-  const zeroUsdValue = '0.00'
   $effect(() => origination.watch(bridgeKey.fromChain))
   $effect(() => destination.watch(bridgeKey.toChain))
   $effect(() => {
@@ -177,7 +176,7 @@
   })
   const priceAsInt = $derived(wplsTokenPrice.get(key) ?? 0n)
   const usdValueInt = $derived(
-    priceAsInt && usdMultiplier ? ((priceAsInt ?? 0n) * 10n ** 18n) / usdMultiplier : 0n,
+    priceAsInt && usdMultiplier ? ((priceAsInt ?? 0n) * oneEther) / usdMultiplier : 0n,
   )
   const usdValueTokenAmount = $derived(
     !amountIn.value
@@ -227,20 +226,20 @@
     }
   }
   const bridgeGoClassNames = $derived(
-    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-l-none px-6' +
-      (bridgeStatus !== null && !editTxHash ? ' rounded-b-none' : ' rounded-r'),
+    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-6 w-16' +
+      (bridgeStatus !== null && !editTxHash ? ' rounded-b-none' : ''),
   )
   const percentProgress = $derived.by(() => {
     if (bridgeStatus === null) return 0
     switch (bridgeStatus.status) {
       case bridgeStatuses.SUBMITTED:
-        return 20
+        return 30
       case bridgeStatuses.MINED:
-        return 40
+        return 50
       case bridgeStatuses.FINALIZED:
-        return 60
-      case bridgeStatuses.VALIDATING:
-        return 80
+        return 75
+      // case bridgeStatuses.VALIDATING:
+      //   return 80
       case bridgeStatuses.AFFIRMED:
         return 100
     }
@@ -258,18 +257,24 @@
     // bridgeStatus !== null ||
     !amountIn.value || !minAmount.value || amountIn.value < minAmount.value,
   )
+  const destinationBlock = $derived(destination.block)
   $effect(() => {
-    if (!tx || !destination.block) return
+    if (!tx || !destinationBlock) {
+      return
+    }
     const result = liveBridgeStatus({
       bridgeKey,
       hash: tx,
-      ticker: destination.block,
+      ticker: destinationBlock,
     })
     result.promise.then((liveResult) => {
       if (result.controller.signal.aborted) return
-      if (liveResult?.hash === tx) {
-        bridgeStatus = liveResult ?? null
+      if (liveResult?.hash !== tx) {
+        const local = localStorage.getItem('bridge-tx')
+        if (!local) return
+        tx = local as Hex
       }
+      bridgeStatus = liveResult ?? null
     })
     return result.cleanup
   })
@@ -331,7 +336,11 @@
   let editTxInput: HTMLInputElement | null = $state(null)
   const toggleEditTxHash = () => {
     editTxHash = !editTxHash
-    editTxInput?.focus()
+    if (editTxHash) {
+      setTimeout(() => {
+        editTxInput?.focus()
+      }, 400)
+    }
   }
 </script>
 
@@ -360,12 +369,12 @@
             class="w-full h-full p-1 text-surface-contrast-50 opacity-0 group-hover:opacity-100 transition-opacity duration-100" />
         </Button>
         <label
-          class="flex flex-row gap-1 w-full pl-4 pr-6 py-4 cursor-pointer text-surface-contrast-50 items-center group"
+          class="flex flex-row gap-2 w-full pl-4 pr-6 py-4 cursor-pointer text-surface-contrast-50 items-center group"
           for="amount-to-bridge">
           <div class="flex flex-col gap-0 w-full relative">
             <NumericInput
               id="amount-to-bridge"
-              class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right placeholder:text-gray-600 text-lg placeholder:text-lg leading-6 h-8"
+              class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right placeholder:text-gray-600 leading-6 h-8"
               value={bridgeAmount}
               decimals={tokenInput.decimals}
               oninput={(v) => {
@@ -373,11 +382,9 @@
               }} />
             <span
               class="text-xs w-full text-gray-500 text-right absolute -bottom-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none"
-              >${usdValueTokenAmount
-                ? humanReadableNumber(usdValueTokenAmount, { maxDecimals: 2 })
-                : zeroUsdValue}</span>
+              >${usd.toCents(usdValueTokenAmount)}</span>
           </div>
-          <span>{tokenInput.symbol}</span>
+          <span class="text-base">{tokenInput.symbol}</span>
           <TokenIcon src={assetSources(tokenInput)} />
         </label>
       </div>
@@ -394,18 +401,7 @@
           <span
             class="flex flex-row items-center text-surface-contrast-50 w-full justify-end group">
             <span class="flex flex-row-reverse gap-2 items-center ml-6 w-full text-right relative">
-              {#if accountState.address}
-                <div
-                  class="flex flex-row absolute w-full right-2 pl-6 text-xs leading-6 text-gray-500 gap-1 -top-4 text-right justify-end">
-                  <span>balance</span>
-                  <BalanceReadout
-                    token={bridgedToken}
-                    hideSymbol
-                    roundedClasses="rounded-md"
-                    decimalClasses="opacity-60" />
-                </div>
-              {/if}
-              <span class="flex flex-col gap-0 relative w-full text-left">
+              <span class="flex flex-col gap-0 relative w-full text-left text-base">
                 <span
                   >{humanReadableNumber(outputAmount, {
                     decimals: bridgedToken.decimals,
@@ -415,9 +411,7 @@
                 <!-- <span class="text-xs text-gray-500"></span> -->
                 <span
                   class="text-xs w-full text-gray-500 absolute -bottom-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none"
-                  >${usdValueTokenAmount
-                    ? humanReadableNumber(usdValueTokenAmount, { maxDecimals: 2 })
-                    : zeroUsdValue}</span>
+                  >${usd.toCents(usdValueTokenAmount)}</span>
               </span>
               <AssetWithNetwork asset={bridgedToken} network={Chains.PLS} />
             </span>
@@ -431,13 +425,15 @@
       class="shadow-inner h-0 transition-all duration-100 bg-surface-900-100 rounded-b"
       class:h-6={bridgeStatus !== null || editTxHash}>
       {#if editTxHash}
-        <div class="h-full">
+        <div class="h-6 flex flex-row items-center">
+          <Button class="h-full w-8 bg-error-400 leading-6 text-base" onclick={toggleEditTxHash}
+            >&times;</Button>
           <Input
             setref={(el) => {
               editTxInput = el
-              el.focus()
             }}
-            class="h-full px-2 py-0 text-sm text-surface-contrast-50 rounded-t-none"
+            class="h-full px-2 py-0 text-sm text-surface-contrast-50 w-full ring-0 focus:ring-0"
+            roundedClass={'rounded-br'}
             value={editTxHashValue}
             oninput={(v) => {
               editTxHashValue = v
@@ -449,7 +445,7 @@
         </div>
       {:else}
         <div
-          class="flex flex-row items-center gap-1 h-full bg-success-500 justify-end min-w-[150px] text-sm transition-all duration-100 relative transition-delay-200"
+          class="flex flex-row items-center gap-1 h-full bg-success-500 justify-end min-w-[200px] text-sm transition-all duration-100 relative transition-delay-200"
           style="width: {percentProgress}%">
           <Button class="h-full w-8 absolute top-0 left-0 bg-error-400" onclick={clearTxTracking}
             >&times;</Button>

@@ -16,7 +16,7 @@
     verticalColorClasses = 'bg-surface-500',
     iconWrapperSizeClasses = 'size-8',
     iconWrapperColorClasses = 'text-surface-950-50',
-    class: className = 'absolute top-0 bottom-0 left-1/2',
+    class: className = 'absolute top-0 bottom-0 left-1/2 -translate-x-1/2',
   }: Props = $props()
   const classes = $derived(
     classNames(`${verticalSizeClasses} ${verticalColorClasses} ${className}`),
