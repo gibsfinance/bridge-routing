@@ -58,7 +58,7 @@
   // )
 </script>
 
-<div class="my-2 text-sm shadow-sm rounded-lg hover:shadow transition-shadow">
+<div class="my-2 text-sm shadow-xs rounded-lg hover:shadow-sm transition-shadow">
   <div
     class="bg-slate-50 rounded-t-lg py-2 px-3 justify-between flex flex-col sm:flex-row relative">
     <button type="button" onclick={lockRecipient}
@@ -110,7 +110,7 @@
         name="calldata"
         id="calldata"
         disabled
-        class="bg-transparent outline-none resize-none flex flex-grow cursor-not-allowed font-mono text-xs sm:text-sm -mr-3 pr-3 max-h-24"
+        class="bg-transparent outline-hidden resize-none flex grow cursor-not-allowed font-mono text-xs sm:text-sm -mr-3 pr-3 max-h-24"
         rows={4}>{nonZeroXCalldata}</textarea>
     </div>
   {/if}

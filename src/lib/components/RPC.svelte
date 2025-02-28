@@ -15,7 +15,7 @@
   const { onsubmit, onclose, data: startingData }: Props = $props()
   const updated = $state<SvelteMap<Chains, string[]>>(new SvelteMap())
   const buttonClasses =
-    'rounded-md bg-neutral-600 px-3 py-3 text-sm font-semibold text-white shadow-sm hover:bg-neutral-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 grow transition-all'
+    'rounded-md bg-neutral-600 px-3 py-3 text-sm font-semibold text-white shadow-xs hover:bg-neutral-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 grow transition-all'
   const data = new SvelteMap(startingData)
   const rpcs = {
     add: (chain: Chains) => {
@@ -69,8 +69,8 @@
         </div>
         <ul class="flex flex-col w-full">
           {#each list as rpc, i}
-            <li class="mb-3 flex w-full flex-grow">
-              <label for="" class="relative flex flex-grow">
+            <li class="mb-3 flex w-full grow">
+              <label for="" class="relative flex grow">
                 <Input
                   value={rpc}
                   class="border border-neutral-500 focus:border-neutral-600"
@@ -87,7 +87,7 @@
             </li>
           {/each}
           {#if !rpcs.hasDefault(chain, list)}
-            <li class="mb-3 flex w-full flex-grow">
+            <li class="mb-3 flex w-full grow">
               <label class="flex text-sm">
                 <Button
                   class={buttonClasses}

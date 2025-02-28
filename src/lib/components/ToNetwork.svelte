@@ -142,7 +142,7 @@
   const gasIsLoading = $derived(!loading.resolved)
 </script>
 
-<div class="shadow-sm rounded-lg hover:shadow transition-shadow">
+<div class="shadow-xs rounded-lg hover:shadow-sm transition-shadow">
   <div class="bg-slate-50 py-2 px-3 rounded-t-lg hover:z-10">
     <NetworkSummary
       network={destinationNetwork}

@@ -32,7 +32,7 @@
   const { asset }: Props = $props()
 </script>
 
-<div class="my-2 text-sm shadow-sm rounded-lg hover:shadow transition-shadow">
+<div class="my-2 text-sm shadow-xs rounded-lg hover:shadow-sm transition-shadow">
   {#if !!asset}
     <div class="bg-slate-50 rounded-t-lg py-2 px-3 justify-between flex flex-row hover:z-10">
       <span class="w-32">Amount In</span>

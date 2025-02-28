@@ -1,9 +1,8 @@
 import type { Config } from 'tailwindcss'
 import forms from '@tailwindcss/forms'
-import { contentPath } from '@skeletonlabs/skeleton/plugin'
 
 export default {
-  content: ['./src/**/*.{html,js,svelte,ts}', contentPath(import.meta.url, 'svelte')],
+  content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
     extend: {
       fontFamily: {

@@ -43,18 +43,18 @@
 </script>
 
 {#if inChain}
-  <details class="dropdown relative flex flex-grow justify-center" bind:this={dropdown}>
+  <details class="dropdown relative flex grow justify-center" bind:this={dropdown}>
     <summary class="flex select-none flex-row items-center justify-items-center space-x-2">
       <StaticNetworkImage network={providedNetwork} {sizeClasses} {provider} />
       <span class="ml-1 whitespace-pre leading-8">{network.name}</span>
       <Icon icon="mingcute:down-fill" class="flex size-5" />
     </summary>
     <ul
-      class="dropdown-content absolute left-0 top-0 z-[1] -mx-2 -mt-1 w-60 bg-slate-50 px-0 pb-1 pt-0 shadow">
+      class="dropdown-content absolute left-0 top-0 z-1 -mx-2 -mt-1 w-60 bg-slate-50 px-0 pb-1 pt-0 shadow-sm">
       {#each reorderedBridgeKeys as listBridgeKey}
         <li class="flex flex-row items-center hover:bg-slate-200">
           <button
-            class="flex h-10 flex-grow flex-row items-center px-2"
+            class="flex h-10 grow flex-row items-center px-2"
             onclick={async () => {
               if (dropdown) dropdown.open = false
               const tokenAddressIn =
@@ -69,7 +69,7 @@
               network={listBridgeKey[bridgeKeyIndex]}
               provider={listBridgeKey[0]}
               {sizeClasses} />
-            <span class="flex flex-grow px-2"
+            <span class="flex grow px-2"
               >{chainsMetadata[listBridgeKey[bridgeKeyIndex]].name}</span>
           </button>
         </li>

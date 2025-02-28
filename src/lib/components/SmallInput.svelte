@@ -45,7 +45,7 @@
   <div class="flex flex-row relative text-transparent pl-1 text-center min-w-8 {className}">
     {value}
     <input
-      class="bg-transparent absolute w-full h-full text-slate-950 text-right top-0 left-0 min-w-8 p-0 pr-0.5 focus:outline-none border-none focus:ring-0 {inputClassName}"
+      class="bg-transparent absolute w-full h-full text-slate-950 text-right top-0 left-0 min-w-8 p-0 pr-0.5 focus:outline-hidden border-none focus:ring-0 {inputClassName}"
       {value}
       spellcheck="false"
       bind:this={input}

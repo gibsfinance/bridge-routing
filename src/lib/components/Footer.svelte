@@ -4,7 +4,7 @@
 </script>
 
 <div class="flex flex-row leading-8 text-slate-200 bg-slate-950 p-4 justify-around">
-  <div class="max-w-5xl flex flex-row flex-grow container items-center">
+  <div class="max-w-5xl flex flex-row grow container items-center">
     <div class="flex w-full">
       <div class="flex">
         <Info />

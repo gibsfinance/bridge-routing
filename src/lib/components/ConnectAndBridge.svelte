@@ -10,6 +10,7 @@
     zeroAddress,
     createWalletClient,
     encodeFunctionData,
+    formatUnits,
   } from 'viem'
   import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input.svelte'
@@ -153,14 +154,16 @@
   }
   let amountInBefore = ''
   const sendIncreaseApproval = transactionButtonPress(increaseApproval)
+  const decimals = $derived(bridgeSettings.assetIn.value!.decimals)
   const sendInitiateBridge = transactionButtonPress(
     () => {
-      amountInBefore = input.amountIn.value!
+      amountInBefore = formatUnits(input.amountIn.value!, decimals)
       return initiateBridge()
     },
     () => {
-      if (amountInBefore === input.amountIn.value!) {
-        input.amountIn.value = ''
+      const previousAmount = formatUnits(input.amountIn.value!, decimals)
+      if (amountInBefore === previousAmount) {
+        input.amountIn.value = null
       }
     },
   )

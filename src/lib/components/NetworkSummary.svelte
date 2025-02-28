@@ -38,7 +38,7 @@
         class:ml-2={!showMax}>
         <Tooltip tooltip={nameTooltip} placement="left">
           <span
-            class="max-w-[175px] overflow-hidden overflow-ellipsis"
+            class="max-w-[175px] overflow-hidden text-ellipsis"
             class:opacity-60={!loading.isResolved(`balance-${toChain(network.id)}`)}
             >{balance === null
               ? ''

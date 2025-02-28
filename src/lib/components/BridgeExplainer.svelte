@@ -11,7 +11,7 @@
   </div>
 </div>
 
-<BlurryImage image_url="url({futureBridge})" blur="9px" brightness="75%" min_height="auto">
+<BlurryImage image_url="url({futureBridge})" blur-sm="9px" brightness="75%" min_height="auto">
   <div class="text-white">
     <div class="container m-auto text-xl text-center drop-shadow-lg sm:max-w-3xl">
       <p class="text-left">

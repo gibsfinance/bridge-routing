@@ -19,8 +19,7 @@
   classes="relative flex tooltip-container"
   triggerClasses="flex"
   contentBase="card preset-filled-tertiary-500 text-sm px-2 py-1 {maxWidth}"
-  openDelay={0}
-  arrow>
+  openDelay={0}>
   {#snippet trigger()}{@render children?.()}{/snippet}
   {#snippet content()}{tooltip}{/snippet}
 </Tooltip>

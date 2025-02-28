@@ -54,7 +54,7 @@
   )
 </script>
 
-<div class="rounded-lg shadow-sm transition-shadow hover:shadow">
+<div class="rounded-lg shadow-xs transition-shadow hover:shadow-sm">
   <div class="rounded-t-lg bg-slate-50 px-3 py-2">
     <NetworkSummary
       network={bridgeKey.fromChain}
@@ -65,9 +65,9 @@
       onmax={handleMaxBalance} />
   </div>
   <div class="mt-[1px] flex flex-row justify-between rounded-b-lg bg-slate-50 text-xl">
-    <span class="relative flex max-w-[70%] flex-grow">
+    <span class="relative flex max-w-[70%] grow">
       <input
-        class="w-full flex-grow bg-transparent border-none px-3 py-2 text-xl leading-8 placeholder-current outline-none hover:appearance-none focus:shadow-inner sm:text-2xl focus:ring-0"
+        class="w-full grow bg-transparent border-none px-3 py-2 text-xl leading-8 placeholder-current outline-hidden hover:appearance-none focus:shadow-inner sm:text-2xl focus:ring-0"
         placeholder="0.0"
         value={inputValue}
         oninput={handleInput}

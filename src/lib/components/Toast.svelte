@@ -10,7 +10,7 @@
           class="alert alert-info bg-tertiary-400 text-slate-100 py-2 px-3 rounded-md flex justify-between items-center">
           <a
             href={msg.link}
-            class="underline flex overflow-ellipsis whitespace-pre"
+            class="underline flex text-ellipsis whitespace-pre"
             aria-label={msg.label}
             target="_blank">
             {msg.message}

@@ -349,7 +349,7 @@
       <ConnectButton />
     </header>
     <div
-      class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow hover:shadow-lg transition-all duration-100">
+      class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100">
       <header class="flex flex-row justify-between relative">
         <!-- token that i have -->
         <div class="w-1/2 flex flex-col justify-end relative">
@@ -400,7 +400,7 @@
       </header>
     </div>
     <div
-      class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow hover:shadow-lg transition-all duration-100 overflow-hidden">
+      class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
       <header class="flex flex-row justify-between relative">
         <div class="flex flex-col w-1/2 gap-0">
           {#if accountState.address}
@@ -421,7 +421,7 @@
             <div class="flex flex-col gap-0 w-full relative">
               <NumericInput
                 id="amount-to-bridge"
-                class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right placeholder:text-gray-600 text-lg placeholder:text-lg"
+                class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right placeholder:text-gray-600 text-lg placeholder:text-lg leading-6 h-8"
                 value={bridgeAmount}
                 decimals={tokenInput.decimals}
                 oninput={(v) => {

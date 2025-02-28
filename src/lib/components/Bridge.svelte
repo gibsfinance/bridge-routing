@@ -60,7 +60,7 @@
   })
   $effect(() => {
     if (!bridgeSettings.assetIn.value) return
-    return minAmount.fetch(bridgeKey, bridgeSettings.assetIn.value)
+    return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
   })
   $effect(() => {
     if (assetInAddress.value && bridgeSettings.assetIn.value?.address) {

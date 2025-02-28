@@ -24,8 +24,8 @@
   {open}
   classes={wrapperClasses}
   triggerBase={triggerClasses}
-  contentBase="card bg-surface-200-800 space-y-2 shadow-xl max-w-screen-sm w-full"
-  backdropClasses="backdrop-blur-sm"
+  contentBase="card bg-surface-200-800 space-y-2 shadow-xl max-w-(--breakpoint-sm) w-full"
+  backdropClasses="backdrop-blur-xs"
   onOpenChange={(e) => {
     open = e.open
   }}>
