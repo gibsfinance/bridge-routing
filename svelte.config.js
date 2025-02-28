@@ -4,11 +4,13 @@ import adapter from '@sveltejs/adapter-static'
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import * as child_process from 'node:child_process'
 
-let githash = 'unknown'
-try {
-  githash = child_process.execSync('git rev-parse HEAD').toString().trim()
-} catch (err) {
-  console.error(err)
+let githash = process.env.RAILWAY_GIT_COMMIT_SHA
+if (!githash) {
+  try {
+    githash = child_process.execSync('git rev-parse HEAD').toString().trim()
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 /** @type {import('@sveltejs/kit').Config} */
