@@ -7,7 +7,12 @@
   import Warning from './Warning.svelte'
   import Icon from '@iconify/svelte'
   import type { FormEventHandler } from 'svelte/elements'
-  import { minAmount, fromTokenBalance } from '$lib/stores/chain-events.svelte'
+  import {
+    minAmount,
+    fromTokenBalance,
+    tokenOriginationChainId,
+    assetLink,
+  } from '$lib/stores/chain-events.svelte'
   import { humanReadableNumber, stripNonNumber } from '$lib/stores/utils'
   import { bridgeKey } from '$lib/stores/input.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
@@ -24,7 +29,7 @@
     await goto(hashPath)
     const native = input.isNative(token, bridgeKey)
     input.unwrap.value = native
-    input.fee.value = formatUnits(bridgeSettings.desiredExcessCompensationBasisPoints, 2)
+    input.fee.value = bridgeSettings.desiredExcessCompensationBasisPoints
   }
   const handleInput: FormEventHandler<HTMLInputElement> = (e) => {
     inputValue = e.currentTarget.value
@@ -39,7 +44,7 @@
   }
   const minTooltip = $derived(minAmount.value ? formatUnits(minAmount.value, decimals) : '...')
   $effect(() => {
-    const inValue = stripNonNumber(inputValue)
+    const inValue = parseUnits(stripNonNumber(inputValue), decimals)
     input.amountIn.value = inValue
   })
   const showWarning = $derived(
@@ -65,16 +70,16 @@
         class="w-full flex-grow bg-transparent border-none px-3 py-2 text-xl leading-8 placeholder-current outline-none hover:appearance-none focus:shadow-inner sm:text-2xl focus:ring-0"
         placeholder="0.0"
         value={inputValue}
+        oninput={handleInput}
         onfocus={() => {
           inputValue = stripNonNumber(inputValue)
           focused = true
         }}
         onblur={() => {
           const value = parseUnits(stripNonNumber(inputValue), decimals)
-          inputValue = humanReadableNumber(value, decimals)
+          inputValue = humanReadableNumber(value, { decimals })
           focused = false
-        }}
-        oninput={handleInput} />
+        }} />
       <Warning
         show={showWarning}
         disabled={focused}
@@ -84,8 +89,9 @@
     <ModalWrapper
       triggerClasses="open-modal-container relative flex flex-row items-center py-2 pr-3 pl-2 leading-8">
       {#snippet button()}
-        {#if !!bridgeSettings.assetIn.value}
-          <AssetWithNetwork asset={bridgeSettings.assetIn.value} />
+        {@const network = tokenOriginationChainId(assetLink.value)}
+        {#if !!bridgeSettings.assetIn.value && network}
+          <AssetWithNetwork asset={bridgeSettings.assetIn.value} {network} />
           <span class="ml-2">{bridgeSettings.assetIn.value?.symbol || ''}</span>
         {/if}
         <Icon
@@ -96,6 +102,8 @@
       {/snippet}
       {#snippet contents({ close })}
         <TokenSelect
+          chain={bridgeKey.fromChain}
+          partnerChain={bridgeKey.toChain}
           onsubmit={(tkn) => {
             chooseTokenSubmit(tkn)
             close()

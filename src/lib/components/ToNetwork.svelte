@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as input from '$lib/stores/input.svelte'
-  import { formatUnits, parseEther } from 'viem'
+  import { formatUnits, parseEther, parseUnits } from 'viem'
   import NetworkSummary from './NetworkSummary.svelte'
   import { humanReadableNumber } from '$lib/stores/utils'
   import Loading from '$lib/components/Loading.svelte'
@@ -50,7 +50,7 @@
     } else if (target < min) {
       target = min
     }
-    return formatUnits(target, 18)
+    return target
   }
   const gasPercentFeeFromNetworkInputs = () => {
     if (bridgeSettings.priceCorrective.value === 0n || !asset) {
@@ -68,11 +68,11 @@
     if (lim > bridgeSettings.amountAfterBridgeFee) {
       lim = bridgeSettings.amountAfterBridgeFee
     }
-    return humanReadableNumber(lim, asset!.decimals)
+    return lim
   }
   const reflowFees = () => {
     if (!bridgeSettings.bridgePathway?.requiresDelivery) {
-      input.fee.value = '0'
+      input.fee.value = 0n
       return
     }
     if (input.feeType.value === input.FeeType.PERCENT) {
@@ -92,10 +92,7 @@
         }
       }
     } else if (asset) {
-      input.limit.value = formatUnits(
-        (bridgeSettings.amountAfterBridgeFee * bridgeSettings.fee) / oneEther,
-        asset!.decimals,
-      )
+      input.limit.value = (bridgeSettings.amountAfterBridgeFee * bridgeSettings.fee) / oneEther
     }
   }
   const feeTypeOptions = [
@@ -105,7 +102,7 @@
   ]
   $effect(() => {
     if (asset && feeType.value === input.FeeType.GAS_TIP) {
-      input.limit.value = gasPercentFeeFromNetworkInputs() || '10'
+      input.limit.value = gasPercentFeeFromNetworkInputs() || 10n * oneEther
     }
   })
   $effect(() => {
@@ -133,9 +130,11 @@
         bridgeSettings.amountAfterBridgeFee - bridgeSettings.estimatedCost > 0n
           ? bridgeSettings.amountAfterBridgeFee - bridgeSettings.estimatedCost
           : 0n,
-        decimals,
-        null,
-        true,
+        {
+          decimals,
+          decimalCount: null,
+          truncLen: true,
+        },
       ),
   )
   const fromChainId = $derived(input.bridgeKey.fromChain)
@@ -195,7 +194,12 @@
             tooltip={feeType.value === input.FeeType.FIXED
               ? 'Fee uses fixed value defined in cost limit'
               : feeType.value === input.FeeType.GAS_TIP
-                ? `Percentage of gas used * ${input.bridgeKey.destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber(bridgeSettings.estimatedNetworkCost, asset?.decimals || 18)} ${utils.nativeSymbol(asset, unwrap)}`
+                ? `Percentage of gas used * ${input.bridgeKey.destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the transaction runner for performing this action\ncurrently: ${humanReadableNumber(
+                    bridgeSettings.estimatedNetworkCost,
+                    {
+                      decimals: asset?.decimals || 18,
+                    },
+                  )} ${utils.nativeSymbol(asset, unwrap)}`
                 : 'The percentage of bridged tokens after the bridge fee'}>
             <button
               type="button"
@@ -204,17 +208,18 @@
               class:line-through={feeType.value === input.FeeType.FIXED}
               onclick={focusOnInputChild}>
               {#if feeType.value !== input.FeeType.FIXED}
+                {@const decimals = bridgeSettings.assetIn.value?.decimals || 18}
                 <span class:hidden={feeType.value !== input.FeeType.GAS_TIP}>⛽&nbsp;+</span><span
                   class="flex items-center"
                   class:opacity-60={gasIsLoading}
                   ><SmallInput
-                    value={input.fee.value}
+                    value={input.fee.value ? formatUnits(input.fee.value, decimals) : ''}
                     class="focus:ring-0 border-none"
                     inputClass="text-lg"
                     suffix="%"
                     oninput={(e) => {
                       deliveryFeeLocked = true
-                      input.fee.value = e
+                      input.fee.value = parseUnits(e, decimals)
                     }} />
                 </span>
               {/if}
@@ -257,15 +262,17 @@
             <span class="flex items-center" class:opacity-60={gasIsLoading}>
               {#if feeType.value === input.FeeType.PERCENT}
                 <span
-                  >{humanReadableNumber(bridgeSettings.limitFromPercent, asset?.decimals || 18)}
+                  >{humanReadableNumber(bridgeSettings.limitFromPercent, {
+                    decimals: asset?.decimals || 18,
+                  })}
                   {utils.nativeSymbol(asset, unwrap)}</span>
               {:else}
                 <SmallInput
-                  value={input.limit.value}
+                  value={input.limit.value ? formatUnits(input.limit.value, decimals) : ''}
                   suffix="&nbsp;{utils.nativeSymbol(asset, unwrap)}"
                   oninput={(e) => {
                     costLimitLocked = true
-                    input.limit.value = e
+                    input.limit.value = parseUnits(e, decimals)
                   }} />
               {/if}
             </span>

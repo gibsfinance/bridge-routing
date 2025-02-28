@@ -3,20 +3,25 @@
   import * as customTokens from '$lib/stores/custom-tokens.svelte'
   import type { Token } from '$lib/types.svelte'
   import type { Hex } from 'viem'
-  import TokenIcon from '$lib/components/TokenIcon.svelte'
   import { getAddress, isAddress } from 'viem'
   import Icon from '@iconify/svelte'
-  import { assetSources } from '$lib/stores/bridge-settings.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { multicallErc20 } from '$lib/utils.svelte'
-  import * as input from '$lib/stores/input.svelte'
+  import { bridgableTokens, clientFromChain } from '$lib/stores/input.svelte'
   import Input from './Input.svelte'
   import _ from 'lodash'
+  import TokenInfo from './TokenInfo.svelte'
+  import type { Chains } from '$lib/stores/auth/types'
+  import Lazy from './Lazy.svelte'
+  import Infinite from './Infinite.svelte'
+  import { InfiniteStore } from '$lib/stores/infinite.svelte'
 
   type Props = {
     onsubmit?: (token: Token) => void
+    chain: Chains
+    partnerChain?: Chains
   }
-  let { onsubmit = () => {} }: Props = $props()
+  let { onsubmit = () => {}, chain, partnerChain }: Props = $props()
   let custom!: Token
   const addCustom = (newToken: Token) => {
     const tkns = customTokens.tokens.value
@@ -60,22 +65,23 @@
     return inside
   }
 
-  const onlyFromCurrentNetwork = (tkn: Token) => tkn.chainId === Number(input.bridgeKey.fromChain) // || !!tkn.extensions?.bridgeInfo?.[Number($bridgeKey[2])]?.tokenAddress
+  const onlyFromCurrentNetwork = (tkn: Token) => tkn.chainId === Number(chain)
+  // || !!tkn.extensions?.bridgeInfo?.[Number($bridgeKey[2])]?.tokenAddress
 
   const loadViaMulticall = async (target: Hex | null) => {
     if (!target) {
       throw new Error('no target')
     }
     const [name, symbol, decimals] = await multicallErc20({
-      chain: chainsMetadata[input.bridgeKey.fromChain],
-      client: input.clientFromChain(input.bridgeKey.fromChain),
+      chain: chainsMetadata[chain],
+      client: clientFromChain(chain),
       target,
     })
     custom = {
       name,
       symbol,
       decimals,
-      chainId: Number(input.bridgeKey.fromChain),
+      chainId: Number(chain),
       address: target,
       logoURI: '',
     }
@@ -83,15 +89,29 @@
   }
   const tokens = customTokens.tokens
   const bridgeableTokens = $derived(
-    input.bridgableTokens.bridgeableTokensUnder(input.bridgeKey.value),
+    bridgableTokens.bridgeableTokensUnder({
+      chain,
+      partnerChain: partnerChain ?? null,
+    }),
   )
-  const subset = $derived(
+  const filteredSubset = $derived(
     getSubset(tokens.value.concat(bridgeableTokens), searchValue, showAllTokens, showAllChains),
   )
+  $effect(() => {
+    if (bridgeableTokens.length) {
+      limit.set(50)
+    }
+  })
+  const limit = $derived(new InfiniteStore(50, bridgeableTokens.length))
+  const subset = $derived(filteredSubset.slice(0, limit.count))
   const inputIsAddress = $derived(isAddress(searchValue))
   const addButtonDisabled = $derived(!inputIsAddress || !!subset.length)
   const searchValueHex = $derived(inputIsAddress ? (searchValue as Hex) : null)
   const searchInputId = 'search-input'
+  const loadMore = () => {
+    if (limit.count > subset.length) return
+    limit.increment(50)
+  }
 </script>
 
 <label
@@ -120,23 +140,11 @@
         <button
           class="relative flex grow cursor-pointer flex-row"
           onclick={() => selectToken(token)}>
-          <span class="size-8">
-            <!-- might be a good idea to simply keep it loaded after first -->
-            <TokenIcon src={assetSources(token)} />
-          </span>
-          <span
-            class="w-full pl-2 text-left flex flex-col leading-8 overflow-ellipsis whitespace-pre group relative">
-            <span class="leading-5 translate-y-1.5 group-hover:translate-y-0 transition-all"
-              >{token.name}</span>
-            <span
-              class="text-slate-400 text-xs opacity-0 group-hover:opacity-100 transition-all absolute bottom-0 left-2">
-              {token.address}
-            </span>
-          </span>
+          <TokenInfo {token} />
         </button>
       </li>
     {/each}
-    <li class="flex">
+    <Infinite tag="li" class="flex" onloadmore={loadMore}>
       <button
         class="flex grow flex-row items-center py-2 leading-8"
         class:cursor-pointer={!addButtonDisabled}
@@ -158,7 +166,7 @@
         {/if}
         <span class="pl-2 leading-8">&nbsp;</span>
       </button>
-    </li>
+    </Infinite>
   </ul>
 </div>
 <div class="flex flex-row">

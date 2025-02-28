@@ -29,7 +29,6 @@
       bridgeSettings.amountToBridge === 0n ||
       bridgeSettings.amountToBridge > tokenBalance,
   )
-  $inspect(provider.value)
   const initiateBridge = async () => {
     if (!bridgeSettings.foreignDataParam) {
       return

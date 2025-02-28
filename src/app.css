@@ -12,3 +12,6 @@ button:disabled {
 body {
   font-family: Ariel, sans-serif;
 }
+.MuiBox-root {
+  @apply !w-full !max-w-none;
+}

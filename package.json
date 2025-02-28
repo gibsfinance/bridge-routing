@@ -56,6 +56,7 @@
   "dependencies": {
     "@iconify/svelte": "^4.2.0",
     "@inlang/paraglide-sveltekit": "^0.15.5",
+    "@lifi/widget": "^3.17.1",
     "@reown/appkit": "^1.6.8",
     "@reown/appkit-adapter-wagmi": "^1.6.8",
     "@skeletonlabs/skeleton": "3.0.0-next.10",
@@ -67,6 +68,8 @@
     "graphql": "^16.10.0",
     "graphql-request": "^7.1.2",
     "lodash": "^4.17.21",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "sveltekit-search-params": "^3.0.0",
     "viem": "^2.23.4",
     "wagmi": "^2.14.11"

@@ -2,7 +2,7 @@ import * as input from '$lib/stores/input.svelte'
 import {
   zeroAddress,
   type Hex,
-  formatUnits,
+  // formatUnits,
   parseUnits,
   isAddress,
   encodeAbiParameters,
@@ -23,7 +23,7 @@ import _ from 'lodash'
 import { uniV2Routers, nativeAssetOut, pathway, whitelisted } from './config.svelte'
 import * as abis from './abis'
 import * as imageLinks from './image-links'
-import { isZero, stripNonNumber } from './utils'
+// import { isZero, stripNonNumber } from './utils'
 import { settings } from './fee-manager.svelte'
 import type { BridgeKeyStore } from '$lib/stores/input.svelte'
 import { accountState } from './auth/AuthProvider.svelte'
@@ -84,8 +84,8 @@ export class BridgeSettings {
   })
   amountToBridge = $derived.by(() => {
     const amountIn = input.amountIn.value
-    if (!amountIn || isZero(amountIn) || !this.assetIn.value) return 0n
-    return parseUnits(stripNonNumber(amountIn), this.assetIn.value.decimals)
+    if (!amountIn || amountIn === 0n || !this.assetIn.value) return 0n
+    return amountIn
   })
   bridgeCost = $derived.by(() => {
     return (this.amountToBridge * this.bridgeFee) / oneEther
@@ -124,17 +124,17 @@ export class BridgeSettings {
   })
   fee = $derived.by(() => {
     const fee = input.fee.value
-    if (!fee || isZero(fee) || !this.bridgePathway || !this.bridgePathway.requiresDelivery) {
+    if (!fee || fee === 0n || !this.bridgePathway || !this.bridgePathway.requiresDelivery) {
       return 0n
     }
-    return parseUnits(stripNonNumber(fee), 18) / 100n
+    return fee / 100n
   })
   limit = $derived.by(() => {
     const limit = input.limit.value
-    if (!limit || isZero(limit) || !this.assetIn.value) {
+    if (!limit || limit === 0n) {
       return 0n
     }
-    return parseUnits(stripNonNumber(limit), this.assetIn.value.decimals)
+    return limit
   })
   limitFromPercent = $derived.by(() => {
     return (this.amountAfterBridgeFee * this.fee) / oneEther
@@ -226,7 +226,7 @@ export class BridgeSettings {
     return (rd3 << 3n) | (nd2 << 2n) | (st1 << 1n) | th0
   })
   desiredExcessCompensationPercentage = $derived.by(() => {
-    return formatUnits(this.desiredExcessCompensationBasisPoints, 2)
+    return this.desiredExcessCompensationBasisPoints
   })
   desiredCompensationRatio = $derived.by(() => {
     return oneEther + (this.desiredExcessCompensationBasisPoints * oneEther) / 10_000n
@@ -387,16 +387,43 @@ export const updateAssetIn = loading.loadsAfterTick<
     if (!address) {
       return null
     }
-    const tokensUnderBridgeKey = input.bridgableTokens.bridgeableTokensUnder(bridgeKey.value)
-    const foundAssetIn = tokensUnderBridgeKey.length
-      ? _.find(tokensUnderBridgeKey, { address }) || _.find(customTokens, { address })
-      : null
+
+    const tokensUnderBridgeKey = input.bridgableTokens.bridgeableTokensUnder({
+      chain: bridgeKey.fromChain,
+      partnerChain: bridgeKey.toChain,
+    })
+    const foundAssetIn = searchKnownAddresses({
+      address,
+      customTokens,
+      tokensUnderBridgeKey,
+    })
     if (foundAssetIn) {
       return foundAssetIn
     }
     return await getAsset(bridgeKey.fromChain, address)
   },
 )
+
+export const searchKnownAddresses = ({
+  // fromChain,
+  // toChain,
+  // address,
+  tokensUnderBridgeKey,
+  customTokens,
+  address,
+}: {
+  // fromChain: Chains
+  // toChain: Chains
+  address: Hex
+  tokensUnderBridgeKey: Token[]
+  customTokens: Token[]
+}) => {
+  return tokensUnderBridgeKey.length
+    ? _.find(tokensUnderBridgeKey, { address: getAddress(address) }) ||
+        _.find(customTokens, { address: getAddress(address) }) ||
+        null
+    : null
+}
 
 export const getAsset = async (chainId: Chains, assetInAddress: Hex) => {
   if (assetInAddress === zeroAddress) {

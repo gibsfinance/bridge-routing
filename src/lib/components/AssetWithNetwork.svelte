@@ -3,23 +3,27 @@
   import type { Token } from '$lib/types.svelte'
   import TokenIcon from './TokenIcon.svelte'
   import { assetSources } from '$lib/stores/bridge-settings.svelte'
-  import { tokenOriginationChainId } from '$lib/stores/chain-events.svelte'
   import { loading } from '$lib/stores/loading.svelte'
   import { zeroAddress } from 'viem'
-  import { assetLink } from '$lib/stores/chain-events.svelte'
   import Image from './Image.svelte'
+  import type { Chains } from '$lib/stores/auth/types'
 
   type Props = {
     asset: Token
+    network: Chains
     tokenSizeClasses?: string
     networkSizeClasses?: string
   }
-  const { asset, tokenSizeClasses = 'size-8', networkSizeClasses = 'size-4' }: Props = $props()
-  const tokenOriginationChain = $derived(tokenOriginationChainId(assetLink.value))
+  const {
+    asset,
+    network: tokenOriginationChain,
+    tokenSizeClasses = 'size-8',
+    networkSizeClasses = 'size-4',
+  }: Props = $props()
   const chain = $derived(
     asset.address !== zeroAddress && tokenOriginationChain && chainsMetadata[tokenOriginationChain],
   )
-  const src = $derived(assetSources(asset))
+  const src = $derived(asset?.logoURI || assetSources(asset))
   const tokenClasses = $derived(`overflow-hidden absolute`)
   const classes = $derived(`relative ${tokenSizeClasses}`)
 </script>

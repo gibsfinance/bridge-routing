@@ -11,21 +11,21 @@ import {
   multicall3Abi,
   encodeFunctionData,
   zeroAddress,
-  parseUnits,
+  // parseUnits,
   fallback,
   type PublicClient,
   webSocket,
 } from 'viem'
-import { countDecimals, humanReadableNumber, isZero, stripNonNumber } from '$lib/stores/utils'
+// import { countDecimals, humanReadableNumber, isZero, stripNonNumber } from '$lib/stores/utils'
 import { ChainIdToKey, Chains, Provider } from './auth/types'
 import { settings, type PathwayExtendableConfig } from './fee-manager.svelte'
 import {
   blacklist,
-  // defaultAssetIn,
   nativeAssetOut,
   nativeTokenName,
   nativeTokenSymbol,
   pathway,
+  pathways,
 } from '$lib/stores/config.svelte'
 import {
   NullableProxyStore,
@@ -36,10 +36,8 @@ import {
 } from '$lib/types.svelte'
 import { chainsMetadata } from './auth/constants'
 import { networks } from './auth/AuthProvider.svelte'
-// import { multicallErc20 } from '$lib/utils.svelte'
 import _ from 'lodash'
 import { loading } from './loading.svelte'
-// import { page } from '$app/state'
 
 export const forcedRefresh = new ProxyStore(0n)
 
@@ -52,38 +50,44 @@ export const incrementForcedRefresh = () => {
 // to see what is affected by incrementing this value
 // ;(window as any).incrementForcedRefresh = incrementForcedRefresh
 
-const humanReadableSet = (current: string | null, v: string | null) => {
-  if (!v) {
-    if (current) {
-      return v
-    }
-    return
-  }
-  const val = stripNonNumber(v)
-  if (isZero(val)) {
-    // the input is a string of zeros
-    return val
-  }
-  const dec = countDecimals(v)
-  const parsed = parseUnits(val, decimals)
-  const readable = humanReadableNumber(parsed, decimals, dec)
-  if (current === readable) {
-    return
-  }
-  return readable
-}
+// const humanReadableSet = (current: string | null, v: string | null) => {
+//   if (!v) {
+//     if (current) {
+//       return v
+//     }
+//     return
+//   }
+//   const val = stripNonNumber(v)
+//   if (isZero(val)) {
+//     // the input is a string of zeros
+//     return val
+//   }
+//   const dec = countDecimals(v)
+//   const parsed = parseUnits(val, decimals)
+//   const readable = humanReadableNumber(parsed, {
+//     decimals,
+//     decimalCount: dec,
+//   })
+//   if (current === readable) {
+//     return
+//   }
+//   return readable
+// }
 
-export const limit = new NullableProxyStore<string>(null, humanReadableSet)
+// export const limit = new NullableProxyStore<string>(null, humanReadableSet)
+export const limit = new NullableProxyStore<bigint>()
 
-let decimals = 18
+// let decimals = 18
 
-export const setLimitDecimals = (d: number) => {
-  decimals = d
-}
+// export const setLimitDecimals = (d: number) => {
+//   decimals = d
+// }
 
-export const amountIn = new NullableProxyStore<string>(null, humanReadableSet)
+export const amountIn = new NullableProxyStore<bigint>()
+// export const amountIn = new NullableProxyStore<string>(null, humanReadableSet)
 
-export const fee = new NullableProxyStore<string>(null, humanReadableSet)
+export const fee = new NullableProxyStore<bigint>()
+// export const fee = new NullableProxyStore<string>(null, humanReadableSet)
 
 export enum FeeType {
   PERCENT = '%',
@@ -180,8 +184,11 @@ export const toPath = (bridgeKey: BridgeKey) => {
 
 export class BridgeableTokensStore {
   value = $state<Token[]>([])
-  bridgeableTokensUnder(bridgeKey: BridgeKey) {
-    return bridgableTokensUnder(bridgeKey)
+  bridgeableTokensUnder(options: { chain: Chains; partnerChain: Chains | null }) {
+    return bridgeableTokensUnder({
+      tokens: this.value,
+      ...options,
+    })
   }
   load() {
     return loadLists()
@@ -221,47 +228,61 @@ cancellableLoadLists.promise.then((tokens: Token[] | null) => {
   bridgableTokens.value = tokens
 })
 
-export const bridgableTokensUnder = (bridgeKey: BridgeKey) => {
-  if (!bridgeKey) return []
-  const conf = pathway(bridgeKey)
+export const bridgeableTokensUnder = ({
+  tokens,
+  chain,
+  partnerChain,
+}: {
+  tokens: Token[]
+  chain: Chains
+  partnerChain: Chains | null
+}) => {
+  const grouping = [Provider.PULSECHAIN, chain]
+  const parentConf = _.get(pathways, grouping)
+  if (!parentConf) {
+    throw new Error('no pathway found')
+  }
+  const conf = partnerChain ? _.get(parentConf, [partnerChain]) : Object.values(parentConf)[0]
+
+  if (!conf) throw new Error('no pathway found')
   const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token
   const sortedList = _.uniqBy(
-    _.sortBy(bridgableTokens.value, ['name', 'chainId']),
+    _.sortBy(tokens, ['name', 'chainId']),
     ({ chainId, address }) => `${chainId}-${getAddress(address)}`,
   )
     .map((item) => {
-      if (defaultAssetIn && defaultAssetIn.address === item.address) {
+      if (defaultAssetIn && getAddress(defaultAssetIn.address) === getAddress(item.address)) {
         return defaultAssetIn
       }
       return item
     })
-    .filter((tkn) => tkn.chainId === Number(bridgeKey[1]))
+    .filter((tkn) => tkn.chainId === Number(chain))
   let list: Token[] = []
   if (sortedList.length) {
-    const bridgedWrappedAssetOut = sortedList.find(
-      (tkn) => tkn.address === nativeAssetOut[bridgeKey[1]],
-    )
+    const bridgedWrappedAssetOut = sortedList.find((tkn) => tkn.address === nativeAssetOut[chain])
     list = _.uniqBy(
       [
         {
-          chainId: Number(bridgeKey[1]),
+          chainId: Number(chain),
           address: zeroAddress as Hex,
-          name: nativeTokenName[bridgeKey[1]],
+          name: nativeTokenName[chain],
           decimals: 18,
-          symbol: nativeTokenSymbol[bridgeKey[1]],
+          symbol: nativeTokenSymbol[chain],
           logoURI: '',
           extensions: bridgedWrappedAssetOut
             ? {
                 wrapped: {
                   address: bridgedWrappedAssetOut.address,
                 },
-                bridgeInfo: {
-                  [Number(bridgeKey[2])]: {
-                    tokenAddress:
-                      bridgedWrappedAssetOut.extensions?.bridgeInfo?.[Number(bridgeKey[2])]
-                        ?.tokenAddress,
-                  },
-                },
+                bridgeInfo: partnerChain
+                  ? {
+                      [Number(partnerChain)]: {
+                        tokenAddress:
+                          bridgedWrappedAssetOut.extensions?.bridgeInfo?.[Number(partnerChain)]
+                            ?.tokenAddress,
+                      },
+                    }
+                  : null,
               }
             : null,
         } as Token,
@@ -422,7 +443,7 @@ export const clientFromChain = (chainId: Chains) => {
 //     set(null)
 //     return loading.loadsAfterTick(
 //       'assetIn',
-//       () => getAsset($bridgeKey[1], $assetInAddress),
+//       () => getAsset($chain, $assetInAddress),
 //       (result: Token | null) => {
 //         if (!result && $bridgableTokens.length) {
 //           return defaultAssetIn($bridgeKey)

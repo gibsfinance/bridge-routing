@@ -8,12 +8,13 @@
   import { page } from '$app/state'
   import { bridgeKey } from '$lib/stores/input.svelte'
   import { Chains } from '$lib/stores/auth/types'
-  import { domains, addDomain } from '$lib/stores/window.svelte'
+  import { addDomain } from '$lib/stores/window.svelte'
   import { innerWidth } from 'svelte/reactivity/window'
   import Image from './Image.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
   import * as rpcs from '$lib/stores/rpcs.svelte'
   import RPC from './RPC.svelte'
+  import Button from './Button.svelte'
 
   onMount(() => {
     addDomain('bridge.pulsechain.com')
@@ -25,9 +26,13 @@
   const gotoNativeDelivery = async () => {
     await goto('#/delivery')
   }
+  const gotoOnboard = async () => {
+    await goto('#/onboard')
+  }
   const txnText = $derived(innerWidth.current && innerWidth.current < 512 ? 'Txns' : 'Transactions')
   const destinationBridgeKey = $derived(bridgeKey.toChain)
   const isDeliveryRoute = $derived(page.route.id?.includes('/delivery'))
+  const isOnboardRoute = $derived(page.route.id?.includes('/onboard'))
 </script>
 
 <div class="z-40 -mb-10 flex h-10">
@@ -41,12 +46,12 @@
         <Image
           src={gibs}
           alt="a yellow hand with index finger and thub rubbing together"
-          class="size-8" />
+          sizeClasses="size-8" />
         <span class="text-2xl leading-8">Gibs&nbsp;</span>
         <Loading />
       </button>
       <div class="flex grow content-end items-center">
-        <ul class="flex grow flex-row items-center justify-end text-white">
+        <ul class="flex grow flex-row items-center justify-end text-white gap-2">
           <li class="flex flex-row">
             {#if destinationBridgeKey === Chains.ETH}
               <VersionedLink
@@ -82,7 +87,7 @@
               </a>
             {/if}
           </li>
-          <li class="flex flex-row pl-2">
+          <li class="flex flex-row">
             <ModalWrapper triggerClasses="flex flex-row items-center px-2 py-1">
               {#snippet button()}
                 RPC&nbsp;<Icon icon="gravity-ui:plug-connection" height="1.2em" width="1.2em" />
@@ -100,7 +105,7 @@
             </ModalWrapper>
           </li>
           {#if !isDeliveryRoute}
-            <li class="flex flex-row items-center pl-2">
+            <li class="flex flex-row items-center">
               <button
                 type="button"
                 name="bridge"
@@ -111,6 +116,17 @@
                   icon="icon-park-outline:bridge-one"
                   height="1.6em"
                   width="1.6em" /></button>
+            </li>
+          {/if}
+          {#if !isOnboardRoute}
+            <li class="flex flex-row items-center">
+              <Button class="flex flex-row items-center px-2 py-1" onclick={gotoOnboard}
+                >Onboard&nbsp;<Icon
+                  icon="material-symbols:run-circle"
+                  stroke-width="1.5"
+                  height="1.6em"
+                  width="1.6em" />
+              </Button>
             </li>
           {/if}
         </ul>

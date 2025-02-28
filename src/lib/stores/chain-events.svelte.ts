@@ -1,16 +1,28 @@
 import * as input from './input.svelte'
 import { multicallRead } from '$lib/utils.svelte'
 import * as abis from './abis'
-import { type PublicClient, type Block, getContract, erc20Abi, type Hex, zeroAddress } from 'viem'
-import { loading, type Cleanup } from './loading.svelte'
-import { Chains } from './auth/types'
+import {
+  type PublicClient,
+  type Block,
+  getContract,
+  erc20Abi,
+  type Hex,
+  zeroAddress,
+  parseAbi,
+  getAddress,
+  type TransactionReceipt,
+} from 'viem'
+import { loading, resolved, type Cleanup } from './loading.svelte'
 import { NullableProxyStore, type Token } from '$lib/types.svelte'
-import { chainsMetadata } from './auth/constants'
+import { bridgeGraphqlUrl, chainsMetadata } from './auth/constants'
 import { nativeAssetOut, pathway } from './config.svelte'
 import { SvelteMap } from 'svelte/reactivity'
 import * as rpcs from './rpcs.svelte'
 import _ from 'lodash'
 import { untrack } from 'svelte'
+import { Chains, toChain } from '$lib/stores/auth/types'
+import { tokenToPair } from './utils'
+import { gql, GraphQLClient } from 'graphql-request'
 
 const watchFinalizedBlocksForSingleChain = (chainId: Chains, onBlock: (block: Block) => void) => {
   const client = input.clientFromChain(chainId)
@@ -39,10 +51,9 @@ export const unwatchFinalizedBlocks = (cleanups: Cleanup[]) => {
 
 export class ChainState {
   private value: Block | null = $state(null)
-  private bridgeKey: input.BridgeKey | null = $state(null)
-  constructor(private index: 1 | 2) {}
+  private chain: Chains | null = $state(null)
   get publicClient() {
-    return input.clientFromChain(this.bridgeKey![this.index])
+    return input.clientFromChain(this.chain!)
   }
   set(block: Block | null) {
     this.value = block
@@ -59,9 +70,9 @@ export class ChainState {
       return perGas
     }
   })
-  watch(bridgeKey: input.BridgeKey) {
+  watch(chain: Chains) {
     this.set(null)
-    this.bridgeKey = bridgeKey
+    this.chain = chain
     untrack(() => loading.increment('gas'))
     let decremented = false
     const cleanup = this.publicClient.watchBlocks({
@@ -84,8 +95,8 @@ export class ChainState {
   }
 }
 
-export const origination = new ChainState(1)
-export const destination = new ChainState(2)
+export const origination = new ChainState()
+export const destination = new ChainState()
 
 export const getTokenBalance = ($chainId: Chains, asset: Token | null, walletAccount: Hex) => {
   if (!asset) return null
@@ -236,20 +247,22 @@ export class MinBridgeAmount {
     this.val = v
   }
 
-  fetch(bridgeKey: input.BridgeKeyStore, assetIn: Token) {
+  fetch(bridgeKey: input.BridgeKey, assetIn: Token) {
     // these clients should already be created, so we should not be doing any harm by accessing them
-    const pathway = bridgeKey.pathway
-    if (!pathway || !assetIn) return
+    const path = pathway(bridgeKey)
+    if (!path || !assetIn) {
+      return
+    }
     this.value = null
     const result = loading.loadsAfterTick<bigint>('min-amount', () => {
-      const fromPublicClient = input.clientFromChain(bridgeKey.fromChain)
-      const toPublicClient = input.clientFromChain(bridgeKey.toChain)
-      const publicClient = pathway?.feeManager === 'from' ? fromPublicClient : toPublicClient
+      const fromPublicClient = input.clientFromChain(bridgeKey[1])
+      const toPublicClient = input.clientFromChain(bridgeKey[2])
+      const publicClient = path?.feeManager === 'from' ? fromPublicClient : toPublicClient
       return publicClient.readContract({
         abi: abis.inputBridge,
         functionName: 'minPerTx',
         args: [assetIn.address],
-        address: pathway[pathway.feeManager],
+        address: path[path.feeManager],
       })
     })()
     result.promise.then((v) => {
@@ -452,10 +465,14 @@ export const tokenBridgeInfo = async (
 }
 
 export const assetLink = new NullableProxyStore<TokenBridgeInfo>()
-export const loadAssetLink = loading.loadsAfterTick<TokenBridgeInfo>(
-  'token',
-  ({ bridgeKey, assetIn }: { bridgeKey: input.BridgeKey; assetIn: Token | null }) =>
-    tokenBridgeInfo(bridgeKey, assetIn),
+export const loadAssetLink = loading.loadsAfterTick<
+  TokenBridgeInfo,
+  {
+    bridgeKey: input.BridgeKey
+    assetIn: Token | null
+  }
+>('token', ({ bridgeKey, assetIn }: { bridgeKey: input.BridgeKey; assetIn: Token | null }) =>
+  tokenBridgeInfo(bridgeKey, assetIn),
 )
 // export const assetLink = derived<Stores, null | TokenBridgeInfo>(
 //   [input.bridgeKey, input.assetIn],
@@ -539,3 +556,292 @@ export const loadApproval = loading.loadsAfterTick<bigint>(
 //   },
 //   0n,
 // )
+
+const pairAbi = parseAbi([
+  'function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
+])
+
+const getReservesFailure = (chainId: Chains, token: Hex) => {
+  return (e: unknown) => {
+    console.error(`Failed to get reserves for id=${chainId} token=${token}`, e)
+    return null
+  }
+}
+
+const wpls = '0xA1077a294dDE1B09bB078844df40758a5D0f9a27'
+
+const retryCount = 3
+const retry = async <T>(
+  delay: number,
+  fn: () => Promise<T>,
+  catcher: (e: unknown) => void,
+): Promise<T> => {
+  for (let i = 0; i < retryCount; i++) {
+    try {
+      return await fn()
+    } catch (e) {
+      catcher(e)
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
+  }
+  throw new Error('Failed to complete operation')
+}
+
+type ReserveQuery<R> = {
+  factory: Hex
+  initCodeHash: Hex
+  pair: Hex
+  token0: Hex
+  token1: Hex
+  reserves: R | null
+}
+
+type KeyedReserveData = {
+  wpls: bigint
+  amount: bigint
+  timestamp: number
+}
+
+const formatReserveQuery = (
+  query: ReserveQuery<[bigint, bigint, number]>,
+): ReserveQuery<KeyedReserveData> => {
+  const { token0, token1, reserves } = query
+  if (!reserves) {
+    return {
+      ...query,
+      reserves: null,
+    }
+  }
+  const [rt0, rt1, timestamp] = reserves
+  const wplsReserve = token0 === wpls ? rt0 : rt1
+  const tokenReserve = token1 === wpls ? rt0 : rt1
+  return {
+    ...query,
+    reserves: { wpls: wplsReserve, amount: tokenReserve, timestamp },
+  }
+}
+
+export const getPoolInfo = async (chainId: Chains, token: Hex, block: Block) => {
+  const client = input.clientFromChain(chainId)
+  const factoryAndInitCodeHash = new Map<Hex, Hex>([
+    [
+      '0x1715a3E4A142d8b698131108995174F37aEBA10D',
+      '0x59fffffddd756cba9095128e53f3291a6ba38b21e3df744936e7289326555d62',
+    ],
+    [
+      '0x29eA7545DEf87022BAdc76323F373EA1e707C523',
+      '0x5dff1ac2d132f5ac2841294c6e9fc0ebafae8d447fac7996ef21c21112f411f1',
+    ],
+  ])
+  const [v1, v2] = await retry(
+    100,
+    () =>
+      Promise.all(
+        Array.from(factoryAndInitCodeHash.entries()).map(async ([factory, initCodeHash]) => {
+          const [pair, token0, token1] = tokenToPair(token, wpls, factory, initCodeHash)
+          // console.log(factory, initCodeHash, token0, token1, pair)
+          const reserves = await getContract({
+            abi: pairAbi,
+            address: pair,
+            client,
+          }).read.getReserves({
+            blockNumber: block.number!,
+          })
+          return {
+            factory: getAddress(factory) as Hex,
+            initCodeHash,
+            pair: getAddress(pair) as Hex,
+            token0: getAddress(token0) as Hex,
+            token1: getAddress(token1) as Hex,
+            reserves,
+          } as ReserveQuery<[bigint, bigint, number]>
+        }),
+      ),
+    getReservesFailure(chainId, token),
+  )
+  const poolInfo = {
+    v1: formatReserveQuery(v1),
+    v2: formatReserveQuery(v2),
+  }
+  return poolInfo
+}
+
+type PoolInfo = {
+  v1: ReserveQuery<KeyedReserveData>
+  v2: ReserveQuery<KeyedReserveData>
+}
+
+export const loadPrice = (token: Token, block: Block) => {
+  const key = `price-${token.chainId}-${token.address}`.toLowerCase()
+  if (!block) {
+    return resolved(null)
+  }
+  return loading.loadsAfterTick<PoolInfo>(key, () =>
+    getPoolInfo(toChain(token.chainId), token.address, block),
+  )()
+}
+
+const stableTokens = {
+  DAI: {
+    address: '0xefd766ccb38eaf1dfd701853bfce31359239f305',
+    decimals: 18,
+  },
+  USDT: {
+    address: '0x0cb6f5a34ad42ec934882a05265a7d5f59b51a2f',
+    decimals: 6,
+  },
+  USDC: {
+    address: '0x15d38573d2feeb82e7ad5187ab8c1d52810b1f07',
+    decimals: 6,
+  },
+} as const
+export const wplsPrice = new NullableProxyStore<bigint>()
+const stableTokensList = Object.values(stableTokens)
+export const watchWplsUSDPrice = loading.loadsAfterTick<bigint, Block>(
+  'price-wpls',
+  (block: Block) =>
+    Promise.all(stableTokensList.map((token) => getPoolInfo(Chains.PLS, token.address, block))),
+  (results: PoolInfo[]) => {
+    return (
+      results.reduce((acc, poolInfo, i) => {
+        return acc + priceInt(poolInfo, stableTokensList[i].decimals)
+      }, 0n) / BigInt(stableTokensList.length)
+    )
+  },
+)
+
+// price is of
+export const priceInt = ({ v1, v2 }: PoolInfo, decimals: number) => {
+  const wplsAmount = (v1.reserves?.wpls ?? 0n) + (v2.reserves?.wpls ?? 0n)
+  const tokenAmount = (v1.reserves?.amount ?? 0n) + (v2.reserves?.amount ?? 0n)
+  const decimalOffset = 10n ** BigInt(decimals)
+  return (wplsAmount * decimalOffset) / tokenAmount
+}
+
+export const bridgeStatuses = {
+  SUBMITTED: 'SUBMITTED',
+  MINED: 'MINED',
+  FINALIZED: 'FINALIZED',
+  VALIDATING: 'VALIDATING',
+  AFFIRMED: 'AFFIRMED',
+} as const
+
+export type BridgeStatus = keyof typeof bridgeStatuses
+export type LiveBridgeStatusParams = {
+  bridgeKey: input.BridgeKeyStore
+  hash: Hex
+  ticker: Block
+}
+export type ContinuedLiveBridgeStatusParams = LiveBridgeStatusParams & {
+  status: BridgeStatus
+  statusIndex: number
+  receipt?: TransactionReceipt
+}
+const statusList = Object.values(bridgeStatuses)
+const statusToIndex = (status: BridgeStatus) => {
+  return statusList.indexOf(status)
+}
+const graphqlClient = _.memoize((url: string) => {
+  return new GraphQLClient(url, {
+    //
+  })
+})
+type SingleBridgeInfo = {
+  userRequests: {
+    id: string
+    txHash: string
+    message: {
+      signatures: string[] | null
+    }
+    token: string
+    to: string
+  }[]
+}
+const singleBridgeInfo = gql`
+  query SingleBridgeInfo($hash: String!) {
+    userRequests(where: { txHash: $hash }) {
+      id
+      txHash
+      message {
+        signatures
+        txHash
+      }
+      token
+      to
+    }
+  }
+`
+export const liveBridgeStatus = loading.loadsAfterTick<
+  ContinuedLiveBridgeStatusParams,
+  LiveBridgeStatusParams
+>(
+  'live-bridge-status',
+  async (params: LiveBridgeStatusParams) => {
+    const { bridgeKey, hash } = params
+    // if (!chain || !chainPartner || !hash) return null
+    const client = input.clientFromChain(bridgeKey.fromChain)
+    const receipt = await client.getTransactionReceipt({
+      hash,
+    })
+    if (!receipt) {
+      // tx has not yet been mined
+      return {
+        ...params,
+        status: bridgeStatuses.SUBMITTED,
+        statusIndex: statusToIndex(bridgeStatuses.SUBMITTED),
+      }
+    }
+    return {
+      ...params,
+      status: bridgeStatuses.MINED,
+      statusIndex: statusToIndex(bridgeStatuses.MINED),
+      receipt,
+    }
+  },
+  async (params: ContinuedLiveBridgeStatusParams) => {
+    if (!params) return null
+    const { statusIndex, receipt, bridgeKey } = params
+    if (statusIndex < statusToIndex(bridgeStatuses.MINED)) return params
+
+    const client = input.clientFromChain(bridgeKey.fromChain)
+    const finalizedBlock = await client.getBlock({
+      blockTag: 'finalized',
+    })
+    if (!finalizedBlock) return null // no finalized block found
+    const blockNumber = finalizedBlock.number
+    if (blockNumber < receipt!.blockNumber) return params
+    return {
+      ...params,
+      status: bridgeStatuses.FINALIZED,
+      statusIndex: statusToIndex(bridgeStatuses.FINALIZED),
+    }
+  },
+  async (params: ContinuedLiveBridgeStatusParams) => {
+    if (!params) return null
+    const { bridgeKey, hash } = params
+    const urls = _.get(bridgeGraphqlUrl, bridgeKey.value)
+    if (!urls) return null
+    // where the signing happens
+    const client = graphqlClient(urls.home)
+    // should put this behind a ttl cache
+    const requiredSignatures = 5
+    const [{ userRequests }] = await Promise.all([
+      client.request<SingleBridgeInfo>(singleBridgeInfo, {
+        hash,
+      }),
+    ])
+    if (requiredSignatures === userRequests[0].message.signatures?.length) {
+      return {
+        ...params,
+        status: bridgeStatuses.AFFIRMED,
+        statusIndex: statusToIndex(bridgeStatuses.AFFIRMED),
+      }
+    } else {
+      return {
+        ...params,
+        status: bridgeStatuses.VALIDATING,
+        statusIndex: statusToIndex(bridgeStatuses.VALIDATING),
+      }
+    }
+  },
+)

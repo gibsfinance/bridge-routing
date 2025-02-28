@@ -40,7 +40,9 @@
           <span
             class="max-w-[175px] overflow-hidden overflow-ellipsis"
             class:opacity-60={!loading.isResolved(`balance-${toChain(network.id)}`)}
-            >{balance === null ? '' : humanReadableNumber(balance, asset?.decimals ?? 18)}</span
+            >{balance === null
+              ? ''
+              : humanReadableNumber(balance, { decimals: asset?.decimals ?? 18 })}</span
           >{utils.nativeSymbol(asset, unwrap)}
         </Tooltip>
       </div>

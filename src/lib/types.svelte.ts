@@ -1,3 +1,4 @@
+import type classNames from 'classnames'
 import type { Hex, Abi } from 'viem'
 
 export type Call = {
@@ -69,3 +70,5 @@ export class NullableProxyStore<T> {
     return this.val
   }
 }
+
+export type ClassParam = Parameters<typeof classNames>[0]

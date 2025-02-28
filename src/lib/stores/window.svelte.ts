@@ -39,9 +39,9 @@ const checkDomain = (domain: string) => {
 export class WindowStore {
   large = $derived(
     innerHeight.current &&
-      innerHeight.current > 600 &&
+      innerHeight.current >= 512 &&
       innerWidth.current &&
-      innerWidth.current >= 768,
+      innerWidth.current >= 512,
   )
 }
 

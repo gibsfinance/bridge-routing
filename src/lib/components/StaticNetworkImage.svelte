@@ -3,6 +3,7 @@
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import ProviderIcon from './ProviderIcon.svelte'
   import Image from './Image.svelte'
+  import classNames from 'classnames'
 
   type Props = {
     network: Chains
@@ -21,10 +22,11 @@
   const providerWrapperClasses = $derived(
     `${providerSizeClasses} absolute -bottom-1 -left-1 rounded-full`,
   )
+  const wrapperClasses = $derived(classNames('relative', sizeClasses))
 </script>
 
-<div class="relative">
-  <Image class={classes} src={visualChain.icon} alt={visualChain.alt} />
+<div class={wrapperClasses}>
+  <Image class={classes} {sizeClasses} src={visualChain.icon} alt={visualChain.alt} />
   {#if provider}
     <div class={providerWrapperClasses}>
       <ProviderIcon {provider} sizeClasses={providerSizeClasses} />

@@ -37,7 +37,10 @@
     <div class="bg-slate-50 rounded-t-lg py-2 px-3 justify-between flex flex-row hover:z-10">
       <span class="w-32">Amount In</span>
       <span
-        >{humanReadableNumber(bridgeSettings.amountToBridge, asset.decimals)} {asset.symbol}</span>
+        >{humanReadableNumber(bridgeSettings.amountToBridge, {
+          decimals: asset.decimals,
+        })}
+        {asset.symbol}</span>
     </div>
     <div class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row hover:z-10">
       <span class="w-32">Bridged</span>
@@ -45,7 +48,9 @@
         <span>-{formatEther(fee * 100n)}%</span>
         <span class="flex flex-row items-end self-end">
           <Loading key="gas">
-            {#snippet contents()}{humanReadableNumber(afterBridge, asset.decimals)}{/snippet}
+            {#snippet contents()}{humanReadableNumber(afterBridge, {
+                decimals: asset.decimals,
+              })}{/snippet}
           </Loading>&nbsp;{asset.symbol}
         </span>
       </span>
@@ -62,7 +67,7 @@
             <Loading key="gas">
               {#snippet contents()}{humanReadableNumber(
                   shouldDeliver.value ? bridgeSettings.estimatedNetworkCost : 0n,
-                  asset.decimals,
+                  { decimals: asset.decimals },
                 )}{/snippet}
             </Loading>&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
           </span>
@@ -87,11 +92,13 @@
             <span
               class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center relative">
               {#if feeType.value === input.FeeType.PERCENT}
-                {humanReadableNumber(bridgeSettings.limitFromPercent, asset.decimals)}
+                {humanReadableNumber(bridgeSettings.limitFromPercent, {
+                  decimals: asset.decimals,
+                })}
               {:else}<Loading key="gas"
                   >{#snippet contents()}{humanReadableNumber(
                       bridgeSettings.estimatedCost,
-                      asset.decimals,
+                      { decimals: asset.decimals },
                     )}{/snippet}</Loading
                 >{/if}&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
             </span>
@@ -107,7 +114,7 @@
           <Loading key="gas">
             {#snippet contents()}{humanReadableNumber(
                 minimumDelivered < 0n ? 0n : minimumDelivered,
-                asset.decimals,
+                { decimals: asset.decimals },
               )}{/snippet}
           </Loading>&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
         </span>
@@ -122,7 +129,7 @@
           ~&nbsp;<Loading key="gas"
             >{#snippet contents()}{humanReadableNumber(
                 estimated < 0n ? 0n : estimated,
-                asset.decimals,
+                { decimals: asset.decimals },
               )}{/snippet}</Loading
           >&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
         </span>
@@ -135,7 +142,7 @@
             <Loading key="gas">
               {#snippet contents()}{humanReadableNumber(
                   minimumDelivered < 0n ? 0n : minimumDelivered,
-                  asset.decimals,
+                  { decimals: asset.decimals },
                 )}{/snippet}
             </Loading>&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
           </span>

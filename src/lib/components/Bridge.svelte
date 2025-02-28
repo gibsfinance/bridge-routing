@@ -14,7 +14,13 @@
     updateAssetOut,
     loadPriceCorrective,
   } from '$lib/stores/bridge-settings.svelte'
-  import { bridgeKey, assetInAddress, loadFeeFor, bridgeFee, clientFromChain } from '$lib/stores/input.svelte'
+  import {
+    bridgeKey,
+    assetInAddress,
+    loadFeeFor,
+    bridgeFee,
+    clientFromChain,
+  } from '$lib/stores/input.svelte'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
     watchFinalizedBlocks,
@@ -114,14 +120,8 @@
     })
     return priceCorrective.cleanup
   })
-  $effect(() => {
-    const fromChainBlockWatcherCleanup = origination.watch(bridgeKey.value)
-    const toChainBlockWatcherCleanup = destination.watch(bridgeKey.value)
-    return () => {
-      fromChainBlockWatcherCleanup()
-      toChainBlockWatcherCleanup()
-    }
-  })
+  $effect(() => origination.watch(bridgeKey.fromChain))
+  $effect(() => destination.watch(bridgeKey.toChain))
   $effect(() => {
     if (!bridgeSettings.assetIn.value || !accountState.address || !origination.block) return
     return fromTokenBalance.fetch(

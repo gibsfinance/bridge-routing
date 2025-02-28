@@ -12,6 +12,8 @@ import { NullableProxyStore } from '$lib/types.svelte'
 import type { Hex } from 'viem'
 import { walletConnectProjectId } from '$lib/config'
 import { EthereumProvider } from '@walletconnect/ethereum-provider'
+import { getBalance, watchBlockNumber, type GetBalanceReturnType } from '@wagmi/core'
+import { SvelteMap } from 'svelte/reactivity'
 
 const projectId = walletConnectProjectId
 
@@ -48,6 +50,7 @@ export const modal = createAppKit({
 })
 
 export const connect = async () => {
+  // accountState.modalOpen = true
   await modal.open()
 
   const ethProvider = await EthereumProvider.init({
@@ -56,7 +59,6 @@ export const connect = async () => {
     showQrModal: true,
     chains: networks.map((n) => n.id) as [number, ...number[]],
   })
-  // console.log(ethProvider)
   provider.value = ethProvider
 }
 
@@ -81,14 +83,70 @@ export const walletInfoState = new NullableProxyStore<ConnectedWalletInfo>()
 
 class AccountState {
   private val = $state<UseAppKitAccountReturn | null>(null)
+  chainId = $state<number | null>(null)
+  lastKnownBalances = new SvelteMap<
+    UseAppKitAccountReturn['caipAddress'],
+    GetBalanceReturnType & {
+      lastUpdated: number
+    }
+  >()
   set value(account: UseAppKitAccountReturn | null) {
     this.val = account
+    const caipAddress = account?.caipAddress
+    if (!caipAddress) return
+    this.chainId = +caipAddress.split(':')[1] || (null as number | null)
+    this.setupWatchBalance()
+  }
+  get balance() {
+    const caipAddress = this.val?.caipAddress
+    if (!caipAddress) return null
+    const balance = this.lastKnownBalances.get(caipAddress)
+    if (!balance) return null
+    // if balance is older than 2 minutes, return null
+    if (balance.lastUpdated < Date.now() - 1000 * 60 * 2) return null
+    return balance.value
+  }
+  get caipAddress() {
+    return this.val?.caipAddress
+  }
+  get chainIdHex() {
+    return this.chainId ? `0x${this.chainId.toString(16)}` : null
   }
   get value() {
     return this.val
   }
   get address() {
     return this.value?.address as Hex | null
+  }
+  get connected() {
+    return !!this.value?.address
+  }
+  private modalIsOpen = $state(false)
+  get modalOpen() {
+    return this.modalIsOpen
+  }
+  set modalOpen(open: boolean) {
+    this.modalIsOpen = open
+  }
+  private setupWatchBalanceCleanup = () => {}
+  setupWatchBalance() {
+    this.setupWatchBalanceCleanup?.()
+    const address = this.address
+    if (!address) return
+    this.setupWatchBalanceCleanup = watchBlockNumber(wagmiAdapter.wagmiConfig, {
+      chainId: this.chainId!,
+      emitOnBegin: true,
+      onBlockNumber: async () => {
+        const balance = await getBalance(wagmiAdapter.wagmiConfig, {
+          address,
+          chainId: this.chainId!,
+        })
+        this.lastKnownBalances.set(this.caipAddress, {
+          lastUpdated: Date.now(),
+          ...balance,
+        })
+      },
+    })
   }
 }
 export const accountState = new AccountState()
@@ -98,7 +156,21 @@ modal.subscribeProviders((providers) => {
   provider.value = providers.eip155 as EthereumProviderType
 })
 
+modal.subscribeEvents((event) => {
+  const { event: e } = event.data
+  console.log(event.data)
+  if (e === 'MODAL_OPEN') {
+    accountState.modalOpen = true
+  } else if (e === 'MODAL_CLOSE') {
+    accountState.modalOpen = false
+  }
+  // else if (e === 'CONNECT_SUCCESS') {
+  //   // accountState.connected = false
+  // }
+})
+
 modal.subscribeWalletInfo((walletInfo) => {
+  console.log('walletInfo', walletInfo)
   walletInfoState.value = walletInfo ?? null
 })
 

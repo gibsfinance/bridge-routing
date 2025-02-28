@@ -1,5 +1,5 @@
 import { mainnet, pulsechain, bsc, sepolia, pulsechainV4 } from '@reown/appkit/networks'
-import { type ChainsMetadata, Chains } from './types'
+import { type ChainsMetadata, Chains, Provider } from './types'
 import * as imageLinks from '$lib/stores/image-links'
 import bnbNetworkUrl from '$lib/images/networks/0x38.png'
 import plsV4NetworkUrl from '$lib/images/networks/0x3af.png'
@@ -14,6 +14,12 @@ export const chainsMetadata = {
     chainId: Chains.PLS,
     icon: imageLinks.network(pulsechain.id),
     alt: 'a pink blue and purple hexagon with an ekg line running horizontally',
+    graphql: {
+      bridgeUrl: {
+        [Provider.PULSECHAIN]:
+          'https://graph.pulsechain.com/subgraphs/name/pulsechain/bridge/graphql',
+      },
+    },
     rpcUrls: {
       default: {
         http: ['https://rpc-pulsechain.g4mm4.io'],
@@ -38,6 +44,12 @@ export const chainsMetadata = {
     rpcUrls: {
       default: {
         http: ['https://rpc-ethereum.g4mm4.io'],
+      },
+    },
+    graphql: {
+      bridgeUrl: {
+        [Provider.PULSECHAIN]:
+          'https://graph.ethereum.pulsechain.com/subgraphs/name/ethereum/bridge/graphql',
       },
     },
   },
@@ -87,3 +99,19 @@ export const chainsMetadata = {
     },
   },
 } as ChainsMetadata
+
+const PULSECHAIN_MAINNET_BRIDGE_GRAPHQL_URLS = {
+  foreign: 'https://graph.ethereum.pulsechain.com/subgraphs/name/ethereum/bridge/graphql',
+  home: 'https://graph.pulsechain.com/subgraphs/name/pulsechain/bridge/graphql',
+}
+
+export const bridgeGraphqlUrl = {
+  [Provider.PULSECHAIN]: {
+    [Chains.PLS]: {
+      [Chains.ETH]: PULSECHAIN_MAINNET_BRIDGE_GRAPHQL_URLS,
+    },
+    [Chains.ETH]: {
+      [Chains.PLS]: PULSECHAIN_MAINNET_BRIDGE_GRAPHQL_URLS,
+    },
+  },
+}
