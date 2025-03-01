@@ -1,14 +1,12 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { accountState, provider, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
+  import { accountState, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import {
     type Hex,
-    getContract,
     erc20Abi,
     maxUint256,
     zeroAddress,
-    createWalletClient,
     encodeFunctionData,
     formatUnits,
   } from 'viem'
@@ -19,7 +17,7 @@
   import { connect } from '$lib/stores/auth/AuthProvider.svelte'
   import { sendTransaction } from '@wagmi/core'
 
-  const { walletClient, shouldDeliver } = input
+  const { shouldDeliver } = input
 
   let disabledByClick = $state(false)
   const tokenBalance = $derived(fromTokenBalance.value || 0n)
