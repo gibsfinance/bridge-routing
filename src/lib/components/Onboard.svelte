@@ -63,9 +63,9 @@
   $effect.pre(() => {
     bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
   })
-  const networkMatches = $derived(
-    !!accountState.chainId && accountState.chainId === Number(bridgeKey.fromChain),
-  )
+  $inspect(accountState.chainId)
+  const networkIsSet = $derived(!!accountState.chainId)
+  const networkMatches = $derived(accountState.chainId === Number(bridgeKey.fromChain))
   $effect(() => {
     if (!tokenInput) {
       bridgeSettings.assetIn.value = {
@@ -156,14 +156,14 @@
   })
 </script>
 
-{#if !networkMatches}
+<!-- {#if !networkMatches}
   <div class="flex flex-row items-center justify-center gap-4">
     <Button class="btn preset-filled-tertiary-950-50 w-fit" onclick={switchToTargetChain}>
       <span>Switch Network</span>
       <Image src={targetChain.icon} alt={targetChain.name} class="size-4" />
     </Button>
-  </div>
-{:else if tokenInput}
+  </div> -->
+{#if tokenInput}
   <div class="flex flex-col gap-4 max-w-2xl mx-auto w-full">
     <header class="flex flex-row justify-between">
       <div class="flex flex-row gap-2">
@@ -242,7 +242,16 @@
         </div>
       </header>
     </div>
-    <OnboardBridge />
-    <OnboardPulseX tokenOut={tokenOutput} />
+    {#if !networkIsSet || networkMatches}
+      <OnboardBridge />
+      <OnboardPulseX tokenOut={tokenOutput} />
+    {:else}
+      <div class="flex flex-row items-center justify-center gap-4">
+        <Button class="btn preset-filled-tertiary-950-50 w-fit" onclick={switchToTargetChain}>
+          <span>Switch Network</span>
+          <Image src={targetChain.icon} alt={targetChain.name} class="size-4" />
+        </Button>
+      </div>
+    {/if}
   </div>
 {/if}

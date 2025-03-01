@@ -31,9 +31,9 @@
     </span>
   {:else if accountState.modalOpen}
     <Icon icon="icomoon-free:spinner9" class="animate-spin" />
-    <span>Connecting...</span>
+    <span class="pr-2">Connecting...</span>
   {:else}
     <span>Connect</span>
-    <Icon icon="mingcute:right-fill" height="1em" width="1em" />
+    <Icon icon="mingcute:right-fill" height="1em" width="1em" class="mr-2" />
   {/if}
 </Button>
