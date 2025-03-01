@@ -17,7 +17,7 @@
   )
   const textContainerClasses = $derived(
     classNames(
-      'w-full h-full text-left flex mx-2 flex-col leading-8 text-ellipsis whitespace-pre relative',
+      'w-full h-full text-left flex mx-1 flex-col leading-8 text-ellipsis whitespace-pre relative',
       reversed ? 'text-right' : 'text-left',
       externalGroup ? null : 'group',
     ),

@@ -226,7 +226,7 @@
     }
   }
   const bridgeGoClassNames = $derived(
-    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-6 w-16' +
+    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-6 w-16 flex basis-auto' +
       (bridgeStatus !== null && !editTxHash ? ' rounded-b-none' : ''),
   )
   const percentProgress = $derived.by(() => {
@@ -253,9 +253,13 @@
     }
     bridgeStatus = null
   }
+  let maxBridgeable = $state(0n)
   const disableBridgeButton = $derived(
     // bridgeStatus !== null ||
-    !amountIn.value || !minAmount.value || amountIn.value < minAmount.value,
+    !amountIn.value ||
+      !minAmount.value ||
+      amountIn.value < minAmount.value ||
+      amountIn.value > maxBridgeable,
   )
   const destinationBlock = $derived(destination.block)
   $effect(() => {
@@ -349,6 +353,7 @@
     class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
     <header class="flex flex-row justify-between relative h-16">
       <div class="flex flex-col w-1/2 gap-0">
+        <!-- input side -->
         {#if accountState.address}
           <div class="flex gap-1 flex-row-reverse absolute top-0 left-0">
             <BalanceReadout
@@ -356,6 +361,10 @@
               roundedClasses="rounded-tl"
               hideSymbol
               decimalLimit={9}
+              onbalanceupdate={(balance) => {
+                console.log('balance updated', balance)
+                maxBridgeable = balance
+              }}
               onmax={(balance) => {
                 amountIn.value = balance
               }} />
@@ -374,14 +383,14 @@
           <div class="flex flex-col gap-0 w-full relative">
             <NumericInput
               id="amount-to-bridge"
-              class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right placeholder:text-gray-600 leading-6 h-8"
+              class="w-full text-base input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right placeholder:text-gray-600 leading-6 h-8"
               value={bridgeAmount}
               decimals={tokenInput.decimals}
               oninput={(v) => {
                 amountIn.value = v
               }} />
             <span
-              class="text-xs w-full text-gray-500 text-right absolute -bottom-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none"
+              class="text-xs w-full text-gray-500 text-right absolute -bottom-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none italic"
               >${usd.toCents(usdValueTokenAmount)}</span>
           </div>
           <span class="text-base">{tokenInput.symbol}</span>
@@ -398,22 +407,29 @@
         {#if !bridgedToken}
           <span class="flex pl-6"><Loader /></span>
         {:else}
+          <!-- output side -->
           <span
-            class="flex flex-row items-center text-surface-contrast-50 w-full justify-end group">
-            <span class="flex flex-row-reverse gap-2 items-center ml-6 w-full text-right relative">
-              <span class="flex flex-col gap-0 relative w-full text-left text-base">
+            class="flex flex-row items-center text-surface-contrast-50 w-full justify-end group min-h-[2rem]">
+            <div class="pl-5 flex flex-row items-center min-w-0 flex-grow">
+              <AssetWithNetwork asset={bridgedToken} network={Chains.PLS} />
+              <span class="flex flex-row gap-2 items-center pl-1 min-w-0 flex-shrink relative">
                 <span
-                  >{humanReadableNumber(outputAmount, {
-                    decimals: bridgedToken.decimals,
-                    maxDecimals: 9,
-                  })}
-                  {bridgedToken.symbol}</span>
+                  class="flex flex-col gap-0 relative text-left min-w-0 flex-shrink overflow-hidden">
+                  <span class="flex min-w-0 flex-shrink overflow-hidden items-center">
+                    <span
+                      class="text-ellipsis overflow-hidden whitespace-nowrap text-base flex-shrink min-w-0"
+                      >{humanReadableNumber(outputAmount, {
+                        decimals: bridgedToken.decimals,
+                      })}</span>
+                    <span class="whitespace-nowrap flex-shrink-0 mx-1 text-base"
+                      >{bridgedToken.symbol}</span>
+                  </span>
+                </span>
                 <span
-                  class="text-xs w-full text-gray-500 absolute -bottom-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none"
+                  class="text-xs w-full text-gray-500 absolute -bottom-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none italic"
                   >${usd.toCents(usdValueTokenAmount)}</span>
               </span>
-              <AssetWithNetwork asset={bridgedToken} network={Chains.PLS} />
-            </span>
+            </div>
             <Button disabled={disableBridgeButton} class={bridgeGoClassNames} onclick={bridgeTokens}
               >Go</Button>
           </span>
@@ -425,7 +441,7 @@
       class:h-6={bridgeStatus !== null || editTxHash}>
       {#if editTxHash}
         <div class="h-6 flex flex-row items-center">
-          <Button class="h-full w-8 bg-error-400 leading-6 text-base" onclick={toggleEditTxHash}
+          <Button class="h-full w-8 bg-error-400 leading-6" onclick={toggleEditTxHash}
             >&times;</Button>
           <Input
             setref={(el) => {

@@ -1,9 +1,9 @@
 <script lang="ts">
   import BlurryImage from '$lib/components/BlurryImage.svelte'
   import Bridge from '$lib/components/Bridge.svelte'
-  import bridgeImageFuzzyWebP from '$lib/images/bridge-fuzzy.webp'
   import BridgeFooter from '$lib/components/BridgeFooter.svelte'
   import { windowStore } from '$lib/stores/window.svelte'
+  const bridgeImageFuzzyWebP = new URL('/images/bridge-fuzzy.webp', import.meta.url).href
 </script>
 
 <div class="flex flex-col w-full">

@@ -1,6 +1,6 @@
 <script>
   import BlurryImage from './BlurryImage.svelte'
-  import payMe from '$lib/images/pay-me.png'
+  const payMe = new URL('/images/pay-me.png', import.meta.url).href
 </script>
 
 <BlurryImage height="600px" image_url="url({payMe})">

@@ -1,8 +1,8 @@
 <script lang="ts">
   import BlurryImage from '$lib/components/BlurryImage.svelte'
-  import onboardImageFuzzy from '$lib/images/runners.jpg'
   import { windowStore } from '$lib/stores/window.svelte'
   import Onboard from '$lib/components/Onboard.svelte'
+  const onboardImageFuzzy = new URL('/images/runners.jpg', import.meta.url).href
 </script>
 
 <div class="flex flex-col w-full">

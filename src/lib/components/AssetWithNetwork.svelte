@@ -25,7 +25,7 @@
   )
   const src = $derived(asset?.logoURI || assetSources(asset))
   const tokenClasses = $derived(`overflow-hidden absolute`)
-  const classes = $derived(`relative ${tokenSizeClasses}`)
+  const classes = $derived(`flex basis-auto relative ${tokenSizeClasses}`)
 </script>
 
 <span class={classes} title={asset.symbol}>

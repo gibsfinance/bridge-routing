@@ -1,7 +1,6 @@
 <script lang="ts">
   import VersionedLink from '$lib/components/VersionedLink.svelte'
   import { goto } from '$app/navigation'
-  import gibs from '$lib/images/1FAF0.svg'
   import { onMount } from 'svelte'
   import Icon from '@iconify/svelte'
   import Loading from './Loading.svelte'
@@ -15,6 +14,7 @@
   import * as rpcs from '$lib/stores/rpcs.svelte'
   import RPC from './RPC.svelte'
   import Button from './Button.svelte'
+  const gibs = new URL('/images/1FAF0.svg', import.meta.url).href
 
   onMount(() => {
     addDomain('bridge.pulsechain.com')

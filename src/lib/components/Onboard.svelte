@@ -191,7 +191,7 @@
             wrapperClasses="w-full h-full"
             triggerClasses="p-4 flex relative justify-end w-full h-full items-center gap-2 text-surface-contrast-50 group">
             {#snippet button()}
-              <span class="flex flex-row px-2 w-full">
+              <span class="flex flex-row px-1 w-full">
                 <TokenInfo
                   token={tokenInput}
                   truncate={8}
@@ -222,7 +222,7 @@
             wrapperClasses="w-full h-full"
             triggerClasses="p-4 flex relative justify-end w-full h-full items-center gap-2 text-surface-contrast-50 group">
             {#snippet button()}
-              <span class="flex flex-row px-2 w-full">
+              <span class="flex flex-row px-1 w-full">
                 <TokenInfo
                   token={tokenOutput}
                   truncate={8}

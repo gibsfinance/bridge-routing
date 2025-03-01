@@ -1,7 +1,7 @@
 <script lang="ts">
   import BlurryImage from './BlurryImage.svelte'
-  import futureBridge from '$lib/images/future-bridge.webp'
   import VersionedLink from './VersionedLink.svelte'
+  const futureBridge = new URL('/images/future-bridge.webp', import.meta.url).href
 </script>
 
 <div class="bg-slate-100">
@@ -11,8 +11,8 @@
   </div>
 </div>
 
-<BlurryImage image_url="url({futureBridge})" blur-sm="9px" brightness="75%" min_height="auto">
-  <div class="text-white">
+<BlurryImage image_url="url({futureBridge})" blur="9px" brightness="75%" min_height="auto">
+  <div class="text-white py-8 px-4">
     <div class="container m-auto text-xl text-center drop-shadow-lg sm:max-w-3xl">
       <p class="text-left">
         Introducing "Token Delivery" for PulseChain to EVM Omnibridges. With a minimal

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import tokensexProvider from '$lib/images/providers/tokensex.svg'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import Image from './Image.svelte'
+  const tokensexProvider = new URL('/images/providers/tokensex.svg', import.meta.url).href
 
   type Props = {
     provider?: string

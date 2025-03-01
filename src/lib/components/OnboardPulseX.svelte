@@ -101,7 +101,7 @@
             }} />
         </div>
         <NumericInput
-          class="w-full input ring-0 focus:ring-0 text-right  placeholder:text-gray-600 text-surface-contrast-50"
+          class="w-full input ring-0 focus:ring-0 text-right placeholder:text-gray-600 text-surface-contrast-50 text-base"
           value={amountToSwapIn}
           decimals={tokenIn.decimals}
           oninput={(v) => {
@@ -125,7 +125,7 @@
         <AssetWithNetwork asset={tokenOut} network={Chains.PLS} />
         <NumericInput
           paddingClass="px-0"
-          class="w-full input ring-0 focus:ring-0 placeholder:text-gray-600 placeholder: text-surface-contrast-50"
+          class="w-full input ring-0 focus:ring-0 placeholder:text-gray-600 placeholder: text-surface-contrast-50 text-base"
           value={amountToSwapOut}
           decimals={tokenOut.decimals}
           oninput={(v) => {
