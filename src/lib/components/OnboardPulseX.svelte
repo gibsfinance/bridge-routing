@@ -89,7 +89,9 @@
   class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
   <header class="flex flex-row justify-between relative h-16">
     {#if tokenIn}
-      <div class="flex flex-row items-center w-1/2 justify-end pr-5 gap-1">
+      <label
+        for="amount-to-swap-in"
+        class="flex flex-row items-center w-1/2 justify-end pr-5 gap-1">
         <div class="flex flex-row-reverse items-center gap-1 absolute top-0 left-0">
           <BalanceReadout
             token={tokenIn}
@@ -103,6 +105,7 @@
         <NumericInput
           class="w-full input ring-0 focus:ring-0 text-right placeholder:text-gray-600 text-surface-contrast-50 text-base"
           value={amountToSwapIn}
+          id="amount-to-swap-in"
           decimals={tokenIn.decimals}
           oninput={(v) => {
             amountInControl = true
@@ -110,7 +113,7 @@
             amountToSwapOut = null
           }} />
         <AssetWithNetwork asset={tokenIn} network={Chains.PLS} />
-      </div>
+      </label>
       <VerticalDivider>
         <Icon
           icon="gridicons:chevron-right"
@@ -120,13 +123,14 @@
         class="size-6 absolute left-0 bottom-0 text-surface-contrast-50 ml-1 flex items-center justify-center">
         <Loading key="pulsex-quote" />
       </div>
-      <div class="flex flex-row items-center w-1/2 pl-5 gap-1">
+      <label for="amount-to-swap-out" class="flex flex-row items-center w-1/2 pl-5 gap-1">
         <!-- output token -->
         <AssetWithNetwork asset={tokenOut} network={Chains.PLS} />
         <NumericInput
           paddingClass="px-0"
           class="w-full input ring-0 focus:ring-0 placeholder:text-gray-600 placeholder: text-surface-contrast-50 text-base"
           value={amountToSwapOut}
+          id="amount-to-swap-out"
           decimals={tokenOut.decimals}
           oninput={(v) => {
             amountInControl = false
@@ -134,7 +138,7 @@
             amountToSwapIn = null
           }} />
         <Button disabled class={swapButtonClassNames} onclick={swapTokens}>Swap</Button>
-      </div>
+      </label>
     {/if}
   </header>
 </div>
