@@ -378,7 +378,7 @@
             class="w-full h-full p-1 text-surface-contrast-50 opacity-0 group-hover:opacity-100 transition-opacity duration-100" />
         </Button>
         <label
-          class="flex flex-row gap-2 w-full pl-4 pr-6 py-4 cursor-pointer text-surface-contrast-50 items-center group"
+          class="flex flex-row gap-1 w-full pl-4 pr-5 py-4 cursor-pointer text-surface-contrast-50 items-center group"
           for="amount-to-bridge">
           <div class="flex flex-col gap-0 w-full relative">
             <NumericInput

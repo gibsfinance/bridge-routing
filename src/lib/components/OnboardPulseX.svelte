@@ -89,7 +89,7 @@
   class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
   <header class="flex flex-row justify-between relative h-16">
     {#if tokenIn}
-      <div class="flex flex-row items-center w-1/2 justify-end pr-6 gap-2">
+      <div class="flex flex-row items-center w-1/2 justify-end pr-5 gap-1">
         <div class="flex flex-row-reverse items-center gap-1 absolute top-0 left-0">
           <BalanceReadout
             token={tokenIn}
@@ -120,7 +120,7 @@
         class="size-6 absolute left-0 bottom-0 text-surface-contrast-50 ml-1 flex items-center justify-center">
         <Loading key="pulsex-quote" />
       </div>
-      <div class="flex flex-row items-center w-1/2 pl-6 gap-2">
+      <div class="flex flex-row items-center w-1/2 pl-5 gap-1">
         <!-- output token -->
         <AssetWithNetwork asset={tokenOut} network={Chains.PLS} />
         <NumericInput
