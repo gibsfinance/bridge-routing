@@ -63,6 +63,7 @@
     "@reown/appkit": "^1.6.8",
     "@reown/appkit-adapter-wagmi": "^1.6.8",
     "@tailwindcss/vite": "^4.0.9",
+    "@types/lodash": "^4.17.16",
     "@types/node": "^22.13.4",
     "@wagmi/core": "^2.16.5",
     "@walletconnect/ethereum-provider": "^2.18.1",

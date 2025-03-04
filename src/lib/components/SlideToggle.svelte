@@ -7,23 +7,19 @@
     class?: string
     name?: string
   }
-  let {
+  const {
     name = _.uniqueId('slide-toggle-'),
-    checked: startChecked,
+    checked,
     class: className,
     onchange,
   }: Props = $props()
-  let checked = $state(startChecked ?? false)
 </script>
 
 <Switch
   {name}
   {checked}
   classes={className}
-  onCheckedChange={(e) => {
-    checked = e.checked
-    onchange?.(e)
-  }}
+  onCheckedChange={onchange}
   controlInactive={'bg-gray-400'}
   thumbInactive={'bg-surface-200'}
   controlActive={'bg-surface-500'} />

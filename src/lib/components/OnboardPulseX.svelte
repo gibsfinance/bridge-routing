@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
+  import { assetSources, bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { getPulseXQuote, type PulsexQuoteOutput, type TradeType } from '$lib/stores/pulsex.svelte'
   import Icon from '@iconify/svelte'
   import type { Token } from '$lib/types.svelte'
@@ -15,10 +15,13 @@
   // import { sendTransaction } from '@wagmi/core'
   // import { wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
   // import * as SDK from '@pulsex/sdk'
-  type Props = {
-    tokenOut: Token
-  }
-  const { tokenOut }: Props = $props()
+
+  import { onboardSettings } from '$lib/stores/onboard.svelte'
+  const tokenOut = $derived(onboardSettings.plsOutToken)
+  const tokenOutWithCorrectLogoURI = $derived({
+    ...tokenOut,
+    logoURI: assetSources(tokenOut),
+  })
   const tokenInURI = $derived(bridgeSettings.assetIn.value?.logoURI)
   const bridgeTokenOut = $derived(bridgeSettings.assetOut.value as Token | null)
   const tokenIn = $derived(
@@ -126,7 +129,7 @@
       <div class="flex flex-row grow items-center w-1/2">
         <label for="amount-to-swap-out" class="flex flex-row grow items-center pl-5 h-full gap-1">
           <!-- output token -->
-          <AssetWithNetwork asset={tokenOut} network={Chains.PLS} />
+          <AssetWithNetwork asset={tokenOutWithCorrectLogoURI} network={Chains.PLS} />
           <NumericInput
             paddingClass="px-0"
             class="w-full input ring-0 focus:ring-0 placeholder:text-gray-600 placeholder: text-surface-contrast-50 text-base"

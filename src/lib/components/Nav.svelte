@@ -33,6 +33,7 @@
   const destinationBridgeKey = $derived(bridgeKey.toChain)
   const isDeliveryRoute = $derived(page.route.id?.includes('/delivery'))
   const isOnboardRoute = $derived(page.route.id?.includes('/onboard'))
+  const isSmall = $derived(innerWidth.current && innerWidth.current < 768)
 </script>
 
 <div class="z-40 -mb-10 flex h-10">
@@ -68,7 +69,10 @@
                     type="button"
                     name="transactions"
                     class="flex items-center justify-center text-white">
-                    {txnText}&nbsp;<Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
+                    {#if !isSmall}{txnText}&nbsp;{/if}<Icon
+                      icon="ic:baseline-list"
+                      height="1.6em"
+                      width="1.6em" />
                   </button>
                 </a>
               </VersionedLink>
@@ -82,7 +86,10 @@
                   type="button"
                   name="transactions"
                   class="flex items-center justify-center text-white">
-                  {txnText}&nbsp;<Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
+                  {#if !isSmall}{txnText}&nbsp;{/if}<Icon
+                    icon="ic:baseline-list"
+                    height="1.6em"
+                    width="1.6em" />
                 </button>
               </a>
             {/if}
@@ -90,7 +97,10 @@
           <li class="flex flex-row">
             <ModalWrapper triggerClasses="flex flex-row items-center px-2 py-1">
               {#snippet button()}
-                RPC&nbsp;<Icon icon="gravity-ui:plug-connection" height="1.2em" width="1.2em" />
+                {#if !isSmall}RPC&nbsp;{/if}<Icon
+                  icon="gravity-ui:plug-connection"
+                  height="1.2em"
+                  width="1.2em" />
               {/snippet}
               {#snippet contents({ close })}
                 <RPC
@@ -112,8 +122,8 @@
                 class="link"
                 onkeypress={gotoNativeDelivery}
                 onclick={gotoNativeDelivery}
-                >Delivery&nbsp;<Icon
-                  icon="icon-park-outline:bridge-one"
+                >{#if !isSmall}Delivery&nbsp;{/if}<Icon
+                  icon="icon-park-solid:bridge-one"
                   height="1.6em"
                   width="1.6em" /></button>
             </li>
@@ -121,7 +131,7 @@
           {#if !isOnboardRoute}
             <li class="flex flex-row items-center">
               <Button class="flex flex-row items-center px-2 py-1" onclick={gotoOnboard}
-                >Onboard&nbsp;<Icon
+                >{#if !isSmall}Onboard&nbsp;{/if}<Icon
                   icon="material-symbols:run-circle"
                   stroke-width="1.5"
                   height="1.6em"
@@ -130,7 +140,6 @@
             </li>
           {/if}
         </ul>
-        <div id="onboard-container"></div>
       </div>
     </div>
   </nav>

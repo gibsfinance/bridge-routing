@@ -16,7 +16,7 @@ export const chainsMetadata = {
     alt: 'a pink blue and purple hexagon with an ekg line running horizontally',
     rpcUrls: {
       default: {
-        http: ['https://rpc-pulsechain.g4mm4.io'],
+        http: ['https://rpc.pulsechain.com'],
       },
     },
     contracts: {

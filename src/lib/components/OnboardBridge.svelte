@@ -4,8 +4,8 @@
   import { isHex, zeroAddress, type Hex } from 'viem'
   import Button from './Button.svelte'
   import Icon from '@iconify/svelte'
-  import { Chains, Provider } from '$lib/stores/auth/types'
-  import { accountState, modal, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
+  import { Chains } from '$lib/stores/auth/types'
+  import { accountState, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
   import {
     assetSources,
     bridgeSettings,
@@ -19,9 +19,7 @@
   import {
     assetLink,
     loadAssetLink,
-    loadPrice,
     minAmount,
-    priceInt,
     watchWplsUSDPrice,
     liveBridgeStatus,
     bridgeStatuses,
@@ -40,7 +38,6 @@
   } from '$lib/stores/input.svelte'
   import { humanReadableNumber, usd } from '$lib/stores/utils'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
-  import { chainsMetadata } from '$lib/stores/auth/constants'
   import { SvelteMap } from 'svelte/reactivity'
   import { sendTransaction, waitForTransactionReceipt } from '@wagmi/core'
   import Loading from './Loading.svelte'
@@ -49,7 +46,6 @@
   import Input from './Input.svelte'
   import { untrack } from 'svelte'
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
-  // let bridgeAmount = $state(0n)
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(bridgeFee.value?.feeF2H ?? 0n)
   const bridgeFeeAmount = $derived((bridgeFeePercent * bridgeAmount) / oneEther)
@@ -58,21 +54,6 @@
 
   let editTxHash = $state(false)
   let editTxHashValue = $state('')
-  $effect.pre(() => {
-    bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
-  })
-  $effect(() => {
-    if (!tokenInput) {
-      bridgeSettings.assetIn.value = {
-        logoURI: `https://gib.show/image/1/${zeroAddress}`,
-        name: 'Ether',
-        symbol: 'ETH',
-        decimals: 18,
-        chainId: 1,
-        address: zeroAddress,
-      }
-    }
-  })
   $effect(() => {
     if (!tokenInput) return
     const tokensUnderBridgeKey = bridgeableTokensUnder({
@@ -138,41 +119,15 @@
   let usdMultiplier = $state(0n)
   const wplsTokenPrice = new SvelteMap<string, bigint>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
-  $effect(() => origination.watch(bridgeKey.fromChain))
-  $effect(() => destination.watch(bridgeKey.toChain))
   $effect(() => {
     const block = destination.block
     if (!block) return
     const watcher = watchWplsUSDPrice(block)
     watcher.promise.then((price) => {
-      if (watcher.controller.signal.aborted) {
-        // console.log('aborted')
-        return
-      }
+      if (watcher.controller.signal.aborted) return
       usdMultiplier = price ?? 0n
     })
     return watcher.cleanup
-  })
-  $effect(() => {
-    const block = destination.block
-    if (!bridgedToken || !block) return
-    const price = loadPrice(bridgedToken, block)
-    price.promise
-      .then((priceResult) => {
-        if (price.controller.signal.aborted) {
-          return
-        }
-        if (!priceResult) {
-          wplsTokenPrice.set(key, 0n)
-        } else {
-          const price = priceInt(priceResult, bridgedToken.decimals)
-          wplsTokenPrice.set(key, price)
-        }
-      })
-      .catch(() => {
-        wplsTokenPrice.set(key, 0n)
-      })
-    return price.cleanup
   })
   const priceAsInt = $derived(wplsTokenPrice.get(key) ?? 0n)
   const usdValueInt = $derived(
