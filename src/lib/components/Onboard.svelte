@@ -54,6 +54,9 @@
       view: 'OnRampProviders',
     })
   }
+  const openZKP2P = () => {
+    open('https://zkp2p.xyz/swap', '_blank')?.focus()
+  }
   const openBridge = () => {
     modal.open({
       view: 'Swap',
@@ -167,12 +170,19 @@
   <div class="flex flex-col gap-4 max-w-2xl mx-auto w-full">
     <header class="flex flex-row justify-between">
       <div class="flex flex-row gap-2">
-        <Button
-          class="btn preset-tonal gap-1 shadow-inner border border-surface-100/20"
-          onclick={openOnRamp}>
-          <span>OnRamp</span>
-          <Icon icon="material-symbols:ramp-left-rounded" mode="svg" class="size-6" />
-        </Button>
+        <div class="flex flex-row gap-0 border-surface-100/20">
+          <Button
+            class="btn gap-1 shadow-inner border px-1 rounded-r-none border-surface-100/20"
+            onclick={openOnRamp}>
+            <Icon icon="material-symbols:ramp-left-rounded" mode="svg" class="size-6" />
+          </Button>
+          <Button
+            class="btn gap-2 shadow-inner border border-surface-100/20 pl-2 rounded-l-none bg-surface-300/20 border-l-0"
+            onclick={openZKP2P}>
+            <span>OnRamp</span>
+            <Icon icon="codicon:circuit-board" mode="svg" class="size-6" />
+          </Button>
+        </div>
         <Button
           class="btn preset-tonal gap-2 shadow-inner border border-surface-100/20"
           onclick={openBridge}>

@@ -123,22 +123,24 @@
         class="size-6 absolute left-0 bottom-0 text-surface-contrast-50 ml-1 flex items-center justify-center">
         <Loading key="pulsex-quote" />
       </div>
-      <label for="amount-to-swap-out" class="flex flex-row items-center w-1/2 pl-5 gap-1">
-        <!-- output token -->
-        <AssetWithNetwork asset={tokenOut} network={Chains.PLS} />
-        <NumericInput
-          paddingClass="px-0"
-          class="w-full input ring-0 focus:ring-0 placeholder:text-gray-600 placeholder: text-surface-contrast-50 text-base"
-          value={amountToSwapOut}
-          id="amount-to-swap-out"
-          decimals={tokenOut.decimals}
-          oninput={(v) => {
-            amountInControl = false
-            amountToSwapOut = v
-            amountToSwapIn = null
-          }} />
+      <div class="flex flex-row grow items-center w-1/2">
+        <label for="amount-to-swap-out" class="flex flex-row grow items-center pl-5 h-full gap-1">
+          <!-- output token -->
+          <AssetWithNetwork asset={tokenOut} network={Chains.PLS} />
+          <NumericInput
+            paddingClass="px-0"
+            class="w-full input ring-0 focus:ring-0 placeholder:text-gray-600 placeholder: text-surface-contrast-50 text-base"
+            value={amountToSwapOut}
+            id="amount-to-swap-out"
+            decimals={tokenOut.decimals}
+            oninput={(v) => {
+              amountInControl = false
+              amountToSwapOut = v
+              amountToSwapIn = null
+            }} />
+        </label>
         <Button disabled class={swapButtonClassNames} onclick={swapTokens}>Swap</Button>
-      </label>
+      </div>
     {/if}
   </header>
 </div>
