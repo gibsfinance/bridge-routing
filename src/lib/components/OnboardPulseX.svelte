@@ -38,7 +38,6 @@
   let quoteResult = $state<PulsexQuoteOutput | null>(null)
   $effect(() => {
     if (!tokenIn || !tokenOut || (!amountToSwapIn && !amountToSwapOut) || !destination.block) {
-      // console.log('no quote', !tokenIn, !tokenOut, amountToSwapIn, amountToSwapOut)
       return
     }
     const quote = getPulseXQuote({
@@ -122,10 +121,6 @@
           icon="gridicons:chevron-right"
           class="text-surface-500 bg-surface-950-50 rounded-full w-full h-full ring-2 ring-current ring-inset p-0.5" />
       </VerticalDivider>
-      <div
-        class="size-6 absolute left-0 bottom-0 text-surface-contrast-50 ml-1 flex items-center justify-center">
-        <Loading key="pulsex-quote" />
-      </div>
       <div class="flex flex-row grow items-center w-1/2">
         <label for="amount-to-swap-out" class="flex flex-row grow items-center pl-5 h-full gap-1">
           <!-- output token -->
@@ -142,7 +137,11 @@
               amountToSwapIn = null
             }} />
         </label>
-        <Button disabled class={swapButtonClassNames} onclick={swapTokens}>Swap</Button>
+        <Button disabled class={swapButtonClassNames} onclick={swapTokens}>
+          <Loading key="pulsex-quote">
+            {#snippet contents()}Swap{/snippet}
+          </Loading>
+        </Button>
       </div>
     {/if}
   </header>
