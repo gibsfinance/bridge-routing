@@ -14,6 +14,9 @@
   import OnboardPulseX from './OnboardPulseX.svelte'
   import OnboardSelectTokens from './OnboardSelectTokens.svelte'
   import OnboardSettings from './OnboardSettings.svelte'
+  import OnboardForeignBridge from './OnboardForeignBridge.svelte'
+  import { onboardSettings } from '$lib/stores/onboard.svelte'
+
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const tokenInput = $derived(bridgeSettings.assetIn.value)
   const networkIsSet = $derived(!!accountState.chainId)
@@ -69,6 +72,9 @@
 {#if tokenInput}
   <div class="flex flex-col gap-4 max-w-2xl mx-auto w-full">
     <OnboardSettings />
+    {#if onboardSettings.foreignBridge.show}
+      <OnboardForeignBridge />
+    {/if}
     <OnboardSelectTokens />
     {#if !networkIsSet || networkMatches}
       <OnboardBridge />

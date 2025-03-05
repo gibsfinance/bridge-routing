@@ -34,7 +34,7 @@
     oninput,
     setref,
   }: Props = $props()
-  const defaultClassName = 'block w-full py-1 px-2 shadow-xs bg-transparent outline-hidden'
+  const defaultClassName = 'flex w-full py-1 px-2 shadow-xs bg-transparent outline-hidden'
   let input!: HTMLInputElement
   export { className as class }
   onMount(() => {

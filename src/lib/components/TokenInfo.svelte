@@ -4,16 +4,37 @@
   import { assetSources } from '$lib/stores/bridge-settings.svelte'
   import { ellipsis } from '$lib/stores/utils'
   import classNames from 'classnames'
+  import type { ClassParam } from '$lib/types.svelte'
   type Props = {
-    token: Token
+    token: {
+      chainId: number
+      name: string
+      symbol: string
+      address: string
+      logoURI?: string
+    }
     truncate?: number
     reversed?: boolean
     externalGroup?: boolean
     wrapperSizeClasses?: string
+    nameClasses?: ClassParam
   }
-  const { token, truncate = 20, reversed = false, externalGroup = false, wrapperSizeClasses = 'w-full h-full' }: Props = $props()
+  const {
+    token,
+    truncate = 20,
+    reversed = false,
+    externalGroup = false,
+    wrapperSizeClasses = 'w-full h-full',
+    nameClasses: nameClassesInput,
+  }: Props = $props()
   const wrapperClasses = $derived(
     classNames('flex', wrapperSizeClasses, reversed ? 'flex-row-reverse' : 'flex-row'),
+  )
+  const nameClasses = $derived(
+    classNames(
+      'leading-5 translate-y-1.5 group-hover:translate-y-0.5 transition-all transition-duration-100',
+      nameClassesInput,
+    ),
   )
   const textContainerClasses = $derived(
     classNames(
@@ -33,12 +54,10 @@
 <div class={wrapperClasses}>
   <span class="size-8">
     <!-- might be a good idea to simply keep it loaded after first -->
-    <TokenIcon src={assetSources(token)} />
+    <TokenIcon src={token.logoURI || assetSources(token)} />
   </span>
   <span class={textContainerClasses}>
-    <span
-      class="leading-5 translate-y-1.5 group-hover:translate-y-0.5 transition-all transition-duration-100"
-      >{token.name}</span>
+    <span class={nameClasses}>{token.name}</span>
     <span class={addressClasses}>
       {ellipsis(token.address, { length: truncate, prefixLength: 2 })}
     </span>

@@ -181,7 +181,7 @@
     }
   }
   const bridgeGoClassNames = $derived(
-    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-6 w-16 flex basis-auto' +
+    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-6 w-16 flex basis-auto text-base' +
       (bridgeStatus !== null && !editTxHash ? ' rounded-b-none' : ''),
   )
   const percentProgress = $derived.by(() => {

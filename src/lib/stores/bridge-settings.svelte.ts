@@ -1512,7 +1512,22 @@ export const loadPriceCorrective = ({
 // )
 
 /** the sources of the asset, including the wrapped asset if it exists */
-export const assetSources = (asset: Token | null) => {
+export const assetSources = (
+  asset: {
+    chainId: number
+    address: string
+    extensions?: {
+      bridgeInfo?: {
+        [chainId: string]: {
+          tokenAddress: string
+        }
+      }
+      wrapped?: {
+        address: string
+      }
+    }
+  } | null,
+) => {
   if (!asset) {
     return ''
   }
@@ -1548,9 +1563,8 @@ export const assetSources = (asset: Token | null) => {
       }),
     ]),
   )
-  const sources = _.sortBy(inputs, [(a: MinTokenInfo) => a.chainId]).map(
-    (a: MinTokenInfo) => `${a.chainId}/${a.address}`,
-  )
+  const sorted = _.sortBy(inputs, [(a: MinTokenInfo) => a.chainId]) as MinTokenInfo[]
+  const sources = sorted.map((a: MinTokenInfo) => `${a.chainId}/${a.address}`.toLowerCase())
   return imageLinks.images(sources)
 }
 

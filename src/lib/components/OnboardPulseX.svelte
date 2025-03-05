@@ -73,7 +73,7 @@
     return int
   }
   const swapButtonClassNames = $derived(
-    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-4 w-16',
+    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-4 w-16 text-base',
   )
   const swapTokens = () => {
     // SDK.

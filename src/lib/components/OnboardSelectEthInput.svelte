@@ -1,11 +1,11 @@
 <script lang="ts">
   import type { Token } from '$lib/types.svelte'
   import { zeroAddress } from 'viem'
-  import Button from './Button.svelte'
-  import Icon from '@iconify/svelte'
+  import TokenInfo from './TokenInfo.svelte'
+  import ModalWrapper from './ModalWrapper.svelte'
+  import TokenSelect from './TokenSelect.svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
-  import { accountState, modal } from '$lib/stores/auth/AuthProvider.svelte'
-  import ConnectButton from './ConnectButton.svelte'
+  import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import { bridgeSettings, searchKnownAddresses } from '$lib/stores/bridge-settings.svelte'
   import {
     assetLink,
@@ -25,16 +25,16 @@
     bridgeKey,
   } from '$lib/stores/input.svelte'
   import { SvelteMap } from 'svelte/reactivity'
-  import SlideToggle from './SlideToggle.svelte'
-  import { onboardSettings } from '$lib/stores/onboard.svelte'
+  import type { Snippet } from 'svelte'
+  const {
+    namePrefix,
+    side = 'left',
+    children,
+  }: { namePrefix?: string; side?: 'left' | 'right'; children?: Snippet } = $props()
+
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
-  const openOnRamp = () => {
-    modal.open({
-      view: 'OnRampProviders',
-    })
-  }
-  const openZKP2P = () => {
-    open('https://zkp2p.xyz/swap', '_blank')?.focus()
+  const updateTokenInput = (token: Token) => {
+    bridgeSettings.assetIn.value = token
   }
   const tokenInput = $derived(bridgeSettings.assetIn.value)
   $effect.pre(() => {
@@ -92,6 +92,7 @@
   $effect(() => {
     recipient.value = accountState.address ?? zeroAddress
   })
+  // let usdMultiplier = $state(0n)
   const wplsTokenPrice = new SvelteMap<string, bigint>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
   $effect(() => origination.watch(bridgeKey.fromChain))
@@ -121,34 +122,41 @@
     if (!bridgeSettings.assetIn.value) return
     return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
   })
-  const toggleShowBridge = () => {
-    onboardSettings.toggleShowBridge()
-  }
+  const token = $derived.by(() =>
+    tokenInput
+      ? {
+          ...tokenInput,
+          name: namePrefix ?? tokenInput.name,
+        }
+      : null,
+  )
 </script>
 
-<header class="flex flex-row justify-between">
-  <div class="flex flex-row gap-2">
-    <div class="flex flex-row gap-0 border-surface-100/20">
-      <Button
-        class="btn gap-1 shadow-inner border px-1 rounded-r-none border-surface-100/20"
-        onclick={openOnRamp}>
-        <Icon icon="material-symbols:ramp-left-rounded" mode="svg" class="size-6" />
-      </Button>
-      <Button
-        class="btn gap-2 shadow-inner border border-surface-100/20 pl-2 rounded-l-none bg-surface-300/20 border-l-0"
-        onclick={openZKP2P}>
-        <span>OnRamp</span>
-        <Icon icon="codicon:circuit-board" mode="svg" class="size-6" />
-      </Button>
-    </div>
-    <Button
-      class="btn preset-tonal gap-2 shadow-inner border border-surface-100/20 pr-1"
-      onclick={toggleShowBridge}>
-      <Icon icon="icon-park-solid:bridge-one" mode="svg" class="size-6" />
-      <span>Bridge</span>
-      <!-- put slide toggle inside a button so we have to let the mouse events pass through -->
-      <SlideToggle checked={onboardSettings.foreignBridge.show} class="pointer-events-none" />
-    </Button>
+{#if token}
+  <div class="w-1/2 flex flex-row justify-end relative">
+    <ModalWrapper
+      wrapperClasses="grow h-full"
+      triggerClasses="p-4 flex relative justify-end grow h-full items-center gap-2 text-surface-contrast-50 group w-full">
+      {#snippet button()}
+        <span class="flex flex-row px-1 w-full">
+          <TokenInfo
+            {token}
+            truncate={8}
+            reversed={side === 'left'}
+            externalGroup
+            wrapperSizeClasses="w-full h-8"
+            nameClasses="text-base" />
+        </span>
+      {/snippet}
+      {#snippet contents({ close })}
+        <TokenSelect
+          chain={Chains.ETH}
+          onsubmit={(tkn) => {
+            updateTokenInput(tkn)
+            close()
+          }} />
+      {/snippet}
+    </ModalWrapper>
+    {@render children?.()}
   </div>
-  <ConnectButton />
-</header>
+{/if}

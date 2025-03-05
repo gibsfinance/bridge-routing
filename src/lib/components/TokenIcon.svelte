@@ -23,7 +23,7 @@
   }
   const onload = markLoaded(true)
   const onerror = markLoaded(false)
-  const classes = $derived(classNames(`${className} ${!loaded ? 'invisible' : ''}`))
+  const classes = $derived(classNames(`rounded-full ${className} ${!loaded ? 'invisible' : ''}`))
   const iconClass = $derived(
     classNames(`absolute opacity-70 ${className} ${sizeClasses} ${!loaded ? '' : 'invisible'}`),
   )

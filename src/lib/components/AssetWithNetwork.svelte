@@ -10,7 +10,7 @@
 
   type Props = {
     asset: Token
-    network: Chains
+    network?: Chains
     tokenSizeClasses?: string
     networkSizeClasses?: string
   }
@@ -38,15 +38,3 @@
       alt={chain.alt} />
   {/if}
 </span>
-<!--
-<style lang="postcss">
-  @reference "tailwindcss/theme";
-  .token-image-container {
-    height: calc(var(--token-size));
-    width: calc(var(--token-size));
-    :global(.network-image) {
-      height: calc(var(--network-size));
-      width: calc(var(--network-size));
-    }
-  }
-</style> -->

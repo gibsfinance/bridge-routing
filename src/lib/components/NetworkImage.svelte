@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Chains, type VisualChain } from '$lib/stores/auth/types'
+  import { Chains, toChain } from '$lib/stores/auth/types'
   import Icon from '@iconify/svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
@@ -17,12 +17,12 @@
 
   let dropdown: HTMLDetailsElement | null = $state(null)
   type Props = {
-    network: Chains
+    network: number
     sizeClasses: string
     inChain?: boolean
   }
   const { network: providedNetwork, sizeClasses, inChain }: Props = $props()
-  const network = $derived(chainIdToChain(providedNetwork))
+  const network = $derived(chainIdToChain(toChain(providedNetwork)))
   const bridgeKeyIndex = $derived((2 - Number(inChain)) as 2 | 1)
   const availableBridgeKeys = $derived(validBridgeKeys(isProd.value))
   const networkOptions = $derived.by(() =>
@@ -66,7 +66,7 @@
               return
             }}>
             <StaticNetworkImage
-              network={listBridgeKey[bridgeKeyIndex]}
+              network={Number(listBridgeKey[bridgeKeyIndex])}
               provider={listBridgeKey[0]}
               {sizeClasses} />
             <span class="flex grow px-2"

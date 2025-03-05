@@ -1,12 +1,13 @@
 <script lang="ts">
-  import { Chains } from '$lib/stores/auth/types'
+  import { Chains, toChain, type ChainsMetadata, type VisualChain } from '$lib/stores/auth/types'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import ProviderIcon from './ProviderIcon.svelte'
   import Image from './Image.svelte'
   import classNames from 'classnames'
+  import * as imageLinks from '$lib/stores/image-links'
 
   type Props = {
-    network: Chains
+    network: number
     sizeClasses?: string
     provider?: string | null
     providerSizeClasses?: string
@@ -17,7 +18,7 @@
     providerSizeClasses = 'size-4',
     provider = null,
   }: Props = $props()
-  const visualChain = $derived(chainsMetadata[network])
+  const visualChain = $derived((chainsMetadata[toChain(network)] || null) as VisualChain | null)
   const classes = $derived(`${sizeClasses} network-icon min-w-8`)
   const providerWrapperClasses = $derived(
     `${providerSizeClasses} absolute -bottom-1 -left-1 rounded-full`,
@@ -26,7 +27,11 @@
 </script>
 
 <div class={wrapperClasses}>
-  <Image class={classes} {sizeClasses} src={visualChain.icon} alt={visualChain.alt} />
+  <Image
+    class={classes}
+    {sizeClasses}
+    src={visualChain?.icon || imageLinks.network(Number(network))}
+    alt={visualChain?.alt || null} />
   {#if provider}
     <div class={providerWrapperClasses}>
       <ProviderIcon {provider} sizeClasses={providerSizeClasses} />

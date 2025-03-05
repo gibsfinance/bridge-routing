@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { humanReadableNumber, numberWithCommas, stripNonNumber } from '$lib/stores/utils'
+  import { numberWithCommas, stripNonNumber } from '$lib/stores/utils'
   import classNames from 'classnames'
   import type { ClassParam } from '$lib/types.svelte'
   import _ from 'lodash'

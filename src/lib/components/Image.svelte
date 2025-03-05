@@ -18,7 +18,7 @@
   }: {
     sizeClasses?: string
     src: string | null | undefined
-    alt?: string
+    alt?: string | null | undefined
     style?: string
     class?: string
     containerClasses?: string

@@ -28,6 +28,7 @@
   } from '$lib/stores/input.svelte'
   import { SvelteMap } from 'svelte/reactivity'
   import { onboardSettings } from '$lib/stores/onboard.svelte'
+  import OnboardSelectEthInput from './OnboardSelectEthInput.svelte'
 
   const tokenOutput = $derived(onboardSettings.plsOutToken)
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
@@ -35,7 +36,6 @@
     bridgeSettings.assetIn.value = token
   }
   const updateTokenOutput = (token: Token) => {
-    console.log('updateTokenOutput', token)
     onboardSettings.plsOutToken = token
   }
   const tokenInput = $derived(bridgeSettings.assetIn.value)
@@ -131,30 +131,7 @@
     class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100">
     <header class="flex flex-row justify-between relative">
       <!-- token that i have -->
-      <div class="w-1/2 flex flex-col justify-end relative">
-        <ModalWrapper
-          wrapperClasses="w-full h-full"
-          triggerClasses="p-4 flex relative justify-end w-full h-full items-center gap-2 text-surface-contrast-50 group">
-          {#snippet button()}
-            <span class="flex flex-row px-1 w-full">
-              <TokenInfo
-                token={tokenInput}
-                truncate={8}
-                reversed
-                externalGroup
-                wrapperSizeClasses="w-full h-8" />
-            </span>
-          {/snippet}
-          {#snippet contents({ close })}
-            <TokenSelect
-              chain={Chains.ETH}
-              onsubmit={(tkn) => {
-                updateTokenInput(tkn)
-                close()
-              }} />
-          {/snippet}
-        </ModalWrapper>
-      </div>
+      <OnboardSelectEthInput side="left" />
       <!-- vertical divider -->
       <VerticalDivider>
         <Icon
@@ -172,7 +149,8 @@
                 token={tokenOutput}
                 truncate={8}
                 externalGroup
-                wrapperSizeClasses="w-full h-8" />
+                wrapperSizeClasses="w-full h-8"
+                nameClasses="text-base" />
             </span>
           {/snippet}
           {#snippet contents({ close })}
