@@ -94,7 +94,7 @@
   $effect(() => {
     const assetIn = bridgeSettings.assetIn.value
     if (!assetIn || !assetLink.value) return
-    console.log('assetIn', JSON.stringify(assetLink.value, null, 2))
+    // console.log('assetIn', JSON.stringify(assetLink.value, null, 2))
     const updatingAssetOut = updateAssetOut({
       bridgeKey,
       assetInput: assetIn,

@@ -1,12 +1,5 @@
 import { createAppKit, type ConnectedWalletInfo, type UseAppKitAccountReturn } from '@reown/appkit'
-import {
-  mainnet,
-  pulsechain,
-  sepolia,
-  pulsechainV4,
-  bsc,
-  type AppKitNetwork,
-} from '@reown/appkit/networks'
+import * as networks from '@reown/appkit/networks'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { NullableProxyStore } from '$lib/types.svelte'
 import type { Hex } from 'viem'
@@ -17,15 +10,49 @@ import { SvelteMap } from 'svelte/reactivity'
 
 const projectId = walletConnectProjectId
 
-export const networks = [mainnet, pulsechain, sepolia, pulsechainV4, bsc] as [
-  AppKitNetwork,
-  ...AppKitNetwork[],
-]
+export const appkitNetworkList = [
+  networks.mainnet,
+  networks.pulsechain,
+  networks.sepolia,
+  networks.pulsechainV4,
+  networks.bsc,
+  // lifi network list
+  networks.arbitrum,
+  networks.base,
+  networks.blast,
+  networks.avalanche,
+  networks.polygon,
+  networks.scroll,
+  networks.optimism,
+  networks.linea,
+  networks.zksync,
+  networks.polygonZkEvm,
+  networks.gnosis,
+  networks.fantom,
+  networks.fuse,
+  networks.boba,
+  networks.unichain,
+  networks.aurora,
+  networks.sei,
+  networks.immutableZkEvm,
+  networks.sonic,
+  networks.gravity,
+  networks.taiko,
+  networks.cronos,
+  networks.cronoszkEVM,
+  networks.fraxtal,
+  networks.abstract,
+  networks.rootstock,
+  networks.celo,
+  networks.worldchain,
+  networks.mantle,
+  networks.berachain,
+] as [networks.AppKitNetwork, ...networks.AppKitNetwork[]]
 
 // 2. Set up Wagmi adapter
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
-  networks,
+  networks: appkitNetworkList,
   syncConnectedChain: true,
 })
 // 3. Configure the metadata
@@ -39,7 +66,7 @@ const metadata = {
 // 3. Create the modal
 export const modal = createAppKit({
   adapters: [wagmiAdapter],
-  networks,
+  networks: appkitNetworkList,
   metadata,
   projectId,
   features: {
@@ -57,7 +84,7 @@ export const connect = async () => {
     projectId,
     metadata,
     showQrModal: true,
-    chains: networks.map((n) => n.id) as [number, ...number[]],
+    chains: appkitNetworkList.map((n) => n.id) as [number, ...number[]],
   })
   provider.value = ethProvider
 }
@@ -69,7 +96,7 @@ export const disconnect = async () => {
   return await modal.close()
 }
 
-export const switchNetwork = async (chain: AppKitNetwork | null | undefined) => {
+export const switchNetwork = async (chain: networks.AppKitNetwork | null | undefined) => {
   if (chain) {
     try {
       modal.switchNetwork(chain)

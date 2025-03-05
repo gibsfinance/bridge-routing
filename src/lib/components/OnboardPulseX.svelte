@@ -17,6 +17,7 @@
   // import * as SDK from '@pulsex/sdk'
 
   import { onboardSettings } from '$lib/stores/onboard.svelte'
+  import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   const tokenOut = $derived(onboardSettings.plsOutToken)
   const tokenOutWithCorrectLogoURI = $derived({
     ...tokenOut,
@@ -87,62 +88,67 @@
   }
 </script>
 
-<div
-  class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
-  <header class="flex flex-row justify-between relative h-16">
-    {#if tokenIn}
-      <label
-        for="amount-to-swap-in"
-        class="flex flex-row items-center w-1/2 justify-end pr-5 gap-1">
-        <div class="flex flex-row-reverse items-center gap-1 absolute top-0 left-0">
-          <BalanceReadout
-            token={tokenIn}
-            roundedClasses="rounded-tl"
-            hideSymbol
-            decimalLimit={9}
-            onmax={(balance) => {
-              amountToSwapIn = balance
-            }} />
-        </div>
-        <NumericInput
-          class="w-full input ring-0 focus:ring-0 text-right placeholder:text-gray-600 text-surface-contrast-50 text-base"
-          value={amountToSwapIn}
-          id="amount-to-swap-in"
-          decimals={tokenIn.decimals}
-          oninput={(v) => {
-            amountInControl = true
-            amountToSwapIn = v
-            amountToSwapOut = null
-          }} />
-        <AssetWithNetwork asset={tokenIn} network={Chains.PLS} />
-      </label>
-      <VerticalDivider>
-        <Icon
-          icon="gridicons:chevron-right"
-          class="text-surface-500 bg-surface-950-50 rounded-full w-full h-full ring-2 ring-current ring-inset p-0.5" />
-      </VerticalDivider>
-      <div class="flex flex-row grow items-center w-1/2">
-        <label for="amount-to-swap-out" class="flex flex-row grow items-center pl-5 h-full gap-1">
-          <!-- output token -->
-          <AssetWithNetwork asset={tokenOutWithCorrectLogoURI} network={Chains.PLS} />
+<div class="flex flex-col">
+  <label for="amount-to-swap-in" class="text-surface-100 text-base italic">3) Swap on PulseX</label>
+  <div
+    class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
+    <header class="flex flex-row justify-between relative h-16">
+      {#if tokenIn}
+        <label
+          for="amount-to-swap-in"
+          class="flex flex-row items-center w-1/2 justify-end pr-5 gap-1">
+          <div class="flex flex-row-reverse items-center gap-1 absolute top-0 left-0">
+            {#if accountState.address}
+              <BalanceReadout
+                token={tokenIn}
+                roundedClasses="rounded-tl"
+                hideSymbol
+                decimalLimit={9}
+                onmax={(balance) => {
+                  amountToSwapIn = balance
+                }} />
+            {/if}
+          </div>
           <NumericInput
-            paddingClass="px-0"
-            class="w-full input ring-0 focus:ring-0 placeholder:text-gray-600 placeholder: text-surface-contrast-50 text-base"
-            value={amountToSwapOut}
-            id="amount-to-swap-out"
-            decimals={tokenOut.decimals}
+            class="w-full input ring-0 focus:ring-0 text-right placeholder:text-gray-600 text-surface-contrast-50 text-base"
+            value={amountToSwapIn}
+            id="amount-to-swap-in"
+            decimals={tokenIn.decimals}
             oninput={(v) => {
-              amountInControl = false
-              amountToSwapOut = v
-              amountToSwapIn = null
+              amountInControl = true
+              amountToSwapIn = v
+              amountToSwapOut = null
             }} />
+          <AssetWithNetwork asset={tokenIn} network={Chains.PLS} />
         </label>
-        <Button disabled class={swapButtonClassNames} onclick={swapTokens}>
-          <Loading key="pulsex-quote">
-            {#snippet contents()}Swap{/snippet}
-          </Loading>
-        </Button>
-      </div>
-    {/if}
-  </header>
+        <VerticalDivider>
+          <Icon
+            icon="gridicons:chevron-right"
+            class="text-surface-500 bg-surface-950-50 rounded-full w-full h-full ring-2 ring-current ring-inset p-0.5" />
+        </VerticalDivider>
+        <div class="flex flex-row grow items-center w-1/2">
+          <label for="amount-to-swap-out" class="flex flex-row grow items-center pl-5 h-full gap-1">
+            <!-- output token -->
+            <AssetWithNetwork asset={tokenOutWithCorrectLogoURI} network={Chains.PLS} />
+            <NumericInput
+              paddingClass="px-0"
+              class="w-full input ring-0 focus:ring-0 placeholder:text-gray-600 placeholder: text-surface-contrast-50 text-base"
+              value={amountToSwapOut}
+              id="amount-to-swap-out"
+              decimals={tokenOut.decimals}
+              oninput={(v) => {
+                amountInControl = false
+                amountToSwapOut = v
+                amountToSwapIn = null
+              }} />
+          </label>
+          <Button disabled class={swapButtonClassNames} onclick={swapTokens}>
+            <Loading key="pulsex-quote">
+              {#snippet contents()}Go{/snippet}
+            </Loading>
+          </Button>
+        </div>
+      {/if}
+    </header>
+  </div>
 </div>

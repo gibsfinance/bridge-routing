@@ -141,14 +141,13 @@
         <Icon icon="codicon:circuit-board" mode="svg" class="size-6" />
       </Button>
     </div>
-    <Button
+    <!-- <Button
       class="btn preset-tonal gap-2 shadow-inner border border-surface-100/20 pr-1"
       onclick={toggleShowBridge}>
       <Icon icon="icon-park-solid:bridge-one" mode="svg" class="size-6" />
       <span>Bridge</span>
-      <!-- put slide toggle inside a button so we have to let the mouse events pass through -->
       <SlideToggle checked={onboardSettings.foreignBridge.show} class="pointer-events-none" />
-    </Button>
+    </Button> -->
   </div>
   <ConnectButton />
 </header>

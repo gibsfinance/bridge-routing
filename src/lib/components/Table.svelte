@@ -18,7 +18,7 @@
       return items.slice(start, start + itemsPerPage)
     })
 
-    console.log('paginatedItems are', paginatedItems)
+    // console.log('paginatedItems are', paginatedItems)
     totalPages = [...paginatedItems]
   }
 

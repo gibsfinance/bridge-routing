@@ -35,7 +35,7 @@ import {
   type TokenOut,
 } from '$lib/types.svelte'
 import { chainsMetadata } from './auth/constants'
-import { networks } from './auth/AuthProvider.svelte'
+import { appkitNetworkList } from './auth/AuthProvider.svelte'
 import _ from 'lodash'
 import { loading } from './loading.svelte'
 
@@ -169,7 +169,7 @@ export const bridgeKey = new BridgeKeyStore()
 export const assetInAddress = new NullableProxyStore<Hex>()
 
 export const chainIdToChain = (chainId: Chains) => {
-  const found = networks.find((n) => n.id === Number(chainId))!
+  const found = appkitNetworkList.find((n) => n.id === Number(chainId))!
   if (!found) {
     console.trace(chainId)
     throw new Error(`chainIdToChain: no network found for chainId: ${chainId}`)

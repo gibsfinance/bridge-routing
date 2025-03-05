@@ -7,6 +7,7 @@
   import NumericInput from './NumericInput.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
   import TokenAndNetworkSelector from './TokenAndNetworkSelector.svelte'
+  import DiagonalText from './DiagonalText.svelte'
   import type { Token } from '$lib/types.svelte'
   import {
     availableChains,
@@ -16,9 +17,8 @@
     loadTools,
     getQuoteStep,
   } from '$lib/stores/objective.svelte'
-  import OnboardSelectEthInput from './OnboardSelectEthInput.svelte'
   import { accountState, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
-  import type { RelayerQuoteResponse, RelayerQuoteResponseData } from '@lifi/types'
+  import type { RelayerQuoteResponseData } from '@lifi/types'
   import _ from 'lodash'
   import TokenInfo from './TokenInfo.svelte'
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
@@ -26,6 +26,7 @@
   import { Chains } from '$lib/stores/auth/types'
   import { sendTransaction } from '@wagmi/core'
   import Loading from './Loading.svelte'
+  import BalanceReadout from './BalanceReadout.svelte'
   let tokenInput: Token = $state({
     logoURI: `https://gib.show/image/137`,
     name: 'Poly',
@@ -43,6 +44,12 @@
     address: zeroAddress,
   })
   let amountInput = $state(0n)
+  let maxBridgeable = $state(0n)
+  $effect(() => {
+    if (amountInput > maxBridgeable) {
+      amountInput = maxBridgeable
+    }
+  })
 
   $effect(() => {
     Promise.all([loadData(), loadTools()]).then(async () => {
@@ -87,7 +94,7 @@
   })
   let latestQuote: RelayerQuoteResponseData['quote'] | null = $state(null)
   $effect(() => {
-    console.log(quoteInputs)
+    // console.log(quoteInputs)
     if (!quoteInputs) return
     const quote = getQuoteStep(quoteInputs)
     quote.promise.then((q) => {
@@ -141,78 +148,98 @@
   }
 </script>
 
-<div
-  class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden relative flex flex-row">
-  <div class="flex flex-row items-center justify-between w-1/2 gap-1">
-    <label
-      for="foreign-bridge-amount-in"
-      class="flex flex-row items-center justify-items-end py-4 grow gap-1">
-      <NumericInput
-        class="w-full text-base input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right placeholder:text-gray-600 leading-6 h-8"
-        id="foreign-bridge-amount-in"
-        value={amountInput}
-        decimals={tokenInput.decimals}
-        oninput={(v) => {
-          amountInput = v
-        }} />
-      <span class="text-surface-contrast-50 leading-8 text-base">{tokenInput.symbol}</span>
-    </label>
-    <ModalWrapper
-      wrapperClasses="flex items-center justify-center h-full"
-      triggerClasses="h-full pr-5">
-      {#snippet button()}
-        <AssetWithNetwork asset={tokenInput} />
-      {/snippet}
-      {#snippet contents({ close })}
-        <TokenAndNetworkSelector
-          token={tokenInput}
-          onSelect={(token) => {
-            tokenInput = token
-            close()
+<div class="flex flex-col">
+  <label for="foreign-bridge-amount-in" class="text-surface-100 text-base italic"
+    >1) Bridge to Ethereum</label>
+  <div
+    class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden relative flex flex-row">
+    <div class="flex flex-row items-center justify-between w-1/2 gap-1">
+      {#if accountState.address}
+        <div class="flex gap-1 flex-row-reverse absolute top-0 left-0">
+          <BalanceReadout
+            token={tokenInput}
+            roundedClasses="rounded-tl"
+            hideSymbol
+            decimalLimit={9}
+            onbalanceupdate={(balance) => {
+              maxBridgeable = balance
+            }}
+            onmax={(balance) => {
+              // amountIn.value = balance
+              amountInput = balance
+            }} />
+        </div>
+      {/if}
+      <label
+        for="foreign-bridge-amount-in"
+        class="flex flex-row items-center justify-items-end py-4 grow gap-1">
+        <NumericInput
+          class="w-full text-base input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right placeholder:text-gray-600 leading-6 h-8"
+          id="foreign-bridge-amount-in"
+          value={amountInput}
+          decimals={tokenInput.decimals}
+          oninput={(v) => {
+            amountInput = v
           }} />
-      {/snippet}
-    </ModalWrapper>
-  </div>
-  <VerticalDivider>
-    <Icon
-      icon="icon-park-solid:bridge-one"
-      class="text-surface-500 bg-surface-950-50 rounded-full w-full h-full ring-2 ring-current ring-inset p-1" />
-  </VerticalDivider>
-  <div class="flex grow w-1/2">
-    <div class="flex w-full">
+        <span class="text-surface-contrast-50 leading-8 text-base">{tokenInput.symbol}</span>
+      </label>
       <ModalWrapper
-        wrapperClasses="grow h-full"
-        triggerClasses="pl-4 py-4 flex relative justify-end grow h-full items-center gap-2 text-surface-contrast-50 group w-full">
+        wrapperClasses="flex items-center justify-center h-full"
+        triggerClasses="h-full pr-5">
         {#snippet button()}
-          <span class="flex flex-row px-1 w-full">
-            <TokenInfo
-              token={tokenOutWithPrefixedName}
-              truncate={8}
-              reversed={false}
-              externalGroup
-              wrapperSizeClasses="w-full h-8"
-              nameClasses="text-base" />
-          </span>
+          <AssetWithNetwork asset={tokenInput} />
         {/snippet}
         {#snippet contents({ close })}
-          <TokenSelect
-            chain={Chains.ETH}
-            onsubmit={(tkn) => {
-              bridgeSettings.assetOut.value = tkn
+          <TokenAndNetworkSelector
+            token={tokenInput}
+            onSelect={(token) => {
+              tokenInput = token
               close()
             }} />
         {/snippet}
       </ModalWrapper>
     </div>
-    <div class="flex items-center justify-center">
-      <Button
-        disabled={!quoteMatchesLatest}
-        class="bg-tertiary-500 px-2 text-base size-16 flex items-center justify-center"
-        onclick={crossForeignBridge}>
-        <Loading key="lifi-quote">
-          {#snippet contents()}Swap{/snippet}
-        </Loading>
-      </Button>
+    <VerticalDivider>
+      <Icon
+        icon="material-symbols:captive-portal"
+        class="text-surface-500 bg-surface-950-50 rounded-full w-full h-full ring-2 ring-current ring-inset p-1" />
+    </VerticalDivider>
+    <div class="flex grow w-1/2">
+      <div class="flex w-full">
+        <ModalWrapper
+          wrapperClasses="grow h-full"
+          triggerClasses="pl-4 py-4 flex relative justify-end grow h-full items-center gap-2 text-surface-contrast-50 group w-full">
+          {#snippet button()}
+            <span class="flex flex-row px-1 w-full">
+              <TokenInfo
+                token={tokenOutWithPrefixedName}
+                truncate={8}
+                reversed={false}
+                externalGroup
+                wrapperSizeClasses="w-full h-8"
+                nameClasses="text-base" />
+            </span>
+          {/snippet}
+          {#snippet contents({ close })}
+            <TokenSelect
+              chain={Chains.ETH}
+              onsubmit={(tkn) => {
+                bridgeSettings.assetOut.value = tkn
+                close()
+              }} />
+          {/snippet}
+        </ModalWrapper>
+      </div>
+      <div class="flex items-center justify-center">
+        <Button
+          disabled={!quoteMatchesLatest}
+          class="bg-tertiary-500 px-2 text-base size-16 flex items-center justify-center"
+          onclick={crossForeignBridge}>
+          <Loading key="lifi-quote">
+            {#snippet contents()}Go{/snippet}
+          </Loading>
+        </Button>
+      </div>
     </div>
   </div>
 </div>
