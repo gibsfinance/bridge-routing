@@ -7,7 +7,6 @@
   import NumericInput from './NumericInput.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
   import TokenAndNetworkSelector from './TokenAndNetworkSelector.svelte'
-  import DiagonalText from './DiagonalText.svelte'
   import type { Token } from '$lib/types.svelte'
   import {
     availableChains,
