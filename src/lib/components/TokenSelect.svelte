@@ -12,22 +12,26 @@
   import _ from 'lodash'
   import TokenInfo from './TokenInfo.svelte'
   import type { Chains } from '$lib/stores/auth/types'
-  import Lazy from './Lazy.svelte'
   import Infinite from './Infinite.svelte'
   import { InfiniteStore } from '$lib/stores/infinite.svelte'
 
   type Props = {
     onsubmit?: (token: Token) => void
     chain: Chains
+    tokens?: Token[]
+    showCustomTokens?: boolean
     partnerChain?: Chains
   }
-  let { onsubmit = () => {}, chain, partnerChain }: Props = $props()
+  let {
+    onsubmit = () => {},
+    chain,
+    tokens,
+    showCustomTokens = false,
+    partnerChain,
+  }: Props = $props()
   let custom!: Token
   const addCustom = (newToken: Token) => {
-    const tkns = customTokens.tokens.value
-    customTokens.tokens.value = _.uniqBy(tkns.concat(newToken), 'address')
-    // searchValue = ''
-    // use token as focus in bridge settings stores
+    customTokens.tokens.value = _.uniqBy(customTokens.tokens.value.concat(newToken), 'address')
   }
   const selectToken = (token: Token) => {
     onsubmit(token)
@@ -87,22 +91,28 @@
     }
     return custom
   }
-  const tokens = customTokens.tokens
-  const bridgeableTokens = $derived(
-    bridgableTokens.bridgeableTokensUnder({
-      chain,
-      partnerChain: partnerChain ?? null,
-    }),
-  )
+  const fullTokenSet = $derived.by(() => {
+    const bridgeable =
+      tokens ??
+      bridgableTokens.bridgeableTokensUnder({
+        chain,
+        partnerChain: partnerChain ?? null,
+      })
+    if (!showCustomTokens) {
+      return bridgeable
+    }
+    const custom = customTokens.tokens.value
+    return custom.concat(bridgeable)
+  })
   const filteredSubset = $derived(
-    getSubset(tokens.value.concat(bridgeableTokens), searchValue, showAllTokens, showAllChains),
+    getSubset(fullTokenSet, searchValue, showAllTokens, showAllChains),
   )
   $effect(() => {
-    if (bridgeableTokens.length) {
+    if (fullTokenSet.length) {
       limit.set(50)
     }
   })
-  const limit = $derived(new InfiniteStore(50, bridgeableTokens.length))
+  const limit = $derived(new InfiniteStore(50, fullTokenSet.length))
   const subset = $derived(filteredSubset.slice(0, limit.count))
   const inputIsAddress = $derived(isAddress(searchValue))
   const addButtonDisabled = $derived(!inputIsAddress || !!subset.length)

@@ -176,6 +176,7 @@
                 {/snippet}
                 {#snippet contents({ close })}
                   <TokenSelect
+                    showCustomTokens
                     chain={Chains.PLS}
                     onsubmit={(tkn) => {
                       onboardSettings.plsOutToken = tkn

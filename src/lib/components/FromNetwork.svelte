@@ -102,6 +102,7 @@
       {/snippet}
       {#snippet contents({ close })}
         <TokenSelect
+          showCustomTokens
           chain={bridgeKey.fromChain}
           partnerChain={bridgeKey.toChain}
           onsubmit={(tkn) => {

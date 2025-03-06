@@ -151,9 +151,6 @@
   }
 </script>
 
-<!-- <div class="flex flex-col">
-  <label for="foreign-bridge-amount-in" class="text-surface-100 text-base italic"
-    >1) Bridge to Ethereum</label> -->
 <div class="flex relative">
   <div
     class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden relative flex flex-row">

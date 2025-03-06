@@ -68,7 +68,6 @@
   <div class="flex flex-col gap-4 max-w-2xl mx-auto w-full">
     <OnboardSettings />
     <OnboardForeignBridge />
-    <!-- <OnboardSelectTokens /> -->
     {#if !networkIsSet || networkMatches}
       <OnboardBridge />
       <OnboardPulseX />
