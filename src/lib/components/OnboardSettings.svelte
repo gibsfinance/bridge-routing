@@ -145,8 +145,15 @@
         <Icon icon="codicon:circuit-board" mode="svg" class="size-6" />
       </Button>
     </div>
-    <Button onclick={toggleHelp}>
+    <Button
+      onclick={toggleHelp}
+      class="flex flex-row items-center italic gap-1 px-1 border {showTooltips.value
+        ? ' rounded-md'
+        : ' border-transparent'}">
       <Icon icon="material-symbols:help" mode="svg" class="size-8" />
+      {#if showTooltips.value}
+        <span class="text-sm pr-1">Dismiss</span>
+      {/if}
     </Button>
   </div>
   <ConnectButton />
