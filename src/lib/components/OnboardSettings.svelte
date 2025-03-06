@@ -27,6 +27,7 @@
   import { SvelteMap } from 'svelte/reactivity'
   import SlideToggle from './SlideToggle.svelte'
   import { onboardSettings } from '$lib/stores/onboard.svelte'
+  import { showTooltips } from '$lib/stores/tooltips.svelte'
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const openOnRamp = () => {
     modal.open({
@@ -35,6 +36,9 @@
   }
   const openZKP2P = () => {
     open('https://zkp2p.xyz/swap', '_blank')?.focus()
+  }
+  const toggleHelp = () => {
+    showTooltips.value = !showTooltips.value
   }
   const tokenInput = $derived(bridgeSettings.assetIn.value)
   $effect.pre(() => {
@@ -141,13 +145,9 @@
         <Icon icon="codicon:circuit-board" mode="svg" class="size-6" />
       </Button>
     </div>
-    <!-- <Button
-      class="btn preset-tonal gap-2 shadow-inner border border-surface-100/20 pr-1"
-      onclick={toggleShowBridge}>
-      <Icon icon="icon-park-solid:bridge-one" mode="svg" class="size-6" />
-      <span>Bridge</span>
-      <SlideToggle checked={onboardSettings.foreignBridge.show} class="pointer-events-none" />
-    </Button> -->
+    <Button onclick={toggleHelp}>
+      <Icon icon="material-symbols:help" mode="svg" class="size-8" />
+    </Button>
   </div>
   <ConnectButton />
 </header>

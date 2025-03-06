@@ -5,6 +5,10 @@
   const onboardImageFuzzy = new URL('/images/runners.jpg', import.meta.url).href
 </script>
 
+<svelte:head>
+  <title>Onboarding</title>
+</svelte:head>
+
 <div class="flex flex-col w-full">
   <div class="flex w-full">
     <BlurryImage

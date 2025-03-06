@@ -4,7 +4,6 @@
   import Tooltip from './Tooltip.svelte'
   import { loading } from '$lib/stores/loading.svelte'
   import { toChain } from '$lib/stores/auth/types'
-  import { chainIdToChain } from '$lib/stores/input.svelte'
   import {
     ChainState,
     tokenBalanceLoadingKey,
@@ -12,17 +11,19 @@
   } from '$lib/stores/chain-events.svelte'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import classNames from 'classnames'
+  import Loading from './Loading.svelte'
 
   type Props = {
     token: Token
     onmax?: (balance: bigint) => boolean | void
-    onbalanceupdate?: (balance: bigint) => void
+    onbalanceupdate?: (balance: bigint | null) => void
     roundedClasses?: ClassParam
     decimalClasses?: ClassParam
     wrapperClasses?: ClassParam
     wrapperSizeClasses?: ClassParam
     hideSymbol?: boolean
     decimalLimit?: number
+    showLoader?: boolean
   }
   const {
     token,
@@ -30,6 +31,7 @@
     wrapperSizeClasses = '',
     wrapperClasses:
       wrapperClassNames = 'relative flex items-baseline text-xs leading-6 pointer-events-auto',
+    showLoader = false,
     roundedClasses = 'rounded-md',
     decimalClasses = '',
     hideSymbol = false,
@@ -53,7 +55,7 @@
   const balance = $derived(tokenBalance.value ?? 0n)
   const disableMax = $derived(balance === 0n)
   const loadingKey = $derived(tokenBalanceLoadingKey(chain, token, walletAccount ?? '0x'))
-  const decimalClassNames = $derived(classNames(decimalClasses))
+  const decimalClassNames = $derived(classNames('h-full', decimalClasses))
   const maxOutBalance = (event: MouseEvent) => {
     if (disableMax) return
     const shouldStopProp = onmax?.(balance)
@@ -66,9 +68,12 @@
 
 <div class={wrapperClasses}>
   <Tooltip tooltip={token.name} placement="top">
-    <span class="flex flex-row gap-1 text-gray-500">
+    <span class="flex flex-row gap-1 items-center text-gray-500 leading-6">
+      {#if showLoader && tokenBalance.value === null}
+        <Loading key={loadingKey} class="w-4 h-6" />
+      {/if}
       <span class={decimalClassNames} class:opacity-60={!loading.isResolved(loadingKey)}
-        >{balance === null
+        >{tokenBalance.value === null
           ? ''
           : humanReadableNumber(balance, {
               decimals: token?.decimals ?? 18,

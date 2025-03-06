@@ -45,6 +45,9 @@
   import ExplorerLink from './ExplorerLink.svelte'
   import Input from './Input.svelte'
   import { untrack } from 'svelte'
+  import GuideStep from './GuideStep.svelte'
+  import GuideShield from './GuideShield.svelte'
+  import { showTooltips } from '$lib/stores/tooltips.svelte'
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(bridgeFee.value?.feeF2H ?? 0n)
@@ -208,10 +211,11 @@
     }
     bridgeStatus = null
   }
-  let maxBridgeable = $state(0n)
+  let maxBridgeable = $state(0n as bigint | null)
   const disableBridgeButton = $derived(
     // bridgeStatus !== null ||
-    !amountIn.value ||
+    !maxBridgeable ||
+      !amountIn.value ||
       !minAmount.value ||
       amountIn.value < minAmount.value ||
       amountIn.value > maxBridgeable,
@@ -303,10 +307,8 @@
   }
 </script>
 
-<div class="flex flex-col">
-  <label for="amount-to-bridge" class="text-surface-100 text-base italic"
-    >2) Bridge to PulseChain</label>
-  {#if tokenInput}
+{#if tokenInput}
+  <div class="flex relative">
     <div
       class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
       <header class="flex flex-row justify-between relative h-16">
@@ -316,6 +318,7 @@
             <div class="flex gap-1 flex-row-reverse absolute top-0 left-0">
               <BalanceReadout
                 token={tokenInput}
+                showLoader
                 roundedClasses="rounded-tl"
                 hideSymbol
                 decimalLimit={9}
@@ -450,5 +453,13 @@
         {/if}
       </footer>
     </div>
-  {/if}
-</div>
+    <GuideShield show={showTooltips.value} class="rounded-xl" />
+    <div class="absolute top-1/2 left-1/4 -translate-y-1/2 -translate-x-1/2 pointer-events-none">
+      <GuideStep step={5}>Input an amount to bridge to PulseChain</GuideStep>
+    </div>
+    <div class="absolute bottom-1 right-16 translate-x-1/2 pointer-events-none">
+      <GuideStep step={6}>Initiate bridge transaction</GuideStep>
+    </div>
+  </div>
+{/if}
+<!-- </div> -->

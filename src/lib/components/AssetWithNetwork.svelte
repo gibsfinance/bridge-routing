@@ -1,14 +1,16 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import type { Token } from '$lib/types.svelte'
+  import type { ClassParam, Token } from '$lib/types.svelte'
   import TokenIcon from './TokenIcon.svelte'
   import { assetSources } from '$lib/stores/bridge-settings.svelte'
   import { loading } from '$lib/stores/loading.svelte'
   import { zeroAddress } from 'viem'
   import Image from './Image.svelte'
   import type { Chains } from '$lib/stores/auth/types'
+  import classNames from 'classnames'
 
   type Props = {
+    class?: ClassParam
     asset: Token
     network?: Chains
     tokenSizeClasses?: string
@@ -19,13 +21,14 @@
     network: tokenOriginationChain,
     tokenSizeClasses = 'size-8',
     networkSizeClasses = 'size-4',
+    class: className = '',
   }: Props = $props()
   const chain = $derived(
     asset.address !== zeroAddress && tokenOriginationChain && chainsMetadata[tokenOriginationChain],
   )
   const src = $derived(asset?.logoURI || assetSources(asset))
   const tokenClasses = $derived(`overflow-hidden absolute`)
-  const classes = $derived(`flex basis-auto relative ${tokenSizeClasses}`)
+  const classes = $derived(classNames(`flex basis-auto relative ${tokenSizeClasses}`, className))
 </script>
 
 <span class={classes} title={asset.symbol}>

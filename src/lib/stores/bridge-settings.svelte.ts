@@ -2,7 +2,6 @@ import * as input from '$lib/stores/input.svelte'
 import {
   zeroAddress,
   type Hex,
-  // formatUnits,
   parseUnits,
   isAddress,
   encodeAbiParameters,
@@ -23,7 +22,6 @@ import _ from 'lodash'
 import { uniV2Routers, nativeAssetOut, pathway, whitelisted } from './config.svelte'
 import * as abis from './abis'
 import * as imageLinks from './image-links'
-// import { isZero, stripNonNumber } from './utils'
 import { settings } from './fee-manager.svelte'
 import type { BridgeKeyStore } from '$lib/stores/input.svelte'
 import { accountState } from './auth/AuthProvider.svelte'
@@ -36,32 +34,6 @@ import { accountState } from './auth/AuthProvider.svelte'
 //   logoURI: '',
 //   chainId: 369,
 // } as Token
-
-/** the asset coming out on the other side of the bridge (foreign) */
-// export const assetOut = $state({
-//   value: null as TokenOut | null,
-//   set: (v: TokenOut | null) => {
-//     assetOut.value = v
-//   },
-//   get address() {
-//     return assetOut.value?.address || null
-//   },
-//   get chainId() {
-//     return assetOut.value?.chainId || null
-//   },
-//   get name() {
-//     return assetOut.value?.name || null
-//   },
-//   get symbol() {
-//     return assetOut.value?.symbol || null
-//   },
-//   get decimals() {
-//     return assetOut.value?.decimals || null
-//   },
-//   get logoURI() {
-//     return assetOut.value?.logoURI || null
-//   },
-// })
 
 export class BridgeSettings {
   constructor() {}

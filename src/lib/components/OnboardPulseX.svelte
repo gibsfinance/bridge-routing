@@ -18,6 +18,12 @@
 
   import { onboardSettings } from '$lib/stores/onboard.svelte'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
+  import GuideStep from './GuideStep.svelte'
+  import ModalWrapper from './ModalWrapper.svelte'
+  import TokenSelect from './TokenSelect.svelte'
+  import TokenInfo from './TokenInfo.svelte'
+  import GuideShield from './GuideShield.svelte'
+  import { showTooltips } from '$lib/stores/tooltips.svelte'
   const tokenOut = $derived(onboardSettings.plsOutToken)
   const tokenOutWithCorrectLogoURI = $derived({
     ...tokenOut,
@@ -86,10 +92,16 @@
     // amountToSwapIn = null
     // amountToSwapOut = null
   }
+  const estimatedAmount = $derived(amountToSwapOut)
+  const tokenOutWithPrefixedName = $derived.by(() => ({
+    ...tokenOut,
+    name: amountToSwapOut ? `${amountToSwapOut} ${tokenOut.symbol}` : tokenOut.symbol,
+  }))
 </script>
 
-<div class="flex flex-col">
-  <label for="amount-to-swap-in" class="text-surface-100 text-base italic">3) Swap on PulseX</label>
+<!-- <div class="flex flex-col">
+  <label for="amount-to-swap-in" class="text-surface-100 text-base italic">3) Swap on PulseX</label> -->
+<div class="flex relative">
   <div
     class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
     <header class="flex flex-row justify-between relative h-16">
@@ -127,9 +139,12 @@
             class="text-surface-500 bg-surface-950-50 rounded-full w-full h-full ring-2 ring-current ring-inset p-0.5" />
         </VerticalDivider>
         <div class="flex flex-row grow items-center w-1/2">
-          <label for="amount-to-swap-out" class="flex flex-row grow items-center pl-5 h-full gap-1">
+          <label for="amount-to-swap-out" class="flex flex-row grow items-center h-full gap-1">
             <!-- output token -->
-            <AssetWithNetwork asset={tokenOutWithCorrectLogoURI} network={Chains.PLS} />
+            <!-- <AssetWithNetwork
+              asset={tokenOutWithCorrectLogoURI}
+              network={Chains.PLS}
+              class="text-surface-900" />
             <NumericInput
               paddingClass="px-0"
               class="w-full input ring-0 focus:ring-0 placeholder:text-gray-600 placeholder: text-surface-contrast-50 text-base"
@@ -140,7 +155,32 @@
                 amountInControl = false
                 amountToSwapOut = v
                 amountToSwapIn = null
-              }} />
+              }} /> -->
+            <div class="flex w-full">
+              <ModalWrapper
+                wrapperClasses="grow h-full"
+                triggerClasses="pl-4 py-4 flex relative justify-end grow h-full items-center gap-2 text-surface-contrast-50 group w-full">
+                {#snippet button()}
+                  <span class="flex flex-row px-1 w-full">
+                    <TokenInfo
+                      token={tokenOutWithPrefixedName}
+                      truncate={8}
+                      reversed={false}
+                      externalGroup
+                      wrapperSizeClasses="w-full h-8"
+                      nameClasses="text-base" />
+                  </span>
+                {/snippet}
+                {#snippet contents({ close })}
+                  <TokenSelect
+                    chain={Chains.PLS}
+                    onsubmit={(tkn) => {
+                      onboardSettings.plsOutToken = tkn
+                      close()
+                    }} />
+                {/snippet}
+              </ModalWrapper>
+            </div>
           </label>
           <Button disabled class={swapButtonClassNames} onclick={swapTokens}>
             <Loading key="pulsex-quote">
@@ -150,5 +190,15 @@
         </div>
       {/if}
     </header>
+  </div>
+  <GuideShield show={showTooltips.value} class="rounded-xl" />
+  <div class="absolute top-2 right-1/4 -translate-x-1/2 pointer-events-none">
+    <GuideStep step={7}>Select your output token</GuideStep>
+  </div>
+  <div class="absolute top-1/2 left-1/4 -translate-y-1/2 -translate-x-1/2 pointer-events-none">
+    <GuideStep step={8}>Input an amount to swap to your output token</GuideStep>
+  </div>
+  <div class="absolute bottom-1 right-16 translate-x-1/2 pointer-events-none">
+    <GuideStep step={9}>Initiate swap transaction</GuideStep>
   </div>
 </div>

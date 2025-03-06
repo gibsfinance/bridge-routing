@@ -11,12 +11,10 @@ import {
   multicall3Abi,
   encodeFunctionData,
   zeroAddress,
-  // parseUnits,
   fallback,
   type PublicClient,
   webSocket,
 } from 'viem'
-// import { countDecimals, humanReadableNumber, isZero, stripNonNumber } from '$lib/stores/utils'
 import { ChainIdToKey, Chains, Provider } from './auth/types'
 import { settings, type PathwayExtendableConfig } from './fee-manager.svelte'
 import {
@@ -38,6 +36,7 @@ import { chainsMetadata } from './auth/constants'
 import { appkitNetworkList } from './auth/AuthProvider.svelte'
 import _ from 'lodash'
 import { loading } from './loading.svelte'
+import * as networks from 'viem/chains'
 
 export const forcedRefresh = new ProxyStore(0n)
 
@@ -339,8 +338,20 @@ export const defaultBatchConfig = {
   },
 }
 
+const chainList = [...Object.values(networks)]
+
+const searchChainsForRpcUrls = (chainId: Hex) => {
+  const id = Number(chainId)
+  const chain = chainList.find((c) => c.id === id)!
+  const { http, webSocket = [] } = chain.rpcUrls.default as unknown as {
+    http?: string[]
+    webSocket?: string[]
+  }
+  return [...(http ?? []), ...(webSocket ?? [])]
+}
+
 export const clientFromChain = (chainId: Chains) => {
-  const urls = _.compact(rpcs.store.get(chainId) || [])
+  const urls = _.compact(rpcs.store.get(chainId) || searchChainsForRpcUrls(chainId))
   const key = rpcs.key(chainId, urls)
   const existing = clientCache.get(chainId)
   if (existing && existing.key === key) {

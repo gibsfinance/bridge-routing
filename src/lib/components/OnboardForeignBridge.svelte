@@ -8,6 +8,7 @@
   import ModalWrapper from './ModalWrapper.svelte'
   import TokenAndNetworkSelector from './TokenAndNetworkSelector.svelte'
   import type { Token } from '$lib/types.svelte'
+  import GuideStep from './GuideStep.svelte'
   import {
     availableChains,
     availableTokensPerOriginChain,
@@ -26,6 +27,8 @@
   import { sendTransaction } from '@wagmi/core'
   import Loading from './Loading.svelte'
   import BalanceReadout from './BalanceReadout.svelte'
+  import { showTooltips } from '$lib/stores/tooltips.svelte'
+  import GuideShield from './GuideShield.svelte'
   let tokenInput: Token = $state({
     logoURI: `https://gib.show/image/137`,
     name: 'Poly',
@@ -43,9 +46,9 @@
     address: zeroAddress,
   })
   let amountInput = $state(0n)
-  let maxBridgeable = $state(0n)
+  let maxBridgeable = $state(0n as bigint | null)
   $effect(() => {
-    if (amountInput > maxBridgeable) {
+    if (maxBridgeable && amountInput > maxBridgeable) {
       amountInput = maxBridgeable
     }
   })
@@ -147,9 +150,10 @@
   }
 </script>
 
-<div class="flex flex-col">
+<!-- <div class="flex flex-col">
   <label for="foreign-bridge-amount-in" class="text-surface-100 text-base italic"
-    >1) Bridge to Ethereum</label>
+    >1) Bridge to Ethereum</label> -->
+<div class="flex relative">
   <div
     class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden relative flex flex-row">
     <div class="flex flex-row items-center justify-between w-1/2 gap-1">
@@ -171,7 +175,7 @@
       {/if}
       <label
         for="foreign-bridge-amount-in"
-        class="flex flex-row items-center justify-items-end py-4 grow gap-1">
+        class="flex flex-row items-center justify-items-end py-4 grow gap-1 relative">
         <NumericInput
           class="w-full text-base input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right placeholder:text-gray-600 leading-6 h-8"
           id="foreign-bridge-amount-in"
@@ -240,5 +244,18 @@
         </Button>
       </div>
     </div>
+  </div>
+  <GuideShield show={showTooltips.value} class="rounded-xl" />
+  <div class="absolute top-1 left-1/2 -translate-x-5/4 pointer-events-none">
+    <GuideStep step={1}>Select your input token and network</GuideStep>
+  </div>
+  <div class="absolute top-2 right-1/4 -translate-x-1/2 pointer-events-none">
+    <GuideStep step={2}>Select your output token</GuideStep>
+  </div>
+  <div class="absolute top-1/2 left-1/4 -translate-y-1/2 -translate-x-1/2 pointer-events-none">
+    <GuideStep step={3}>Enter the amount you want to bridge to Ethereum</GuideStep>
+  </div>
+  <div class="absolute bottom-1 right-16 translate-x-1/2 pointer-events-none">
+    <GuideStep step={4}>Initiate the transaction to bridge to Ethereum</GuideStep>
   </div>
 </div>
