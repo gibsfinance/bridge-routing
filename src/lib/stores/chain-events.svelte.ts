@@ -51,51 +51,54 @@ export const unwatchFinalizedBlocks = (cleanups: Cleanup[]) => {
   cleanups.forEach((cleanup) => cleanup())
 }
 
-export class ChainState {
-  private value: Block | null = $state(null)
-  private chain: Chains | null = $state(null)
-  get publicClient() {
-    return input.clientFromChain(this.chain!)
+export class ChainsState {
+  private blocks = new SvelteMap<Chains, Block | null>()
+  private chainCounts = new Map<Chains, number>()
+  block(chain: Chains) {
+    return this.blocks.get(chain)
   }
-  set(block: Block | null) {
-    this.value = block
-  }
-  get block() {
-    return this.value
-  }
-  latestBaseFeePerGas = $derived.by(() => {
-    const perGas = this.block?.baseFeePerGas
+  latestBaseFeePerGas(chain: Chains) {
+    const perGas = this.block(chain)?.baseFeePerGas
     if (!perGas) {
       // on bsc the numbers are fairly fixed
       return 3_000_000_000n
     } else {
       return perGas
     }
-  })
+  }
+  increment(chain: Chains) {
+    untrack(() => this.chainCounts.set(chain, (this.chainCounts.get(chain) ?? 0) + 1))
+  }
+  decrement(chain: Chains) {
+    untrack(() => this.chainCounts.set(chain, (this.chainCounts.get(chain) ?? 0) - 1))
+  }
   watch(chain: Chains) {
-    this.set(null)
-    this.chain = chain
+    if (!this.blocks.has(chain)) {
+      // signals a "pending" state
+      this.blocks.set(chain, null)
+    }
+    this.increment(chain)
     untrack(() => loading.increment('gas'))
     const decrement = _.once(() => {
       untrack(() => loading.decrement('gas'))
     })
-    const cleanup = this.publicClient.watchBlocks({
+    const cleanup = input.clientFromChain(chain).watchBlocks({
       emitOnBegin: true,
       emitMissed: true,
       onBlock: (block) => {
         decrement()
-        this.set(block)
+        untrack(() => this.blocks.set(chain, block))
       },
     })
     return () => {
       decrement()
+      this.decrement(chain)
       cleanup()
     }
   }
 }
 
-export const origination = new ChainState()
-export const destination = new ChainState()
+export const latestBlock = new ChainsState()
 
 export const getTokenBalance = (
   chainId: Chains,
@@ -156,7 +159,7 @@ export class TokenBalanceWatcher {
     return `${this.chainId}-${this.walletAccount}-${this.token?.address}`.toLowerCase()
   }
 
-  fetch(chainId: Chains, token: Token, walletAccount: Hex, ticker: Block) {
+  fetch(chainId: Chains, token: Token, walletAccount: Hex, ticker: Block | null | undefined) {
     this.cleanup()
     this.chainId = chainId
     this.token = token
@@ -611,8 +614,11 @@ type KeyedReserveData = {
 }
 
 const formatReserveQuery = (
-  query: ReserveQuery<[bigint, bigint, number]>,
-): ReserveQuery<KeyedReserveData> => {
+  query: ReserveQuery<[bigint, bigint, number]> | null,
+): ReserveQuery<KeyedReserveData> | null => {
+  if (!query) {
+    return null
+  }
   const { token0, token1, reserves } = query
   if (!reserves) {
     return {
@@ -647,14 +653,20 @@ export const getPoolInfo = async (chainId: Chains, token: Hex, block: Block) => 
       Promise.all(
         Array.from(factoryAndInitCodeHash.entries()).map(async ([factory, initCodeHash]) => {
           const [pair, token0, token1] = tokenToPair(token, wpls, factory, initCodeHash)
-          // console.log(factory, initCodeHash, token0, token1, pair)
           const reserves = await getContract({
             abi: pairAbi,
             address: pair,
             client,
-          }).read.getReserves({
-            blockNumber: block.number!,
           })
+            .read.getReserves({
+              blockNumber: block.number!,
+            })
+            .catch(() => {
+              return null
+            })
+          if (!reserves) {
+            return null
+          }
           return {
             factory: getAddress(factory) as Hex,
             initCodeHash,
@@ -675,8 +687,8 @@ export const getPoolInfo = async (chainId: Chains, token: Hex, block: Block) => 
 }
 
 type PoolInfo = {
-  v1: ReserveQuery<KeyedReserveData>
-  v2: ReserveQuery<KeyedReserveData>
+  v1: ReserveQuery<KeyedReserveData> | null
+  v2: ReserveQuery<KeyedReserveData> | null
 }
 
 export const loadPrice = (token: Token, block: Block) => {
@@ -712,16 +724,29 @@ export const watchWplsUSDPrice = loading.loadsAfterTick<bigint, Block>(
   (results: PoolInfo[]) => {
     return (
       results.reduce((acc, poolInfo, i) => {
-        return acc + priceInt(poolInfo, stableTokensList[i].decimals)
+        const pi = poolInfo
+        if (!pi) return acc
+        const priceValue = priceInt(pi, stableTokensList[i].decimals)
+        if (!priceValue) {
+          return acc
+        }
+        return acc + priceValue
       }, 0n) / BigInt(stableTokensList.length)
     )
   },
 )
 
 // price is of
-export const priceInt = ({ v1, v2 }: PoolInfo, decimals: number) => {
-  const wplsAmount = (v1.reserves?.wpls ?? 0n) + (v2.reserves?.wpls ?? 0n)
-  const tokenAmount = (v1.reserves?.amount ?? 0n) + (v2.reserves?.amount ?? 0n)
+export const priceInt = (poolInfo: PoolInfo | null, decimals: number) => {
+  if (!poolInfo) {
+    return null
+  }
+  if (!poolInfo.v1 && !poolInfo.v2) {
+    return null
+  }
+  const { v1, v2 } = poolInfo
+  const wplsAmount = (v1?.reserves?.wpls ?? 0n) + (v2?.reserves?.wpls ?? 0n)
+  const tokenAmount = (v1?.reserves?.amount ?? 0n) + (v2?.reserves?.amount ?? 0n)
   const decimalOffset = 10n ** BigInt(decimals)
   return (wplsAmount * decimalOffset) / tokenAmount
 }

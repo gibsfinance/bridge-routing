@@ -5,13 +5,14 @@
   import { loading } from '$lib/stores/loading.svelte'
   import { toChain } from '$lib/stores/auth/types'
   import {
-    ChainState,
+    latestBlock,
     tokenBalanceLoadingKey,
     TokenBalanceWatcher,
   } from '$lib/stores/chain-events.svelte'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import classNames from 'classnames'
   import Loading from './Loading.svelte'
+  import { untrack } from 'svelte'
 
   type Props = {
     token: Token
@@ -41,13 +42,13 @@
   const chain = $derived(toChain(token.chainId))
   const tokenBalance = new TokenBalanceWatcher()
   const walletAccount = $derived(accountState.address)
-  const chainState = new ChainState()
+  $effect(() => untrack(() => latestBlock.watch(chain)))
   $effect(() => {
-    return chainState.watch(chain)
-  })
-  $effect(() => {
-    if (!walletAccount || !chainState.block) return
-    return tokenBalance.fetch(chain, token, walletAccount, chainState.block)
+    const block = untrack(() => latestBlock.block(chain))
+    if (!walletAccount || !block) {
+      return
+    }
+    return tokenBalance.fetch(chain, token, walletAccount, block)
   })
   $effect(() => {
     onbalanceupdate?.(tokenBalance.value)

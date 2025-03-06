@@ -24,8 +24,7 @@
     liveBridgeStatus,
     bridgeStatuses,
     type ContinuedLiveBridgeStatusParams,
-    origination,
-    destination,
+    latestBlock,
   } from '$lib/stores/chain-events.svelte'
   import {
     amountIn,
@@ -122,10 +121,10 @@
   let usdMultiplier = $state(0n)
   const wplsTokenPrice = new SvelteMap<string, bigint>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
+  const destinationBlock = $derived(untrack(() => latestBlock.block(bridgeKey.toChain)))
   $effect(() => {
-    const block = destination.block
-    if (!block) return
-    const watcher = watchWplsUSDPrice(block)
+    if (!destinationBlock) return
+    const watcher = watchWplsUSDPrice(destinationBlock)
     watcher.promise.then((price) => {
       if (watcher.controller.signal.aborted) return
       usdMultiplier = price ?? 0n
@@ -151,7 +150,7 @@
       bridgeStatus = {
         bridgeKey,
         hash: tx!,
-        ticker: destination.block!,
+        ticker: untrack(() => latestBlock.block(bridgeKey.toChain)!),
         status: bridgeStatuses.SUBMITTED,
         statusIndex: 0,
       }
@@ -220,7 +219,6 @@
       amountIn.value < minAmount.value ||
       amountIn.value > maxBridgeable,
   )
-  const destinationBlock = $derived(destination.block)
   $effect(() => {
     if (!tx || !destinationBlock) {
       return
@@ -249,7 +247,7 @@
         return 'This transaction is still being validated by the network.'
       case bridgeStatuses.MINED:
         const currentlyFinalizedBlock = bridgeStatus?.finalizedBlock?.number
-        const currentBlock = origination.block?.number
+        const currentBlock = untrack(() => latestBlock.block(bridgeKey.fromChain)?.number)
         let estimatedFutureFinalizedBlock = currentlyFinalizedBlock
         const minedBlock = bridgeStatus.receipt?.blockNumber
         if (

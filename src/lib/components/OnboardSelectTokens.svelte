@@ -9,15 +9,7 @@
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import { bridgeSettings, searchKnownAddresses } from '$lib/stores/bridge-settings.svelte'
   import VerticalDivider from './VerticalDivider.svelte'
-  import {
-    assetLink,
-    loadAssetLink,
-    loadPrice,
-    minAmount,
-    priceInt,
-    origination,
-    destination,
-  } from '$lib/stores/chain-events.svelte'
+  import { assetLink, latestBlock, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
   import {
     bridgableTokens,
     bridgeableTokensUnder,
@@ -29,6 +21,7 @@
   import { SvelteMap } from 'svelte/reactivity'
   import { onboardSettings } from '$lib/stores/onboard.svelte'
   import OnboardSelectEthInput from './OnboardSelectEthInput.svelte'
+  import { untrack } from 'svelte'
 
   const tokenOutput = $derived(onboardSettings.plsOutToken)
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
@@ -97,29 +90,8 @@
   // let usdMultiplier = $state(0n)
   const wplsTokenPrice = new SvelteMap<string, bigint>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
-  $effect(() => origination.watch(bridgeKey.fromChain))
-  $effect(() => destination.watch(bridgeKey.toChain))
-  $effect(() => {
-    const block = destination.block
-    if (!bridgedToken || !block) return
-    const price = loadPrice(bridgedToken, block)
-    price.promise
-      .then((priceResult) => {
-        if (price.controller.signal.aborted) {
-          return
-        }
-        if (!priceResult) {
-          wplsTokenPrice.set(key, 0n)
-        } else {
-          const price = priceInt(priceResult, bridgedToken.decimals)
-          wplsTokenPrice.set(key, price)
-        }
-      })
-      .catch(() => {
-        wplsTokenPrice.set(key, 0n)
-      })
-    return price.cleanup
-  })
+  $effect(() => untrack(() => latestBlock.watch(bridgeKey.fromChain)))
+  $effect(() => untrack(() => latestBlock.watch(bridgeKey.toChain)))
   $effect(() => {
     if (!bridgeSettings.assetIn.value) return
     return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)

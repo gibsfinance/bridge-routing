@@ -333,7 +333,7 @@ const clientCache = new Map<Chains, { key: string; client: PublicClient }>([])
 
 export const defaultBatchConfig = {
   batch: {
-    wait: 0,
+    wait: 10,
     batchSize: 32,
   },
 }

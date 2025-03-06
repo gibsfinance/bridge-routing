@@ -29,6 +29,7 @@
   import BalanceReadout from './BalanceReadout.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
   import GuideShield from './GuideShield.svelte'
+  import { untrack } from 'svelte'
   let tokenInput: Token = $state({
     logoURI: `https://gib.show/image/137`,
     name: 'Poly',
@@ -37,7 +38,7 @@
     chainId: 137,
     address: zeroAddress,
   })
-  let tokenOutput = $state({
+  let tokenOutput: Token = $state({
     logoURI: `https://gib.show/image/1/${zeroAddress}`,
     name: 'Ether',
     symbol: 'ETH',
@@ -55,9 +56,9 @@
 
   $effect(() => {
     Promise.all([loadData(), loadTools()]).then(async () => {
-      const polygon = availableChains.get(137)!
+      const polygon = untrack(() => availableChains.get(137)!)
       await loadTokensForChains(polygon)
-      const tokens = availableTokensPerOriginChain.get(polygon.id)!
+      const tokens = untrack(() => availableTokensPerOriginChain.get(polygon.id)!)
       const first = tokens[0]
       if (first) {
         tokenInput = first as Token
@@ -161,6 +162,7 @@
         <div class="flex gap-1 flex-row-reverse absolute top-0 left-0">
           <BalanceReadout
             token={tokenInput}
+            showLoader
             roundedClasses="rounded-tl"
             hideSymbol
             decimalLimit={9}
@@ -227,7 +229,8 @@
             <TokenSelect
               chain={Chains.ETH}
               onsubmit={(tkn) => {
-                bridgeSettings.assetOut.value = tkn
+                bridgeSettings.assetIn.value = tkn
+                tokenOutput = tkn as Token
                 close()
               }} />
           {/snippet}

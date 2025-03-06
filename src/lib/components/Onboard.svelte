@@ -5,7 +5,7 @@
   import { Chains, Provider } from '$lib/stores/auth/types'
   import { accountState, modal } from '$lib/stores/auth/AuthProvider.svelte'
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
-  import { loadPrice, priceInt, origination, destination } from '$lib/stores/chain-events.svelte'
+  import { loadPrice, priceInt, latestBlock } from '$lib/stores/chain-events.svelte'
   import { bridgeKey } from '$lib/stores/input.svelte'
   import Image from './Image.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
@@ -16,6 +16,7 @@
   import OnboardSettings from './OnboardSettings.svelte'
   import OnboardForeignBridge from './OnboardForeignBridge.svelte'
   import { onboardSettings } from '$lib/stores/onboard.svelte'
+  import { untrack } from 'svelte'
 
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const tokenInput = $derived(bridgeSettings.assetIn.value)
@@ -42,25 +43,19 @@
       view: 'Networks',
     })
   }
-  const wplsTokenPrice = new SvelteMap<string, bigint>()
+  const wplsTokenPrice = new SvelteMap<string, bigint | null>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
-  $effect(() => origination.watch(bridgeKey.fromChain))
-  $effect(() => destination.watch(bridgeKey.toChain))
+  $effect(() => untrack(() => latestBlock.watch(bridgeKey.fromChain)))
+  $effect(() => untrack(() => latestBlock.watch(bridgeKey.toChain)))
   $effect(() => {
-    const block = destination.block
+    const block = untrack(() => latestBlock.block(bridgeKey.toChain))
     if (!bridgedToken || !block) return
     const price = loadPrice(bridgedToken, block)
     price.promise
       .then((priceResult) => {
-        if (price.controller.signal.aborted) {
-          return
-        }
-        if (!priceResult) {
-          wplsTokenPrice.set(key, 0n)
-        } else {
-          const price = priceInt(priceResult, bridgedToken.decimals)
-          wplsTokenPrice.set(key, price)
-        }
+        if (price.controller.signal.aborted) return
+        const priceVal = priceInt(priceResult, bridgedToken.decimals)
+        wplsTokenPrice.set(key, priceVal)
       })
       .catch(() => {
         wplsTokenPrice.set(key, 0n)

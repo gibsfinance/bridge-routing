@@ -28,8 +28,7 @@
     fromTokenBalance,
     toTokenBalance,
     minAmount,
-    origination,
-    destination,
+    latestBlock,
     loadAssetLink,
     assetLink,
     loadApproval,
@@ -37,6 +36,7 @@
   import type { Token } from '$lib/types.svelte'
   import { getAddress } from 'viem'
   import { windowStore } from '$lib/stores/window.svelte'
+  import { untrack } from 'svelte'
   // const originationNetwork = $derived(chainsMetadata[bridgeKey.fromChain])
   // const destinationNetwork = $derived(chainsMetadata[bridgeKey.toChain])
   const toggleDropdowns = (type: string) => {
@@ -107,11 +107,13 @@
     return updatingAssetOut.cleanup
   })
   $effect(() => {
+    const block = untrack(() => latestBlock.block(bridgeKey.fromChain))
+    if (!block) return
     const priceCorrective = loadPriceCorrective({
       bridgeKey,
       assetOut: bridgeSettings.assetOut.value as Token,
       assetLink: assetLink.value,
-      block: origination.block,
+      block,
       amountToBridge: bridgeSettings.amountToBridge,
     })
     priceCorrective.promise.then((price) => {
@@ -120,26 +122,28 @@
     })
     return priceCorrective.cleanup
   })
-  $effect(() => origination.watch(bridgeKey.fromChain))
-  $effect(() => destination.watch(bridgeKey.toChain))
+  $effect(() => untrack(() => latestBlock.watch(bridgeKey.fromChain)))
+  $effect(() => untrack(() => latestBlock.watch(bridgeKey.toChain)))
   $effect(() => {
-    if (!bridgeSettings.assetIn.value || !accountState.address || !origination.block) return
+    const originationBlock = untrack(() => latestBlock.block(bridgeKey.fromChain))
+    if (!bridgeSettings.assetIn.value || !accountState.address || originationBlock) return
     return fromTokenBalance.fetch(
       bridgeKey.fromChain,
       bridgeSettings.assetIn.value,
       accountState.address,
-      origination.block,
+      originationBlock,
     )
   })
   $effect(() => {
-    if (!bridgeSettings.assetOut.value?.address || !accountState.address || !destination.block) {
+    const destinationBlock = untrack(() => latestBlock.block(bridgeKey.toChain))
+    if (!bridgeSettings.assetOut.value?.address || !accountState.address || destinationBlock) {
       return
     }
     return toTokenBalance.fetch(
       bridgeKey.toChain,
       bridgeSettings.assetOut.value as Token,
       accountState.address,
-      destination.block,
+      destinationBlock,
     )
   })
   $effect(() => {

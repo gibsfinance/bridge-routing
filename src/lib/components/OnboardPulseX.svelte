@@ -9,7 +9,7 @@
   import NumericInput from './NumericInput.svelte'
   import BalanceReadout from './BalanceReadout.svelte'
   import { formatUnits } from 'viem'
-  import { destination } from '$lib/stores/chain-events.svelte'
+  import { latestBlock } from '$lib/stores/chain-events.svelte'
   import Loading from './Loading.svelte'
   import Button from './Button.svelte'
   // import { sendTransaction } from '@wagmi/core'
@@ -24,11 +24,8 @@
   import TokenInfo from './TokenInfo.svelte'
   import GuideShield from './GuideShield.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
+  import { untrack } from 'svelte'
   const tokenOut = $derived(onboardSettings.plsOutToken)
-  const tokenOutWithCorrectLogoURI = $derived({
-    ...tokenOut,
-    logoURI: assetSources(tokenOut),
-  })
   const tokenInURI = $derived(bridgeSettings.assetIn.value?.logoURI)
   const bridgeTokenOut = $derived(bridgeSettings.assetOut.value as Token | null)
   const tokenIn = $derived(
@@ -44,7 +41,12 @@
   let amountToSwapOut = $state<bigint | null>(null)
   let quoteResult = $state<PulsexQuoteOutput | null>(null)
   $effect(() => {
-    if (!tokenIn || !tokenOut || (!amountToSwapIn && !amountToSwapOut) || !destination.block) {
+    if (
+      !tokenIn ||
+      !tokenOut ||
+      (!amountToSwapIn && !amountToSwapOut) ||
+      !untrack(() => latestBlock.block(Chains.PLS))
+    ) {
       return
     }
     const quote = getPulseXQuote({
@@ -113,6 +115,7 @@
             {#if accountState.address}
               <BalanceReadout
                 token={tokenIn}
+                showLoader
                 roundedClasses="rounded-tl"
                 hideSymbol
                 decimalLimit={9}
