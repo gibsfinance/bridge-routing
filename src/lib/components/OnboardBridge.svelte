@@ -47,7 +47,7 @@
   import { untrack } from 'svelte'
   import GuideStep from './GuideStep.svelte'
   import GuideShield from './GuideShield.svelte'
-  import { showTooltips } from '$lib/stores/tooltips.svelte'
+  import { showTooltips } from '$lib/stores/storage.svelte'
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(bridgeFee.value?.feeF2H ?? 0n)

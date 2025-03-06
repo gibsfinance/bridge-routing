@@ -27,7 +27,7 @@
   import { SvelteMap } from 'svelte/reactivity'
   import SlideToggle from './SlideToggle.svelte'
   import { onboardSettings } from '$lib/stores/onboard.svelte'
-  import { showTooltips } from '$lib/stores/tooltips.svelte'
+  import { showTooltips } from '$lib/stores/storage.svelte'
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const openOnRamp = () => {
     modal.open({

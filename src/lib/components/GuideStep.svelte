@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Tooltip } from '@skeletonlabs/skeleton-svelte'
-  import { showTooltips } from '$lib/stores/tooltips.svelte'
+  import { showTooltips } from '$lib/stores/storage.svelte'
   import classNames from 'classnames'
   import type { ClassParam } from '$lib/types.svelte'
   type Props = {

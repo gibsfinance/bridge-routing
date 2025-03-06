@@ -27,7 +27,7 @@
   import { sendTransaction } from '@wagmi/core'
   import Loading from './Loading.svelte'
   import BalanceReadout from './BalanceReadout.svelte'
-  import { showTooltips } from '$lib/stores/tooltips.svelte'
+  import { showTooltips } from '$lib/stores/storage.svelte'
   import GuideShield from './GuideShield.svelte'
   let tokenInput: Token = $state({
     logoURI: `https://gib.show/image/137`,

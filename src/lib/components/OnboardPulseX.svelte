@@ -23,7 +23,7 @@
   import TokenSelect from './TokenSelect.svelte'
   import TokenInfo from './TokenInfo.svelte'
   import GuideShield from './GuideShield.svelte'
-  import { showTooltips } from '$lib/stores/tooltips.svelte'
+  import { showTooltips } from '$lib/stores/storage.svelte'
   const tokenOut = $derived(onboardSettings.plsOutToken)
   const tokenOutWithCorrectLogoURI = $derived({
     ...tokenOut,

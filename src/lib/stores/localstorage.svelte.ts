@@ -28,7 +28,7 @@ const jsonAnyParse = (_key: string, value: unknown) => {
   }
   return value
 }
-class LocalProxy<T> extends ProxyStore<T> {
+export class LocalProxy<T> extends ProxyStore<T> {
   constructor(
     protected key: string,
     defaultValue: T,
@@ -58,26 +58,21 @@ class LocalProxy<T> extends ProxyStore<T> {
     return _.get(this, ['value', ...key]) as T
   }
 }
-export type DefaultSettings = {
-  showTooltips: boolean
-}
-const globalDefaultSettings: DefaultSettings = {
-  showTooltips: true,
-}
-export const storage = new LocalProxy('gibs.finance.settings', globalDefaultSettings)
 
-export class LocalProxyProp<T> {
-  protected key: string[]
-  constructor(key: string | string[], defaultValue: T) {
-    this.key = Array.isArray(key) ? key : [key]
+export class LocalProxyProp<T, LP> {
+  constructor(
+    protected storage: LocalProxy<LP>,
+    protected key: string[],
+    defaultValue: T,
+  ) {
     if (!_.has(storage.value, key)) {
       this.value = defaultValue
     }
   }
   get value() {
-    return storage.access<T>(this.key)
+    return this.storage.access<T>(this.key)
   }
   set value(v: T) {
-    storage.update(this.key, v)
+    this.storage.update(this.key, v)
   }
 }
