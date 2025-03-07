@@ -1,10 +1,10 @@
-import { type Hex, getAddress } from 'viem'
+import { getAddress } from 'viem'
 import { imageRoot } from '$lib/config'
 
 interface MinimalTokenInfo {
   chainId: number
-  address: Hex
-  logoURI?: string
+  address: string
+  logoURI?: string | null
 }
 
 export const list = (path: string) => {

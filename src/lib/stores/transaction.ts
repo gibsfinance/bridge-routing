@@ -1,8 +1,9 @@
 import { addMessage, removeMessage } from './toast'
+import * as transactions from './transactions'
 import type { Hex } from 'viem'
 import { loading } from './loading.svelte'
 import { ellipsis } from './utils'
-import { bridgeKey, clientFromChain, incrementForcedRefresh } from './input.svelte'
+import { bridgeKey, incrementForcedRefresh } from './input.svelte'
 import { uri } from './toast'
 import { noop } from 'lodash'
 import { ProxyStore } from '$lib/types.svelte'
@@ -31,9 +32,7 @@ export const transactionButtonPress =
         label: 'submit-tx',
       }
       addMessage(msg)
-      const receipt = await clientFromChain(bridgeKey.fromChain).waitForTransactionReceipt({
-        hash: txHash,
-      })
+      const receipt = await transactions.wait(txHash)
       removeMessage(msg)
       addMessage({
         message:

@@ -7,7 +7,7 @@
     availableChains,
     availableTokensPerOriginChain,
     loadTokensForChains,
-  } from '$lib/stores/objective.svelte'
+  } from '$lib/stores/lifi.svelte'
   import Image from './Image.svelte'
   import Button from './Button.svelte'
   import Infinite from './Infinite.svelte'

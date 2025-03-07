@@ -107,7 +107,7 @@
     return updatingAssetOut.cleanup
   })
   $effect(() => {
-    const block = untrack(() => latestBlock.block(bridgeKey.fromChain))
+    const block = untrack(() => latestBlock.block(Number(bridgeKey.fromChain)))
     if (!block) return
     const priceCorrective = loadPriceCorrective({
       bridgeKey,
@@ -122,25 +122,25 @@
     })
     return priceCorrective.cleanup
   })
-  $effect(() => untrack(() => latestBlock.watch(bridgeKey.fromChain)))
-  $effect(() => untrack(() => latestBlock.watch(bridgeKey.toChain)))
+  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.fromChain))))
+  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.toChain))))
   $effect(() => {
-    const originationBlock = untrack(() => latestBlock.block(bridgeKey.fromChain))
+    const originationBlock = untrack(() => latestBlock.block(Number(bridgeKey.fromChain)))
     if (!bridgeSettings.assetIn.value || !accountState.address || originationBlock) return
     return fromTokenBalance.fetch(
-      bridgeKey.fromChain,
+      Number(bridgeKey.fromChain),
       bridgeSettings.assetIn.value,
       accountState.address,
       originationBlock,
     )
   })
   $effect(() => {
-    const destinationBlock = untrack(() => latestBlock.block(bridgeKey.toChain))
+    const destinationBlock = untrack(() => latestBlock.block(Number(bridgeKey.toChain)))
     if (!bridgeSettings.assetOut.value?.address || !accountState.address || destinationBlock) {
       return
     }
     return toTokenBalance.fetch(
-      bridgeKey.toChain,
+      Number(bridgeKey.toChain),
       bridgeSettings.assetOut.value as Token,
       accountState.address,
       destinationBlock,
@@ -151,7 +151,7 @@
       walletAccount: accountState.address,
       bridgeKey: bridgeKey.value,
       assetLink: assetLink.value,
-      publicClient: clientFromChain(bridgeKey.fromChain),
+      publicClient: clientFromChain(Number(bridgeKey.fromChain)),
     })
     result.promise.then((approval) => {
       if (result.controller.signal.aborted) return

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as transactions from '$lib/stores/transactions'
   import TokenIcon from './TokenIcon.svelte'
   import type { Token } from '$lib/types.svelte'
   import { isHex, zeroAddress, type Hex } from 'viem'
@@ -25,6 +26,7 @@
     bridgeStatuses,
     type ContinuedLiveBridgeStatusParams,
     latestBlock,
+    checkApproval,
   } from '$lib/stores/chain-events.svelte'
   import {
     amountIn,
@@ -34,11 +36,12 @@
     loadFeeFor,
     recipient,
     bridgeKey,
+    clientFromChain,
   } from '$lib/stores/input.svelte'
   import { humanReadableNumber, usd } from '$lib/stores/utils'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { SvelteMap } from 'svelte/reactivity'
-  import { sendTransaction, waitForTransactionReceipt } from '@wagmi/core'
+  // import { sendTransaction } from '@wagmi/core'
   import Loading from './Loading.svelte'
   import Tooltip from './Tooltip.svelte'
   import ExplorerLink from './ExplorerLink.svelte'
@@ -47,6 +50,7 @@
   import GuideStep from './GuideStep.svelte'
   import GuideShield from './GuideShield.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
+    import { chainsMetadata } from '$lib/stores/auth/constants'
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(bridgeFee.value?.feeF2H ?? 0n)
@@ -102,15 +106,29 @@
   })
   const bridgeTokens = async () => {
     if (!accountState.address) return
-    const tx = await sendTransaction(wagmiAdapter.wagmiConfig, {
+    const approval = await checkApproval([
+      accountState.address,
+      bridgeSettings.bridgePathway?.from ?? zeroAddress,
+      tokenInput?.address as Hex,
+      clientFromChain(Number(bridgeKey.fromChain)),
+    ])
+    if (approval < bridgeAmount) {
+      const tx = await transactions.sendApproval({
+        tokenAddress: tokenInput?.address as Hex,
+        spender: bridgeSettings.bridgePathway?.from ?? zeroAddress,
+        amount: bridgeAmount,
+        chain: chainsMetadata[bridgeKey.fromChain],
+      })
+      await transactions.wait(tx)
+    }
+    const tx = await transactions.sendTransaction({
       account: accountState.address,
+      chain: chainsMetadata[bridgeKey.fromChain],
       ...bridgeSettings.transactionInputs,
     })
     setTxHash(tx)
     incrementBridgeStatus()
-    waitForTransactionReceipt(wagmiAdapter.wagmiConfig, {
-      hash: tx,
-    }).then(() => {
+    transactions.wait(tx).then(() => {
       incrementBridgeStatus()
     })
   }
@@ -121,7 +139,7 @@
   let usdMultiplier = $state(0n)
   const wplsTokenPrice = new SvelteMap<string, bigint>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
-  const destinationBlock = $derived(untrack(() => latestBlock.block(bridgeKey.toChain)))
+  const destinationBlock = $derived(latestBlock.block(Number(bridgeKey.toChain)))
   $effect(() => {
     if (!destinationBlock) return
     const watcher = watchWplsUSDPrice(destinationBlock)
@@ -150,7 +168,7 @@
       bridgeStatus = {
         bridgeKey,
         hash: tx!,
-        ticker: untrack(() => latestBlock.block(bridgeKey.toChain)!),
+        ticker: untrack(() => latestBlock.block(Number(bridgeKey.toChain))!),
         status: bridgeStatuses.SUBMITTED,
         statusIndex: 0,
       }
@@ -247,7 +265,7 @@
         return 'This transaction is still being validated by the network.'
       case bridgeStatuses.MINED:
         const currentlyFinalizedBlock = bridgeStatus?.finalizedBlock?.number
-        const currentBlock = untrack(() => latestBlock.block(bridgeKey.fromChain)?.number)
+        const currentBlock = untrack(() => latestBlock.block(Number(bridgeKey.fromChain))?.number)
         let estimatedFutureFinalizedBlock = currentlyFinalizedBlock
         const minedBlock = bridgeStatus.receipt?.blockNumber
         if (
@@ -311,23 +329,6 @@
       class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
       <header class="flex flex-row justify-between relative h-16">
         <div class="flex flex-col w-1/2 gap-0">
-          <!-- input side -->
-          {#if accountState.address}
-            <div class="flex gap-1 flex-row-reverse absolute top-0 left-0">
-              <BalanceReadout
-                token={tokenInput}
-                showLoader
-                roundedClasses="rounded-tl"
-                hideSymbol
-                decimalLimit={9}
-                onbalanceupdate={(balance) => {
-                  maxBridgeable = balance
-                }}
-                onmax={(balance) => {
-                  amountIn.value = balance
-                }} />
-            </div>
-          {/if}
           <Button
             class="absolute size-6 bottom-0 left-0 flex justify-center items-center text-surface-contrast-50 group"
             onclick={toggleEditTxHash}>
@@ -352,8 +353,25 @@
                 >${usd.toCents(usdValueTokenAmount)}</span>
             </div>
             <span class="text-base">{tokenInput.symbol}</span>
-            <TokenIcon src={assetSources(tokenInput)} />
+            <TokenIcon src={tokenInput.logoURI ?? assetSources(tokenInput)} />
           </label>
+
+          {#if accountState.address}
+            <div class="flex gap-1 flex-row-reverse absolute top-0 left-0">
+              <BalanceReadout
+                token={tokenInput}
+                showLoader
+                roundedClasses="rounded-tl"
+                hideSymbol
+                decimalLimit={9}
+                onbalanceupdate={(balance) => {
+                  maxBridgeable = balance
+                }}
+                onmax={(balance) => {
+                  amountIn.value = balance
+                }} />
+            </div>
+          {/if}
         </div>
         <VerticalDivider>
           <Icon
@@ -368,7 +386,7 @@
             <!-- output side -->
             <span
               class="flex flex-row items-center text-surface-contrast-50 w-full justify-end group min-h-[2rem]">
-              <div class="pl-5 flex flex-row items-center min-w-0 flex-grow">
+              <div class="pl-5 flex flex-row items-center min-w-0 grow">
                 <AssetWithNetwork asset={bridgedToken} network={Chains.PLS} />
                 <span class="flex flex-row gap-2 items-center pl-1 min-w-0 flex-shrink relative">
                   <span

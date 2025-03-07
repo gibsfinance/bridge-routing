@@ -12,10 +12,8 @@
   import { SvelteMap } from 'svelte/reactivity'
   import OnboardBridge from './OnboardBridge.svelte'
   import OnboardPulseX from './OnboardPulseX.svelte'
-  import OnboardSelectTokens from './OnboardSelectTokens.svelte'
   import OnboardSettings from './OnboardSettings.svelte'
   import OnboardForeignBridge from './OnboardForeignBridge.svelte'
-  import { onboardSettings } from '$lib/stores/onboard.svelte'
   import { untrack } from 'svelte'
 
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
@@ -45,10 +43,10 @@
   }
   const wplsTokenPrice = new SvelteMap<string, bigint | null>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
-  $effect(() => untrack(() => latestBlock.watch(bridgeKey.fromChain)))
-  $effect(() => untrack(() => latestBlock.watch(bridgeKey.toChain)))
+  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.fromChain))))
+  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.toChain))))
   $effect(() => {
-    const block = untrack(() => latestBlock.block(bridgeKey.toChain))
+    const block = latestBlock.block(Number(bridgeKey.toChain))
     if (!bridgedToken || !block) return
     const price = loadPrice(bridgedToken, block)
     price.promise

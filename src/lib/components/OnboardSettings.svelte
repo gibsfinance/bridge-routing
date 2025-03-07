@@ -4,7 +4,7 @@
   import Button from './Button.svelte'
   import Icon from '@iconify/svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
-  import { accountState, modal } from '$lib/stores/auth/AuthProvider.svelte'
+  import { accountState, modal, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
   import ConnectButton from './ConnectButton.svelte'
   import { bridgeSettings, searchKnownAddresses } from '$lib/stores/bridge-settings.svelte'
   import { assetLink, latestBlock, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
@@ -18,7 +18,7 @@
   } from '$lib/stores/input.svelte'
   import { onboardSettings } from '$lib/stores/onboard.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
-  import { untrack } from 'svelte'
+  import { onDestroy, untrack } from 'svelte'
   const openOnRamp = () => {
     modal.open({
       view: 'OnRampProviders',
@@ -86,11 +86,14 @@
   $effect(() => {
     recipient.value = accountState.address ?? zeroAddress
   })
-  $effect(() => untrack(() => latestBlock.watch(bridgeKey.fromChain)))
-  $effect(() => untrack(() => latestBlock.watch(bridgeKey.toChain)))
+  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.fromChain))))
+  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.toChain))))
   $effect(() => {
     if (!bridgeSettings.assetIn.value) return
     return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
+  })
+  onDestroy(async () => {
+    await Promise.all([wagmiAdapter.disconnect(), modal.disconnect()])
   })
   // const toggleShowBridge = () => {
   //   onboardSettings.toggleShowBridge()

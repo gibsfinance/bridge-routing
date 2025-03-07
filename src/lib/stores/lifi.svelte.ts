@@ -1,12 +1,4 @@
-import {
-  ChainType,
-  getChains,
-  getTools,
-  getTokens,
-  getQuote,
-  getConnections,
-  createConfig,
-} from '@lifi/sdk'
+import { ChainType, getChains, getTokens, getQuote, getConnections, createConfig } from '@lifi/sdk'
 import type {
   Chain,
   Connection,
@@ -14,35 +6,31 @@ import type {
   QuoteRequest,
   RelayerQuoteResponseData,
   Token,
-  ToolsResponse,
 } from '@lifi/types'
 import { SvelteMap } from 'svelte/reactivity'
 import type { Hex } from 'viem'
 import { loading } from './loading.svelte'
+import _ from 'lodash'
+import { maxMemoize } from '$lib/utils.svelte'
 
 const integrator = 'gibs.finance'
 createConfig({
   integrator,
-  // preloadChains: true,
 })
 
-export const availableTools = $state({
-  value: null as null | ToolsResponse,
-  set: (tools: ToolsResponse) => {
-    availableTools.value = tools
-  },
-})
 export const availableChains = new SvelteMap<number, Chain>()
 export const availableTokensPerOriginChain = new SvelteMap<number, Token[]>()
 export const availableTokensPerDestinationChain = new SvelteMap<number, Token[]>()
 
+const fetchChains = _.memoize(async () => {
+  const chains = await getChains({
+    chainTypes: [ChainType.EVM, ChainType.UTXO, ChainType.SVM, ChainType.MVM],
+  })
+  return chains
+})
+
 export const loadData = async () => {
-  const [chains] = await Promise.all([
-    getChains({
-      chainTypes: [ChainType.EVM, ChainType.UTXO, ChainType.SVM, ChainType.MVM],
-    }),
-    getTools(),
-  ])
+  const [chains] = await Promise.all([fetchChains()])
   const c = new Map<string, Chain>()
   chains.forEach((chain) => {
     if (c.has(chain.key)) return
@@ -121,19 +109,19 @@ export const tokenOut = $state({
   },
 })
 
+const getTokensAndCache = _.memoize(async (id: number) => {
+  const tokens = await getTokens({
+    chains: [id],
+  })
+  availableTokensPerOriginChain.set(id, tokens.tokens[id])
+  return tokens.tokens[id]
+})
+
 export const loadTokensForChains = async (chain: Chain) => {
   if (availableTokensPerOriginChain.has(chain.id)) {
     return availableTokensPerOriginChain.get(chain.id)!
   }
-  const tokens = await getTokens({
-    chains: [chain.id],
-  })
-  availableTokensPerOriginChain.set(chain.id, tokens.tokens[chain.id])
-}
-
-export const loadTools = async () => {
-  const tools = await getTools()
-  availableTools.set(tools)
+  await getTokensAndCache(chain.id)
 }
 
 export const flipTokens = () => {
@@ -167,18 +155,13 @@ export const toAddress = $state({
   },
 })
 
-export const getQuoteStep = loading.loadsAfterTick<RelayerQuoteResponseData['quote'], QuoteRequest>(
+export const getQuoteStep = loading.loadsAfterTick<
+  RelayerQuoteResponseData['quote'],
+  QuoteRequest & { blockNumber: bigint }
+>(
   'lifi-quote',
-  async ({
-    fromChain,
-    toChain,
-    fromToken,
-    toToken,
-    fromAmount,
-    fromAddress,
-    toAddress,
-  }: QuoteRequest) => {
-    return await getQuote({
+  maxMemoize(
+    async ({
       fromChain,
       toChain,
       fromToken,
@@ -186,7 +169,17 @@ export const getQuoteStep = loading.loadsAfterTick<RelayerQuoteResponseData['quo
       fromAmount,
       fromAddress,
       toAddress,
-      integrator,
-    })
-  },
+    }: QuoteRequest) => {
+      return await getQuote({
+        fromChain,
+        toChain,
+        fromToken,
+        toToken,
+        fromAmount,
+        fromAddress,
+        toAddress,
+        integrator,
+      })
+    },
+  ),
 )

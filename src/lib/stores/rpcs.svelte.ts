@@ -1,23 +1,23 @@
-import { Chains } from '$lib/stores/auth/types'
+import { Chains, toChain } from '$lib/stores/auth/types'
 import { chainsMetadata } from './auth/constants'
 // import { get, writable } from 'svelte/store'
 import { isProd } from '$lib/stores/config.svelte'
 import _ from 'lodash'
 import { SvelteMap } from 'svelte/reactivity'
 
-type RPCEntry = [Chains, string[]]
+type RPCEntry = [number, string[]]
 
-type RPCData = SvelteMap<Chains, string[]>
+type RPCData = SvelteMap<number, string[]>
 
 const prodRpc = [
-  [Chains.PLS, [...chainsMetadata[Chains.PLS].rpcUrls.default.http]],
-  [Chains.ETH, [...chainsMetadata[Chains.ETH].rpcUrls.default.http]],
-  [Chains.BNB, [...chainsMetadata[Chains.BNB].rpcUrls.default.http]],
+  [Number(Chains.PLS), [...chainsMetadata[Chains.PLS].rpcUrls.default.http]],
+  [Number(Chains.ETH), [...chainsMetadata[Chains.ETH].rpcUrls.default.http]],
+  [Number(Chains.BNB), [...chainsMetadata[Chains.BNB].rpcUrls.default.http]],
 ] as RPCEntry[]
 
 const testnetRpc = [
-  [Chains.V4PLS, [...chainsMetadata[Chains.V4PLS].rpcUrls.default.http]],
-  [Chains.SEP, [...chainsMetadata[Chains.SEP].rpcUrls.default.http]],
+  [Number(Chains.V4PLS), [...chainsMetadata[Chains.V4PLS].rpcUrls.default.http]],
+  [Number(Chains.SEP), [...chainsMetadata[Chains.SEP].rpcUrls.default.http]],
 ] as RPCEntry[]
 
 const localStorageKey = 'rpcs'
@@ -30,10 +30,10 @@ class RpcsStore {
   get value() {
     return this.val
   }
-  get(c: Chains) {
+  get(c: number) {
     return this.val.get(c) || null
   }
-  set(c: Chains, l: string[]) {
+  set(c: number, l: string[]) {
     this.val.set(c, l)
     this.updateStorage()
   }
@@ -49,8 +49,8 @@ class RpcsStore {
     }
     const stored = entry.split('\n').map((ro) => {
       const [chain, ...list] = ro.split(',')
-      return [chain as Chains, _.compact(list)] as const
-    }) as [Chains, string[]][]
+      return [Number(chain), _.compact(list)] as const
+    }) as [number, string[]][]
     return new Map([...this.value.entries()].concat(stored))
   }
   entries() {
@@ -60,9 +60,9 @@ class RpcsStore {
 
 export const store = new RpcsStore()
 
-export const key = (c: Chains, l: string[]) => `${c},${(l as string[]).join(',')}`
+export const key = (c: number, l: string[]) => `${c},${(l as string[]).join(',')}`
 
-export const update = (chain: Chains, i: number, rpc: string) => {
+export const update = (chain: number, i: number, rpc: string) => {
   const list = store.get(chain) as string[]
   if (list[i] === rpc) {
     return
@@ -72,13 +72,13 @@ export const update = (chain: Chains, i: number, rpc: string) => {
   store.set(chain, l)
 }
 
-export const remove = (chain: Chains, i: number) => {
+export const remove = (chain: number, i: number) => {
   const list = store.get(chain) as string[]
   list.splice(i, 1)
   store.set(chain, list)
 }
 
-export const add = (chain: Chains, addition = (rpcs: string[]) => [''].concat(rpcs)) => {
+export const add = (chain: number, addition = (rpcs: string[]) => [''].concat(rpcs)) => {
   const before = store.get(chain) as string[]
   const list = addition(before.slice(0))
   const filteredList = list.filter((val, i) => {
@@ -94,12 +94,12 @@ export const add = (chain: Chains, addition = (rpcs: string[]) => [''].concat(rp
   store.set(chain, filteredList)
 }
 
-export const hasDefault = (chain: Chains, list: string[]) => {
-  const defaultRpc = chainsMetadata[chain].rpcUrls.default.http[0] as string
+export const hasDefault = (chain: number, list: string[]) => {
+  const defaultRpc = chainsMetadata[toChain(chain)].rpcUrls.default.http[0] as string
   if (!defaultRpc) return false
   return list.includes(defaultRpc)
 }
 
-export const restoreDefault = (chain: Chains) => {
-  add(chain, (l) => l.concat(chainsMetadata[chain].rpcUrls.default.http))
+export const restoreDefault = (chain: number) => {
+  add(chain, (l) => l.concat(chainsMetadata[toChain(chain)].rpcUrls.default.http))
 }

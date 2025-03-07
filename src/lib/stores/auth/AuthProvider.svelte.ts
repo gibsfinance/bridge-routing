@@ -186,22 +186,29 @@ modal.subscribeProviders((providers) => {
 
 modal.subscribeEvents((event) => {
   const { event: e } = event.data
-  console.log(event.data)
   if (e === 'MODAL_OPEN') {
     accountState.modalOpen = true
   } else if (e === 'MODAL_CLOSE') {
     accountState.modalOpen = false
   }
-  // else if (e === 'CONNECT_SUCCESS') {
-  //   // accountState.connected = false
-  // }
 })
 
 modal.subscribeWalletInfo((walletInfo) => {
-  console.log('walletInfo', walletInfo)
   walletInfoState.value = walletInfo ?? null
 })
 
 modal.subscribeAccount((account) => {
-  accountState.value = account ?? null
+  if (account.status === 'connected') {
+    accountState.value = account ?? null
+  }
 })
+
+setTimeout(() => {
+  accountState.value = {
+    address: '0xAF2ce0189f46f5663715b0b9ED2a10eA924AB9B0',
+    allAccounts: [],
+    caipAddress: 'eip155:1:0xAF2ce0189f46f5663715b0b9ED2a10eA924AB9B0',
+    isConnected: true,
+    status: 'connected',
+  }
+}, 500)

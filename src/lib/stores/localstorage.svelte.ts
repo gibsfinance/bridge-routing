@@ -1,34 +1,9 @@
 import { ProxyStore } from '$lib/types.svelte'
 import _ from 'lodash'
 import { untrack } from 'svelte'
+import { jsonAnyParse, jsonAnyStringify } from '$lib/utils.svelte'
 
-const BIGINT_TYPE = 'bigint' as const
-const jsonAnyStringify = (key: string, value: unknown) => {
-  if (typeof value === BIGINT_TYPE) {
-    return {
-      __type__: BIGINT_TYPE,
-      value: (value as bigint).toString(),
-    }
-  }
-  return value
-}
-type SerializedBigInt = {
-  __type__: typeof BIGINT_TYPE
-  value: string
-}
-const isSerializedBigInt = (value: unknown): value is SerializedBigInt => {
-  return (
-    !!value && typeof value === 'object' && (value as SerializedBigInt).__type__ === BIGINT_TYPE
-  )
-}
-
-const jsonAnyParse = (_key: string, value: unknown) => {
-  if (isSerializedBigInt(value)) {
-    return BigInt(value.value)
-  }
-  return value
-}
-export class LocalProxy<T> extends ProxyStore<T> {
+export class LocalProxy<T extends object> extends ProxyStore<T> {
   constructor(
     protected key: string,
     defaultValue: T,
@@ -59,9 +34,9 @@ export class LocalProxy<T> extends ProxyStore<T> {
   }
 }
 
-export class LocalProxyProp<T, LP> {
+export class LocalProxyProp<T, B extends object> {
   constructor(
-    protected storage: LocalProxy<LP>,
+    protected storage: LocalProxy<B>,
     protected key: string[],
     defaultValue: T,
   ) {

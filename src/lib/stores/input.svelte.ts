@@ -15,7 +15,7 @@ import {
   type PublicClient,
   webSocket,
 } from 'viem'
-import { ChainIdToKey, Chains, Provider } from './auth/types'
+import { ChainIdToKey, Chains, Provider, toChain } from './auth/types'
 import { settings, type PathwayExtendableConfig } from './fee-manager.svelte'
 import {
   blacklist,
@@ -287,7 +287,7 @@ export const bridgeableTokensUnder = ({
         } as Token,
       ].concat(sortedList),
       ({ chainId, address }) => `${chainId}/${getAddress(address)}`,
-    ).filter((tkn) => !blacklist.has(tkn.address))
+    ).filter((tkn) => !blacklist.has(tkn.address as Hex))
   }
   return list.map((token) => {
     // register on a central cache so that tokens that are gotten from onchain
@@ -329,7 +329,7 @@ export const isUnwrappable = (
 
 export const walletClient = new NullableProxyStore<WalletClient>(null)
 
-const clientCache = new Map<Chains, { key: string; client: PublicClient }>([])
+const clientCache = new Map<number, { key: string; client: PublicClient }>([])
 
 export const defaultBatchConfig = {
   batch: {
@@ -340,9 +340,8 @@ export const defaultBatchConfig = {
 
 const chainList = [...Object.values(networks)]
 
-const searchChainsForRpcUrls = (chainId: Hex) => {
-  const id = Number(chainId)
-  const chain = chainList.find((c) => c.id === id)!
+const searchChainsForRpcUrls = (chainId: number) => {
+  const chain = chainList.find((c) => c.id === chainId)!
   const { http, webSocket = [] } = chain.rpcUrls.default as unknown as {
     http?: string[]
     webSocket?: string[]
@@ -350,7 +349,7 @@ const searchChainsForRpcUrls = (chainId: Hex) => {
   return [...(http ?? []), ...(webSocket ?? [])]
 }
 
-export const clientFromChain = (chainId: Chains) => {
+export const clientFromChain = (chainId: number) => {
   const urls = _.compact(rpcs.store.get(chainId) || searchChainsForRpcUrls(chainId))
   const key = rpcs.key(chainId, urls)
   const existing = clientCache.get(chainId)
@@ -358,7 +357,7 @@ export const clientFromChain = (chainId: Chains) => {
     return existing.client
   }
   const client = createPublicClient({
-    chain: chainsMetadata[chainId],
+    chain: chainsMetadata[toChain(chainId)],
     transport: fallback(
       urls.map((rpc) =>
         rpc.startsWith('http')
@@ -479,7 +478,7 @@ export const fromChainMulticall = (bridgeKey: BridgeKeyStore) => {
   const metadata = chainsMetadata[bridgeKey.fromChain]
   return getContract({
     abi: multicall3Abi,
-    client: clientFromChain(bridgeKey.fromChain),
+    client: clientFromChain(Number(bridgeKey.fromChain)),
     address: metadata.contracts!.multicall3!.address,
   })
 }
@@ -488,7 +487,7 @@ export const toChainMulticall = (bridgeKey: BridgeKeyStore) => {
   const metadata = chainsMetadata[bridgeKey.toChain]
   return getContract({
     abi: multicall3Abi,
-    client: clientFromChain(bridgeKey.toChain),
+    client: clientFromChain(Number(bridgeKey.toChain)),
     address: metadata.contracts!.multicall3!.address,
   })
 }

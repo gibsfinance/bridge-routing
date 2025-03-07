@@ -41,21 +41,21 @@
   const showMax = $state(!!onmax)
   const chain = $derived(toChain(token.chainId))
   const tokenBalance = new TokenBalanceWatcher()
-  const walletAccount = $derived(accountState.address)
-  $effect(() => untrack(() => latestBlock.watch(chain)))
+  const walletAccount = $derived(untrack(() => accountState.address))
+  $effect(() => untrack(() => latestBlock.watch(Number(chain))))
   $effect(() => {
-    const block = untrack(() => latestBlock.block(chain))
+    const block = latestBlock.block(Number(chain))
     if (!walletAccount || !block) {
       return
     }
-    return tokenBalance.fetch(chain, token, walletAccount, block)
+    return tokenBalance.fetch(Number(chain), token, walletAccount, block)
   })
   $effect(() => {
     onbalanceupdate?.(tokenBalance.value)
   })
   const balance = $derived(tokenBalance.value ?? 0n)
   const disableMax = $derived(balance === 0n)
-  const loadingKey = $derived(tokenBalanceLoadingKey(chain, token, walletAccount ?? '0x'))
+  const loadingKey = $derived(tokenBalanceLoadingKey(Number(chain), token, walletAccount ?? '0x'))
   const decimalClassNames = $derived(classNames('h-full', decimalClasses))
   const maxOutBalance = (event: MouseEvent) => {
     if (disableMax) return

@@ -25,7 +25,7 @@ import { tokenToPair } from './utils'
 import { gql, GraphQLClient } from 'graphql-request'
 import { Cache } from './cache'
 
-const watchFinalizedBlocksForSingleChain = (chainId: Chains, onBlock: (block: Block) => void) => {
+const watchFinalizedBlocksForSingleChain = (chainId: number, onBlock: (block: Block) => void) => {
   const client = input.clientFromChain(chainId)
   return client.watchBlocks({
     blockTag: 'finalized',
@@ -35,13 +35,13 @@ const watchFinalizedBlocksForSingleChain = (chainId: Chains, onBlock: (block: Bl
   })
 }
 
-export const finalizedBlocks = new SvelteMap<Chains, bigint | null>()
+export const finalizedBlocks = new SvelteMap<number, bigint | null>()
 
 export const watchFinalizedBlocks = () =>
   Object.keys(chainsMetadata)
-    .filter((chain) => rpcs.store.get(chain as Chains))
+    .filter((chain) => rpcs.store.get(Number(chain)))
     .map((chain) => {
-      const chainId = chain as Chains
+      const chainId = Number(chain)
       return watchFinalizedBlocksForSingleChain(chainId, (v) => {
         finalizedBlocks.set(chainId, v.number)
       })
@@ -52,12 +52,12 @@ export const unwatchFinalizedBlocks = (cleanups: Cleanup[]) => {
 }
 
 export class ChainsState {
-  private blocks = new SvelteMap<Chains, Block | null>()
-  private chainCounts = new Map<Chains, number>()
-  block(chain: Chains) {
+  private blocks = new SvelteMap<number, Block | null>()
+  private chainCounts = new Map<number, number>()
+  block(chain: number) {
     return this.blocks.get(chain)
   }
-  latestBaseFeePerGas(chain: Chains) {
+  latestBaseFeePerGas(chain: number) {
     const perGas = this.block(chain)?.baseFeePerGas
     if (!perGas) {
       // on bsc the numbers are fairly fixed
@@ -66,13 +66,13 @@ export class ChainsState {
       return perGas
     }
   }
-  increment(chain: Chains) {
+  increment(chain: number) {
     untrack(() => this.chainCounts.set(chain, (this.chainCounts.get(chain) ?? 0) + 1))
   }
-  decrement(chain: Chains) {
+  decrement(chain: number) {
     untrack(() => this.chainCounts.set(chain, (this.chainCounts.get(chain) ?? 0) - 1))
   }
-  watch(chain: Chains) {
+  watch(chain: number) {
     if (!this.blocks.has(chain)) {
       // signals a "pending" state
       this.blocks.set(chain, null)
@@ -101,7 +101,7 @@ export class ChainsState {
 export const latestBlock = new ChainsState()
 
 export const getTokenBalance = (
-  chainId: Chains,
+  chainId: number,
   asset: Token | null,
   walletAccount: Hex | null,
 ) => {
@@ -112,7 +112,7 @@ export const getTokenBalance = (
       ? () => publicClient.getBalance({ address: walletAccount })
       : () =>
           getContract({
-            address: asset.address,
+            address: asset.address as Hex,
             abi: erc20Abi,
             client: publicClient,
           })
@@ -122,7 +122,7 @@ export const getTokenBalance = (
   return loading.loadsAfterTick<bigint | null>(key, getBalance)()
 }
 
-export const tokenBalanceLoadingKey = (chainId: Chains, token: Token, walletAccount: Hex) => {
+export const tokenBalanceLoadingKey = (chainId: number, token: Token, walletAccount: Hex) => {
   return `balance-${chainId}-${token.address}-${walletAccount}`.toLowerCase()
 }
 
@@ -133,7 +133,7 @@ const balanceTTL = 1000 * 60 * 20
 const balanceCache = new Map<string, { time: number; value: bigint | null }>()
 export class TokenBalanceWatcher {
   private balanceCleanup: Cleanup | null = null
-  private chainId: Chains | null = null
+  private chainId: number | null = null
   private token: Token | null = null
   private walletAccount: Hex | null = null
   value = $state<bigint | null>(null)
@@ -159,7 +159,7 @@ export class TokenBalanceWatcher {
     return `${this.chainId}-${this.walletAccount}-${this.token?.address}`.toLowerCase()
   }
 
-  fetch(chainId: Chains, token: Token, walletAccount: Hex, ticker: Block | null | undefined) {
+  fetch(chainId: number, token: Token, walletAccount: Hex, ticker: Block | null | undefined) {
     this.cleanup()
     this.chainId = chainId
     this.token = token
@@ -178,7 +178,9 @@ export class TokenBalanceWatcher {
       }
       this.clearLongtailBalances()
       balanceCache.set(this.key, { time: Date.now(), value: v })
-      this.value = v
+      if (v !== untrack(() => this.value)) {
+        this.value = v
+      }
     })
   }
 }
@@ -266,13 +268,13 @@ export class MinBridgeAmount {
     }
     this.value = null
     const result = loading.loadsAfterTick<bigint>('min-amount', () => {
-      const fromPublicClient = input.clientFromChain(bridgeKey[1])
-      const toPublicClient = input.clientFromChain(bridgeKey[2])
+      const fromPublicClient = input.clientFromChain(Number(bridgeKey[1]))
+      const toPublicClient = input.clientFromChain(Number(bridgeKey[2]))
       const publicClient = path?.feeManager === 'from' ? fromPublicClient : toPublicClient
       return publicClient.readContract({
         abi: abis.inputBridge,
         functionName: 'minPerTx',
-        args: [assetIn.address],
+        args: [assetIn.address as Hex],
         address: path[path.feeManager],
       })
     })()
@@ -313,10 +315,10 @@ export const minAmount = new MinBridgeAmount()
 // )
 
 const links = _.memoize(
-  async ({ chainId, target, address }: { chainId: Chains; target: Hex; address: Hex }) => {
+  async ({ chainId, target, address }: { chainId: number; target: Hex; address: Hex }) => {
     return multicallRead<Hex[]>({
       client: input.clientFromChain(chainId),
-      chain: chainsMetadata[chainId],
+      chain: chainsMetadata[toChain(chainId)],
       abi: abis.inputBridge,
       target,
       calls: [
@@ -331,10 +333,10 @@ const links = _.memoize(
 )
 
 export const tokenLinks = _.memoize(
-  async ({ chainId, target, address }: { chainId: Chains; target: Hex; address: Hex }) => {
+  async ({ chainId, target, address }: { chainId: number; target: Hex; address: Hex }) => {
     return multicallRead<[Hex, Hex]>({
       client: input.clientFromChain(chainId),
-      chain: chainsMetadata[chainId],
+      chain: chainsMetadata[toChain(chainId)],
       abi: abis.inputBridge,
       target,
       calls: [
@@ -391,14 +393,14 @@ export const tokenBridgeInfo = async (
   // console.log(links)
   const [toMappings, fromMappings] = await Promise.all([
     links({
-      chainId: toChain,
+      chainId: Number(toChain),
       target: bridgePathway.to,
-      address: assetInAddress,
+      address: assetInAddress as Hex,
     }),
     links({
-      chainId: fromChain,
+      chainId: Number(fromChain),
       target: bridgePathway.from,
-      address: assetInAddress,
+      address: assetInAddress as Hex,
     }),
   ])
   const [toBridged, toNative] = toMappings
@@ -409,11 +411,11 @@ export const tokenBridgeInfo = async (
     // if (notGas) console.log('toBridged')
     return {
       originationChainId: fromChain,
-      assetInAddress,
+      assetInAddress: assetInAddress as Hex,
       assetOutAddress: toBridged,
       toForeign: {
         foreign: toBridged,
-        home: assetInAddress,
+        home: assetInAddress as Hex,
       },
     }
   }
@@ -421,11 +423,11 @@ export const tokenBridgeInfo = async (
     // if (notGas) console.log('toNative')
     return {
       originationChainId: toChain,
-      assetInAddress,
+      assetInAddress: assetInAddress as Hex,
       assetOutAddress: toNative,
       toHome: {
         home: toNative,
-        foreign: assetInAddress,
+        foreign: assetInAddress as Hex,
       },
     }
   }
@@ -434,10 +436,10 @@ export const tokenBridgeInfo = async (
     // if (notGas) console.log('fromNative')
     return {
       originationChainId: toChain,
-      assetInAddress,
+      assetInAddress: assetInAddress as Hex,
       assetOutAddress: fromNative,
       toHome: {
-        home: assetInAddress,
+        home: assetInAddress as Hex,
         foreign: fromNative,
       },
     }
@@ -446,30 +448,30 @@ export const tokenBridgeInfo = async (
     // if (notGas) console.log('fromBridged')
     return {
       originationChainId: fromChain,
-      assetInAddress,
+      assetInAddress: assetInAddress as Hex,
       assetOutAddress: fromBridged,
       toForeign: {
         foreign: fromBridged,
-        home: assetInAddress,
+        home: assetInAddress as Hex,
       },
     }
   }
   // the token has not been bridged yet
   return {
     originationChainId: toChain,
-    assetInAddress,
+    assetInAddress: assetInAddress as Hex,
     assetOutAddress: null,
     ...(bridgePathway.toHome
       ? {
           toHome: {
-            foreign: assetInAddress,
+            foreign: assetInAddress as Hex,
             home: null,
           },
         }
       : {
           toForeign: {
             foreign: null,
-            home: assetInAddress,
+            home: assetInAddress as Hex,
           },
         }),
   }
@@ -506,7 +508,7 @@ export const tokenOriginationChainId = (assetLink: TokenBridgeInfo | null) => {
 //   },
 // )
 
-const checkApproval = async ([walletAccount, $bridgeAddress, address, publicClient]: [
+export const checkApproval = async ([walletAccount, $bridgeAddress, address, publicClient]: [
   Hex | undefined,
   Hex,
   Hex,
@@ -572,7 +574,7 @@ const pairAbi = parseAbi([
   'function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
 ])
 
-const getReservesFailure = (chainId: Chains, token: Hex) => {
+const getReservesFailure = (chainId: number, token: Hex) => {
   return (e: unknown) => {
     console.error(`Failed to get reserves for id=${chainId} token=${token}`, e)
     return null
@@ -635,7 +637,7 @@ const formatReserveQuery = (
   }
 }
 
-export const getPoolInfo = async (chainId: Chains, token: Hex, block: Block) => {
+export const getPoolInfo = async (chainId: number, token: Hex, block: Block) => {
   const client = input.clientFromChain(chainId)
   const factoryAndInitCodeHash = new Map<Hex, Hex>([
     [
@@ -697,7 +699,7 @@ export const loadPrice = (token: Token, block: Block) => {
     return resolved(null)
   }
   return loading.loadsAfterTick<PoolInfo>(key, () =>
-    getPoolInfo(toChain(token.chainId), token.address, block),
+    getPoolInfo(token.chainId, token.address as Hex, block),
   )()
 }
 
@@ -720,7 +722,9 @@ const stableTokensList = Object.values(stableTokens)
 export const watchWplsUSDPrice = loading.loadsAfterTick<bigint, Block>(
   'price-wpls',
   (block: Block) =>
-    Promise.all(stableTokensList.map((token) => getPoolInfo(Chains.PLS, token.address, block))),
+    Promise.all(
+      stableTokensList.map((token) => getPoolInfo(Number(Chains.PLS), token.address, block)),
+    ),
   (results: PoolInfo[]) => {
     return (
       results.reduce((acc, poolInfo, i) => {
@@ -835,7 +839,7 @@ export const liveBridgeStatus = loading.loadsAfterTick<
   async (params: LiveBridgeStatusParams) => {
     const { bridgeKey, hash } = params
     // if (!chain || !chainPartner || !hash) return null
-    const client = input.clientFromChain(bridgeKey.fromChain)
+    const client = input.clientFromChain(Number(bridgeKey.fromChain))
     const receipt = await client.getTransactionReceipt({
       hash,
     })
@@ -864,7 +868,7 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     const urls = _.get(bridgeGraphqlUrl, bridgeKey.value)
     if (!urls) return null
     // where the signing happens
-    const client = input.clientFromChain(bridgeKey.fromChain)
+    const client = input.clientFromChain(Number(bridgeKey.fromChain))
     const [finalizedBlock, foreignStatus] = await Promise.all([
       client.getBlock({
         blockTag: 'finalized',

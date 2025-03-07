@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { assetSources, bridgeSettings } from '$lib/stores/bridge-settings.svelte'
-  import { getPulseXQuote, type PulsexQuoteOutput, type TradeType } from '$lib/stores/pulsex.svelte'
+  import * as transactions from '$lib/stores/transactions'
+  import { bridgeSettings, oneEther } from '$lib/stores/bridge-settings.svelte'
+  import { getPulseXQuote, type PulsexQuoteOutput } from '$lib/stores/pulsex/quote.svelte'
   import Icon from '@iconify/svelte'
   import type { Token } from '$lib/types.svelte'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
@@ -8,8 +9,8 @@
   import VerticalDivider from './VerticalDivider.svelte'
   import NumericInput from './NumericInput.svelte'
   import BalanceReadout from './BalanceReadout.svelte'
-  import { formatUnits } from 'viem'
-  import { latestBlock } from '$lib/stores/chain-events.svelte'
+  import { formatUnits, type Hex } from 'viem'
+  import { checkApproval, latestBlock } from '$lib/stores/chain-events.svelte'
   import Loading from './Loading.svelte'
   import Button from './Button.svelte'
   // import { sendTransaction } from '@wagmi/core'
@@ -25,6 +26,9 @@
   import GuideShield from './GuideShield.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
   import { untrack } from 'svelte'
+  import { humanReadableNumber } from '$lib/stores/utils'
+  import { clientFromChain } from '$lib/stores/input.svelte'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
   const tokenOut = $derived(onboardSettings.plsOutToken)
   const tokenInURI = $derived(bridgeSettings.assetIn.value?.logoURI)
   const bridgeTokenOut = $derived(bridgeSettings.assetOut.value as Token | null)
@@ -36,7 +40,7 @@
         } as Token)
       : null,
   )
-  let amountInControl = $state(true)
+  // let amountInControl = $state(true)
   let amountToSwapIn = $state<bigint | null>(0n)
   let amountToSwapOut = $state<bigint | null>(null)
   let quoteResult = $state<PulsexQuoteOutput | null>(null)
@@ -45,26 +49,27 @@
       !tokenIn ||
       !tokenOut ||
       (!amountToSwapIn && !amountToSwapOut) ||
-      !untrack(() => latestBlock.block(Chains.PLS))
+      !untrack(() => latestBlock.block(Number(Chains.PLS)))
     ) {
       return
     }
     const quote = getPulseXQuote({
       tokenIn,
       tokenOut,
-      amountIn: amountInControl ? amountToSwapIn : null,
-      amountOut: amountInControl ? null : amountToSwapOut,
+      amountIn: amountToSwapIn,
+      amountOut: null,
     })
     quote.promise.then((result) => {
       if (quote.controller.signal.aborted || !result) return
       quoteResult = result
-      if (amountInControl) {
-        amountToSwapOut = truncateValue(result.outputAmount.value, tokenOut.decimals)
-      } else {
-        amountToSwapIn = truncateValue(result.inputAmount.value, tokenIn.decimals)
-      }
+      console.log(result)
+      amountToSwapOut = truncateValue(result.outputAmount.value, tokenOut.decimals)
     })
     return quote.cleanup
+  })
+  const quoteMatchesLatest = $derived.by(() => {
+    if (!quoteResult || !amountToSwapIn) return false
+    return quoteResult.inputAmount.value === amountToSwapIn.toString()
   })
   const truncateValue = (value: string, decimals: number) => {
     const int = BigInt(value)
@@ -81,9 +86,40 @@
     return int
   }
   const swapButtonClassNames = $derived(
-    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-4 w-16 text-base',
+    'bg-tertiary-500 text-surface-contrast-950 rounded-none size-16 text-base flex flex-row items-center justify-center shrink-0',
   )
-  const swapTokens = () => {
+  const swapRouterAddress = '0xDA9aBA4eACF54E0273f56dfFee6B8F1e20B23Bba'
+  const swapDisabled = $derived(!amountToSwapIn)
+  const swapTokens = async () => {
+    if (swapDisabled) return
+    const publicClient = clientFromChain(Number(Chains.PLS))
+    const approval = await checkApproval([
+      accountState.address!,
+      swapRouterAddress,
+      tokenIn!.address as Hex,
+      publicClient,
+    ])
+    if (approval < amountToSwapIn!) {
+      const tx = await transactions.sendApproval({
+        tokenAddress: tokenIn!.address as Hex,
+        spender: swapRouterAddress,
+        chain: chainsMetadata[Chains.PLS],
+      })
+      await transactions.wait(tx)
+      // const tx = await approveToken({
+      //   walletAccount: accountState.address!,
+      //   bridgeKey: bridgeKey.value,
+      //   assetLink: assetLink.value,
+      //   publicClient: clientFromChain(Number(bridgeKey.fromChain)),
+      // })
+    }
+    // const approval = await loadApproval({
+    //   walletAccount: accountState.address,
+    //   bridgeKey: bridgeKey.value,
+    //   assetLink: assetLink.value,
+    //   publicClient: clientFromChain(Number(bridgeKey.fromChain)),
+    // })
+    // const
     // SDK.
     // sendTransaction(wagmiAdapter.wagmiConfig, {
     // to: quoteResult?.outputAmount.address,
@@ -94,15 +130,25 @@
     // amountToSwapIn = null
     // amountToSwapOut = null
   }
-  const estimatedAmount = $derived(amountToSwapOut)
+  // const estimatedAmount = $derived(amountToSwapOut)
+
+  const estimatedAmount = $derived.by(() => {
+    if (!quoteMatchesLatest) return ''
+    const amountToSwapOutInt = amountToSwapOut ?? 0n
+    const amountToSwapOutToken = amountToSwapOutInt / oneEther
+    const lengthInt = amountToSwapOutToken.toString().length
+    const maxDecimals = Math.max(4, 9 - Math.max(0, lengthInt - 5))
+    return humanReadableNumber(amountToSwapOutInt, {
+      decimals: tokenOut.decimals,
+      maxDecimals,
+    })
+  })
   const tokenOutWithPrefixedName = $derived.by(() => ({
     ...tokenOut,
-    name: amountToSwapOut ? `${amountToSwapOut} ${tokenOut.symbol}` : tokenOut.symbol,
+    name: estimatedAmount ? `${estimatedAmount} ${tokenOut.symbol}` : tokenOut.symbol,
   }))
 </script>
 
-<!-- <div class="flex flex-col">
-  <label for="amount-to-swap-in" class="text-surface-100 text-base italic">3) Swap on PulseX</label> -->
 <div class="flex relative">
   <div
     class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
@@ -130,7 +176,6 @@
             id="amount-to-swap-in"
             decimals={tokenIn.decimals}
             oninput={(v) => {
-              amountInControl = true
               amountToSwapIn = v
               amountToSwapOut = null
             }} />
@@ -141,50 +186,31 @@
             icon="gridicons:chevron-right"
             class="text-surface-500 bg-surface-950-50 rounded-full w-full h-full ring-2 ring-current ring-inset p-0.5" />
         </VerticalDivider>
-        <div class="flex flex-row grow items-center w-1/2">
-          <label for="amount-to-swap-out" class="flex flex-row grow items-center h-full gap-1">
-            <!-- output token -->
-            <!-- <AssetWithNetwork
-              asset={tokenOutWithCorrectLogoURI}
-              network={Chains.PLS}
-              class="text-surface-900" />
-            <NumericInput
-              paddingClass="px-0"
-              class="w-full input ring-0 focus:ring-0 placeholder:text-gray-600 placeholder: text-surface-contrast-50 text-base"
-              value={amountToSwapOut}
-              id="amount-to-swap-out"
-              decimals={tokenOut.decimals}
-              oninput={(v) => {
-                amountInControl = false
-                amountToSwapOut = v
-                amountToSwapIn = null
-              }} /> -->
-            <div class="flex w-full">
-              <ModalWrapper
-                wrapperClasses="grow h-full"
-                triggerClasses="pl-4 py-4 flex relative justify-end grow h-full items-center gap-2 text-surface-contrast-50 group w-full">
-                {#snippet button()}
-                  <span class="flex flex-row px-1 w-full">
-                    <TokenInfo
-                      token={tokenOutWithPrefixedName}
-                      truncate={8}
-                      reversed={false}
-                      externalGroup
-                      wrapperSizeClasses="w-full h-8"
-                      nameClasses="text-base" />
-                  </span>
-                {/snippet}
-                {#snippet contents({ close })}
-                  <TokenSelect
-                    showCustomTokens
-                    chain={Chains.PLS}
-                    onsubmit={(tkn) => {
-                      onboardSettings.plsOutToken = tkn
-                      close()
-                    }} />
-                {/snippet}
-              </ModalWrapper>
-            </div>
+        <div class="flex flex-row grow items-center w-1/2 justify-end">
+          <label
+            for="amount-to-swap-out"
+            class="flex flex-row grow items-center h-full gap-1 min-w-0">
+            <ModalWrapper
+              wrapperClasses="grow h-full flex w-full"
+              triggerClasses="pl-4 py-4 flex relative grow justify-end h-full items-center gap-2 text-surface-contrast-50 group w-full">
+              {#snippet button()}
+                <TokenInfo
+                  token={tokenOutWithPrefixedName}
+                  truncate={8}
+                  externalGroup
+                  wrapperSizeClasses="h-8 min-w-0 overflow-hidden flex grow px-1"
+                  nameClasses="text-base truncate" />
+              {/snippet}
+              {#snippet contents({ close })}
+                <TokenSelect
+                  showCustomTokens
+                  chain={Chains.PLS}
+                  onsubmit={(tkn) => {
+                    onboardSettings.plsOutToken = tkn
+                    close()
+                  }} />
+              {/snippet}
+            </ModalWrapper>
           </label>
           <Button disabled class={swapButtonClassNames} onclick={swapTokens}>
             <Loading key="pulsex-quote">

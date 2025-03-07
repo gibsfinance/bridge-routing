@@ -83,7 +83,7 @@ export class BridgeSettings {
     return input.estimatedGas.value
   })
   latestBaseFeePerGas = $derived.by(() => {
-    return chainEvents.destination.latestBaseFeePerGas
+    return chainEvents.latestBlock.latestBaseFeePerGas(Number(input.bridgeKey.value[2]))
   })
   clampedReimbersement = $derived.by(() => {
     if (input.feeType.value === input.FeeType.PERCENT) {
@@ -225,7 +225,7 @@ export class BridgeSettings {
     let data = '0x' as Hex
     if (this.interactingWithBridgeToken) {
       // when interacting with a bridged token, we need to call the token address directly
-      toAddress = this.assetIn.value.address
+      toAddress = this.assetIn.value.address as Hex
       value = 0n
       // if we want delivery of the tokens (going from home to foreign) then we need to have the foreign data param
       // and it needs to start with the destination router
@@ -292,7 +292,7 @@ export class BridgeSettings {
               abi: abis.inputBridgeExtraInput,
               functionName: 'relayTokensAndCall',
               args: [
-                this.assetIn.value.address,
+                this.assetIn.value.address as Hex,
                 this.bridgePathway.destinationRouter,
                 this.amountToBridge,
                 this.feeDirectorStructEncoded,
@@ -303,7 +303,7 @@ export class BridgeSettings {
               abi: abis.inputBridge,
               functionName: 'relayTokensAndCall',
               args: [
-                this.assetIn.value.address,
+                this.assetIn.value.address as Hex,
                 this.bridgePathway.destinationRouter,
                 this.amountToBridge,
                 this.feeDirectorStructEncoded,
@@ -315,7 +315,7 @@ export class BridgeSettings {
               abi: abis.inputBridgeExtraInput,
               functionName: 'relayTokens',
               args: [
-                this.assetIn.value.address,
+                this.assetIn.value.address as Hex,
                 input.recipient.value,
                 this.amountToBridge,
                 accountState.address,
@@ -324,7 +324,7 @@ export class BridgeSettings {
           : encodeFunctionData({
               abi: abis.inputBridge,
               functionName: 'relayTokens',
-              args: [this.assetIn.value.address, input.recipient.value, this.amountToBridge],
+              args: [this.assetIn.value.address as Hex, input.recipient.value, this.amountToBridge],
             })
       }
     }
@@ -411,8 +411,8 @@ export const getAsset = async (chainId: Chains, assetInAddress: Hex) => {
     }
   }
   const asset = await multicallErc20({
-    client: input.clientFromChain(chainId),
-    chain: chainsMetadata[chainId],
+    client: input.clientFromChain(Number(chainId)),
+    chain: chainsMetadata[toChain(chainId)],
     target: assetInAddress,
   }).catch(() => null)
   if (!asset) {
@@ -485,7 +485,7 @@ export const updateAssetOut = ({
       const contract = getContract({
         address: assetOutAddress,
         abi: erc20Abi,
-        client: input.clientFromChain(bridgeKey.toChain),
+        client: input.clientFromChain(Number(bridgeKey.toChain)),
       })
       return contract.read.totalSupply().catch(() => {
         return -1n
@@ -497,7 +497,7 @@ export const updateAssetOut = ({
         return null
       }
       return await multicallErc20({
-        client: input.clientFromChain(bridgeKey.toChain),
+        client: input.clientFromChain(Number(bridgeKey.toChain)),
         chain: chainsMetadata[bridgeKey.toChain],
         target: assetOutAddress,
       }).catch(() => null)
@@ -756,7 +756,7 @@ const readAmountOut = (
   }
   const q = multicallRead<FetchResult[]>({
     chain: chainsMetadata[chain],
-    client: input.clientFromChain(chain),
+    client: input.clientFromChain(Number(chain)),
     abi: abis.univ2Router,
     // pulsex router
     calls: _.flatMap(uniV2Routers[chain], (target) =>
@@ -852,14 +852,14 @@ export const loadPriceCorrective = ({
           ],
         ),
         readAmountOut(
-          assetOut.address!, //
+          assetOut.address as Hex, //
           aboutToBridge,
           toChain, //
           bridgeKey, //
           block!.number!,
           // only the direct route is available.
           // might be able to create a whitelist for this at some point
-          [[assetOut!.address!, measurementToken]],
+          [[assetOut.address as Hex, measurementToken]],
         ),
       ])
     },

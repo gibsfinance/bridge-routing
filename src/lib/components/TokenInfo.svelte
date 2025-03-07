@@ -6,13 +6,7 @@
   import classNames from 'classnames'
   import type { ClassParam } from '$lib/types.svelte'
   type Props = {
-    token: {
-      chainId: number
-      name: string
-      symbol: string
-      address: string
-      logoURI?: string
-    }
+    token: Token
     truncate?: number
     reversed?: boolean
     externalGroup?: boolean
@@ -38,7 +32,7 @@
   )
   const textContainerClasses = $derived(
     classNames(
-      'w-full h-full text-left flex mx-1 flex-col leading-8 text-ellipsis whitespace-pre relative',
+      'flex mx-1 grow flex-col leading-8 relative min-w-0 overflow-hidden',
       reversed ? 'text-right' : 'text-left',
       externalGroup ? null : 'group',
     ),
@@ -52,12 +46,11 @@
 </script>
 
 <div class={wrapperClasses}>
-  <span class="size-8">
-    <!-- might be a good idea to simply keep it loaded after first -->
+  <span class="size-8 flex-shrink-0">
     <TokenIcon src={token.logoURI || assetSources(token)} />
   </span>
   <span class={textContainerClasses}>
-    <span class={nameClasses}>{token.name}</span>
+    <span class={`${nameClasses} truncate overflow-hidden text-ellipsis`}>{token.name}</span>
     <span class={addressClasses}>
       {ellipsis(token.address, { length: truncate, prefixLength: 2 })}
     </span>

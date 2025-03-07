@@ -24,13 +24,13 @@ export type TokenMetadata = {
 }
 
 export type Token = TokenMetadata & {
-  address: Hex
+  address: string
   chainId: number
-  logoURI?: string
+  logoURI?: string | undefined | null
   extensions?: Extensions
 }
 
-export type TokenOut = Omit<Token, 'address'> & { address: Hex | null }
+export type TokenOut = Omit<Token, 'address'> & { address: string | null }
 
 export type TokenList = {
   tokens: Token[]

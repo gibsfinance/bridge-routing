@@ -1,21 +1,14 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { accountState, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
+  import * as transactions from '$lib/stores/transactions'
+  import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
-  import {
-    type Hex,
-    erc20Abi,
-    maxUint256,
-    zeroAddress,
-    encodeFunctionData,
-    formatUnits,
-  } from 'viem'
+  import { formatUnits, type Hex, zeroAddress } from 'viem'
   import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input.svelte'
   import { assetLink, fromTokenBalance } from '$lib/stores/chain-events.svelte'
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { connect } from '$lib/stores/auth/AuthProvider.svelte'
-  import { sendTransaction } from '@wagmi/core'
 
   const { shouldDeliver } = input
 
@@ -120,34 +113,20 @@
     if (!assetLink || !bridgeSettings.assetIn.value || !bridgeSettings.transactionInputs) {
       return
     }
-    const options = opts()
-    return await sendTransaction(wagmiAdapter.wagmiConfig, {
+    // const options = opts()
+    return await transactions.sendTransaction({
       ...bridgeSettings.transactionInputs,
-      ...options,
+      ...transactions.options(chainsMetadata[input.bridgeKey.fromChain]),
     })
-  }
-  const opts = () => {
-    const account = walletAccount as Hex
-    const options = {
-      account,
-      type: 'eip1559',
-      chain: chainsMetadata[input.bridgeKey.fromChain],
-    } as const
-    return options
   }
   const increaseApproval = async () => {
     if (!bridgeSettings.bridgePathway || !bridgeSettings.assetIn.value) {
       return
     }
-    const options = opts()
-    return await sendTransaction(wagmiAdapter.wagmiConfig, {
-      ...options,
-      to: bridgeSettings.assetIn.value.address,
-      data: encodeFunctionData({
-        abi: erc20Abi,
-        functionName: 'approve',
-        args: [bridgeSettings.bridgePathway.from, maxUint256],
-      }),
+    return transactions.sendApproval({
+      tokenAddress: bridgeSettings.assetIn.value.address as Hex,
+      spender: bridgeSettings.bridgePathway.from,
+      chain: chainsMetadata[input.bridgeKey.fromChain],
     })
   }
   let amountInBefore = ''

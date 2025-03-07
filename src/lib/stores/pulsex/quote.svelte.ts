@@ -1,9 +1,13 @@
-import type { Token } from '$lib/types.svelte'
-import type { Hex } from 'viem'
-import { Chains } from './auth/types'
-import { loading } from './loading.svelte'
+// import type { Token } from '$lib/types.svelte'
+// import type { Hex } from 'viem'
+import { Chains } from '../auth/types'
+import { loading } from '../loading.svelte'
 import _ from 'lodash'
-export type TradeType = 0 | 1
+import type { BestRoutes } from './types'
+import type { Token } from '$lib/types.svelte'
+import type { TradeType } from '@pulsex/swap-sdk-core'
+import type { Hex } from 'viem'
+// export type TradeType = 0 | 1
 export type PulsexQuoteArgs = {
   amountIn: bigint | null
   amountOut: bigint | null
@@ -25,30 +29,30 @@ export type PulsexQuoteInput = {
   amount: PulsexAmount
   tradeType: TradeType
 }
-export type PulsexPathStep = PulsexCurrency
-export type PulsexReserve = PulsexAmount
-export type PulsexPool = {
-  address: string | Hex
-  type: number
-  reserve0: PulsexReserve
-  reserve1: PulsexReserve
-}
-export type PulsexRoute = {
-  inputAmount: PulsexAmount
-  outputAmount: PulsexAmount
-  path: PulsexPathStep[]
-  pools: PulsexPool[]
-}
-export type PulsexQuoteOutput = {
-  blockNumber: number | null
-  gasEstimate: string // number
-  gasEstimateInUSD: PulsexAmount
-  inputAmount: PulsexAmount
-  outputAmount: PulsexAmount
-  tradeType: TradeType
-  routes: PulsexRoute[]
-}
-export const getPulseXQuote = loading.loadsAfterTick<PulsexQuoteOutput, PulsexQuoteArgs>(
+// export type PulsexPathStep = PulsexCurrency
+// export type PulsexReserve = PulsexAmount
+// export type PulsexPool = {
+//   address: string | Hex
+//   type: number
+//   reserve0: PulsexReserve
+//   reserve1: PulsexReserve
+// }
+// export type PulsexRoute = {
+//   inputAmount: PulsexAmount
+//   outputAmount: PulsexAmount
+//   path: PulsexPathStep[]
+//   pools: PulsexPool[]
+// }
+// export type PulsexQuoteOutput = {
+//   blockNumber: number | null
+//   gasEstimate: string // number
+//   gasEstimateInUSD: PulsexAmount
+//   inputAmount: PulsexAmount
+//   outputAmount: PulsexAmount
+//   tradeType: TradeType
+//   routes: PulsexRoute[]
+// }
+export const getPulseXQuote = loading.loadsAfterTick<BestRoutes, PulsexQuoteArgs>(
   'pulsex-quote',
   async (
     { amountOut, amountIn, tokenIn, tokenOut }: PulsexQuoteArgs,
@@ -96,7 +100,7 @@ const quoteFetch = _.debounce(
       resolve,
       reject,
     }: {
-      resolve: (value: PulsexQuoteOutput | null) => void
+      resolve: (value: BestRoutes | null) => void
       reject: (reason?: unknown) => void
     },
   ) => {
@@ -115,7 +119,9 @@ const quoteFetch = _.debounce(
         'Content-Type': 'application/json',
       },
     })
-    resolve((await quote.json()) as PulsexQuoteOutput)
+    const result = (await quote.json()) as BestRoutes
+    console.log(result)
+    resolve(result)
   },
   1_000,
 )
