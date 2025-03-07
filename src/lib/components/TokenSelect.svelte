@@ -78,7 +78,7 @@
     }
     const [name, symbol, decimals] = await multicallErc20({
       chain: chainsMetadata[chain],
-      client: clientFromChain(chain),
+      client: clientFromChain(Number(chain)),
       target,
     })
     custom = {

@@ -1,29 +1,24 @@
-import { sendTransaction as sendTransactionCore, waitForTransactionReceipt } from '@wagmi/core'
-import { accountState, wagmiAdapter } from './auth/AuthProvider.svelte'
 import {
-  encodeFunctionData,
-  erc20Abi,
-  maxUint256,
-  type Chain,
-  type Hex,
+  sendTransaction as sendTransactionCore,
+  waitForTransactionReceipt,
   type SendTransactionParameters,
-} from 'viem'
+} from '@wagmi/core'
+import { accountState, wagmiAdapter } from './auth/AuthProvider.svelte'
+import { encodeFunctionData, erc20Abi, maxUint256, zeroAddress, type Hex } from 'viem'
+import { type ApprovalParameters, checkAllowance } from './chain-read.svelte'
+
+export * from './chain-read.svelte'
 
 export const sendApproval = ({
-  tokenAddress,
+  token,
   spender,
   amount = maxUint256,
-  chain,
-}: {
-  tokenAddress: Hex
-  spender: Hex
-  amount?: bigint
-  chain: Chain
-}) => {
-  const opts = options(chain)
+  chainId,
+}: ApprovalParameters & { amount?: bigint }) => {
+  const opts = options(chainId)
   return sendTransactionCore(wagmiAdapter.wagmiConfig, {
     ...opts,
-    to: tokenAddress,
+    to: token,
     data: encodeFunctionData({
       abi: erc20Abi,
       functionName: 'approve',
@@ -32,11 +27,39 @@ export const sendApproval = ({
   })
 }
 
-export const options = (chain: Chain) => {
+export const checkAndRaiseApproval = async ({
+  token,
+  spender,
+  chainId,
+  raiseTo = maxUint256,
+  minimum,
+}: {
+  token: Hex
+  spender: Hex
+  chainId: number
+  raiseTo?: bigint
+  minimum: bigint
+}) => {
+  if (token !== zeroAddress) {
+    const approvalParams = {
+      account: accountState.address!,
+      spender: spender ?? zeroAddress,
+      token,
+      chainId: Number(chainId),
+    }
+    const approval = await checkAllowance(approvalParams)
+    if (approval < minimum) {
+      const tx = await sendApproval({ ...approvalParams, amount: raiseTo })
+      await wait(tx)
+    }
+  }
+}
+
+export const options = (chainId: number) => {
   const options = {
     account: accountState.address,
     type: 'eip1559',
-    chain,
+    chainId,
   } as const
   return options
 }

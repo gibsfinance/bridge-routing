@@ -1,7 +1,8 @@
 <script lang="ts">
   import * as transactions from '$lib/stores/transactions'
   import { bridgeSettings, oneEther } from '$lib/stores/bridge-settings.svelte'
-  import { getPulseXQuote, type PulsexQuoteOutput } from '$lib/stores/pulsex/quote.svelte'
+  import { getPulseXQuote } from '$lib/stores/pulsex/quote.svelte'
+  import type { SerializedTrade } from '$lib/stores/pulsex/transformers'
   import Icon from '@iconify/svelte'
   import type { Token } from '$lib/types.svelte'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
@@ -10,7 +11,7 @@
   import NumericInput from './NumericInput.svelte'
   import BalanceReadout from './BalanceReadout.svelte'
   import { formatUnits, type Hex } from 'viem'
-  import { checkApproval, latestBlock } from '$lib/stores/chain-events.svelte'
+  import { latestBlock } from '$lib/stores/chain-events.svelte'
   import Loading from './Loading.svelte'
   import Button from './Button.svelte'
   // import { sendTransaction } from '@wagmi/core'
@@ -29,6 +30,7 @@
   import { humanReadableNumber } from '$lib/stores/utils'
   import { clientFromChain } from '$lib/stores/input.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
+  import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
   const tokenOut = $derived(onboardSettings.plsOutToken)
   const tokenInURI = $derived(bridgeSettings.assetIn.value?.logoURI)
   const bridgeTokenOut = $derived(bridgeSettings.assetOut.value as Token | null)
@@ -43,13 +45,13 @@
   // let amountInControl = $state(true)
   let amountToSwapIn = $state<bigint | null>(0n)
   let amountToSwapOut = $state<bigint | null>(null)
-  let quoteResult = $state<PulsexQuoteOutput | null>(null)
+  let quoteResult = $state<SerializedTrade | null>(null)
   $effect(() => {
     if (
       !tokenIn ||
       !tokenOut ||
       (!amountToSwapIn && !amountToSwapOut) ||
-      !untrack(() => latestBlock.block(Number(Chains.PLS)))
+      !latestBlock.block(Number(Chains.PLS))
     ) {
       return
     }
@@ -89,48 +91,25 @@
     'bg-tertiary-500 text-surface-contrast-950 rounded-none size-16 text-base flex flex-row items-center justify-center shrink-0',
   )
   const swapRouterAddress = '0xDA9aBA4eACF54E0273f56dfFee6B8F1e20B23Bba'
-  const swapDisabled = $derived(!amountToSwapIn)
+  const swapDisabled = $derived(!amountToSwapIn || !amountToSwapOut || !quoteMatchesLatest)
   const swapTokens = async () => {
     if (swapDisabled) return
-    const publicClient = clientFromChain(Number(Chains.PLS))
-    const approval = await checkApproval([
-      accountState.address!,
-      swapRouterAddress,
-      tokenIn!.address as Hex,
-      publicClient,
-    ])
-    if (approval < amountToSwapIn!) {
-      const tx = await transactions.sendApproval({
-        tokenAddress: tokenIn!.address as Hex,
-        spender: swapRouterAddress,
-        chain: chainsMetadata[Chains.PLS],
-      })
-      await transactions.wait(tx)
-      // const tx = await approveToken({
-      //   walletAccount: accountState.address!,
-      //   bridgeKey: bridgeKey.value,
-      //   assetLink: assetLink.value,
-      //   publicClient: clientFromChain(Number(bridgeKey.fromChain)),
-      // })
-    }
-    // const approval = await loadApproval({
-    //   walletAccount: accountState.address,
-    //   bridgeKey: bridgeKey.value,
-    //   assetLink: assetLink.value,
-    //   publicClient: clientFromChain(Number(bridgeKey.fromChain)),
-    // })
-    // const
-    // SDK.
-    // sendTransaction(wagmiAdapter.wagmiConfig, {
-    // to: quoteResult?.outputAmount.address,
-    // value: quoteResult?.inputAmount.value,
-    // data: quoteResult?.calldata,
-    // })
-    // amountInControl = !amountInControl
-    // amountToSwapIn = null
-    // amountToSwapOut = null
+    await transactions.checkAndRaiseApproval({
+      token: tokenIn!.address! as Hex,
+      spender: swapRouterAddress,
+      chainId: Number(Chains.PLS),
+      minimum: amountToSwapIn!,
+    })
+    const transactionInfo = getTransactionDataFromTrade(Number(Chains.PLS), quoteResult!)
+    const tx = await transactions.sendTransaction({
+      data: transactionInfo.calldata as Hex,
+      to: swapRouterAddress,
+      // gas: BigInt(quoteResult!.gasEstimate!),
+      value: BigInt(transactionInfo.value),
+      chainId: Number(Chains.PLS),
+    })
+    await transactions.wait(tx)
   }
-  // const estimatedAmount = $derived(amountToSwapOut)
 
   const estimatedAmount = $derived.by(() => {
     if (!quoteMatchesLatest) return ''
@@ -212,7 +191,7 @@
               {/snippet}
             </ModalWrapper>
           </label>
-          <Button disabled class={swapButtonClassNames} onclick={swapTokens}>
+          <Button disabled={swapDisabled} class={swapButtonClassNames} onclick={swapTokens}>
             <Loading key="pulsex-quote">
               {#snippet contents()}Go{/snippet}
             </Loading>

@@ -66,9 +66,9 @@
   <div class="flex flex-col gap-4 max-w-2xl mx-auto w-full">
     <OnboardSettings />
     <OnboardForeignBridge />
-    {#if !networkIsSet || networkMatches}
-      <OnboardBridge />
-      <OnboardPulseX />
+    <OnboardBridge />
+    <OnboardPulseX />
+    <!-- {#if !networkIsSet || networkMatches}
     {:else}
       <div class="flex flex-row items-center justify-center gap-4">
         <Button class="btn preset-filled-tertiary-950-50 w-fit" onclick={switchToTargetChain}>
@@ -76,6 +76,6 @@
           <Image src={targetChain.icon} alt={targetChain.name} class="size-4" />
         </Button>
       </div>
-    {/if}
+    {/if} -->
   </div>
 {/if}

@@ -26,7 +26,6 @@
     bridgeStatuses,
     type ContinuedLiveBridgeStatusParams,
     latestBlock,
-    checkApproval,
   } from '$lib/stores/chain-events.svelte'
   import {
     amountIn,
@@ -50,7 +49,7 @@
   import GuideStep from './GuideStep.svelte'
   import GuideShield from './GuideShield.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
-    import { chainsMetadata } from '$lib/stores/auth/constants'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(bridgeFee.value?.feeF2H ?? 0n)
@@ -106,24 +105,15 @@
   })
   const bridgeTokens = async () => {
     if (!accountState.address) return
-    const approval = await checkApproval([
-      accountState.address,
-      bridgeSettings.bridgePathway?.from ?? zeroAddress,
-      tokenInput?.address as Hex,
-      clientFromChain(Number(bridgeKey.fromChain)),
-    ])
-    if (approval < bridgeAmount) {
-      const tx = await transactions.sendApproval({
-        tokenAddress: tokenInput?.address as Hex,
-        spender: bridgeSettings.bridgePathway?.from ?? zeroAddress,
-        amount: bridgeAmount,
-        chain: chainsMetadata[bridgeKey.fromChain],
-      })
-      await transactions.wait(tx)
-    }
+    await transactions.checkAndRaiseApproval({
+      token: tokenInput!.address! as Hex,
+      spender: bridgeSettings.bridgePathway!.from!,
+      chainId: Number(bridgeKey.fromChain),
+      minimum: bridgeAmount,
+    })
     const tx = await transactions.sendTransaction({
       account: accountState.address,
-      chain: chainsMetadata[bridgeKey.fromChain],
+      chainId: Number(bridgeKey.fromChain),
       ...bridgeSettings.transactionInputs,
     })
     setTxHash(tx)

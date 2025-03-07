@@ -53,7 +53,7 @@ export const appkitNetworkList = [
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
   networks: appkitNetworkList,
-  syncConnectedChain: true,
+  syncConnectedChain: false,
 })
 // 3. Configure the metadata
 const metadata = {
@@ -75,6 +75,13 @@ export const modal = createAppKit({
     analytics: false,
   },
 })
+
+try {
+  // modal.disconnect()
+  modal.resetAccount('eip155')
+} catch {
+  console.log('err at disconnect')
+}
 
 export const connect = async () => {
   // accountState.modalOpen = true

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as transactions from '$lib/stores/transactions'
   import Icon from '@iconify/svelte'
   import VerticalDivider from './VerticalDivider.svelte'
   import Button from './Button.svelte'
@@ -176,8 +177,13 @@
     name: estimatedAmount ? `${estimatedAmount} ${tokenOutput.symbol}` : tokenOutput.symbol,
   }))
   const crossForeignBridge = async () => {
-    console.log(latestQuote)
-    const tx = await sendTransaction(wagmiAdapter.wagmiConfig, {
+    await transactions.checkAndRaiseApproval({
+      token: tokenInput!.address! as Hex,
+      spender: latestQuote!.transactionRequest!.to as Hex,
+      chainId: Number(tokenInput.chainId),
+      minimum: amountInput,
+    })
+    const tx = await transactions.sendTransaction({
       account: accountState.address,
       data: latestQuote!.transactionRequest!.data as Hex,
       gas: BigInt(latestQuote!.transactionRequest!.gasLimit ?? 0),

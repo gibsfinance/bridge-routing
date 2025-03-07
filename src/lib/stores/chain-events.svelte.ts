@@ -2,7 +2,7 @@ import * as input from './input.svelte'
 import { multicallRead } from '$lib/utils.svelte'
 import * as abis from './abis'
 import {
-  type PublicClient,
+  // type PublicClient,
   type Block,
   getContract,
   erc20Abi,
@@ -508,44 +508,44 @@ export const tokenOriginationChainId = (assetLink: TokenBridgeInfo | null) => {
 //   },
 // )
 
-export const checkApproval = async ([walletAccount, $bridgeAddress, address, publicClient]: [
-  Hex | undefined,
-  Hex,
-  Hex,
-  PublicClient,
-]) => {
-  if (!walletAccount) {
-    return 0n
-  }
-  const token = getContract({
-    abi: erc20Abi,
-    address,
-    client: publicClient,
-  })
-  const allowance = await token.read.allowance([walletAccount, $bridgeAddress])
-  return allowance
-}
+// export const checkApproval = async ([walletAccount, $bridgeAddress, address, publicClient]: {
+//   account: Hex | undefined,
+//   spender: Hex,
+//   Hex,
+//   PublicClient,
+// }) => {
+//   if (!walletAccount) {
+//     return 0n
+//   }
+//   const token = getContract({
+//     abi: erc20Abi,
+//     address,
+//     client: publicClient,
+//   })
+//   const allowance = await token.read.allowance([walletAccount, $bridgeAddress])
+//   return allowance
+// }
 
-export const loadApproval = loading.loadsAfterTick<bigint>(
-  'approval',
-  ({
-    walletAccount,
-    bridgeKey,
-    assetLink,
-    publicClient,
-  }: {
-    walletAccount: Hex | undefined
-    bridgeKey: input.BridgeKey
-    assetLink: TokenBridgeInfo | null
-    publicClient: PublicClient
-  }) => {
-    if (!bridgeKey || !assetLink || !walletAccount) {
-      return 0n
-    }
-    const bridgeAddress = pathway(bridgeKey)!.from
-    return checkApproval([walletAccount, bridgeAddress, assetLink.assetInAddress, publicClient])
-  },
-)
+// export const loadApproval = loading.loadsAfterTick<bigint>(
+//   'approval',
+//   ({
+//     walletAccount,
+//     bridgeKey,
+//     assetLink,
+//     publicClient,
+//   }: {
+//     walletAccount: Hex | undefined
+//     bridgeKey: input.BridgeKey
+//     assetLink: TokenBridgeInfo | null
+//     publicClient: PublicClient
+//   }) => {
+//     if (!bridgeKey || !assetLink || !walletAccount) {
+//       return 0n
+//     }
+//     const bridgeAddress = pathway(bridgeKey)!.from
+//     return checkApproval([walletAccount, bridgeAddress, assetLink.assetInAddress, publicClient])
+//   },
+// )
 // export const approval = derived(
 //   [
 //     walletAccount,

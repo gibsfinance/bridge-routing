@@ -1,13 +1,11 @@
-// import type { Token } from '$lib/types.svelte'
-// import type { Hex } from 'viem'
 import { Chains } from '../auth/types'
 import { loading } from '../loading.svelte'
 import _ from 'lodash'
-import type { BestRoutes } from './types'
+import type { SerializedTrade } from './transformers'
 import type { Token } from '$lib/types.svelte'
 import type { TradeType } from '@pulsex/swap-sdk-core'
 import type { Hex } from 'viem'
-// export type TradeType = 0 | 1
+
 export type PulsexQuoteArgs = {
   amountIn: bigint | null
   amountOut: bigint | null
@@ -52,7 +50,7 @@ export type PulsexQuoteInput = {
 //   tradeType: TradeType
 //   routes: PulsexRoute[]
 // }
-export const getPulseXQuote = loading.loadsAfterTick<BestRoutes, PulsexQuoteArgs>(
+export const getPulseXQuote = loading.loadsAfterTick<SerializedTrade, PulsexQuoteArgs>(
   'pulsex-quote',
   async (
     { amountOut, amountIn, tokenIn, tokenOut }: PulsexQuoteArgs,
@@ -100,7 +98,7 @@ const quoteFetch = _.debounce(
       resolve,
       reject,
     }: {
-      resolve: (value: BestRoutes | null) => void
+      resolve: (value: SerializedTrade | null) => void
       reject: (reason?: unknown) => void
     },
   ) => {
@@ -119,8 +117,8 @@ const quoteFetch = _.debounce(
         'Content-Type': 'application/json',
       },
     })
-    const result = (await quote.json()) as BestRoutes
-    console.log(result)
+    const result = (await quote.json()) as SerializedTrade
+    // console.log(result)
     resolve(result)
   },
   1_000,

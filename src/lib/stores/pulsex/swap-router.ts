@@ -11,7 +11,7 @@ import {
   type PermitOptions,
   Payments,
   SelfPermit,
-  toHex,
+  // toHex,
 } from '@pulsex/v3-sdk'
 import invariant from 'tiny-invariant'
 
@@ -25,7 +25,7 @@ import { maximumAmountIn, minimumAmountOut } from './maximum-amount'
 import { isStablePool, isV1Pool, isV2Pool } from './pool'
 import { buildBaseRoute } from './route'
 import { getOutputOfPools } from './get-output-of-pools'
-import { encodeFunctionData, type Address, type Hex } from 'viem'
+import { encodeFunctionData, numberToHex, type Address, type Hex } from 'viem'
 
 const ZERO = 0n
 
@@ -633,7 +633,7 @@ export abstract class SwapRouter {
 
     return {
       calldata: MulticallExtended.encodeMulticall(calldatas, options.deadlineOrPreviousBlockhash),
-      value: toHex(inputIsNative ? totalAmountIn.quotient : ZERO),
+      value: numberToHex(inputIsNative ? totalAmountIn.quotient : ZERO),
     }
   }
 
@@ -679,7 +679,7 @@ export abstract class SwapRouter {
 
     return {
       calldata: MulticallExtended.encodeMulticall(calldatas, options.deadlineOrPreviousBlockhash),
-      value: toHex(value.toString()),
+      value: numberToHex(value),
     }
   }
 }
