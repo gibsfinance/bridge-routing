@@ -316,7 +316,7 @@
   $inspect(bridgedToken)
 </script>
 
-<OnboardStep icon="icon-park-solid:bridge-one" step={2}>
+<OnboardStep icon="line-md:chevron-double-down" step={2}>
   {#snippet input()}
     <SectionInput
       focused

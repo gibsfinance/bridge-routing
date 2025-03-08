@@ -76,12 +76,12 @@ export const modal = createAppKit({
   },
 })
 
-try {
-  // modal.disconnect()
-  modal.resetAccount('eip155')
-} catch {
-  console.log('err at disconnect')
-}
+// try {
+//   // modal.disconnect()
+//   modal.resetAccount('eip155')
+// } catch {
+//   console.log('err at disconnect')
+// }
 
 export const connect = async () => {
   // accountState.modalOpen = true
@@ -128,6 +128,7 @@ class AccountState {
     this.val = account
     const caipAddress = account?.caipAddress
     if (!caipAddress) return
+    console.trace()
     this.chainId = +caipAddress.split(':')[1] || (null as number | null)
     this.setupWatchBalance()
   }
@@ -205,17 +206,18 @@ modal.subscribeWalletInfo((walletInfo) => {
 })
 
 modal.subscribeAccount((account) => {
+  console.log('account', account)
   if (account.status === 'connected') {
     accountState.value = account ?? null
   }
 })
 
-setTimeout(() => {
-  accountState.value = {
-    address: '0xAF2ce0189f46f5663715b0b9ED2a10eA924AB9B0',
-    allAccounts: [],
-    caipAddress: 'eip155:1:0xAF2ce0189f46f5663715b0b9ED2a10eA924AB9B0',
-    isConnected: true,
-    status: 'connected',
-  }
-}, 500)
+// setTimeout(() => {
+//   accountState.value = {
+//     address: '0xAF2ce0189f46f5663715b0b9ED2a10eA924AB9B0',
+//     allAccounts: [],
+//     caipAddress: 'eip155:1:0xAF2ce0189f46f5663715b0b9ED2a10eA924AB9B0',
+//     isConnected: true,
+//     status: 'connected',
+//   }
+// }, 500)

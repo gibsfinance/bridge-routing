@@ -31,7 +31,7 @@
         positionClasses="absolute top-1/2 left-0 -translate-y-1/2">
         <Icon
           {icon}
-          class="rounded-full w-full h-full ring-2 ring-current text-surface-500 ring-inset p-2 bg-surface-950-50" />
+          class="rounded-full w-full h-full ring-4 text-surface-contrast-100 ring-inset ring-white p-2 bg-surface-900-100" />
       </ExchangeInputDivider>
     </div>
     {@render button()}

@@ -152,7 +152,7 @@
   // $inspect(bridgeableTokensPLS)
 </script>
 
-<OnboardStep icon="tdesign:swap" step={3}>
+<OnboardStep icon="token:swap" step={3}>
   {#snippet input()}
     <SectionInput
       focused

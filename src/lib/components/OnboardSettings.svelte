@@ -110,10 +110,11 @@
           onclick={openOnRamp}>
           <Icon icon="material-symbols:ramp-left-rounded" mode="svg" class="size-8" />
         </Button>
-        <Button class="gap-2 shadow-inner px-1 rounded-l-none" onclick={openZKP2P}>
-          <!-- <span>OnRamp</span> -->
+        <!-- <Button class="gap-2 shadow-inner px-1 rounded-l-none" onclick={openZKP2P}> -->
+        <a href="https://zkp2p.xyz/swap" target="_blank" class="flex items-center">
           <Icon icon="ph:circuitry-fill" mode="svg" class="size-8" />
-        </Button>
+        </a>
+        <!-- </Button> -->
         <Button
           onclick={toggleHelp}
           class="flex flex-row items-center italic gap-1 pr-1 border-2 rounded-full {showTooltips.value

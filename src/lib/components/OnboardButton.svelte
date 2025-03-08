@@ -25,7 +25,7 @@
     onclick={decrementOnboardStep}
     disabled={activeOnboardStep.value === 1}>
     <Icon
-      icon="f7:chevron-left-2"
+      icon="line-md:chevron-double-left"
       class="size-7 transition-transform duration-100 {activeOnboardStep.value !== 1
         ? 'group-hover:-translate-x-0.5'
         : ''}" />
@@ -43,7 +43,7 @@
     onclick={incrementOnboardStep}
     disabled={activeOnboardStep.value === 3}>
     <Icon
-      icon="f7:chevron-right-2"
+      icon="line-md:chevron-double-right"
       class="size-7 transition-transform duration-100 {activeOnboardStep.value !== 3
         ? 'group-hover:translate-x-0.5'
         : ''}" />
