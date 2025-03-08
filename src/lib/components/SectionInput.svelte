@@ -1,0 +1,104 @@
+<script lang="ts">
+  import type { Token } from '$lib/types.svelte'
+  import _ from 'lodash'
+  import NumericInput from './NumericInput.svelte'
+  import ModalWrapper from './ModalWrapper.svelte'
+  import SelectButtonContents from './SelectButtonContents.svelte'
+  import type { Snippet } from 'svelte'
+  import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
+  import BalanceReadout from './BalanceReadout.svelte'
+  import { largeInputFontScaler } from '$lib/stores/font-scaler'
+  import OnboardRadio from './OnboardRadio.svelte'
+  import { humanReadableNumber } from '$lib/stores/utils'
+
+  type Props = {
+    id?: string
+    label?: string
+    token: Token
+    showRadio?: boolean
+    disabled?: boolean
+    readonly?: boolean
+    focused?: boolean
+    oninput?: (v: bigint) => void
+    value: bigint | null
+    modal?: Snippet<[{ close: () => void }]>
+    onmax?: (v: bigint) => void
+    onbalanceupdate?: (v: bigint | null) => void
+  }
+  const {
+    id = _.uniqueId('section-input-'),
+    token,
+    label,
+    oninput,
+    showRadio = false,
+    readonly = false,
+    disabled = false,
+    focused = false,
+    value,
+    modal,
+    onmax,
+    onbalanceupdate,
+  }: Props = $props()
+  $inspect(value)
+</script>
+
+<label
+  for={id}
+  class="flex flex-col items-center justify-items-end grow gap-1 rounded-container shadow-inset justify-between w-full preset-outline-surface-500 overflow-hidden relative p-4"
+  class:bg-white={focused}
+  class:bg-surface-950-50={!focused}
+  class:cursor-not-allowed={readonly}>
+  <div class="flex relative items-center flex-col w-full gap-2">
+    <div class="flex flex-row justify-between w-full h-5">
+      <span class="text-sm text-surface-700">{label}</span>
+      {#if showRadio}
+        <OnboardRadio />
+      {/if}
+    </div>
+    <div class="flex flex-row items-center justify-between w-full">
+      {#if readonly}
+        {@const valIsNumber = typeof value === 'bigint'}
+        {@const humanReadable =
+          valIsNumber && value !== 0n
+            ? humanReadableNumber(value, {
+                decimals: token.decimals,
+              })
+            : value?.toString()}
+        <span
+          class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-gray-600 h-10 leading-10"
+          style:font-size={`${largeInputFontScaler(humanReadable?.length ?? 0)}px`}
+          >{valIsNumber ? humanReadable : '0'}</span>
+        <SelectButtonContents {token} network={token.chainId} hideChevron />
+      {:else}
+        <NumericInput
+          {id}
+          class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-gray-600 h-10 leading-10 tracking-tight"
+          {value}
+          decimals={token.decimals}
+          {disabled}
+          {oninput} />
+        <ModalWrapper wrapperClasses="flex items-center justify-center h-full" triggerClasses="">
+          {#snippet button()}
+            <SelectButtonContents {token} network={token.chainId} />
+          {/snippet}
+          {#snippet contents({ close })}
+            {@render modal?.({ close })}
+          {/snippet}
+        </ModalWrapper>
+      {/if}
+    </div>
+
+    <div class="flex gap-1 flex-row justify-end grow w-full h-5">
+      {#if accountState.address && (!!onmax || !!onbalanceupdate)}
+        <BalanceReadout
+          {token}
+          showLoader
+          roundedClasses={null}
+          hideSymbol
+          decimalLimit={9}
+          {onbalanceupdate}
+          {onmax} />
+      {/if}
+    </div>
+  </div>
+</label>

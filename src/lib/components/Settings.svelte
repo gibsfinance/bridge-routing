@@ -29,7 +29,7 @@
     if (isEns(addr)) {
       const tld = ensTld(addr)
       const normalized = normalize(addr)
-      const publicClient = input.clientFromChain(Chains[tld])
+      const publicClient = input.clientFromChain(Number(Chains[tld]))
       loading.increment('ens')
       ensToAddress(publicClient, normalized)
         .catch((err) => {

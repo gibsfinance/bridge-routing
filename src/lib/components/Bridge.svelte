@@ -6,6 +6,7 @@
   import Settings from './Settings.svelte'
   import * as customTokens from '$lib/stores/custom-tokens.svelte'
   import Details from './Details.svelte'
+  import * as transactions from '$lib/stores/transactions'
   import {
     details,
     bridgeSettings,
@@ -31,14 +32,13 @@
     latestBlock,
     loadAssetLink,
     assetLink,
-    loadApproval,
   } from '$lib/stores/chain-events.svelte'
   import type { Token } from '$lib/types.svelte'
   import { getAddress } from 'viem'
   import { windowStore } from '$lib/stores/window.svelte'
   import { untrack } from 'svelte'
-  // const originationNetwork = $derived(chainsMetadata[bridgeKey.fromChain])
-  // const destinationNetwork = $derived(chainsMetadata[bridgeKey.toChain])
+  import { loading } from '$lib/stores/loading.svelte'
+
   const toggleDropdowns = (type: string) => {
     if (details.value === type) details.value = null
     else details.value = type as ExtraDataOptions
@@ -146,6 +146,13 @@
       destinationBlock,
     )
   })
+  const loadApproval = loading.loadsAfterTick<bigint>(
+    'approval',
+    async (inputs: transactions.ApprovalParameters) => {
+      const result = await transactions.checkAllowance(inputs)
+      return result
+    },
+  )
   $effect(() => {
     const result = loadApproval({
       walletAccount: accountState.address,

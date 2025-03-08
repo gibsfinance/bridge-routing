@@ -2,6 +2,7 @@
   import BlurryImage from '$lib/components/BlurryImage.svelte'
   import { windowStore } from '$lib/stores/window.svelte'
   import Onboard from '$lib/components/Onboard.svelte'
+  import OnboardSettings from '$lib/components/OnboardSettings.svelte'
   const onboardImageFuzzy = new URL('/images/runners.jpg', import.meta.url).href
 </script>
 
@@ -17,11 +18,14 @@
       blur="12px"
       brightness="50%">
       <div class="flex flex-col text-lg w-full px-2 gap-4 mb-16">
-        <h1
-          class="text-white font-italiana z-10 top-0 bottom-0 left-0 right-0 text-center content-center capitalize text-5xl mt-16">
-          onboard
-        </h1>
-        <Onboard />
+        <div class="mt-8 max-w-lg mx-auto w-full">
+          <h1
+            class="text-white font-italiana top-0 bottom-0 left-0 right-0 text-center content-center capitalize text-5xl">
+            onboard
+          </h1>
+          <OnboardSettings />
+          <Onboard />
+        </div>
       </div>
     </BlurryImage>
   </div>

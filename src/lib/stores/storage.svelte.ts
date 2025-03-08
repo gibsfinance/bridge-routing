@@ -1,3 +1,4 @@
+import { zeroAddress, type Hex } from 'viem'
 import { LocalProxy, LocalProxyProp } from './localstorage.svelte'
 
 export type DefaultSettings = {
@@ -22,3 +23,7 @@ export const foreignBridgeInputs = new LocalProxyProp(
   ['foreignBridgeInputs'],
   null as ForeignBridgeInputs | null,
 )
+
+export const activeOnboardStep = new LocalProxyProp(storage, ['activeOnboardStep'], 1)
+
+export const plsOutToken = new LocalProxyProp(storage, ['plsOutToken'], zeroAddress as Hex)

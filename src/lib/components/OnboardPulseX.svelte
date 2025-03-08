@@ -1,16 +1,16 @@
 <script lang="ts">
   import * as transactions from '$lib/stores/transactions'
-  import { bridgeSettings, oneEther } from '$lib/stores/bridge-settings.svelte'
+  import { assetSources, bridgeSettings, oneEther } from '$lib/stores/bridge-settings.svelte'
   import { getPulseXQuote } from '$lib/stores/pulsex/quote.svelte'
   import type { SerializedTrade } from '$lib/stores/pulsex/transformers'
   import Icon from '@iconify/svelte'
   import type { Token } from '$lib/types.svelte'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { Chains } from '$lib/stores/auth/types'
-  import VerticalDivider from './VerticalDivider.svelte'
+  import VerticalDivider from './ExchangeInputDivider.svelte'
   import NumericInput from './NumericInput.svelte'
   import BalanceReadout from './BalanceReadout.svelte'
-  import { formatUnits, type Hex } from 'viem'
+  import { formatUnits, getAddress, zeroAddress, type Hex } from 'viem'
   import { latestBlock } from '$lib/stores/chain-events.svelte'
   import Loading from './Loading.svelte'
   import Button from './Button.svelte'
@@ -18,20 +18,36 @@
   // import { wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
   // import * as SDK from '@pulsex/sdk'
 
-  import { onboardSettings } from '$lib/stores/onboard.svelte'
+  // import { onboardSettings } from '$lib/stores/onboard.svelte'
+  import { plsOutToken } from '$lib/stores/storage.svelte'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import GuideStep from './GuideStep.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
   import TokenSelect from './TokenSelect.svelte'
   import TokenInfo from './TokenInfo.svelte'
   import GuideShield from './GuideShield.svelte'
-  import { showTooltips } from '$lib/stores/storage.svelte'
-  import { untrack } from 'svelte'
+  import { showTooltips, storage } from '$lib/stores/storage.svelte'
+  // import { untrack } from 'svelte'
   import { humanReadableNumber } from '$lib/stores/utils'
-  import { clientFromChain } from '$lib/stores/input.svelte'
-  import { chainsMetadata } from '$lib/stores/auth/constants'
+  // import { clientFromChain } from '$lib/stores/input.svelte'
+  // import { chainsMetadata } from '$lib/stores/auth/constants'
   import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
-  const tokenOut = $derived(onboardSettings.plsOutToken)
+  import { bridgableTokens, bridgeableTokensUnder } from '$lib/stores/input.svelte'
+  import OnboardStep from './OnboardStep.svelte'
+  import SectionInput from './SectionInput.svelte'
+  import OnboardButton from './OnboardButton.svelte'
+  const tokenOutputAddress = $derived(plsOutToken.value)
+  const tokens = $derived(
+    bridgableTokens.bridgeableTokensUnder({
+      chain: Chains.PLS,
+      partnerChain: null,
+    }),
+  )
+  $inspect(tokens)
+  const tokenOut = $derived.by(() => {
+    // const tokens =
+    return tokens.find((t) => getAddress(t.address) === getAddress(tokenOutputAddress)) ?? tokens[0]
+  })
   const tokenInURI = $derived(bridgeSettings.assetIn.value?.logoURI)
   const bridgeTokenOut = $derived(bridgeSettings.assetOut.value as Token | null)
   const tokenIn = $derived(
@@ -126,9 +142,122 @@
     ...tokenOut,
     name: estimatedAmount ? `${estimatedAmount} ${tokenOut.symbol}` : tokenOut.symbol,
   }))
+  // const bridgeableTokensPLS = $derived(
+  //   bridgeableTokensUnder({
+  //     // tokens: bridgableTokens.value,
+  //     chain: Chains.PLS,
+  //     partnerChain: null,
+  //   }),
+  // )
+  // $inspect(bridgeableTokensPLS)
 </script>
 
-<div class="flex relative">
+<OnboardStep icon="tdesign:swap" step={3}>
+  {#snippet input()}
+    <SectionInput
+      focused
+      label="Input"
+      token={tokenIn ?? {
+        address: zeroAddress,
+        chainId: Number(Chains.PLS),
+        decimals: 18,
+        logoURI: assetSources(tokenIn),
+        symbol: 'ETH',
+        name: 'Ether',
+      }}
+      showRadio
+      value={amountToSwapIn ?? 0n}
+      onbalanceupdate={(balance) => {
+        // maxBridgeable = balance
+      }}
+      onmax={(balance) => {
+        amountToSwapIn = balance
+      }}
+      oninput={(v) => {
+        amountToSwapIn = v
+      }}>
+      {#snippet modal({ close })}
+        <TokenSelect
+          chain={Chains.PLS}
+          {tokens}
+          onsubmit={(tkn) => {
+            bridgeSettings.assetOut.value = tkn as Token
+            close()
+          }} />
+      {/snippet}
+    </SectionInput>
+    <!-- {#if tokenIn}
+      <label
+        for="amount-to-swap-in"
+        class="flex flex-row items-center w-1/2 justify-end pr-5 gap-1">
+        <div class="flex flex-row-reverse items-center gap-1 absolute top-0 left-0">
+          {#if accountState.address}
+            <BalanceReadout
+              token={tokenIn}
+              showLoader
+              roundedClasses="rounded-tl"
+              hideSymbol
+              decimalLimit={9}
+              onmax={(balance) => {
+                amountToSwapIn = balance
+              }} />
+          {/if}
+        </div>
+        <NumericInput
+          class="w-full input ring-0 focus:ring-0 text-right placeholder:text-gray-600 text-surface-contrast-50 text-base"
+          value={amountToSwapIn}
+          id="amount-to-swap-in"
+          decimals={tokenIn.decimals}
+          oninput={(v) => {
+            amountToSwapIn = v
+            amountToSwapOut = null
+          }} />
+        <AssetWithNetwork asset={tokenIn} network={Number(Chains.PLS)} />
+      </label>
+    {/if} -->
+  {/snippet}
+  {#snippet output()}
+    <SectionInput
+      label="Output"
+      token={tokenOut ?? {
+        address: zeroAddress,
+        chainId: Number(Chains.PLS),
+        decimals: 18,
+        logoURI: assetSources(tokenOut),
+        symbol: 'ETH',
+        name: 'Ether',
+      }}
+      onbalanceupdate={() => {}}
+      value={amountToSwapOut ?? 0n}>
+      {#snippet modal({ close })}
+        <TokenSelect
+          chain={Chains.PLS}
+          {tokens}
+          onsubmit={(tkn) => {
+            plsOutToken.value = tkn.address as Hex
+            close()
+          }} />
+      {/snippet}
+    </SectionInput>
+  {/snippet}
+  {#snippet button()}
+    <!-- <Button
+      disabled={swapDisabled}
+      class="bg-tertiary-500 text-surface-contrast-950 h-14 rounded-2xl w-full text-xl flex flex-row items-center justify-center shrink-0"
+      onclick={swapTokens}>
+      <Loading key="lifi-quote">
+        {#snippet contents()}Swap{/snippet}
+      </Loading>
+    </Button> -->
+
+    <OnboardButton
+      disabled={swapDisabled}
+      onclick={swapTokens}
+      text="Swap"
+      loadingKey="lifi-quote" />
+  {/snippet}
+</OnboardStep>
+<!-- <div class="flex relative">
   <div
     class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
     <header class="flex flex-row justify-between relative h-16">
@@ -158,7 +287,7 @@
               amountToSwapIn = v
               amountToSwapOut = null
             }} />
-          <AssetWithNetwork asset={tokenIn} network={Chains.PLS} />
+          <AssetWithNetwork asset={tokenIn} network={Number(Chains.PLS)} />
         </label>
         <VerticalDivider>
           <Icon
@@ -185,7 +314,7 @@
                   showCustomTokens
                   chain={Chains.PLS}
                   onsubmit={(tkn) => {
-                    onboardSettings.plsOutToken = tkn
+                    plsOutToken.value = tkn.address as Hex
                     close()
                   }} />
               {/snippet}
@@ -210,4 +339,4 @@
   <div class="absolute bottom-1 right-16 translate-x-1/2 pointer-events-none">
     <GuideStep step={9}>Initiate swap transaction</GuideStep>
   </div>
-</div>
+</div> -->

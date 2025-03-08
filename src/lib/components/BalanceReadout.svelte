@@ -1,7 +1,7 @@
 <script lang="ts">
   import { humanReadableNumber } from '$lib/stores/utils'
   import type { ClassParam, Token } from '$lib/types.svelte'
-  import Tooltip from './Tooltip.svelte'
+  // import Tooltip from './Tooltip.svelte'
   import { loading } from '$lib/stores/loading.svelte'
   import { toChain } from '$lib/stores/auth/types'
   import {
@@ -13,6 +13,11 @@
   import classNames from 'classnames'
   import Loading from './Loading.svelte'
   import { untrack } from 'svelte'
+  import {
+    createFontScaler,
+    // largeInputFontScaler,
+  } from '$lib/stores/font-scaler'
+  import { oneEther } from '$lib/stores/bridge-settings.svelte'
 
   type Props = {
     token: Token
@@ -65,35 +70,45 @@
     }
   }
   const wrapperClasses = $derived(classNames(wrapperClassNames, wrapperSizeClasses))
+  // const balanceFontScaler = createFontScaler({
+  //   maxFontSize: 14,
+  //   minFontSize: 12,
+  //   freeCharacters: 18,
+  //   scale: 2,
+  // })
+  const humanReadableText = $derived(
+    humanReadableNumber(balance, {
+      decimals: token?.decimals ?? 18,
+      maxDecimals: 18 - Math.floor(Number(balance / oneEther / 3n)).toString().length,
+    }),
+  )
+  $inspect(humanReadableText, balance, Number(balance / oneEther / 3n))
+  // const fontSize = $derived(balanceFontScaler(humanReadableText.length))
 </script>
 
 <div class={wrapperClasses}>
-  <Tooltip tooltip={token.name} placement="top">
-    <span class="flex flex-row gap-1 items-center text-gray-500 leading-6">
-      {#if showLoader && tokenBalance.value === null}
-        <Loading key={loadingKey} class="w-4 h-6" />
-      {/if}
-      <span class={decimalClassNames} class:opacity-60={!loading.isResolved(loadingKey)}
-        >{tokenBalance.value === null
-          ? ''
-          : humanReadableNumber(balance, {
-              decimals: token?.decimals ?? 18,
-              // maxDecimals: decimalLimit,
-            })}
-      </span>
-      {#if !hideSymbol}
-        <span class="flex">{token.symbol}</span>
-      {/if}
+  <!-- <Tooltip tooltip={token.name} placement="left"> -->
+  <span class="flex flex-row gap-1 items-center text-gray-700 leading-5 text-sm">
+    {#if showLoader && tokenBalance.value === null}
+      <Loading key={loadingKey} class="w-4 h-5" />
+    {/if}
+    <span class={decimalClassNames} class:opacity-70={!loading.isResolved(loadingKey)}
+      >{tokenBalance.value === null ? '' : humanReadableText}
     </span>
-  </Tooltip>
+    <!-- {#if !hideSymbol} -->
+    <span class="flex">{token.symbol}</span>
+    <!-- {/if} -->
+  </span>
+  <!-- </Tooltip> -->
 </div>
 {#if showMax}
   <button
-    class="{roundedClasses} px-2 text-xs uppercase leading-6 h-6 flex"
     class:bg-tertiary-400={disableMax}
     class:bg-tertiary-600={!disableMax}
     class:hover:bg-tertiary-500={!disableMax}
+    class:text-tertiary-contrast-950={disableMax}
+    class="{roundedClasses} rounded-full text-xs flex items-center justify-center text-surface-contrast-600 px-1.5"
     onclick={maxOutBalance}>
-    max
+    Max
   </button>
 {/if}

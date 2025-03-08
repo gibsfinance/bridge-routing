@@ -16,9 +16,10 @@
     recipient,
     bridgeKey,
   } from '$lib/stores/input.svelte'
-  import { onboardSettings } from '$lib/stores/onboard.svelte'
+  // import { onboardSettings } from '$lib/stores/onboard.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
   import { onDestroy, untrack } from 'svelte'
+  import OnboardRadio from './OnboardRadio.svelte'
   const openOnRamp = () => {
     modal.open({
       view: 'OnRampProviders',
@@ -100,31 +101,29 @@
   // }
 </script>
 
-<header class="flex flex-row justify-between">
-  <div class="flex flex-row gap-2">
-    <div class="flex flex-row gap-0 border-surface-100/20">
-      <Button
-        class="btn gap-1 shadow-inner border px-1 rounded-r-none border-surface-100/20"
-        onclick={openOnRamp}>
-        <Icon icon="material-symbols:ramp-left-rounded" mode="svg" class="size-6" />
-      </Button>
-      <Button
-        class="btn gap-2 shadow-inner border border-surface-100/20 pl-2 rounded-l-none bg-surface-300/20 border-l-0"
-        onclick={openZKP2P}>
-        <span>OnRamp</span>
-        <Icon icon="codicon:circuit-board" mode="svg" class="size-6" />
-      </Button>
+<header class="flex flex-col items-center justify-between mt-2 gap-2">
+  <div class="flex flex-row w-full items-center">
+    <div class="flex flex-row gap-1 grow items-center">
+      <div class="flex flex-row border-surface-100/20 gap-1 py-2">
+        <Button
+          class="gap-1 rounded-l-full shadow-inner border-r-0 px-1 rounded-r-none border-surface-100/20"
+          onclick={openOnRamp}>
+          <Icon icon="material-symbols:ramp-left-rounded" mode="svg" class="size-8" />
+        </Button>
+        <Button class="gap-2 shadow-inner px-1 rounded-l-none" onclick={openZKP2P}>
+          <!-- <span>OnRamp</span> -->
+          <Icon icon="ph:circuitry-fill" mode="svg" class="size-8" />
+        </Button>
+        <Button
+          onclick={toggleHelp}
+          class="flex flex-row items-center italic gap-1 pr-1 border-2 rounded-full {showTooltips.value
+            ? ' '
+            : ' border-transparent'}">
+          <Icon icon="material-symbols:help" mode="svg" class="size-9" />
+          <span class="text-sm pr-1 leading-9" class:invisible={!showTooltips.value}>Dismiss</span>
+        </Button>
+      </div>
     </div>
-    <Button
-      onclick={toggleHelp}
-      class="flex flex-row items-center italic gap-1 px-1 border {showTooltips.value
-        ? ' rounded-md'
-        : ' border-transparent'}">
-      <Icon icon="material-symbols:help" mode="svg" class="size-8" />
-      {#if showTooltips.value}
-        <span class="text-sm pr-1">Dismiss</span>
-      {/if}
-    </Button>
+    <ConnectButton />
   </div>
-  <ConnectButton />
 </header>

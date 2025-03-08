@@ -68,7 +68,7 @@
     <span class="relative flex max-w-[70%] grow">
       <input
         class="w-full grow bg-transparent border-none px-3 py-2 text-xl leading-8 placeholder-current outline-hidden hover:appearance-none focus:shadow-inner sm:text-2xl focus:ring-0"
-        placeholder="0.0"
+        placeholder="0"
         value={inputValue}
         oninput={handleInput}
         onfocus={() => {

@@ -1,6 +1,5 @@
 <script lang="ts">
   import '../app.css'
-  // import Delivery from '$lib/pages/Delivery.svelte'
   import Nav from '$lib/components/Nav.svelte'
   import Footer from '$lib/components/Footer.svelte'
   import Loader from '$lib/components/Loader.svelte'

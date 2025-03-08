@@ -5,24 +5,31 @@
   import _ from 'lodash'
   import type { FormEventHandler } from 'svelte/elements'
   import { formatUnits, parseUnits } from 'viem'
+  import { largeInputFontScaler } from '$lib/stores/font-scaler'
+  // import { fitText } from '$lib/stores/fittext'
 
   type Props = {
     id?: string
     value?: bigint | null
     decimals?: number
+    disabled?: boolean
     oninput?: (value: bigint) => void
     onblur?: FormEventHandler<HTMLInputElement>
     onfocus?: FormEventHandler<HTMLInputElement>
     class?: ClassParam
     paddingClass?: ClassParam
     placeholder?: string
+    fit?: boolean
   }
   const {
+    fit = false,
     id = _.uniqueId('numeric-input-'),
     value: startingValue = null,
     decimals = 18,
-    placeholder = '0.0',
-    class: className = 'w-full input ring-0 focus:ring-0 text-surface-contrast-50 text-right',
+    placeholder = '0',
+    disabled = false,
+    class:
+      className = 'w-full input ring-0 focus:ring-0 text-surface-contrast-50 text-right font-inter',
     paddingClass = 'py-0 px-0',
     ...props
   }: Props = $props()
@@ -47,10 +54,7 @@
     props.oninput?.(bestGuess ?? 0n)
   }
   let inputRef: HTMLInputElement | null = null
-  $effect(() => {
-    if (!focused || selectionEnd === null) return
-    inputRef?.setSelectionRange(selectionEnd, selectionEnd)
-  })
+  const fontSize = $derived(largeInputFontScaler(value?.length))
   const onfocus: FormEventHandler<HTMLInputElement> = (e) => {
     focused = true
     props.onfocus?.(e)
@@ -64,6 +68,8 @@
 <input
   type="text"
   bind:this={inputRef}
+  style:font-size={`${fontSize}px`}
+  {disabled}
   {id}
   {placeholder}
   class={classes}

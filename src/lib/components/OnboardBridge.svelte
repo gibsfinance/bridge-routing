@@ -6,7 +6,7 @@
   import Button from './Button.svelte'
   import Icon from '@iconify/svelte'
   import { Chains } from '$lib/stores/auth/types'
-  import { accountState, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
+  import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
     assetSources,
     bridgeSettings,
@@ -14,7 +14,7 @@
     searchKnownAddresses,
   } from '$lib/stores/bridge-settings.svelte'
   import NumericInput from './NumericInput.svelte'
-  import VerticalDivider from './VerticalDivider.svelte'
+  import VerticalDivider from './ExchangeInputDivider.svelte'
   import BalanceReadout from './BalanceReadout.svelte'
   import Loader from './Loader.svelte'
   import {
@@ -35,12 +35,10 @@
     loadFeeFor,
     recipient,
     bridgeKey,
-    clientFromChain,
   } from '$lib/stores/input.svelte'
   import { humanReadableNumber, usd } from '$lib/stores/utils'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { SvelteMap } from 'svelte/reactivity'
-  // import { sendTransaction } from '@wagmi/core'
   import Loading from './Loading.svelte'
   import Tooltip from './Tooltip.svelte'
   import ExplorerLink from './ExplorerLink.svelte'
@@ -48,8 +46,12 @@
   import { untrack } from 'svelte'
   import GuideStep from './GuideStep.svelte'
   import GuideShield from './GuideShield.svelte'
-  import { showTooltips } from '$lib/stores/storage.svelte'
-  import { chainsMetadata } from '$lib/stores/auth/constants'
+  import { foreignBridgeInputs, showTooltips } from '$lib/stores/storage.svelte'
+  import OnboardStep from './OnboardStep.svelte'
+  import SectionInput from './SectionInput.svelte'
+  import TokenAndNetworkSelector from './TokenAndNetworkSelector.svelte'
+  import TokenSelect from './TokenSelect.svelte'
+  import OnboardButton from './OnboardButton.svelte'
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(bridgeFee.value?.feeF2H ?? 0n)
@@ -311,161 +313,74 @@
       }, 400)
     }
   }
+  $inspect(bridgedToken)
 </script>
 
-{#if tokenInput}
-  <div class="flex relative">
-    <div
-      class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
-      <header class="flex flex-row justify-between relative h-16">
-        <div class="flex flex-col w-1/2 gap-0">
-          <Button
-            class="absolute size-6 bottom-0 left-0 flex justify-center items-center text-surface-contrast-50 group"
-            onclick={toggleEditTxHash}>
-            <Icon
-              icon="mdi:pencil"
-              class="w-full h-full p-1 text-surface-contrast-50 opacity-0 group-hover:opacity-100 transition-opacity duration-100" />
-          </Button>
-          <label
-            class="flex flex-row gap-1 w-full pl-4 pr-5 py-4 cursor-pointer text-surface-contrast-50 items-center group"
-            for="amount-to-bridge">
-            <div class="flex flex-col gap-0 w-full relative">
-              <NumericInput
-                id="amount-to-bridge"
-                class="w-full text-base input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 text-right placeholder:text-gray-600 leading-6 h-8"
-                value={bridgeAmount}
-                decimals={tokenInput.decimals}
-                oninput={(v) => {
-                  amountIn.value = v
-                }} />
-              <span
-                class="text-xs w-full text-gray-500 text-right absolute -bottom-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none italic"
-                >${usd.toCents(usdValueTokenAmount)}</span>
-            </div>
-            <span class="text-base">{tokenInput.symbol}</span>
-            <TokenIcon src={tokenInput.logoURI ?? assetSources(tokenInput)} />
-          </label>
-
-          {#if accountState.address}
-            <div class="flex gap-1 flex-row-reverse absolute top-0 left-0">
-              <BalanceReadout
-                token={tokenInput}
-                showLoader
-                roundedClasses="rounded-tl"
-                hideSymbol
-                decimalLimit={9}
-                onbalanceupdate={(balance) => {
-                  maxBridgeable = balance
-                }}
-                onmax={(balance) => {
-                  amountIn.value = balance
-                }} />
-            </div>
-          {/if}
-        </div>
-        <VerticalDivider>
-          <Icon
-            icon="icon-park-solid:bridge-one"
-            class="text-surface-500 bg-surface-950-50 rounded-full w-full h-full ring-2 ring-current ring-inset p-1" />
-        </VerticalDivider>
-        <div
-          class="flex flex-col w-1/2 text-surface-contrast-50 items-start justify-center relative cursor-not-allowed">
-          {#if !bridgedToken}
-            <span class="flex pl-6"><Loader /></span>
-          {:else}
-            <!-- output side -->
-            <span
-              class="flex flex-row items-center text-surface-contrast-50 w-full justify-end group min-h-[2rem]">
-              <div class="pl-5 flex flex-row items-center min-w-0 grow">
-                <AssetWithNetwork asset={bridgedToken} network={Chains.PLS} />
-                <span class="flex flex-row gap-2 items-center pl-1 min-w-0 flex-shrink relative">
-                  <span
-                    class="flex flex-col gap-0 relative text-left min-w-0 flex-shrink overflow-hidden">
-                    <span class="flex min-w-0 flex-shrink overflow-hidden items-center">
-                      <span
-                        class="text-ellipsis overflow-hidden whitespace-nowrap text-base flex-shrink min-w-0"
-                        >{humanReadableNumber(outputAmount, {
-                          decimals: bridgedToken.decimals,
-                        })}</span>
-                      <span class="whitespace-nowrap flex-shrink-0 mx-1 text-base"
-                        >{bridgedToken.symbol}</span>
-                    </span>
-                  </span>
-                  <span
-                    class="text-xs w-full text-gray-500 absolute -bottom-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none italic"
-                    >${usd.toCents(usdValueTokenAmount)}</span>
-                </span>
-              </div>
-              <Button
-                disabled={disableBridgeButton}
-                class={bridgeGoClassNames}
-                onclick={bridgeTokens}>Go</Button>
-            </span>
-          {/if}
-        </div>
-      </header>
-      <footer
-        class="shadow-inner h-0 transition-all duration-100 bg-surface-900-100 rounded-b"
-        class:h-6={bridgeStatus !== null || editTxHash}>
-        {#if editTxHash}
-          <div class="h-6 flex flex-row items-center">
-            <Button class="h-full w-8 bg-error-400 leading-6" onclick={toggleEditTxHash}
-              >&times;</Button>
-            <Input
-              setref={(el) => {
-                editTxInput = el
-              }}
-              class="h-full px-2 py-0 text-sm text-surface-contrast-50 w-full ring-0 focus:ring-0"
-              roundedClass={'rounded-br'}
-              value={editTxHashValue}
-              oninput={(v) => {
-                editTxHashValue = v
-                if (editTxHashValue.length === 66 && isHex(editTxHashValue)) {
-                  setTxHash(editTxHashValue)
-                  editTxHash = false
-                }
-              }} />
-          </div>
-        {:else}
-          <div
-            class="flex flex-row items-center gap-1 h-full bg-success-500 justify-end min-w-[200px] text-sm transition-all duration-100 relative transition-delay-200"
-            style="width: {percentProgress}%">
-            <Button class="h-full w-8 absolute top-0 left-0 bg-error-400" onclick={clearTxTracking}
-              >&times;</Button>
-            <ExplorerLink path={`/tx/${tx}`} chain={bridgeKey.fromChain} size="1.5em" />
-            <Button
-              class="btn h-full p-0 capitalize flex-row gap-2 hover:filter-none text-sm font-inter"
-              onclick={incrementBridgeStatus}>
-              <Loading key="bridge-status-check" />
-              <span class="text-surface-contrast-950">{bridgeStatus?.status?.toLowerCase()}</span>
-            </Button>
-            {#if bridgeStatus?.status !== bridgeStatuses.AFFIRMED && bridgeStatusETATooltip}
-              <Tooltip
-                placement="top"
-                tooltip={bridgeStatusETATooltip}
-                class="pr-1 items-center justify-center">
-                <Icon icon="mdi:clock" class="size-6 p-1 pointer-events-none" />
-              </Tooltip>
-            {/if}
-            {#if bridgeStatus?.status === bridgeStatuses.AFFIRMED && bridgeStatus.deliveredHash}
-              <span class="h-full w-8 flex items-center justify-start">
-                <ExplorerLink
-                  path={`/tx/${bridgeStatus.deliveredHash}`}
-                  chain={bridgeKey.toChain}
-                  size="1.5em" />
-              </span>
-            {/if}
-          </div>
-        {/if}
-      </footer>
-    </div>
-    <GuideShield show={showTooltips.value} class="rounded-xl" />
-    <div class="absolute top-1/2 left-1/4 -translate-y-1/2 -translate-x-1/2 pointer-events-none">
-      <GuideStep step={5}>Input an amount to bridge to PulseChain</GuideStep>
-    </div>
-    <div class="absolute bottom-1 right-16 translate-x-1/2 pointer-events-none">
-      <GuideStep step={6}>Initiate bridge transaction</GuideStep>
-    </div>
-  </div>
-{/if}
-<!-- </div> -->
+<OnboardStep icon="icon-park-solid:bridge-one" step={2}>
+  {#snippet input()}
+    <SectionInput
+      focused
+      label="Input"
+      token={tokenInput ?? {
+        address: zeroAddress,
+        chainId: Number(bridgeKey.fromChain),
+        decimals: 18,
+        logoURI: assetSources(tokenInput),
+        symbol: 'ETH',
+        name: 'Ether',
+      }}
+      showRadio
+      value={amountIn.value}
+      onbalanceupdate={(balance) => {
+        maxBridgeable = balance
+      }}
+      onmax={(balance) => {
+        amountIn.value = balance
+      }}
+      oninput={(v) => {
+        console.log('oninput', v)
+        amountIn.value = v
+      }}>
+      {#snippet modal({ close })}
+        <TokenSelect
+          chain={Chains.ETH}
+          tokens={bridgeableTokensUnder({
+            tokens: bridgableTokens.value,
+            chain: bridgeKey.fromChain,
+            partnerChain: bridgeKey.toChain,
+          })}
+          onsubmit={(tkn) => {
+            bridgeSettings.assetIn.value = tkn as Token
+            foreignBridgeInputs.value = {
+              ...foreignBridgeInputs.value!,
+              toToken: tkn.address,
+            }
+            close()
+          }} />
+      {/snippet}
+    </SectionInput>
+  {/snippet}
+  {#snippet output()}
+    <SectionInput
+      label="Output"
+      token={bridgedToken ?? {
+        address: zeroAddress,
+        chainId: Number(bridgeKey.toChain),
+        decimals: 18,
+        logoURI: assetSources(bridgedToken),
+        symbol: 'ETH',
+        name: 'Ether',
+      }}
+      readonly
+      value={outputAmount}
+      onbalanceupdate={() => {}}>
+    </SectionInput>
+  {/snippet}
+  {#snippet button()}
+    <OnboardButton
+      disabled={disableBridgeButton}
+      onclick={bridgeTokens}
+      text="Bridge to PulseChain"
+      loadingKey="lifi-quote" />
+  {/snippet}
+</OnboardStep>

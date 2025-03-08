@@ -1,25 +1,23 @@
 <script lang="ts">
   import type { Token } from '$lib/types.svelte'
   import { zeroAddress } from 'viem'
-  import Button from './Button.svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
-  import { accountState, modal } from '$lib/stores/auth/AuthProvider.svelte'
+  import { modal } from '$lib/stores/auth/AuthProvider.svelte'
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { loadPrice, priceInt, latestBlock } from '$lib/stores/chain-events.svelte'
   import { bridgeKey } from '$lib/stores/input.svelte'
-  import Image from './Image.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { SvelteMap } from 'svelte/reactivity'
   import OnboardBridge from './OnboardBridge.svelte'
   import OnboardPulseX from './OnboardPulseX.svelte'
-  import OnboardSettings from './OnboardSettings.svelte'
   import OnboardForeignBridge from './OnboardForeignBridge.svelte'
   import { untrack } from 'svelte'
-
+  import { activeOnboardStep } from '$lib/stores/storage.svelte'
+  import OnboardRadio from './OnboardRadio.svelte'
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const tokenInput = $derived(bridgeSettings.assetIn.value)
-  const networkIsSet = $derived(!!accountState.chainId)
-  const networkMatches = $derived(accountState.chainId === Number(bridgeKey.fromChain))
+  // const networkIsSet = $derived(!!accountState.chainId)
+  // const networkMatches = $derived(accountState.chainId === Number(bridgeKey.fromChain))
   $effect.pre(() => {
     bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
   })
@@ -63,11 +61,14 @@
 </script>
 
 {#if tokenInput}
-  <div class="flex flex-col gap-4 max-w-2xl mx-auto w-full">
-    <OnboardSettings />
-    <OnboardForeignBridge />
-    <OnboardBridge />
-    <OnboardPulseX />
+  <div class="flex flex-col max-w-lg mx-auto w-full p-2 bg-white card relative">
+    {#if activeOnboardStep.value === 1}
+      <OnboardForeignBridge />
+    {:else if activeOnboardStep.value === 2}
+      <OnboardBridge />
+    {:else if activeOnboardStep.value === 3}
+      <OnboardPulseX />
+    {/if}
     <!-- {#if !networkIsSet || networkMatches}
     {:else}
       <div class="flex flex-row items-center justify-center gap-4">
