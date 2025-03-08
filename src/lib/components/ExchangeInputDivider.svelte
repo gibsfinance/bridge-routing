@@ -13,19 +13,17 @@
     onclick?: () => void
   }
   const {
-    children,
     verticalSizeClasses = 'w-full',
     positionClasses = 'relative',
     iconWrapperSizeClasses = 'size-12',
-    // iconWrapperColorClasses = 'text-surface-800-200',
+    children,
     onclick,
   }: Props = $props()
   const classes = $derived(classNames(verticalSizeClasses, positionClasses))
   const iconWrapperClasses = $derived(
     classNames(
       iconWrapperSizeClasses,
-      // iconWrapperColorClasses,
-      `absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-current text-white`,
+      'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-current text-white',
       onclick ? 'cursor-pointer' : 'cursor-auto',
     ),
   )

@@ -190,9 +190,9 @@
   icon="material-symbols:captive-portal"
   step={1}
   ondividerclick={() => {
-    const futureInput = tokenOutput
-    tokenOutput = tokenInput
-    tokenInput = futureInput
+    // const futureInput = tokenOutput
+    // tokenOutput = tokenInput
+    // tokenInput = futureInput
   }}>
   {#snippet input()}
     <SectionInput

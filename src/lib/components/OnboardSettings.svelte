@@ -102,7 +102,7 @@
 </script>
 
 <header class="flex flex-col items-center justify-between mt-2 gap-2">
-  <div class="flex flex-row w-full items-center">
+  <div class="flex flex-row w-full items-center relative">
     <div class="flex flex-row gap-1 grow items-center">
       <div class="flex flex-row border-surface-100/20 gap-1 py-2">
         <Button
@@ -126,5 +126,8 @@
       </div>
     </div>
     <ConnectButton />
+    <div class="absolute left-1/2 -translate-x-1/2 top-0 h-14 items-center justify-center flex">
+      <Icon icon="mingcute:run-fill" mode="svg" class="size-8" />
+    </div>
   </div>
 </header>

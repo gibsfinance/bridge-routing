@@ -19,10 +19,10 @@
       brightness="50%">
       <div class="flex flex-col text-lg w-full px-2 gap-4 mb-16">
         <div class="mt-8 max-w-lg mx-auto w-full">
-          <h1
+          <!-- <h1
             class="text-white font-italiana top-0 bottom-0 left-0 right-0 text-center content-center capitalize text-5xl">
             onboard
-          </h1>
+          </h1> -->
           <OnboardSettings />
           <Onboard />
         </div>

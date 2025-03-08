@@ -33,7 +33,8 @@
   const destinationBridgeKey = $derived(bridgeKey.toChain)
   const isDeliveryRoute = $derived(page.route.id?.includes('/delivery'))
   const isOnboardRoute = $derived(page.route.id?.includes('/onboard'))
-  const isSmall = $derived(innerWidth.current && innerWidth.current < 768)
+  const alwaysSmall = true
+  const isSmall = $derived(alwaysSmall || (innerWidth.current && innerWidth.current < 768))
 </script>
 
 <div class="z-40 -mb-10 flex h-10">
@@ -132,7 +133,7 @@
             <li class="flex flex-row items-center">
               <Button class="flex flex-row items-center px-2 py-1" onclick={gotoOnboard}
                 >{#if !isSmall}Onboard&nbsp;{/if}<Icon
-                  icon="material-symbols:run-circle"
+                  icon="mingcute:run-fill"
                   stroke-width="1.5"
                   height="1.6em"
                   width="1.6em" />

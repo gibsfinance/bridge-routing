@@ -43,7 +43,6 @@
       partnerChain: null,
     }),
   )
-  $inspect(tokens)
   const tokenOut = $derived.by(() => {
     // const tokens =
     return tokens.find((t) => getAddress(t.address) === getAddress(tokenOutputAddress)) ?? tokens[0]
@@ -152,7 +151,14 @@
   // $inspect(bridgeableTokensPLS)
 </script>
 
-<OnboardStep icon="token:swap" step={3}>
+<OnboardStep
+  icon="token:swap"
+  step={3}
+  ondividerclick={() => {
+    const futureInput = tokenOut
+    plsOutToken.value = bridgeSettings.assetOut.value?.address as Hex
+    bridgeSettings.assetOut.value = futureInput
+  }}>
   {#snippet input()}
     <SectionInput
       focused
