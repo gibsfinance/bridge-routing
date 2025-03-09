@@ -1,7 +1,7 @@
 <script lang="ts">
   import OnboardStep from './OnboardStep.svelte'
   import * as transactions from '$lib/stores/transactions'
-  import { formatUnits, zeroAddress, type Hex } from 'viem'
+  import { formatUnits, getAddress, zeroAddress, type Hex } from 'viem'
   import TokenAndNetworkSelector from './TokenAndNetworkSelector.svelte'
   import type { Token } from '$lib/types.svelte'
   import {
@@ -69,7 +69,9 @@
       const tokensDestination = untrack(() => availableTokensPerOriginChain.get(1)!)
       const tokenDestination =
         (previousSettings?.toToken
-          ? tokensDestination.find((tkn) => tkn.address === previousSettings.toToken)
+          ? tokensDestination.find(
+              (tkn) => getAddress(tkn.address) === getAddress(previousSettings.toToken),
+            )
           : tokensDestination[0]) ?? tokensDestination[0]
       if (tokenDestination) {
         tokenOutput = tokenDestination

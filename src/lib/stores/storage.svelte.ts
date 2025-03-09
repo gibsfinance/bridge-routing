@@ -18,11 +18,12 @@ export type ForeignBridgeInputs = {
   // toChain: number - always 1
   toToken: string
 }
-export const foreignBridgeInputs = new LocalProxyProp(
-  storage,
-  ['foreignBridgeInputs'],
-  null as ForeignBridgeInputs | null,
-)
+export const foreignBridgeInputs = new LocalProxyProp(storage, ['foreignBridgeInputs'], {
+  fromChain: 1,
+  fromToken: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599' as Hex,
+  fromAmount: 0n,
+  toToken: zeroAddress as Hex,
+} as ForeignBridgeInputs | null)
 
 export const activeOnboardStep = new LocalProxyProp(storage, ['activeOnboardStep'], 1)
 
