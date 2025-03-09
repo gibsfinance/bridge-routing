@@ -1,6 +1,6 @@
 import { type Hex, type Address, encodeFunctionData } from 'viem'
 import { type Percent, Token, validateAndParseAddress } from '@pulsex/sdk'
-import { type FeeOptions, Payments } from '@pulsex/v3-sdk'
+import { type FeeOptions, Payments } from './payments'
 import { peripheryPaymentsWithFeeExtendedAbi } from './abis/IPeripheryPaymentsWithFeeExtended'
 
 function encodeFeeBips(fee: Percent): bigint {

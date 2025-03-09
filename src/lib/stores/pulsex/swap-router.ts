@@ -5,14 +5,15 @@ import {
   TradeType,
   validateAndParseAddress,
 } from '@pulsex/sdk'
-import {
-  type FeeOptions,
-  type MethodParameters,
-  type PermitOptions,
-  Payments,
-  SelfPermit,
-  // toHex,
-} from '@pulsex/v3-sdk'
+// import {
+//   type MethodParameters,
+//   type PermitOptions,
+//   SelfPermit,
+//   // toHex,
+// } from '@pulsex/v3-sdk'
+import { type FeeOptions, Payments } from './payments'
+import { type MethodParameters, toHex } from './calldata'
+import { type PermitOptions, SelfPermit } from './self-permit'
 import invariant from 'tiny-invariant'
 
 import { PulseXSwapRouterAbi } from './abis/IPulseXSwapRouter'
@@ -25,7 +26,7 @@ import { maximumAmountIn, minimumAmountOut } from './maximum-amount'
 import { isStablePool, isV1Pool, isV2Pool } from './pool'
 import { buildBaseRoute } from './route'
 import { getOutputOfPools } from './get-output-of-pools'
-import { encodeFunctionData, numberToHex, type Address, type Hex } from 'viem'
+import { encodeFunctionData, type Address, type Hex } from 'viem'
 
 const ZERO = 0n
 
@@ -633,7 +634,7 @@ export abstract class SwapRouter {
 
     return {
       calldata: MulticallExtended.encodeMulticall(calldatas, options.deadlineOrPreviousBlockhash),
-      value: numberToHex(inputIsNative ? totalAmountIn.quotient : ZERO),
+      value: toHex(inputIsNative ? totalAmountIn.quotient : ZERO),
     }
   }
 
@@ -679,7 +680,7 @@ export abstract class SwapRouter {
 
     return {
       calldata: MulticallExtended.encodeMulticall(calldatas, options.deadlineOrPreviousBlockhash),
-      value: numberToHex(value),
+      value: toHex(value),
     }
   }
 }

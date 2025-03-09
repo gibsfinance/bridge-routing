@@ -64,7 +64,6 @@
     "@pulsex/chains": "^1.0.2",
     "@pulsex/sdk": "^1.7.3",
     "@pulsex/swap-sdk-core": "^2.0.4",
-    "@pulsex/v3-sdk": "^2.0.0",
     "@reown/appkit": "^1.6.8",
     "@reown/appkit-adapter-wagmi": "^1.6.8",
     "@tailwindcss/vite": "^4.0.9",
