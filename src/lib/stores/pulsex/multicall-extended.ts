@@ -1,6 +1,6 @@
 import { encodeFunctionData, type Hex } from 'viem'
 import type { BigintIsh } from '@pulsex/sdk'
-import { Multicall } from '@pulsex/v3-sdk'
+import { Multicall } from './multicall'
 
 import { multicallExtendedAbi } from './abis/IMulticallExtended'
 

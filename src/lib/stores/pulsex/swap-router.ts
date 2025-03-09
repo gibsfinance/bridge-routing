@@ -5,12 +5,6 @@ import {
   TradeType,
   validateAndParseAddress,
 } from '@pulsex/sdk'
-// import {
-//   type MethodParameters,
-//   type PermitOptions,
-//   SelfPermit,
-//   // toHex,
-// } from '@pulsex/v3-sdk'
 import { type FeeOptions, Payments } from './payments'
 import { type MethodParameters, toHex } from './calldata'
 import { type PermitOptions, SelfPermit } from './self-permit'
