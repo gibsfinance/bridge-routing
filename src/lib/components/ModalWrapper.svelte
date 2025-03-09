@@ -10,8 +10,9 @@
     button?: Snippet
     triggerClasses?: string
     wrapperClasses?: string
+    contentClasses?: string
   }
-  const { contents, button, triggerClasses = '', wrapperClasses }: Props = $props()
+  const { contents, button, triggerClasses = '', wrapperClasses, contentClasses }: Props = $props()
   let open = $state(false)
 </script>
 
@@ -19,8 +20,9 @@
   {open}
   classes={wrapperClasses}
   triggerBase={triggerClasses}
-  contentBase="card bg-surface-200-800 space-y-2 shadow-xl max-w-(--container-lg) w-full"
+  contentBase="card bg-surface-950-50 space-y-2 shadow-xl max-w-(--container-lg) w-full text-surface-contrast-50 h-full max-h-[512px]"
   backdropClasses="backdrop-blur-xs"
+  positionerClasses="h-full"
   onOpenChange={(e) => {
     open = e.open
   }}>

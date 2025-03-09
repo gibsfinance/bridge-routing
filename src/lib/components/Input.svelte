@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import classnames from 'classnames'
+  import type { ClassParam } from '$lib/types.svelte'
 
   type Props = {
     value: string
@@ -8,10 +9,10 @@
     name?: string
     id?: string
     size?: 'sm' | 'md' | 'lg'
-    border?: boolean
     autoFocus?: boolean
-    class?: string
-    roundedClass?: string
+    class?: ClassParam
+    roundedClass?: ClassParam
+    backgroundClass?: ClassParam
     onclick?: () => void
     onblur?: () => void
     onfocus?: () => void
@@ -24,19 +25,18 @@
     name,
     id,
     size,
-    border,
     autoFocus,
     class: className,
     roundedClass,
+    backgroundClass,
     onclick,
     onblur,
     onfocus,
     oninput,
     setref,
   }: Props = $props()
-  const defaultClassName = 'flex w-full py-1 px-2 shadow-xs bg-transparent outline-hidden'
+  const defaultClassName = 'flex w-full shadow-xs outline-hidden'
   let input!: HTMLInputElement
-  export { className as class }
   onMount(() => {
     if (autoFocus) {
       input.focus()
@@ -68,5 +68,4 @@
   class:leading-6={size === 'sm'}
   class:text-md={size === 'md'}
   class:leading-8={size === 'md'}
-  class:border-0={!border}
-  class={classnames(defaultClassName, className, roundedClass)} />
+  class={classnames(defaultClassName, className, roundedClass, backgroundClass)} />

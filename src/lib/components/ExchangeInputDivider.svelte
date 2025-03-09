@@ -10,23 +10,24 @@
     iconWrapperColorClasses?: ClassParam
     positionClasses?: ClassParam
     class?: ClassParam
-    onclick?: () => void
+    onclick?: null | (() => void)
   }
   const {
     verticalSizeClasses = 'w-full',
     positionClasses = 'relative',
     iconWrapperSizeClasses = 'size-12',
     children,
-    onclick,
+    onclick: onClick,
   }: Props = $props()
   const classes = $derived(classNames(verticalSizeClasses, positionClasses))
   const iconWrapperClasses = $derived(
     classNames(
       iconWrapperSizeClasses,
       'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-current text-white',
-      onclick ? 'cursor-pointer' : 'cursor-auto',
+      onClick ? 'cursor-pointer' : 'cursor-auto',
     ),
   )
+  const onclick = $derived.by(() => onClick ?? (() => {}))
 </script>
 
 <div class={classes}>

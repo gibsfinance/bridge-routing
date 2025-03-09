@@ -51,8 +51,8 @@
     if (!tokenInput) return
     const tokensUnderBridgeKey = bridgeableTokensUnder({
       tokens: bridgableTokens.value,
-      chain: bridgeKey.toChain,
-      partnerChain: bridgeKey.fromChain,
+      chain: Number(bridgeKey.toChain),
+      partnerChain: Number(bridgeKey.fromChain),
     })
     const link = loadAssetLink({
       bridgeKey: bridgeKey.value,

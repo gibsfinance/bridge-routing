@@ -39,7 +39,6 @@
     onmax,
     onbalanceupdate,
   }: Props = $props()
-  $inspect(value)
 </script>
 
 <label
@@ -50,7 +49,7 @@
   class:cursor-not-allowed={readonly}>
   <div class="flex relative items-center flex-col w-full gap-2">
     <div class="flex flex-row justify-between w-full h-5">
-      <span class="text-sm text-surface-700">{label}</span>
+      <span class="text-sm text-gray-500">{label}</span>
       {#if showRadio}
         <OnboardRadio />
       {/if}
@@ -65,19 +64,22 @@
               })
             : value?.toString()}
         <span
-          class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-gray-600 h-10 leading-10"
+          class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-gray-500 h-10 leading-10"
           style:font-size={`${largeInputFontScaler(humanReadable?.length ?? 0)}px`}
           >{valIsNumber ? humanReadable : '0'}</span>
         <SelectButtonContents {token} network={token.chainId} hideChevron />
       {:else}
         <NumericInput
           {id}
-          class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-gray-600 h-10 leading-10 tracking-tight"
+          class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-gray-500 h-10 leading-10 tracking-tight"
           {value}
           decimals={token.decimals}
           {disabled}
           {oninput} />
-        <ModalWrapper wrapperClasses="flex items-center justify-center h-full" triggerClasses="">
+        <ModalWrapper
+          wrapperClasses="flex items-center justify-center h-full"
+          triggerClasses=""
+          contentClasses="">
           {#snippet button()}
             <SelectButtonContents {token} network={token.chainId} />
           {/snippet}

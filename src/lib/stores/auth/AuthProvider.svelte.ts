@@ -3,6 +3,7 @@ import * as networks from '@reown/appkit/networks'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { NullableProxyStore } from '$lib/types.svelte'
 import type { Hex } from 'viem'
+import * as chains from 'viem/chains'
 import { walletConnectProjectId } from '$lib/config'
 import { EthereumProvider } from '@walletconnect/ethereum-provider'
 import { getBalance, watchBlockNumber, type GetBalanceReturnType } from '@wagmi/core'
@@ -48,6 +49,12 @@ export const appkitNetworkList = [
   networks.mantle,
   networks.berachain,
 ] as [networks.AppKitNetwork, ...networks.AppKitNetwork[]]
+export const appkitNetworkIds = new Set(appkitNetworkList.map((n) => n.id))
+export const chainsById = new Map<number, chains.Chain>(
+  Object.values(chains)
+    .filter((chain) => appkitNetworkIds.has(chain.id))
+    .map((chain) => [chain.id, chain]),
+)
 
 // 2. Set up Wagmi adapter
 export const wagmiAdapter = new WagmiAdapter({
@@ -206,7 +213,6 @@ modal.subscribeWalletInfo((walletInfo) => {
 })
 
 modal.subscribeAccount((account) => {
-  console.log('account', account)
   if (account.status === 'connected') {
     accountState.value = account ?? null
   }

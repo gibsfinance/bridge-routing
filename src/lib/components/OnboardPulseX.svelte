@@ -39,7 +39,7 @@
   const tokenOutputAddress = $derived(plsOutToken.value)
   const tokens = $derived(
     bridgableTokens.bridgeableTokensUnder({
-      chain: Chains.PLS,
+      chain: Number(Chains.PLS),
       partnerChain: null,
     }),
   )
@@ -153,7 +153,6 @@
 
 <OnboardStep
   icon="token:swap"
-  step={3}
   ondividerclick={() => {
     const futureInput = tokenOut
     plsOutToken.value = bridgeSettings.assetOut.value?.address as Hex
@@ -184,10 +183,12 @@
       }}>
       {#snippet modal({ close })}
         <TokenSelect
-          chain={Chains.PLS}
+          chains={[Number(Chains.PLS)]}
           {tokens}
           onsubmit={(tkn) => {
-            bridgeSettings.assetOut.value = tkn as Token
+            if (tkn) {
+              bridgeSettings.assetOut.value = tkn as Token
+            }
             close()
           }} />
       {/snippet}
@@ -237,10 +238,12 @@
       value={amountToSwapOut ?? 0n}>
       {#snippet modal({ close })}
         <TokenSelect
-          chain={Chains.PLS}
+          chains={[Number(Chains.PLS)]}
           {tokens}
           onsubmit={(tkn) => {
-            plsOutToken.value = tkn.address as Hex
+            if (tkn) {
+              plsOutToken.value = tkn.address as Hex
+            }
             close()
           }} />
       {/snippet}

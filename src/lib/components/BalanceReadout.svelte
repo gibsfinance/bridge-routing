@@ -82,13 +82,12 @@
       maxDecimals: 18 - Math.floor(Number(balance / oneEther / 3n)).toString().length,
     }),
   )
-  $inspect(humanReadableText, balance, Number(balance / oneEther / 3n))
   // const fontSize = $derived(balanceFontScaler(humanReadableText.length))
 </script>
 
 <div class={wrapperClasses}>
   <!-- <Tooltip tooltip={token.name} placement="left"> -->
-  <span class="flex flex-row gap-1 items-center text-gray-700 leading-5 text-sm">
+  <span class="flex flex-row gap-1 items-center text-gray-500 leading-5 text-[14px]">
     {#if showLoader && tokenBalance.value === null}
       <Loading key={loadingKey} class="w-4 h-5" />
     {/if}

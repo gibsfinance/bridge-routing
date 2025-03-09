@@ -11,10 +11,11 @@
 @theme {
   --font-inter: Inter var, Inter, sans-serif;
   --font-italiana: Italiana, sans-serif;
+  --radius-2xl: 1.25rem;
 }
 
 :root * {
-  --radius-container: 1.25rem;
+  /* --radius-container: 1.25rem; */
 }
 
 /*

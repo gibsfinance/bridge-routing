@@ -361,8 +361,8 @@ export const updateAssetIn = loading.loadsAfterTick<
     }
 
     const tokensUnderBridgeKey = input.bridgableTokens.bridgeableTokensUnder({
-      chain: bridgeKey.fromChain,
-      partnerChain: bridgeKey.toChain,
+      chain: Number(bridgeKey.fromChain),
+      partnerChain: Number(bridgeKey.toChain),
     })
     const foundAssetIn = searchKnownAddresses({
       address,

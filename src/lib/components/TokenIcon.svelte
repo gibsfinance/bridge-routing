@@ -29,7 +29,7 @@
   )
 </script>
 
-<div class="flex relative hover:shadow-md rounded-full">
+<div class="flex relative rounded-full">
   <Icon icon="nrk:media-404-notfound" class={iconClass} data-src={src} />
   <Image {src} {alt} {onload} {onerror} class={classes} {sizeClasses} {containerClasses} />
 </div>

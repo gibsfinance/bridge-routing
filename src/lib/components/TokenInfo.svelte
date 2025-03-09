@@ -10,8 +10,9 @@
     truncate?: number
     reversed?: boolean
     externalGroup?: boolean
-    wrapperSizeClasses?: string
+    wrapperSizeClasses?: ClassParam
     nameClasses?: ClassParam
+    wrapperPadding?: ClassParam
   }
   const {
     token,
@@ -19,16 +20,19 @@
     reversed = false,
     externalGroup = false,
     wrapperSizeClasses = 'w-full h-full',
+    wrapperPadding = 'px-6',
     nameClasses: nameClassesInput,
   }: Props = $props()
   const wrapperClasses = $derived(
-    classNames('flex', wrapperSizeClasses, reversed ? 'flex-row-reverse' : 'flex-row'),
+    classNames(
+      'flex gap-2',
+      wrapperSizeClasses,
+      wrapperPadding,
+      reversed ? 'flex-row-reverse' : 'flex-row',
+    ),
   )
   const nameClasses = $derived(
-    classNames(
-      'leading-5 translate-y-1.5 group-hover:translate-y-0.5 transition-all transition-duration-100',
-      nameClassesInput,
-    ),
+    classNames('leading-5 transition-all transition-duration-100 text-base', nameClassesInput),
   )
   const textContainerClasses = $derived(
     classNames(
@@ -39,20 +43,24 @@
   )
   const addressClasses = $derived(
     classNames(
-      'text-slate-500 font-mono text-xs opacity-0 group-hover:opacity-100 transition-all transition-duration-100 absolute -bottom-0.5',
+      'text-gray-400 font-mono text-xs leading-4 transition-all transition-duration-100 -bottom-0.5',
       reversed ? 'right-0' : 'left-0',
     ),
   )
 </script>
 
 <div class={wrapperClasses}>
-  <span class="size-8 flex-shrink-0">
-    <TokenIcon src={token.logoURI || assetSources(token)} />
+  <span class="size-10 flex-shrink-0">
+    <TokenIcon src={token.logoURI || assetSources(token)} sizeClasses="size-10" />
   </span>
   <span class={textContainerClasses}>
-    <span class={`${nameClasses} truncate overflow-hidden text-ellipsis`}>{token.name}</span>
-    <span class={addressClasses}>
-      {ellipsis(token.address, { length: truncate, prefixLength: 2 })}
+    <span class={`${nameClasses} leading-6 truncate overflow-hidden text-ellipsis`}
+      >{token.name}</span>
+    <span class="flex flex-row text-sm items-center leading-4 gap-2">
+      <span class="text-gray-500 font-light">{token.symbol}</span>
+      <span class={addressClasses}>
+        {ellipsis(token.address, { length: truncate, prefixLength: 2 })}
+      </span>
     </span>
   </span>
 </div>

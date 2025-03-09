@@ -1,13 +1,13 @@
 <script lang="ts">
   import OnboardStep from './OnboardStep.svelte'
   import * as transactions from '$lib/stores/transactions'
-  import Button from './Button.svelte'
   import { formatUnits, zeroAddress, type Hex } from 'viem'
   import TokenAndNetworkSelector from './TokenAndNetworkSelector.svelte'
   import type { Token } from '$lib/types.svelte'
   import {
     availableChains,
     availableTokensPerOriginChain,
+    getQuoteStep,
     loadData,
     loadTokensForChains,
   } from '$lib/stores/lifi.svelte'
@@ -24,12 +24,12 @@
   import { Chains } from '$lib/stores/auth/types'
   import OnboardButton from './OnboardButton.svelte'
   let tokenInput: Token = $state({
-    logoURI: `https://gib.show/image/137`,
-    name: 'Poly',
-    symbol: 'POL',
-    decimals: 18,
-    chainId: 137,
-    address: zeroAddress as string,
+    logoURI: `https://gib.show/image/1/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599`,
+    name: 'Wrapped Bitcoin',
+    symbol: 'WBTC',
+    decimals: 8,
+    chainId: 1,
+    address: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599' as string,
   })
   let tokenOutput: Token = $state({
     logoURI: `https://gib.show/image/1/${zeroAddress}`,
@@ -80,9 +80,15 @@
   const quoteInputs = $derived.by(() => {
     const fromChain = availableChains.get(tokenInput.chainId)
     const toChain = availableChains.get(tokenOutput.chainId)
-    if (!fromChain || !toChain) return null
+    if (!fromChain || !toChain) {
+      console.log('no from or to chain')
+      return null
+    }
     const originTokens = availableTokensPerOriginChain.get(fromChain!.id)
-    if (!originTokens) return null
+    if (!originTokens) {
+      console.log('no origin tokens')
+      return null
+    }
     const fromToken = originTokens.find((t) => t.address === tokenInput.address)
     const toToken = originTokens.find((t) => t.address === tokenOutput.address)
     const fromAddress = accountState.address ?? ''
@@ -95,8 +101,19 @@
       !amountInput ||
       !fromAddress ||
       !toAddress
-    )
+    ) {
+      console.log(
+        'missing info',
+        fromChain,
+        toChain,
+        fromToken,
+        toToken,
+        amountInput,
+        fromAddress,
+        toAddress,
+      )
       return null
+    }
     return {
       fromChain: fromChain.id,
       toChain: toChain.id,
@@ -122,18 +139,17 @@
   })
   let latestQuote: RelayerQuoteResponseData['quote'] | null = $state(null)
   $effect(() => {
-    // console.log(quoteInputs)
     const latestBlockNumber = untrack(() => latestBlock.block(tokenOutput.chainId))
     if (!quoteInputs || !latestBlockNumber || !latestBlockNumber.number) return
-    // const quote = getQuoteStep({
-    //   ...quoteInputs,
-    //   blockNumber: latestBlockNumber.number,
-    // })
-    // quote.promise.then((q) => {
-    //   if (quote.controller.signal.aborted) return
-    //   latestQuote = q
-    // })
-    // return quote.cleanup
+    const quote = getQuoteStep({
+      ...quoteInputs,
+      blockNumber: latestBlockNumber.number,
+    })
+    quote.promise.then((q) => {
+      if (quote.controller.signal.aborted) return
+      latestQuote = q
+    })
+    return quote.cleanup
   })
   const quoteMatchesLatest = $derived.by(() => {
     if (!latestQuote || !quoteInputs) return false
@@ -156,6 +172,10 @@
       fromAmount: quoteInputs.fromAmount,
     }
     return _.isEqual(derived, quoteInputs)
+  })
+  const amountOutput = $derived.by(() => {
+    if (!latestQuote) return null
+    return latestQuote.estimate.toAmount ? BigInt(latestQuote.estimate.toAmount) : null
   })
   const estimatedAmount = $derived.by(() => {
     if (!quoteMatchesLatest) return ''
@@ -188,12 +208,14 @@
 
 <OnboardStep
   icon="material-symbols:captive-portal"
-  step={1}
-  ondividerclick={() => {
-    // const futureInput = tokenOutput
-    // tokenOutput = tokenInput
-    // tokenInput = futureInput
-  }}>
+  ondividerclick={tokenInput.chainId === tokenOutput.chainId
+    ? () => {
+        const futureInput = tokenOutput
+        tokenOutput = tokenInput
+        tokenInput = futureInput
+        amountInput = 0n
+      }
+    : null}>
   {#snippet input()}
     <SectionInput
       showRadio
@@ -212,9 +234,10 @@
       }}>
       {#snippet modal({ close })}
         <TokenAndNetworkSelector
-          token={tokenInput}
-          onSelect={(token) => {
-            tokenInput = token
+          onsubmit={(token) => {
+            if (token) {
+              tokenInput = token
+            }
             close()
           }} />
       {/snippet}
@@ -224,19 +247,19 @@
     <SectionInput
       label="Output"
       token={tokenOutWithPrefixedName}
-      value={amountInput}
-      onbalanceupdate={(balance) => {
-        maxBridgeable = balance
-      }}
-      oninput={(v) => {
-        amountInput = v
+      value={amountOutput}
+      disabled
+      onbalanceupdate={() => {
+        // maxBridgeable = balance
       }}>
       {#snippet modal({ close })}
         <TokenSelect
-          chain={Chains.ETH}
+          chains={[Number(Chains.ETH)]}
           tokens={availableTokensPerOriginChain.get(1)!}
           onsubmit={(tkn) => {
-            tokenOutput = tkn as Token
+            if (tkn) {
+              tokenOutput = tkn
+            }
             close()
           }} />
       {/snippet}

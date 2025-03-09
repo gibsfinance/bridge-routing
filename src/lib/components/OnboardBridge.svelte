@@ -3,8 +3,6 @@
   import TokenIcon from './TokenIcon.svelte'
   import type { Token } from '$lib/types.svelte'
   import { isHex, zeroAddress, type Hex } from 'viem'
-  import Button from './Button.svelte'
-  import Icon from '@iconify/svelte'
   import { Chains } from '$lib/stores/auth/types'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
@@ -39,17 +37,10 @@
   import { humanReadableNumber, usd } from '$lib/stores/utils'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { SvelteMap } from 'svelte/reactivity'
-  import Loading from './Loading.svelte'
-  import Tooltip from './Tooltip.svelte'
-  import ExplorerLink from './ExplorerLink.svelte'
-  import Input from './Input.svelte'
   import { untrack } from 'svelte'
-  import GuideStep from './GuideStep.svelte'
-  import GuideShield from './GuideShield.svelte'
-  import { foreignBridgeInputs, showTooltips } from '$lib/stores/storage.svelte'
+  import { foreignBridgeInputs } from '$lib/stores/storage.svelte'
   import OnboardStep from './OnboardStep.svelte'
   import SectionInput from './SectionInput.svelte'
-  import TokenAndNetworkSelector from './TokenAndNetworkSelector.svelte'
   import TokenSelect from './TokenSelect.svelte'
   import OnboardButton from './OnboardButton.svelte'
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
@@ -65,8 +56,8 @@
     if (!tokenInput) return
     const tokensUnderBridgeKey = bridgeableTokensUnder({
       tokens: bridgableTokens.value,
-      chain: bridgeKey.toChain,
-      partnerChain: bridgeKey.fromChain,
+      chain: Number(bridgeKey.toChain),
+      partnerChain: Number(bridgeKey.fromChain),
     })
     const link = loadAssetLink({
       bridgeKey: bridgeKey.value,
@@ -313,10 +304,9 @@
       }, 400)
     }
   }
-  $inspect(bridgedToken)
 </script>
 
-<OnboardStep icon="line-md:chevron-double-down" step={2}>
+<OnboardStep icon="line-md:chevron-double-down">
   {#snippet input()}
     <SectionInput
       focused
@@ -338,22 +328,23 @@
         amountIn.value = balance
       }}
       oninput={(v) => {
-        console.log('oninput', v)
         amountIn.value = v
       }}>
       {#snippet modal({ close })}
         <TokenSelect
-          chain={Chains.ETH}
+          chains={[Number(Chains.ETH)]}
           tokens={bridgeableTokensUnder({
             tokens: bridgableTokens.value,
-            chain: bridgeKey.fromChain,
-            partnerChain: bridgeKey.toChain,
+            chain: Number(bridgeKey.fromChain),
+            partnerChain: Number(bridgeKey.toChain),
           })}
           onsubmit={(tkn) => {
-            bridgeSettings.assetIn.value = tkn as Token
-            foreignBridgeInputs.value = {
-              ...foreignBridgeInputs.value!,
-              toToken: tkn.address,
+            if (tkn) {
+              bridgeSettings.assetIn.value = tkn as Token
+              foreignBridgeInputs.value = {
+                ...foreignBridgeInputs.value!,
+                toToken: tkn.address,
+              }
             }
             close()
           }} />

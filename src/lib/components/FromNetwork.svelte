@@ -91,7 +91,7 @@
       {#snippet button()}
         {@const network = tokenOriginationChainId(assetLink.value)}
         {#if !!bridgeSettings.assetIn.value && network}
-          <AssetWithNetwork asset={bridgeSettings.assetIn.value} {network} />
+          <AssetWithNetwork asset={bridgeSettings.assetIn.value} network={Number(network)} />
           <span class="ml-2">{bridgeSettings.assetIn.value?.symbol || ''}</span>
         {/if}
         <Icon
@@ -103,10 +103,12 @@
       {#snippet contents({ close })}
         <TokenSelect
           showCustomTokens
-          chain={bridgeKey.fromChain}
-          partnerChain={bridgeKey.toChain}
+          chains={[Number(bridgeKey.fromChain)]}
+          partnerChain={Number(bridgeKey.toChain)}
           onsubmit={(tkn) => {
-            chooseTokenSubmit(tkn)
+            if (tkn) {
+              chooseTokenSubmit(tkn)
+            }
             close()
           }} />
       {/snippet}

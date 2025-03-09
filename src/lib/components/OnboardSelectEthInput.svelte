@@ -16,7 +16,6 @@
     recipient,
     bridgeKey,
   } from '$lib/stores/input.svelte'
-  import { SvelteMap } from 'svelte/reactivity'
   import type { Snippet } from 'svelte'
   const {
     namePrefix,
@@ -48,8 +47,8 @@
     if (!tokenInput) return
     const tokensUnderBridgeKey = bridgeableTokensUnder({
       tokens: bridgableTokens.value,
-      chain: bridgeKey.toChain,
-      partnerChain: bridgeKey.fromChain,
+      chain: Number(bridgeKey.toChain),
+      partnerChain: Number(bridgeKey.fromChain),
     })
     const link = loadAssetLink({
       bridgeKey: bridgeKey.value,
@@ -121,9 +120,11 @@
       {/snippet}
       {#snippet contents({ close })}
         <TokenSelect
-          chain={Chains.ETH}
+          chains={[Number(Chains.ETH)]}
           onsubmit={(tkn) => {
-            updateTokenInput(tkn)
+            if (tkn) {
+              updateTokenInput(tkn)
+            }
             close()
           }} />
       {/snippet}

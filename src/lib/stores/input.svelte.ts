@@ -183,7 +183,7 @@ export const toPath = (bridgeKey: BridgeKey) => {
 
 export class BridgeableTokensStore {
   value = $state<Token[]>([])
-  bridgeableTokensUnder(options: { chain: Chains; partnerChain: Chains | null }) {
+  bridgeableTokensUnder(options: { chain: number; partnerChain: number | null }) {
     return bridgeableTokensUnder({
       tokens: this.value,
       ...options,
@@ -233,15 +233,17 @@ export const bridgeableTokensUnder = ({
   partnerChain,
 }: {
   tokens: Token[]
-  chain: Chains
-  partnerChain: Chains | null
+  chain: number
+  partnerChain: number | null
 }) => {
-  const grouping = [Provider.PULSECHAIN, chain]
+  const grouping = [Provider.PULSECHAIN, toChain(chain)]
   const parentConf = _.get(pathways, grouping)
   if (!parentConf) {
     throw new Error('no pathway found')
   }
-  const conf = partnerChain ? _.get(parentConf, [partnerChain]) : Object.values(parentConf)[0]
+  const conf = partnerChain
+    ? _.get(parentConf, [toChain(partnerChain)])
+    : Object.values(parentConf)[0]
 
   if (!conf) throw new Error('no pathway found')
   const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token
@@ -258,15 +260,17 @@ export const bridgeableTokensUnder = ({
     .filter((tkn) => tkn.chainId === Number(chain))
   let list: Token[] = []
   if (sortedList.length) {
-    const bridgedWrappedAssetOut = sortedList.find((tkn) => tkn.address === nativeAssetOut[chain])
+    const bridgedWrappedAssetOut = sortedList.find(
+      (tkn) => tkn.address === nativeAssetOut[toChain(chain)],
+    )
     list = _.uniqBy(
       [
         {
           chainId: Number(chain),
           address: zeroAddress as Hex,
-          name: nativeTokenName[chain],
+          name: nativeTokenName[toChain(chain)],
           decimals: 18,
-          symbol: nativeTokenSymbol[chain],
+          symbol: nativeTokenSymbol[toChain(chain)],
           logoURI: '',
           extensions: bridgedWrappedAssetOut
             ? {
