@@ -5,6 +5,7 @@
   import { ellipsis } from '$lib/stores/utils'
   import classNames from 'classnames'
   import type { ClassParam } from '$lib/types.svelte'
+    import { zeroAddress } from 'viem'
   type Props = {
     token: Token
     truncate?: number
@@ -58,9 +59,11 @@
       >{token.name}</span>
     <span class="flex flex-row text-sm items-center leading-4 gap-2">
       <span class="text-gray-500 font-light">{token.symbol}</span>
-      <span class={addressClasses}>
-        {ellipsis(token.address, { length: truncate, prefixLength: 2 })}
-      </span>
+      {#if token.address !== zeroAddress}
+        <span class={addressClasses}>
+          {ellipsis(token.address, { length: truncate, prefixLength: 2 })}
+        </span>
+      {/if}
     </span>
   </span>
 </div>

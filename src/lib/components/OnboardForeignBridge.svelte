@@ -91,7 +91,7 @@
     }
     const fromToken = originTokens.find((t) => t.address === tokenInput.address)
     const toToken = originTokens.find((t) => t.address === tokenOutput.address)
-    const fromAddress = accountState.address ?? ''
+    const fromAddress = accountState.address ?? '0x0000000000000000000000000000000000000001'
     let toAddress = fromAddress
     if (
       !fromChain ||
@@ -102,16 +102,6 @@
       !fromAddress ||
       !toAddress
     ) {
-      console.log(
-        'missing info',
-        fromChain,
-        toChain,
-        fromToken,
-        toToken,
-        amountInput,
-        fromAddress,
-        toAddress,
-      )
       return null
     }
     return {
@@ -204,6 +194,15 @@
     })
     console.log(tx)
   }
+  const canBridge = $derived.by(() => {
+    return (
+      quoteMatchesLatest &&
+      !!latestQuote &&
+      !!amountOutput &&
+      !!amountInput &&
+      !!accountState.address
+    )
+  })
 </script>
 
 <OnboardStep
@@ -267,7 +266,7 @@
   {/snippet}
   {#snippet button()}
     <OnboardButton
-      disabled={!quoteMatchesLatest}
+      disabled={!canBridge}
       onclick={crossForeignBridge}
       text="Bridge to Ethereum"
       loadingKey="lifi-quote" />

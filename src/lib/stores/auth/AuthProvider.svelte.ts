@@ -135,7 +135,6 @@ class AccountState {
     this.val = account
     const caipAddress = account?.caipAddress
     if (!caipAddress) return
-    console.trace()
     this.chainId = +caipAddress.split(':')[1] || (null as number | null)
     this.setupWatchBalance()
   }
@@ -158,7 +157,7 @@ class AccountState {
     return this.val
   }
   get address() {
-    return this.value?.address as Hex | null
+    return (this.value?.address ?? null) as Hex | null
   }
   get connected() {
     return !!this.value?.address
