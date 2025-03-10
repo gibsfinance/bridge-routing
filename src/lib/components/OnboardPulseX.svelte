@@ -37,6 +37,12 @@
   import SectionInput from './SectionInput.svelte'
   import OnboardButton from './OnboardButton.svelte'
   import { pulsechain } from 'viem/chains'
+  import { transactionButtonPress } from '$lib/stores/transaction'
+  import { getContext } from 'svelte'
+  import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
+
+  const toast = getContext('toast') as ToastContext
+
   const tokenOutputAddress = $derived(plsOutToken.value)
   const tokens = $derived(
     bridgableTokens.bridgeableTokensUnder({
@@ -108,24 +114,31 @@
   )
   const swapRouterAddress = '0xDA9aBA4eACF54E0273f56dfFee6B8F1e20B23Bba'
   const swapDisabled = $derived(!amountToSwapIn || !amountToSwapOut || !quoteMatchesLatest)
-  const swapTokens = async () => {
-    if (swapDisabled) return
-    await transactions.checkAndRaiseApproval({
-      token: tokenIn!.address! as Hex,
-      spender: swapRouterAddress,
-      chainId: Number(Chains.PLS),
-      minimum: amountToSwapIn!,
-    })
-    const transactionInfo = getTransactionDataFromTrade(Number(Chains.PLS), quoteResult!)
-    const tx = await transactions.sendTransaction({
-      data: transactionInfo.calldata as Hex,
-      to: swapRouterAddress,
-      // gas: BigInt(quoteResult!.gasEstimate!),
-      value: BigInt(transactionInfo.value),
-      chainId: Number(Chains.PLS),
-    })
-    await transactions.wait(tx)
-  }
+  const swapTokens = transactionButtonPress({
+    toast,
+    steps: [
+      async () => {
+        if (swapDisabled) return
+        return await transactions.checkAndRaiseApproval({
+          token: tokenIn!.address! as Hex,
+          spender: swapRouterAddress,
+          chainId: Number(Chains.PLS),
+          minimum: amountToSwapIn!,
+        })
+      },
+      async () => {
+        const transactionInfo = getTransactionDataFromTrade(Number(Chains.PLS), quoteResult!)
+        const tx = await transactions.sendTransaction({
+          data: transactionInfo.calldata as Hex,
+          to: swapRouterAddress,
+          // gas: BigInt(quoteResult!.gasEstimate!),
+          value: BigInt(transactionInfo.value),
+          chainId: Number(Chains.PLS),
+        })
+        return tx
+      },
+    ],
+  })
 
   const estimatedAmount = $derived.by(() => {
     if (!quoteMatchesLatest) return ''

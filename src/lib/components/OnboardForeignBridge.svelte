@@ -23,6 +23,11 @@
   import { Chains } from '$lib/stores/auth/types'
   import OnboardButton from './OnboardButton.svelte'
   import type { Chain as LIFIChain } from '@lifi/sdk'
+  import { transactionButtonPress } from '$lib/stores/transaction'
+  import { getContext } from 'svelte'
+    import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
+
+  const toast = getContext('toast') as ToastContext
   let tokenInput: Token = $state({
     logoURI: `https://gib.show/image/1/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599`,
     name: 'Wrapped Bitcoin',
@@ -203,23 +208,31 @@
     ...tokenOutput,
     name: estimatedAmount ? `${estimatedAmount} ${tokenOutput.symbol}` : tokenOutput.symbol,
   }))
-  const crossForeignBridge = async () => {
-    await transactions.checkAndRaiseApproval({
-      token: tokenInput!.address! as Hex,
-      spender: latestQuote!.transactionRequest!.to as Hex,
-      chainId: Number(tokenInput.chainId),
-      minimum: amountInput,
-    })
-    const tx = await transactions.sendTransaction({
-      account: accountState.address,
-      data: latestQuote!.transactionRequest!.data as Hex,
-      gas: BigInt(latestQuote!.transactionRequest!.gasLimit ?? 0),
-      gasPrice: BigInt(latestQuote!.transactionRequest!.gasPrice ?? 0),
-      to: latestQuote!.transactionRequest!.to as Hex,
-      value: BigInt(latestQuote!.transactionRequest!.value ?? 0),
-    })
-    console.log(tx)
-  }
+  const crossForeignBridge = transactionButtonPress({
+    toast,
+    steps: [
+      async () => {
+        console.log('checking approval')
+        return await transactions.checkAndRaiseApproval({
+          token: tokenInput!.address! as Hex,
+          spender: latestQuote!.transactionRequest!.to as Hex,
+          chainId: Number(tokenInput.chainId),
+          minimum: amountInput,
+        })
+      },
+      async () => {
+        const tx = await transactions.sendTransaction({
+          account: accountState.address,
+          data: latestQuote!.transactionRequest!.data as Hex,
+          gas: BigInt(latestQuote!.transactionRequest!.gasLimit ?? 0),
+          gasPrice: BigInt(latestQuote!.transactionRequest!.gasPrice ?? 0),
+          to: latestQuote!.transactionRequest!.to as Hex,
+          value: BigInt(latestQuote!.transactionRequest!.value ?? 0),
+        })
+        return tx
+      },
+    ],
+  })
   const canBridge = $derived.by(() => {
     return (
       quoteMatchesLatest &&

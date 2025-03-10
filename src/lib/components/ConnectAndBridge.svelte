@@ -9,6 +9,9 @@
   import { assetLink, fromTokenBalance } from '$lib/stores/chain-events.svelte'
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { connect } from '$lib/stores/auth/AuthProvider.svelte'
+  import { getContext } from 'svelte'
+
+  const toast = getContext('toast')
 
   const { shouldDeliver } = input
 
@@ -116,34 +119,41 @@
     // const options = opts()
     return await transactions.sendTransaction({
       ...bridgeSettings.transactionInputs,
-      ...transactions.options(chainsMetadata[input.bridgeKey.fromChain]),
+      ...transactions.options(chainsMetadata[input.bridgeKey.fromChain].id),
     })
   }
-  const increaseApproval = async () => {
-    if (!bridgeSettings.bridgePathway || !bridgeSettings.assetIn.value) {
-      return
-    }
-    return transactions.sendApproval({
-      tokenAddress: bridgeSettings.assetIn.value.address as Hex,
-      spender: bridgeSettings.bridgePathway.from,
-      chain: chainsMetadata[input.bridgeKey.fromChain],
-    })
-  }
+  // const increaseApproval = async () => {
+  //   if (!bridgeSettings.bridgePathway || !bridgeSettings.assetIn.value) {
+  //     return
+  //   }
+  //   return transactions.sendApproval({
+  //     token: bridgeSettings.assetIn.value.address as Hex,
+  //     spender: bridgeSettings.bridgePathway.from,
+  //     chainId: chainsMetadata[input.bridgeKey.fromChain].id,
+  //     account: input.amountIn.value!,
+  //   })
+  // }
   let amountInBefore = ''
-  const sendIncreaseApproval = transactionButtonPress(increaseApproval)
+  const sendIncreaseApproval = transactionButtonPress({
+    toast,
+    steps: [increaseApproval],
+  })
   const decimals = $derived(bridgeSettings.assetIn.value!.decimals)
-  const sendInitiateBridge = transactionButtonPress(
-    () => {
-      amountInBefore = formatUnits(input.amountIn.value!, decimals)
-      return initiateBridge()
-    },
-    () => {
+  const sendInitiateBridge = transactionButtonPress({
+    toast,
+    steps: [
+      () => {
+        amountInBefore = formatUnits(input.amountIn.value!, decimals)
+        return initiateBridge()
+      },
+    ],
+    after: () => {
       const previousAmount = formatUnits(input.amountIn.value!, decimals)
       if (amountInBefore === previousAmount) {
         input.amountIn.value = null
       }
     },
-  )
+  })
   const testId = 'progression-button'
   const isNative = $derived(bridgeSettings.assetIn.value?.address === zeroAddress)
 </script>

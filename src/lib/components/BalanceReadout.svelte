@@ -29,16 +29,16 @@
   }
   const {
     token,
-    onmax,
     wrapperSizeClasses = '',
     wrapperClasses: wrapperClassNames = 'relative flex items-center text-xs leading-5 gap-1',
     showLoader = false,
     roundedClasses = 'rounded-md',
     decimalClasses = '',
+    onmax,
     onbalanceupdate,
   }: Props = $props()
   const showMax = $state(!!onmax)
-  const tokenBalance = new TokenBalanceWatcher()
+  const tokenBalance = $derived(token && new TokenBalanceWatcher())
 
   $effect(() => untrack(() => latestBlock.watch(token.chainId)))
   $effect(() => {

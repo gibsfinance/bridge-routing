@@ -38,12 +38,18 @@
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { SvelteMap } from 'svelte/reactivity'
   import { untrack } from 'svelte'
-  import { foreignBridgeInputs } from '$lib/stores/storage.svelte'
+  import { bridgeTxHash, foreignBridgeInputs } from '$lib/stores/storage.svelte'
   import OnboardStep from './OnboardStep.svelte'
   import SectionInput from './SectionInput.svelte'
   import TokenSelect from './TokenSelect.svelte'
   import OnboardButton from './OnboardButton.svelte'
   import { availableChains } from '$lib/stores/lifi.svelte'
+  import { transactionButtonPress } from '$lib/stores/transaction'
+  import { getContext } from 'svelte'
+  import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
+
+  const toast = getContext('toast') as ToastContext
+
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(bridgeFee.value?.feeF2H ?? 0n)
@@ -97,29 +103,38 @@
   $effect(() => {
     tx = localStorage.getItem('bridge-tx') as Hex | null
   })
-  const bridgeTokens = async () => {
-    if (!accountState.address) return
-    await transactions.checkAndRaiseApproval({
-      token: tokenInput!.address! as Hex,
-      spender: bridgeSettings.bridgePathway!.from!,
-      chainId: Number(bridgeKey.fromChain),
-      minimum: bridgeAmount,
-    })
-    const tx = await transactions.sendTransaction({
-      account: accountState.address,
-      chainId: Number(bridgeKey.fromChain),
-      ...bridgeSettings.transactionInputs,
-    })
-    setTxHash(tx)
-    incrementBridgeStatus()
-    transactions.wait(tx).then(() => {
-      incrementBridgeStatus()
-    })
-  }
-  const setTxHash = (hash: Hex) => {
-    tx = hash
-    localStorage.setItem('bridge-tx', hash)
-  }
+  const bridgeTokens = transactionButtonPress({
+    toast,
+    steps: [
+      async () => {
+        if (!accountState.address) return
+        return await transactions.checkAndRaiseApproval({
+          token: tokenInput!.address! as Hex,
+          spender: bridgeSettings.bridgePathway!.from!,
+          chainId: Number(bridgeKey.fromChain),
+          minimum: bridgeAmount,
+        })
+      },
+      async () => {
+        const tx = await transactions.sendTransaction({
+          account: accountState.address,
+          chainId: Number(bridgeKey.fromChain),
+          ...bridgeSettings.transactionInputs,
+        })
+        // setTxHash(tx)
+        bridgeTxHash.value = tx
+        incrementBridgeStatus()
+        transactions.wait(tx).then(() => {
+          incrementBridgeStatus()
+        })
+        return tx
+      },
+    ],
+  })
+  // const setTxHash = (hash: Hex) => {
+  //   tx = hash
+  //   // localStorage.setItem('bridge-tx', hash)
+  // }
   let usdMultiplier = $state(0n)
   const wplsTokenPrice = new SvelteMap<string, bigint>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())

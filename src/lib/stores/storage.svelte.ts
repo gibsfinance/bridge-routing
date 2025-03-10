@@ -34,3 +34,5 @@ export const foreignBridgeInputs = new LocalProxyProp(
 export const activeOnboardStep = new LocalProxyProp(storage, ['activeOnboardStep'], 1)
 
 export const plsOutToken = new LocalProxyProp(storage, ['plsOutToken'], zeroAddress as Hex)
+
+export const bridgeTxHash = new LocalProxyProp(storage, ['bridgeTxHash'], null as Hex | null)

@@ -40,19 +40,20 @@ export const checkAndRaiseApproval = async ({
   raiseTo?: bigint
   minimum: bigint
 }) => {
-  if (token !== zeroAddress) {
-    const approvalParams = {
-      account: accountState.address!,
-      spender: spender ?? zeroAddress,
-      token,
-      chainId: Number(chainId),
-    }
-    const approval = await checkAllowance(approvalParams)
-    if (approval < minimum) {
-      const tx = await sendApproval({ ...approvalParams, amount: raiseTo })
-      await wait(tx)
-    }
+  if (token === zeroAddress) {
+    return null
   }
+  const approvalParams = {
+    account: accountState.address!,
+    spender: spender ?? zeroAddress,
+    token,
+    chainId: Number(chainId),
+  }
+  const approval = await checkAllowance(approvalParams)
+  if (approval < minimum) {
+    return await sendApproval({ ...approvalParams, amount: raiseTo })
+  }
+  return null
 }
 
 export const options = (chainId: number) => {

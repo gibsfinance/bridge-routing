@@ -6,7 +6,6 @@
   import Image from './Image.svelte'
   import classNames from 'classnames'
   import { availableChains } from '$lib/stores/lifi.svelte'
-  import { zeroAddress } from 'viem'
 
   type Props = {
     class?: ClassParam
@@ -24,7 +23,9 @@
   const chain = $derived(availableChains.get(Number(asset.chainId)))
   const src = $derived(asset?.logoURI || assetSources(asset))
   const tokenClasses = $derived(`overflow-hidden absolute`)
-  const classes = $derived(classNames(`flex basis-auto relative ${tokenSizeClasses}`, className))
+  const classes = $derived(
+    classNames('flex basis-auto relative text-surface-contrast-50', tokenSizeClasses, className),
+  )
 </script>
 
 <span class={classes} title={asset.symbol}>

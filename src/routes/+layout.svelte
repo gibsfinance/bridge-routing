@@ -2,7 +2,8 @@
   import '../app.css'
   import Nav from '$lib/components/Nav.svelte'
   import Footer from '$lib/components/Footer.svelte'
-  import Loader from '$lib/components/Loader.svelte'
+  // import Loader from '$lib/components/Loader.svelte'
+  import { ToastProvider } from '@skeletonlabs/skeleton-svelte'
 
   const { children } = $props()
 </script>
@@ -19,7 +20,9 @@
   <div class="app">
     <Nav />
     <main class="mt-14 box-border flex min-h-screen w-full flex-col bg-slate-950 text-white">
-      {@render children()}
+      <ToastProvider placement="bottom-end">
+        {@render children()}
+      </ToastProvider>
       <Footer />
     </main>
   </div>
