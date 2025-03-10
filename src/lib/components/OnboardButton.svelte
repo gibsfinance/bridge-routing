@@ -3,20 +3,61 @@
   import Button from './Button.svelte'
   import Loading from './Loading.svelte'
   import { activeOnboardStep } from '$lib/stores/storage.svelte'
+  import { accountState, connect, switchNetwork } from '$lib/stores/auth/AuthProvider.svelte'
+  import type { AppKitNetwork } from '@reown/appkit/networks'
+  import { loading } from '$lib/stores/loading.svelte'
 
   type Props = {
     disabled: boolean
     onclick: () => void
     text: string
     loadingKey: string
+    requiredChain: {
+      id: number | string
+      name: string
+    }
   }
-  const { disabled, onclick, text, loadingKey }: Props = $props()
+  const {
+    disabled: disabledMain,
+    onclick: onClickMain,
+    text: textMain,
+    loadingKey,
+    requiredChain,
+  }: Props = $props()
+  const isRequiredChain = $derived(!!requiredChain && requiredChain.id === accountState.chainId)
   const incrementOnboardStep = () => {
     activeOnboardStep.value += 1
   }
   const decrementOnboardStep = () => {
     activeOnboardStep.value -= 1
   }
+  const disabled = $derived.by(() => {
+    if (!accountState.connected) {
+      return false
+    }
+    if (!isRequiredChain) {
+      return false
+    }
+    return disabledMain || !loading.isResolved(loadingKey)
+  })
+  const text = $derived.by(() => {
+    if (!accountState.connected || !requiredChain) {
+      return 'Connect Wallet'
+    }
+    if (!isRequiredChain) {
+      return 'Switch to ' + requiredChain.name
+    }
+    return textMain
+  })
+  const onclick = loading.loadsAfterTick(loadingKey, () => {
+    if (!accountState.connected) {
+      return connect()
+    }
+    if (!isRequiredChain) {
+      return switchNetwork(requiredChain as AppKitNetwork)
+    }
+    return onClickMain()
+  })
 </script>
 
 <div class="flex flex-row rounded-2xl overflow-hidden">
@@ -32,11 +73,10 @@
   </Button>
   <Button
     {disabled}
-    class="bg-tertiary-500 text-surface-contrast-950 h-14 grow text-xl flex flex-row items-center justify-center shrink-0"
+    class="bg-tertiary-500 text-surface-contrast-950 h-14 grow text-xl flex flex-row items-center justify-center shrink-0 gap-2"
     {onclick}>
-    <Loading key={loadingKey}>
-      {#snippet contents()}{text}{/snippet}
-    </Loading>
+    {text}
+    <Loading key={loadingKey} />
   </Button>
   <Button
     class="w-14 bg-tertiary-500 text-surface-contrast-950 group flex items-center justify-center"

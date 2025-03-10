@@ -11,7 +11,7 @@
   const {
     step,
     justifyClass,
-    sizeClass = 'w-5 h-5 flex items-center justify-center',
+    sizeClass = 'w-5 h-full flex items-center justify-center',
   }: Props = $props()
   const isActive = $derived(activeOnboardStep.value >= step)
   const classes = classNames(sizeClass, justifyClass)

@@ -8,7 +8,7 @@
   const flipDirection = async () => {
     const flippedBridgeKey = bridgeKey.partner
     if (accountState.address) {
-      await switchNetwork(bridgeKey.partnerChain)
+      switchNetwork(bridgeKey.partnerChain)
     }
     await goto(
       `#/delivery/${toPath(flippedBridgeKey)}/${bridgeSettings.networkSwitchAssetOutAddress}`,

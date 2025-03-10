@@ -5,40 +5,40 @@
   import Input from './Input.svelte'
   import Button from './Button.svelte'
   import { SvelteMap } from 'svelte/reactivity'
-  import type { Chains } from '$lib/stores/auth/types'
-  type Data = [Chains, string[]][]
+  import { toChain, type Chains } from '$lib/stores/auth/types'
+  type Data = [number, string[]][]
   type Props = {
     data: Data
     onsubmit: (data: Data) => void
     onclose: () => void
   }
   const { onsubmit, onclose, data: startingData }: Props = $props()
-  const updated = $state<SvelteMap<Chains, string[]>>(new SvelteMap())
+  const updated = $state<SvelteMap<number, string[]>>(new SvelteMap())
   const buttonClasses =
     'rounded-md bg-neutral-600 px-3 py-3 text-sm font-semibold text-white shadow-xs hover:bg-neutral-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 grow transition-all'
   const data = new SvelteMap(startingData)
   const rpcs = {
-    add: (chain: Chains) => {
+    add: (chain: number) => {
       const currentChainValue = updated.get(chain) ?? ([] as string[])
       currentChainValue.push('')
       updated.set(chain, currentChainValue)
     },
-    remove: (chain: Chains, i: number) => {
+    remove: (chain: number, i: number) => {
       const currentChainValue = updated.get(chain) ?? ([] as string[])
       const updatedRPCs = currentChainValue.slice(0).splice(i, 1)
       updated.set(chain, updatedRPCs)
     },
-    update: (chain: Chains, i: number, value: string) => {
+    update: (chain: number, i: number, value: string) => {
       const currentChainValue = updated.get(chain) ?? ([] as string[])
       currentChainValue[i] = value
       updated.set(chain, currentChainValue)
     },
-    restoreDefault: (chain: Chains) => {
-      const updatedRPCs = chainsMetadata[chain].rpcUrls.default.http.slice(0)
+    restoreDefault: (chain: number) => {
+      const updatedRPCs = chainsMetadata[toChain(chain)].rpcUrls.default.http.slice(0)
       updated.set(chain, updatedRPCs)
     },
-    hasDefault: (chain: Chains, list: string[]) => {
-      const defaultValues = chainsMetadata[chain].rpcUrls.default.http.slice(0)
+    hasDefault: (chain: number, list: string[]) => {
+      const defaultValues = chainsMetadata[toChain(chain)].rpcUrls.default.http.slice(0)
       const currentChainValue = updated.get(chain) ?? ([] as string[])
       return (
         currentChainValue.length === list.length &&
@@ -64,7 +64,7 @@
             <button type="button" class="mx-3" onclick={() => rpcs.add(chain)}>
               <Icon icon="gridicons:add-outline" />
             </button>
-            {chainsMetadata[chain].name}
+            {chainsMetadata[toChain(chain)].name}
           </label>
         </div>
         <ul class="flex flex-col w-full">

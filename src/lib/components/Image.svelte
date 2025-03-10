@@ -1,6 +1,8 @@
 <script lang="ts" module>
+  import classNames from 'classnames'
   import Lazy from './Lazy.svelte'
   import { onDestroy, type Snippet } from 'svelte'
+  import type { ClassParam } from '$lib/types.svelte'
 
   const loadedImages = new WeakMap<HTMLImageElement, string>()
 </script>
@@ -16,18 +18,18 @@
     onload,
     onerror,
   }: {
-    sizeClasses?: string
+    sizeClasses?: ClassParam
     src: string | null | undefined
     alt?: string | null | undefined
     style?: string
     class?: string
-    containerClasses?: string
+    containerClasses?: ClassParam
     onload?: () => void
     onerror?: () => void
     fallback?: Snippet
   } = $props()
-  const className = $derived(`${classNameInput} ${sizeClasses}`)
-  const containerClass = $derived(`${containerClasses} ${sizeClasses}`)
+  const className = $derived(classNames(classNameInput, sizeClasses))
+  const containerClass = $derived(classNames(containerClasses, sizeClasses))
   let img = $state<HTMLImageElement | null>(null)
   let visible = $state(false)
   $effect(() => {

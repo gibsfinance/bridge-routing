@@ -146,23 +146,41 @@
 <script lang="ts">
   import TokenSelect from './TokenSelect.svelte'
   import { appkitNetworkIds } from '$lib/stores/auth/AuthProvider.svelte'
-  import { availableTokensPerOriginChain } from '$lib/stores/lifi.svelte'
+  import {
+    availableChains,
+    availableTokensPerOriginChain,
+    loadTokensForChains,
+  } from '$lib/stores/lifi.svelte'
   import type { Token } from '$lib/types.svelte'
-  const chains = $derived([...appkitNetworkIds.values()].map(Number) as [number, ...number[]])
-  let selectedChainIndex = $state(0)
-  const selectedChainId = $derived(chains[selectedChainIndex])
-  const tokens = $derived(availableTokensPerOriginChain.get(selectedChainId) ?? [])
-
   type Props = {
     onsubmit: (token: Token | null) => void
+    chainId: number
   }
-  const { onsubmit }: Props = $props()
+  const { onsubmit, chainId }: Props = $props()
+  const chains = $derived(
+    [...appkitNetworkIds.values()]
+      .filter((id) => availableChains.has(id as number))
+      .map(Number) as [number, ...number[]],
+  )
+  let selectedChainIndex = $state(0)
+  $effect(() => {
+    selectedChainIndex = chains.indexOf(chainId)
+  })
+  const selectedChainId = $derived(chains[selectedChainIndex])
+  const tokens = $derived(availableTokensPerOriginChain.get(selectedChainId) ?? [])
+  $effect(() => {
+    const tokens = availableTokensPerOriginChain.get(selectedChainId) ?? []
+    if (tokens.length === 0) {
+      loadTokensForChains(availableChains.get(selectedChainId)!)
+    }
+  })
 </script>
 
 <TokenSelect
   {chains}
   {tokens}
   {onsubmit}
+  selectedChain={selectedChainIndex}
   onnetworkchange={(chainId) => {
     const index = chains.indexOf(chainId)
     if (index !== -1) {

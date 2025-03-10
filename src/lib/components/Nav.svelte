@@ -14,6 +14,7 @@
   import * as rpcs from '$lib/stores/rpcs.svelte'
   import RPC from './RPC.svelte'
   import Button from './Button.svelte'
+  import ConnectButton from './ConnectButton.svelte'
   const gibs = new URL('/images/1FAF0.svg', import.meta.url).href
 
   onMount(() => {
@@ -33,18 +34,19 @@
   const destinationBridgeKey = $derived(bridgeKey.toChain)
   const isDeliveryRoute = $derived(page.route.id?.includes('/delivery'))
   const isOnboardRoute = $derived(page.route.id?.includes('/onboard'))
-  const alwaysSmall = true
-  const isSmall = $derived(alwaysSmall || (innerWidth.current && innerWidth.current < 768))
+  // const alwaysSmall = true
+  const isSmall = $derived(innerWidth.current && innerWidth.current < 768)
 </script>
 
-<div class="z-40 -mb-10 flex h-10">
-  <nav class="fixed right-0 left-0 flex h-10 flex-row bg-slate-950 px-2 leading-8 shadow-inner">
+<div class="fixed z-40 -mb-10 flex h-10">
+  <nav
+    class="fixed right-0 left-0 flex h-14 flex-row bg-surface-950-50 p-2 leading-8 shadow-inner text-surface-contrast-50">
     <div class="m-auto flex w-full max-w-5xl justify-between">
       <button
         type="button"
         onkeypress={gotoHome}
         onclick={gotoHome}
-        class="link font-italiana flex flex-row pr-2 leading-8 text-white uppercase">
+        class="link font-italiana flex flex-row pr-2 leading-8 uppercase">
         <Image
           src={gibs}
           alt="a yellow hand with index finger and thub rubbing together"
@@ -53,7 +55,9 @@
         <Loading />
       </button>
       <div class="flex grow content-end items-center">
-        <ul class="flex grow flex-row items-center justify-end text-white gap-2">
+        <ul
+          class="flex grow flex-row items-center justify-end text-surface-contrast-50"
+          class:gap-2={!isSmall}>
           <li class="flex flex-row">
             {#if destinationBridgeKey === Chains.ETH}
               <VersionedLink
@@ -69,11 +73,9 @@
                   <button
                     type="button"
                     name="transactions"
-                    class="flex items-center justify-center text-white">
-                    {#if !isSmall}{txnText}&nbsp;{/if}<Icon
-                      icon="ic:baseline-list"
-                      height="1.6em"
-                      width="1.6em" />
+                    class="flex items-center justify-center">
+                    <!-- {#if !isSmall}{txnText}&nbsp;{/if} -->
+                    <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
                   </button>
                 </a>
               </VersionedLink>
@@ -83,14 +85,9 @@
                 href="https://tokensex.link/explorer"
                 target="_blank"
                 class="link">
-                <button
-                  type="button"
-                  name="transactions"
-                  class="flex items-center justify-center text-white">
-                  {#if !isSmall}{txnText}&nbsp;{/if}<Icon
-                    icon="ic:baseline-list"
-                    height="1.6em"
-                    width="1.6em" />
+                <button type="button" name="transactions" class="flex items-center justify-center">
+                  <!-- {#if !isSmall}{txnText}&nbsp;{/if} -->
+                  <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
                 </button>
               </a>
             {/if}
@@ -98,10 +95,8 @@
           <li class="flex flex-row">
             <ModalWrapper triggerClasses="flex flex-row items-center px-2 py-1">
               {#snippet button()}
-                {#if !isSmall}RPC&nbsp;{/if}<Icon
-                  icon="gravity-ui:plug-connection"
-                  height="1.2em"
-                  width="1.2em" />
+                <!-- {#if !isSmall}RPC&nbsp;{/if} -->
+                <Icon icon="gravity-ui:plug-connection" height="1.2em" width="1.2em" />
               {/snippet}
               {#snippet contents({ close })}
                 <RPC
@@ -122,24 +117,22 @@
                 name="bridge"
                 class="link"
                 onkeypress={gotoNativeDelivery}
-                onclick={gotoNativeDelivery}
-                >{#if !isSmall}Delivery&nbsp;{/if}<Icon
-                  icon="icon-park-solid:bridge-one"
-                  height="1.6em"
-                  width="1.6em" /></button>
+                onclick={gotoNativeDelivery}>
+                <!-- {#if !isSmall}Delivery&nbsp;{/if} -->
+                <Icon icon="icon-park-solid:bridge-one" height="1.6em" width="1.6em" /></button>
             </li>
           {/if}
           {#if !isOnboardRoute}
             <li class="flex flex-row items-center">
-              <Button class="flex flex-row items-center px-2 py-1" onclick={gotoOnboard}
-                >{#if !isSmall}Onboard&nbsp;{/if}<Icon
-                  icon="mingcute:run-fill"
-                  stroke-width="1.5"
-                  height="1.6em"
-                  width="1.6em" />
+              <Button class="flex flex-row items-center px-2 py-1" onclick={gotoOnboard}>
+                <!-- {#if !isSmall}Onboard&nbsp;{/if} -->
+                <Icon icon="mingcute:run-fill" stroke-width="1.5" height="1.6em" width="1.6em" />
               </Button>
             </li>
           {/if}
+          <li class="flex flex-row items-center">
+            <ConnectButton />
+          </li>
         </ul>
       </div>
     </div>
@@ -149,6 +142,6 @@
 <style lang="postcss">
   @reference "tailwindcss/theme";
   .link {
-    @apply flex cursor-pointer flex-row items-center px-2 py-1 text-white;
+    @apply flex cursor-pointer flex-row items-center px-2 py-1;
   }
 </style>

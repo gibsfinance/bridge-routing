@@ -12,8 +12,14 @@
   import Infinite from './Infinite.svelte'
   import { InfiniteStore } from '$lib/stores/infinite.svelte'
   import TokenSelectInput from './TokenSelectInput.svelte'
-  import { chainsById } from '$lib/stores/auth/AuthProvider.svelte'
+  import { appkitNetworkById, chainsById } from '$lib/stores/auth/AuthProvider.svelte'
   import Button from './Button.svelte'
+  import NetworkImage from './NetworkImage.svelte'
+  import StaticNetworkImage from './StaticNetworkImage.svelte'
+  import { Popover } from '@skeletonlabs/skeleton-svelte'
+  import { availableChains } from '$lib/stores/lifi.svelte'
+  import Loading from './Loading.svelte'
+  import { loading } from '$lib/stores/loading.svelte'
   type Props = {
     onsubmit?: (token: Token | null) => void
     onnetworkchange?: (chain: number) => void
@@ -21,6 +27,7 @@
     tokens?: Token[]
     showCustomTokens?: boolean
     partnerChain?: number | null
+    selectedChain?: number
   }
   let {
     onsubmit = () => {},
@@ -29,6 +36,7 @@
     tokens,
     showCustomTokens = false,
     partnerChain,
+    selectedChain = 0,
   }: Props = $props()
   let custom!: Token
   const addCustom = (newToken: Token) => {
@@ -132,6 +140,7 @@
     if (limit.count > subset.length) return
     limit.increment(50)
   }
+  let chainSelectOpen = $state(false)
 </script>
 
 <div class="flex flex-col h-full max-h-[512px] rounded-2xl overflow-hidden">
@@ -150,9 +159,66 @@
     value={searchValue}
     oninput={(val) => {
       searchValue = val
-    }} />
-  <div class="overflow-y-scroll">
-    <ul class="flex grow flex-col overflow-y-scroll">
+    }}>
+    {#snippet icon()}
+      {#if chains.length > 1}
+        <!-- for some reason, the modal property is required here -->
+        <Popover
+          open={chainSelectOpen}
+          triggerBase="flex flex-row items-center p-1 justify-center mr-2"
+          zIndex="50"
+          contentClasses="flex flex-col max-h-64 border rounded-2xl bg-surface-50 text-surface-contrast-50 overflow-y-scroll relative"
+          positionerClasses="pointer-events-auto"
+          modal
+          positioning={{
+            placement: 'bottom-end',
+            gutter: 2,
+            strategy: 'fixed',
+          }}
+          onOpenChange={() => {
+            chainSelectOpen = !chainSelectOpen
+          }}>
+          {#snippet trigger()}
+            {@const network = availableChains.get(chains[selectedChain])!}
+            <StaticNetworkImage
+              network={network.id}
+              sizeClasses="size-6 rounded-lg"
+              icon={network.logoURI} />
+            <Icon icon="mynaui:chevron-down" class="size-5 ml-1" />
+          {/snippet}
+          {#snippet content()}
+            <span class="text-sm text-gray-500 px-4 pt-2">Select Network</span>
+            <ul class="flex flex-col">
+              {#each chains as chain}
+                {@const network = availableChains.get(chain)!}
+                <li class="flex flex-row grow">
+                  <Button
+                    class="flex flex-row items-center px-4 py-2 hover:bg-surface-100 grow"
+                    onclick={() => {
+                      onnetworkchange(chain)
+                      chainSelectOpen = false
+                    }}>
+                    <StaticNetworkImage
+                      network={network.id}
+                      sizeClasses="size-6 rounded-lg"
+                      icon={network.logoURI} />
+                    <span class="ml-2">{network.name}</span>
+                  </Button>
+                </li>
+              {/each}
+            </ul>
+          {/snippet}
+        </Popover>
+      {/if}
+    {/snippet}
+  </TokenSelectInput>
+  <div class="overflow-y-scroll h-full">
+    <div
+      class="h-10 w-full flex items-center justify-center"
+      class:hidden={loading.isResolved('lifi-tokens')}>
+      <Loading class="size-6" />
+    </div>
+    <ul class="flex grow flex-col overflow-y-scroll h-full">
       {#each subset as token}
         <li class="flex hover:bg-surface-900-100 relative">
           <button
@@ -163,31 +229,36 @@
         </li>
       {/each}
       <Infinite tag="li" class="flex" onloadmore={loadMore}>
-        <button
-          class="flex grow flex-row items-center py-2 leading-8"
-          class:cursor-pointer={!addButtonDisabled}
-          disabled={addButtonDisabled}
-          class:opacity-70={addButtonDisabled}
-          class:cursor-not-allowed={addButtonDisabled}
-          onclick={() => addCustom(custom)}>
-          <Icon icon="ic:baseline-add" height="1.5em" width="1.5em" />
-          <Icon class="ml-2" icon="ph:question" height={32} width={32} />
-          {#if !addButtonDisabled}
-            {#await loadViaMulticall(searchValueHex)}
-              <span class="flex flex-row items-center pl-2 leading-8"
-                ><Icon icon="svg-spinners:3-dots-scale" height="1.5em" width="1.5em" />&nbsp;</span>
-            {:then data}
-              {#if data}
-                <span class="pl-2 leading-8">{data.name} ({data.symbol})</span>
-              {:else}
+        {#if showCustomTokens}
+          <button
+            class="flex grow flex-row items-center py-2 leading-8"
+            class:cursor-pointer={!addButtonDisabled}
+            disabled={addButtonDisabled}
+            class:opacity-70={addButtonDisabled}
+            class:cursor-not-allowed={addButtonDisabled}
+            onclick={() => addCustom(custom)}>
+            <Icon icon="ic:baseline-add" height="1.5em" width="1.5em" />
+            <Icon class="ml-2" icon="ph:question" height={32} width={32} />
+            {#if !addButtonDisabled}
+              {#await loadViaMulticall(searchValueHex)}
+                <span class="flex flex-row items-center pl-2 leading-8"
+                  ><Icon
+                    icon="svg-spinners:3-dots-scale"
+                    height="1.5em"
+                    width="1.5em" />&nbsp;</span>
+              {:then data}
+                {#if data}
+                  <span class="pl-2 leading-8">{data.name} ({data.symbol})</span>
+                {:else}
+                  <span class="pl-2 leading-8">Unknown</span>
+                {/if}
+              {:catch}
                 <span class="pl-2 leading-8">Unknown</span>
-              {/if}
-            {:catch}
-              <span class="pl-2 leading-8">Unknown</span>
-            {/await}
-          {/if}
-          <span class="pl-2 leading-8">&nbsp;</span>
-        </button>
+              {/await}
+            {/if}
+            <span class="pl-2 leading-8">&nbsp;</span>
+          </button>
+        {/if}
       </Infinite>
     </ul>
   </div>

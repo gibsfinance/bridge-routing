@@ -20,7 +20,6 @@ createConfig({
 
 export const availableChains = new SvelteMap<number, Chain>()
 export const availableTokensPerOriginChain = new SvelteMap<number, Token[]>()
-export const availableTokensPerDestinationChain = new SvelteMap<number, Token[]>()
 
 const fetchChains = _.memoize(async () => {
   const chains = await getChains({
@@ -109,19 +108,22 @@ export const tokenOut = $state({
   },
 })
 
-const getTokensAndCache = _.memoize(async (id: number) => {
-  const tokens = await getTokens({
-    chains: [id],
-  })
-  availableTokensPerOriginChain.set(id, tokens.tokens[id])
-  return tokens.tokens[id]
-})
+const getTokensAndCache = _.memoize(
+  loading.loadsAfterTick<Token[], number>('lifi-tokens', async (id: number) => {
+    const tokens = await getTokens({
+      chains: [id],
+    })
+    availableTokensPerOriginChain.set(id, tokens.tokens[id])
+    return tokens.tokens[id]
+  }),
+)
 
 export const loadTokensForChains = async (chain: Chain) => {
   if (availableTokensPerOriginChain.has(chain.id)) {
     return availableTokensPerOriginChain.get(chain.id)!
   }
-  await getTokensAndCache(chain.id)
+  const getter = getTokensAndCache(chain.id)
+  return getter.promise
 }
 
 export const flipTokens = () => {

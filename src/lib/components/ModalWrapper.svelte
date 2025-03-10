@@ -20,9 +20,10 @@
   {open}
   classes={wrapperClasses}
   triggerBase={triggerClasses}
-  contentBase="card bg-surface-950-50 space-y-2 shadow-xl max-w-(--container-lg) w-full text-surface-contrast-50 h-full max-h-[512px]"
+  contentBase="card bg-surface-950-50 space-y-2 max-w-(--container-lg) w-full text-surface-contrast-50 h-full max-h-[512px] border border-surface-200"
   backdropClasses="backdrop-blur-xs"
-  positionerClasses="h-full"
+  zIndex="50"
+  positionerClasses="h-full z-40"
   onOpenChange={(e) => {
     open = e.open
   }}>

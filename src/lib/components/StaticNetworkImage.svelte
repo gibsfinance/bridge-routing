@@ -7,7 +7,8 @@
   import * as imageLinks from '$lib/stores/image-links'
 
   type Props = {
-    network: number
+    network: number | string
+    icon?: string
     sizeClasses?: string
     provider?: string | null
     providerSizeClasses?: string
@@ -17,9 +18,10 @@
     sizeClasses = 'size-8',
     providerSizeClasses = 'size-4',
     provider = null,
+    icon,
   }: Props = $props()
   const visualChain = $derived((chainsMetadata[toChain(network)] || null) as VisualChain | null)
-  const classes = $derived(`${sizeClasses} network-icon min-w-8`)
+  const classes = $derived(`${sizeClasses} network-icon`)
   const providerWrapperClasses = $derived(
     `${providerSizeClasses} absolute -bottom-1 -left-1 rounded-full`,
   )
@@ -30,7 +32,7 @@
   <Image
     class={classes}
     {sizeClasses}
-    src={visualChain?.icon || imageLinks.network(Number(network))}
+    src={icon ?? visualChain?.icon ?? imageLinks.network(Number(network))}
     alt={visualChain?.alt || null} />
   {#if provider}
     <div class={providerWrapperClasses}>

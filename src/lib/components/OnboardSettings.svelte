@@ -101,13 +101,11 @@
   // }
 </script>
 
-<header class="flex flex-col items-center justify-between mt-2 gap-2">
+<header class="flex flex-col items-center justify-between gap-2">
   <div class="flex flex-row w-full items-center relative">
     <div class="flex flex-row gap-1 grow items-center">
       <div class="flex flex-row border-surface-100/20 gap-1 py-2">
-        <Button
-          class="gap-1 rounded-l-full shadow-inner border-r-0 px-1 rounded-r-none border-surface-100/20"
-          onclick={openOnRamp}>
+        <Button class="gap-1 rounded-l-full px-1" onclick={openOnRamp}>
           <Icon icon="material-symbols:ramp-left-rounded" mode="svg" class="size-8" />
         </Button>
         <!-- <Button class="gap-2 shadow-inner px-1 rounded-l-none" onclick={openZKP2P}> -->
@@ -125,7 +123,6 @@
         </Button>
       </div>
     </div>
-    <ConnectButton />
     <div class="absolute left-1/2 -translate-x-1/2 top-0 h-14 items-center justify-center flex">
       <Icon icon="mingcute:run-fill" mode="svg" class="size-8" />
     </div>

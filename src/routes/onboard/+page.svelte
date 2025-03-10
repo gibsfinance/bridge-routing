@@ -16,13 +16,9 @@
       min_height={windowStore.large ? 'calc(100vh - 40px)' : 'auto'}
       image_url="url({onboardImageFuzzy})"
       blur="12px"
-      brightness="50%">
-      <div class="flex flex-col text-lg w-full px-2 gap-4 mb-16">
-        <div class="mt-8 max-w-lg mx-auto w-full">
-          <!-- <h1
-            class="text-white font-italiana top-0 bottom-0 left-0 right-0 text-center content-center capitalize text-5xl">
-            onboard
-          </h1> -->
+      brightness="90%">
+      <div class="flex flex-col text-lg w-full gap-4 mb-16">
+        <div class="mt-16 max-w-lg mx-auto w-full">
           <OnboardSettings />
           <Onboard />
         </div>

@@ -18,10 +18,7 @@
 <div class="app bg-slate-950">
   <div class="app">
     <Nav />
-    <main class="mt-10 box-border flex min-h-screen w-full flex-col bg-slate-950 text-white">
-      <!-- <div class="flex grow items-center justify-center">
-        <Loader loaded={false} />
-      </div> -->
+    <main class="mt-14 box-border flex min-h-screen w-full flex-col bg-slate-950 text-white">
       {@render children()}
       <Footer />
     </main>

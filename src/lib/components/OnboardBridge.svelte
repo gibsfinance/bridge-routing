@@ -43,6 +43,7 @@
   import SectionInput from './SectionInput.svelte'
   import TokenSelect from './TokenSelect.svelte'
   import OnboardButton from './OnboardButton.svelte'
+  import { availableChains } from '$lib/stores/lifi.svelte'
   const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(bridgeFee.value?.feeF2H ?? 0n)
@@ -370,6 +371,7 @@
   {#snippet button()}
     <OnboardButton
       disabled={disableBridgeButton}
+      requiredChain={availableChains.get(tokenInput!.chainId)!}
       onclick={bridgeTokens}
       text="Bridge to PulseChain"
       loadingKey="lifi-quote" />

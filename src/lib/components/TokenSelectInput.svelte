@@ -1,9 +1,9 @@
 <script lang="ts">
   import _ from 'lodash'
   import Input from './Input.svelte'
-  import Icon from '@iconify/svelte'
   import classNames from 'classnames'
   import type { ClassParam } from '$lib/types.svelte'
+  import type { Snippet } from 'svelte'
   type Props = {
     value: string
     roundedClasses?: ClassParam
@@ -11,6 +11,7 @@
     backgroundClasses?: ClassParam
     paddingClasses?: ClassParam
     oninput: (val: string) => void
+    icon?: Snippet
   }
   const {
     value,
@@ -19,6 +20,7 @@
     backgroundClasses = 'bg-surface-900-100',
     paddingClasses = 'leading-8 px-4',
     oninput,
+    icon,
   }: Props = $props()
   const searchInputId = _.uniqueId('search-input')
   // "rounded-lg border border-slate-400 pl-6"
@@ -37,10 +39,8 @@
       class={classes}
       {value}
       {oninput} />
-    <!-- <Icon
-      icon="ic:baseline-search"
-      height="1.5em"
-      width="1.5em"
-      class="cursor-text size-8 p-1 flex absolute right-0" /> -->
+    <div class="absolute right-0">
+      {@render icon?.()}
+    </div>
   </div>
 </label>

@@ -3,14 +3,8 @@ import { LocalProxy, LocalProxyProp } from './localstorage.svelte'
 
 export type DefaultSettings = {
   showTooltips: boolean
+  foreignBridgeInputs: ForeignBridgeInputs | null
 }
-const globalDefaultSettings: DefaultSettings = {
-  showTooltips: true,
-}
-export const storage = new LocalProxy('gibs.finance.settings', globalDefaultSettings)
-
-export const showTooltips = new LocalProxyProp(storage, ['showTooltips'], true)
-
 export type ForeignBridgeInputs = {
   fromChain: number
   fromToken: string
@@ -18,12 +12,24 @@ export type ForeignBridgeInputs = {
   // toChain: number - always 1
   toToken: string
 }
-export const foreignBridgeInputs = new LocalProxyProp(storage, ['foreignBridgeInputs'], {
-  fromChain: 1,
-  fromToken: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599' as Hex,
-  fromAmount: 0n,
-  toToken: zeroAddress as Hex,
-} as ForeignBridgeInputs | null)
+const globalDefaultSettings: DefaultSettings = {
+  showTooltips: true,
+  foreignBridgeInputs: {
+    fromChain: 1,
+    fromToken: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599' as Hex,
+    fromAmount: 0n,
+    toToken: zeroAddress as Hex,
+  } as ForeignBridgeInputs | null,
+}
+export const storage = new LocalProxy('gibs.finance.settings', globalDefaultSettings)
+
+export const showTooltips = new LocalProxyProp(storage, ['showTooltips'], true)
+
+export const foreignBridgeInputs = new LocalProxyProp(
+  storage,
+  ['foreignBridgeInputs'],
+  null as ForeignBridgeInputs | null,
+)
 
 export const activeOnboardStep = new LocalProxyProp(storage, ['activeOnboardStep'], 1)
 

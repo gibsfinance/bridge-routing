@@ -15,7 +15,6 @@
   import type { RelayerQuoteResponseData } from '@lifi/types'
   import _ from 'lodash'
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
-  import Loading from './Loading.svelte'
   import { foreignBridgeInputs } from '$lib/stores/storage.svelte'
   import { untrack } from 'svelte'
   import { latestBlock } from '$lib/stores/chain-events.svelte'
@@ -23,6 +22,7 @@
   import TokenSelect from './TokenSelect.svelte'
   import { Chains } from '$lib/stores/auth/types'
   import OnboardButton from './OnboardButton.svelte'
+  import type { Chain as LIFIChain } from '@lifi/sdk'
   let tokenInput: Token = $state({
     logoURI: `https://gib.show/image/1/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599`,
     name: 'Wrapped Bitcoin',
@@ -205,6 +205,9 @@
       !!accountState.address
     )
   })
+  const requiredChain = $derived.by(() => {
+    return availableChains.get(tokenInput.chainId)! as LIFIChain
+  })
 </script>
 
 <OnboardStep
@@ -235,6 +238,7 @@
       }}>
       {#snippet modal({ close })}
         <TokenAndNetworkSelector
+          chainId={Number(tokenInput.chainId)}
           onsubmit={(token) => {
             if (token) {
               tokenInput = token
@@ -269,6 +273,7 @@
   {#snippet button()}
     <OnboardButton
       disabled={!canBridge}
+      {requiredChain}
       onclick={crossForeignBridge}
       text="Bridge to Ethereum"
       loadingKey="lifi-quote" />

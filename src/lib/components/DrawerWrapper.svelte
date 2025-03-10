@@ -21,6 +21,7 @@
   contentBase="bg-surface-100-900 space-y-4 shadow-xl w-[480px] h-screen"
   positionerJustify="justify-start"
   positionerAlign=""
+  zIndex="50"
   positionerPadding=""
   transitionsPositionerIn={{ x: -480, duration: 200 }}
   transitionsPositionerOut={{ x: -480, duration: 200 }}>

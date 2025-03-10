@@ -6,7 +6,13 @@ import type { Hex } from 'viem'
 import * as chains from 'viem/chains'
 import { walletConnectProjectId } from '$lib/config'
 import { EthereumProvider } from '@walletconnect/ethereum-provider'
-import { getBalance, watchBlockNumber, type GetBalanceReturnType } from '@wagmi/core'
+import {
+  getBalance,
+  getConnectors,
+  switchChain,
+  watchBlockNumber,
+  type GetBalanceReturnType,
+} from '@wagmi/core'
 import { SvelteMap } from 'svelte/reactivity'
 
 const projectId = walletConnectProjectId
@@ -50,7 +56,10 @@ export const appkitNetworkList = [
   networks.berachain,
 ] as [networks.AppKitNetwork, ...networks.AppKitNetwork[]]
 export const appkitNetworkIds = new Set(appkitNetworkList.map((n) => n.id))
-export const chainsById = new Map<number, chains.Chain>(
+export const appkitNetworkById = new Map<number, networks.AppKitNetwork>(
+  appkitNetworkList.map((n) => [n.id, n] as [number, networks.AppKitNetwork]),
+)
+export const chainsById = new Map<string | number, chains.Chain>(
   Object.values(chains)
     .filter((chain) => appkitNetworkIds.has(chain.id))
     .map((chain) => [chain.id, chain]),
@@ -110,10 +119,15 @@ export const disconnect = async () => {
   return await modal.close()
 }
 
-export const switchNetwork = async (chain: networks.AppKitNetwork | null | undefined) => {
+export const switchNetwork = (chain: networks.AppKitNetwork | null | undefined) => {
   if (chain) {
     try {
-      modal.switchNetwork(chain)
+      const connectors = getConnectors(wagmiAdapter.wagmiConfig)
+      if (!connectors.length) return
+      switchChain(wagmiAdapter.wagmiConfig, {
+        connector: connectors[0],
+        chainId: chain.id as number,
+      })
     } catch (err) {
       console.error('err at switchNetwork', err)
     }
@@ -182,7 +196,12 @@ class AccountState {
         const balance = await getBalance(wagmiAdapter.wagmiConfig, {
           address,
           chainId: this.chainId!,
-        })
+        }).catch(() => ({
+          value: 0n,
+          decimals: 18,
+          formatted: '0',
+          symbol: 'ETH',
+        }))
         this.lastKnownBalances.set(this.caipAddress, {
           lastUpdated: Date.now(),
           ...balance,
@@ -216,13 +235,3 @@ modal.subscribeAccount((account) => {
     accountState.value = account ?? null
   }
 })
-
-// setTimeout(() => {
-//   accountState.value = {
-//     address: '0xAF2ce0189f46f5663715b0b9ED2a10eA924AB9B0',
-//     allAccounts: [],
-//     caipAddress: 'eip155:1:0xAF2ce0189f46f5663715b0b9ED2a10eA924AB9B0',
-//     isConnected: true,
-//     status: 'connected',
-//   }
-// }, 500)

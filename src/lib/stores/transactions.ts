@@ -3,7 +3,7 @@ import {
   waitForTransactionReceipt,
   type SendTransactionParameters,
 } from '@wagmi/core'
-import { accountState, wagmiAdapter } from './auth/AuthProvider.svelte'
+import { accountState, wagmiAdapter, connect } from './auth/AuthProvider.svelte'
 import { encodeFunctionData, erc20Abi, maxUint256, zeroAddress, type Hex } from 'viem'
 import { type ApprovalParameters, checkAllowance } from './chain-read.svelte'
 
@@ -65,7 +65,13 @@ export const options = (chainId: number) => {
 }
 
 export const sendTransaction = (opts: SendTransactionParameters) => {
-  return sendTransactionCore(wagmiAdapter.wagmiConfig, opts)
+  return sendTransactionCore(wagmiAdapter.wagmiConfig, opts).catch(async (err) => {
+    if (err.message.includes('Connector not connected')) {
+      await connect()
+      return sendTransactionCore(wagmiAdapter.wagmiConfig, opts)
+    }
+    throw err
+  })
 }
 
 export const wait = async (tx: Hex) => {

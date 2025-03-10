@@ -19,21 +19,16 @@
 </script>
 
 <Button
-  class="bg-surface-300/20 pr-2 py-0 shadow-inner border-2 border-surface-100/20 rounded-full h-10 text-surface-contrast-950 text-base flex flex-row items-center gap-1 bottom-2 right-2"
+  class="bg-surface-white/20 p-1 shadow-inner border border-surface-200 rounded-full h-10 text-surface-contrast-50 text-base flex flex-row items-center gap-1 bottom-2 right-2"
   onclick={connect}>
   {#if accountState.connected}
     <Image
       src={targetChain.icon}
       alt={targetChain.name}
       containerClasses="flex overflow-hidden rounded-l-full"
-      sizeClasses="size-9" />
-    <span class="border-surface-500/20 rounded-r pl-1 leading-8">
-      <span
-        >{accountState.address &&
-          ellipsis(accountState.address, {
-            length: 6,
-            prefixLength: 2,
-          })}</span>
+      sizeClasses="size-8" />
+    <span class="border-surface-500/20 rounded-r pl-1 leading-8 mr-2 text-sm">
+      <span>{accountState.address && accountState.address.slice(0, 8)}...</span>
     </span>
   {:else if accountState.modalOpen}
     <span class="pl-2">Connecting...</span>

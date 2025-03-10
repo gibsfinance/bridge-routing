@@ -36,6 +36,7 @@
   import OnboardStep from './OnboardStep.svelte'
   import SectionInput from './SectionInput.svelte'
   import OnboardButton from './OnboardButton.svelte'
+  import { pulsechain } from 'viem/chains'
   const tokenOutputAddress = $derived(plsOutToken.value)
   const tokens = $derived(
     bridgableTokens.bridgeableTokensUnder({
@@ -250,20 +251,12 @@
     </SectionInput>
   {/snippet}
   {#snippet button()}
-    <!-- <Button
-      disabled={swapDisabled}
-      class="bg-tertiary-500 text-surface-contrast-950 h-14 rounded-2xl w-full text-xl flex flex-row items-center justify-center shrink-0"
-      onclick={swapTokens}>
-      <Loading key="lifi-quote">
-        {#snippet contents()}Swap{/snippet}
-      </Loading>
-    </Button> -->
-
     <OnboardButton
+      requiredChain={pulsechain}
       disabled={swapDisabled}
       onclick={swapTokens}
       text="Swap"
-      loadingKey="lifi-quote" />
+      loadingKey="pulsex-quote" />
   {/snippet}
 </OnboardStep>
 <!-- <div class="flex relative">

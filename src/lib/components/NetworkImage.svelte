@@ -61,7 +61,7 @@
                 listBridgeKey === bridgeKey.partner
                   ? bridgeSettings.assetOut.value?.address
                   : zeroAddress
-              if (walletAccount) await switchNetwork(chainIdToChain(bridgeKey.toChain))
+              if (walletAccount) switchNetwork(chainIdToChain(bridgeKey.toChain))
               await goto(`#/delivery/${toPath(listBridgeKey)}/${tokenAddressIn}`)
               return
             }}>
