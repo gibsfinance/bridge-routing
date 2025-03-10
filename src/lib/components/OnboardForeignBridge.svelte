@@ -59,9 +59,10 @@
       )
       await loadTokensForChains(loadedFromChain)
       const tokens = untrack(() => availableTokensPerOriginChain.get(loadedFromChain.id)!)
-      const target = previousSettings?.fromToken
-        ? tokens.find((tkn) => tkn.address === previousSettings.fromToken)
-        : (tokens[0] ?? tokens[0])
+      const target =
+        (previousSettings?.fromToken
+          ? tokens.find((tkn) => tkn.address === previousSettings.fromToken)
+          : tokens[0]) ?? tokens[0]
       if (target) {
         tokenInput = target
       }
@@ -83,16 +84,25 @@
     const fromChain = availableChains.get(tokenInput.chainId)
     const toChain = availableChains.get(tokenOutput.chainId)
     if (!fromChain || !toChain) {
-      console.log('no from or to chain')
+      // console.log('no from or to chain', fromChain, toChain)
       return null
     }
     const originTokens = availableTokensPerOriginChain.get(fromChain!.id)
-    if (!originTokens) {
-      console.log('no origin tokens')
+    if (!originTokens || !originTokens.length) {
+      // console.log('no origin tokens', originTokens)
       return null
     }
-    const fromToken = originTokens.find((t) => t.address === tokenInput.address)
-    const toToken = originTokens.find((t) => t.address === tokenOutput.address)
+    const destinationChain = availableTokensPerOriginChain.get(toChain!.id)
+    if (!destinationChain || !destinationChain.length) {
+      // console.log('no destination chain tokens', destinationChain)
+      return null
+    }
+    const fromToken = originTokens.find(
+      (t) => getAddress(t.address) === getAddress(tokenInput.address),
+    )
+    const toToken = destinationChain.find(
+      (t) => getAddress(t.address) === getAddress(tokenOutput.address),
+    )
     const fromAddress = accountState.address ?? '0x0000000000000000000000000000000000000001'
     let toAddress = fromAddress
     if (
@@ -104,6 +114,18 @@
       !fromAddress ||
       !toAddress
     ) {
+      // console.log(
+      //   'no quote inputs',
+      //   fromChain,
+      //   toChain,
+      //   fromToken,
+      //   toToken,
+      //   amountInput,
+      //   fromAddress,
+      //   toAddress,
+      //   tokenInput.address,
+      //   tokenOutput.address,
+      // )
       return null
     }
     return {
@@ -132,7 +154,9 @@
   let latestQuote: RelayerQuoteResponseData['quote'] | null = $state(null)
   $effect(() => {
     const latestBlockNumber = untrack(() => latestBlock.block(tokenOutput.chainId))
-    if (!quoteInputs || !latestBlockNumber || !latestBlockNumber.number) return
+    if (!quoteInputs || !latestBlockNumber || !latestBlockNumber.number) {
+      return
+    }
     const quote = getQuoteStep({
       ...quoteInputs,
       blockNumber: latestBlockNumber.number,
@@ -254,9 +278,7 @@
       token={tokenOutWithPrefixedName}
       value={amountOutput}
       disabled
-      onbalanceupdate={() => {
-        // maxBridgeable = balance
-      }}>
+      onbalanceupdate={() => {}}>
       {#snippet modal({ close })}
         <TokenSelect
           chains={[Number(Chains.ETH)]}

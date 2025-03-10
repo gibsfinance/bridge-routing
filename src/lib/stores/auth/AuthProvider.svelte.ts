@@ -1,4 +1,9 @@
-import { createAppKit, type ConnectedWalletInfo, type UseAppKitAccountReturn } from '@reown/appkit'
+import {
+  createAppKit,
+  type CaipNetwork,
+  type ConnectedWalletInfo,
+  type UseAppKitAccountReturn,
+} from '@reown/appkit'
 import * as networks from '@reown/appkit/networks'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { NullableProxyStore } from '$lib/types.svelte'
@@ -6,13 +11,7 @@ import type { Hex } from 'viem'
 import * as chains from 'viem/chains'
 import { walletConnectProjectId } from '$lib/config'
 import { EthereumProvider } from '@walletconnect/ethereum-provider'
-import {
-  getBalance,
-  getConnectors,
-  switchChain,
-  watchBlockNumber,
-  type GetBalanceReturnType,
-} from '@wagmi/core'
+import { getBalance, getConnectors, watchBlockNumber, type GetBalanceReturnType } from '@wagmi/core'
 import { SvelteMap } from 'svelte/reactivity'
 
 const projectId = walletConnectProjectId
@@ -119,14 +118,17 @@ export const disconnect = async () => {
   return await modal.close()
 }
 
-export const switchNetwork = (chain: networks.AppKitNetwork | null | undefined) => {
+export const switchNetwork = async (chain: networks.AppKitNetwork | null | undefined) => {
+  console.log('switchNetwork', chain)
   if (chain) {
     try {
       const connectors = getConnectors(wagmiAdapter.wagmiConfig)
-      if (!connectors.length) return
-      switchChain(wagmiAdapter.wagmiConfig, {
-        connector: connectors[0],
-        chainId: chain.id as number,
+      if (!connectors.length) {
+        console.log('no connectors')
+        return
+      }
+      await wagmiAdapter.switchNetwork({
+        caipNetwork: chain as CaipNetwork,
       })
     } catch (err) {
       console.error('err at switchNetwork', err)
@@ -208,6 +210,7 @@ class AccountState {
         })
       },
     })
+    return this.setupWatchBalanceCleanup
   }
 }
 export const accountState = new AccountState()

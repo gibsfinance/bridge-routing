@@ -105,6 +105,7 @@ export const getTokenBalance = (
   asset: Token | null,
   walletAccount: Hex | null,
 ) => {
+  // console.log('getTokenBalance', chainId, asset, walletAccount)
   if (!asset || !walletAccount) return null
   const publicClient = input.clientFromChain(chainId)
   const getBalance =
@@ -182,6 +183,9 @@ export class TokenBalanceWatcher {
         this.value = v
       }
     })
+    // return () => {
+    //   this.cleanup()
+    // }
   }
 }
 

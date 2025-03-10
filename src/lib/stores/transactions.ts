@@ -64,8 +64,8 @@ export const options = (chainId: number) => {
   return options
 }
 
-export const sendTransaction = (opts: SendTransactionParameters) => {
-  return sendTransactionCore(wagmiAdapter.wagmiConfig, opts).catch(async (err) => {
+export const sendTransaction = async (opts: SendTransactionParameters) => {
+  return await sendTransactionCore(wagmiAdapter.wagmiConfig, opts).catch(async (err) => {
     if (err.message.includes('Connector not connected')) {
       await connect()
       return sendTransactionCore(wagmiAdapter.wagmiConfig, opts)

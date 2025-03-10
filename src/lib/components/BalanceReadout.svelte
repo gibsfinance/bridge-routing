@@ -12,12 +12,8 @@
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import classNames from 'classnames'
   import Loading from './Loading.svelte'
-  import { untrack } from 'svelte'
-  import {
-    createFontScaler,
-    // largeInputFontScaler,
-  } from '$lib/stores/font-scaler'
   import { oneEther } from '$lib/stores/bridge-settings.svelte'
+  import { untrack } from 'svelte'
 
   type Props = {
     token: Token
@@ -35,32 +31,32 @@
     token,
     onmax,
     wrapperSizeClasses = '',
-    wrapperClasses:
-      wrapperClassNames = 'relative flex items-baseline text-xs leading-6 pointer-events-auto',
+    wrapperClasses: wrapperClassNames = 'relative flex items-center text-xs leading-5 gap-1',
     showLoader = false,
     roundedClasses = 'rounded-md',
     decimalClasses = '',
-    hideSymbol = false,
     onbalanceupdate,
   }: Props = $props()
   const showMax = $state(!!onmax)
-  const chain = $derived(toChain(token.chainId))
   const tokenBalance = new TokenBalanceWatcher()
-  const walletAccount = $derived(untrack(() => accountState.address))
-  $effect(() => untrack(() => latestBlock.watch(Number(chain))))
+
+  $effect(() => untrack(() => latestBlock.watch(token.chainId)))
   $effect(() => {
-    const block = latestBlock.block(Number(chain))
-    if (!walletAccount || !block) {
+    const block = untrack(() => latestBlock.block(token.chainId))
+    if (!accountState.address || !block) {
       return
     }
-    return tokenBalance.fetch(Number(chain), token, walletAccount, block)
+    return tokenBalance.fetch(token.chainId, token, accountState.address, block)
   })
+
   $effect(() => {
     onbalanceupdate?.(tokenBalance.value)
   })
   const balance = $derived(tokenBalance.value ?? 0n)
   const disableMax = $derived(balance === 0n)
-  const loadingKey = $derived(tokenBalanceLoadingKey(Number(chain), token, walletAccount ?? '0x'))
+  const loadingKey = $derived(
+    tokenBalanceLoadingKey(token.chainId, token, accountState.address ?? '0x'),
+  )
   const decimalClassNames = $derived(classNames('h-full', decimalClasses))
   const maxOutBalance = (event: MouseEvent) => {
     if (disableMax) return
@@ -70,23 +66,15 @@
     }
   }
   const wrapperClasses = $derived(classNames(wrapperClassNames, wrapperSizeClasses))
-  // const balanceFontScaler = createFontScaler({
-  //   maxFontSize: 14,
-  //   minFontSize: 12,
-  //   freeCharacters: 18,
-  //   scale: 2,
-  // })
   const humanReadableText = $derived(
     humanReadableNumber(balance, {
       decimals: token?.decimals ?? 18,
       maxDecimals: 18 - Math.floor(Number(balance / oneEther / 3n)).toString().length,
     }),
   )
-  // const fontSize = $derived(balanceFontScaler(humanReadableText.length))
 </script>
 
 <div class={wrapperClasses}>
-  <!-- <Tooltip tooltip={token.name} placement="left"> -->
   <span class="flex flex-row gap-1 items-center text-gray-500 leading-5 text-[14px]">
     {#if showLoader && tokenBalance.value === null}
       <Loading key={loadingKey} class="w-4 h-5" />
@@ -94,20 +82,17 @@
     <span class={decimalClassNames} class:opacity-70={!loading.isResolved(loadingKey)}
       >{tokenBalance.value === null ? '' : humanReadableText}
     </span>
-    <!-- {#if !hideSymbol} -->
     <span class="flex">{token.symbol}</span>
-    <!-- {/if} -->
   </span>
-  <!-- </Tooltip> -->
+  {#if showMax}
+    <button
+      class:bg-tertiary-400={disableMax}
+      class:bg-tertiary-600={!disableMax}
+      class:hover:bg-tertiary-500={!disableMax}
+      class:text-tertiary-contrast-950={disableMax}
+      class="{roundedClasses} rounded-full text-xs flex items-center justify-center text-surface-contrast-600 px-1.5"
+      onclick={maxOutBalance}>
+      Max
+    </button>
+  {/if}
 </div>
-{#if showMax}
-  <button
-    class:bg-tertiary-400={disableMax}
-    class:bg-tertiary-600={!disableMax}
-    class:hover:bg-tertiary-500={!disableMax}
-    class:text-tertiary-contrast-950={disableMax}
-    class="{roundedClasses} rounded-full text-xs flex items-center justify-center text-surface-contrast-600 px-1.5"
-    onclick={maxOutBalance}>
-    Max
-  </button>
-{/if}

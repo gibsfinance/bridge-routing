@@ -5,11 +5,8 @@
   import Image from './Image.svelte'
   import Icon from '@iconify/svelte'
   import { Chains } from '$lib/stores/auth/types'
-  import {
-    ellipsis,
-    // humanReadableNumber,
-  } from '$lib/stores/utils'
-  const targetChain = $derived(chainsMetadata[accountState.chainIdHex as Chains])
+  import { availableChains } from '$lib/stores/lifi.svelte'
+  const targetChain = $derived(accountState.chainId && availableChains.get(accountState.chainId))
   // const shortBalance = $derived(
   //   humanReadableNumber(accountState.balance ?? 0n, {
   //     decimals: targetChain.nativeCurrency.decimals,
@@ -22,11 +19,13 @@
   class="bg-surface-white/20 p-1 shadow-inner border border-surface-200 rounded-full h-10 text-surface-contrast-50 text-base flex flex-row items-center gap-1 bottom-2 right-2"
   onclick={connect}>
   {#if accountState.connected}
-    <Image
-      src={targetChain.icon}
-      alt={targetChain.name}
-      containerClasses="flex overflow-hidden rounded-l-full"
-      sizeClasses="size-8" />
+    {#if targetChain}
+      <Image
+        src={targetChain.logoURI}
+        alt={targetChain.name}
+        containerClasses="flex overflow-hidden rounded-l-full"
+        sizeClasses="size-8" />
+    {/if}
     <span class="border-surface-500/20 rounded-r pl-1 leading-8 mr-2 text-sm">
       <span>{accountState.address && accountState.address.slice(0, 8)}...</span>
     </span>

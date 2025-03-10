@@ -360,26 +360,31 @@ export const clientFromChain = (chainId: number) => {
   if (existing && existing.key === key) {
     return existing.client
   }
+  const chain = [...Object.values(networks)].find((chain) => chain.id === chainId)
+  // console.log(chainId, chain)
+  const transport = !urls?.length
+    ? http()
+    : fallback(
+        urls.map((rpc) =>
+          rpc.startsWith('http')
+            ? http(rpc, {
+                ...defaultBatchConfig,
+              })
+            : webSocket(rpc, {
+                keepAlive: true,
+                reconnect: true,
+                retryDelay: 250,
+                retryCount: 10,
+                timeout: 4_000,
+                ...defaultBatchConfig,
+              }),
+        ),
+        { rank: true },
+      )
   const client = createPublicClient({
-    chain: chainsMetadata[toChain(chainId)],
-    transport: fallback(
-      urls.map((rpc) =>
-        rpc.startsWith('http')
-          ? http(rpc, {
-              ...defaultBatchConfig,
-            })
-          : webSocket(rpc, {
-              keepAlive: true,
-              reconnect: true,
-              retryDelay: 250,
-              retryCount: 10,
-              timeout: 4_000,
-              ...defaultBatchConfig,
-            }),
-      ),
-      { rank: true },
-    ),
-  })
+    chain,
+    transport,
+  }) as PublicClient
   clientCache.set(chainId, {
     key,
     client,

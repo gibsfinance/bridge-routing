@@ -1,13 +1,12 @@
 <script lang="ts">
-  import { chainsMetadata } from '$lib/stores/auth/constants'
   import type { ClassParam, Token } from '$lib/types.svelte'
   import TokenIcon from './TokenIcon.svelte'
   import { assetSources } from '$lib/stores/bridge-settings.svelte'
   import { loading } from '$lib/stores/loading.svelte'
-  import { zeroAddress } from 'viem'
   import Image from './Image.svelte'
-  import { toChain, type Chains } from '$lib/stores/auth/types'
   import classNames from 'classnames'
+  import { availableChains } from '$lib/stores/lifi.svelte'
+  import { zeroAddress } from 'viem'
 
   type Props = {
     class?: ClassParam
@@ -18,16 +17,11 @@
   }
   const {
     asset,
-    network: tokenOriginationChain,
     tokenSizeClasses = 'size-8',
     networkSizeClasses = 'size-4',
     class: className = '',
   }: Props = $props()
-  const chain = $derived(
-    asset.address !== zeroAddress &&
-      tokenOriginationChain &&
-      chainsMetadata[toChain(tokenOriginationChain)],
-  )
+  const chain = $derived(availableChains.get(Number(asset.chainId)))
   const src = $derived(asset?.logoURI || assetSources(asset))
   const tokenClasses = $derived(`overflow-hidden absolute`)
   const classes = $derived(classNames(`flex basis-auto relative ${tokenSizeClasses}`, className))
@@ -37,9 +31,9 @@
   <TokenIcon visible sizeClasses={tokenSizeClasses} class={tokenClasses} {src} />
   {#if chain && loading.isResolved('token')}
     <Image
-      class="network-image absolute -right-0.5 -bottom-0.5 rounded-full bg-slate-100"
+      class="network-image absolute -right-0.5 -bottom-0.5 rounded-full"
       sizeClasses={networkSizeClasses}
-      src={chain.icon}
-      alt={chain.alt} />
+      src={chain.logoURI}
+      alt={chain.name} />
   {/if}
 </span>
