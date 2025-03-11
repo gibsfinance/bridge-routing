@@ -24,7 +24,6 @@ export const transactionButtonPress =
       loading.increment('user')
       for (const step of steps) {
         const txHash = await step()
-        console.log('txHash', txHash)
         if (txHash === undefined) {
           return
         }

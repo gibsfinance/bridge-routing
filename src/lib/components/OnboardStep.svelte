@@ -8,9 +8,10 @@
     input: Snippet
     output: Snippet
     button: Snippet
+    progress?: Snippet
     ondividerclick?: null | (() => void)
   }
-  const { icon, input, output, button, ondividerclick }: Props = $props()
+  const { icon, input, output, button, progress, ondividerclick }: Props = $props()
 </script>
 
 <div class="flex relative">
@@ -32,6 +33,7 @@
             : ''}" />
       </ExchangeInputDivider>
     </div>
+    {@render progress?.()}
     {@render button()}
   </div>
 </div>

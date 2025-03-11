@@ -1,18 +1,26 @@
 <script lang="ts">
   import { accountState, connect } from '$lib/stores/auth/AuthProvider.svelte'
-  import { chainsMetadata } from '$lib/stores/auth/constants'
   import Button from '$lib/components/Button.svelte'
   import Image from './Image.svelte'
   import Icon from '@iconify/svelte'
-  import { Chains } from '$lib/stores/auth/types'
+  import { idToChain } from '$lib/stores/auth/types'
   import { availableChains } from '$lib/stores/lifi.svelte'
-  const targetChain = $derived(accountState.chainId && availableChains.get(accountState.chainId))
-  // const shortBalance = $derived(
-  //   humanReadableNumber(accountState.balance ?? 0n, {
-  //     decimals: targetChain.nativeCurrency.decimals,
-  //     maxDecimals: 4,
-  //   }),
-  // )
+  import * as imageLinks from '$lib/stores/image-links'
+  const targetChain = $derived.by(() => {
+    const id = accountState.chainId
+    const chain = !id ? null : availableChains.get(id)
+    if (chain) {
+      return {
+        name: chain.name,
+        logoURI: chain.logoURI,
+      }
+    }
+    const network = idToChain.get(id!)!
+    return {
+      name: network.name,
+      logoURI: imageLinks.network(id!),
+    }
+  })
 </script>
 
 <Button

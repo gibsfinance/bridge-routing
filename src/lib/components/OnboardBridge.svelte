@@ -3,7 +3,7 @@
   import TokenIcon from './TokenIcon.svelte'
   import type { Token } from '$lib/types.svelte'
   import { isHex, zeroAddress, type Hex } from 'viem'
-  import { Chains } from '$lib/stores/auth/types'
+  import { Chains, idToChain } from '$lib/stores/auth/types'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
     assetSources,
@@ -38,7 +38,7 @@
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { SvelteMap } from 'svelte/reactivity'
   import { untrack } from 'svelte'
-  import { bridgeTxHash, foreignBridgeInputs } from '$lib/stores/storage.svelte'
+  import { bridgeTxHash, foreignBridgeInputs, storage } from '$lib/stores/storage.svelte'
   import OnboardStep from './OnboardStep.svelte'
   import SectionInput from './SectionInput.svelte'
   import TokenSelect from './TokenSelect.svelte'
@@ -47,6 +47,13 @@
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
+  import { Progress, Tooltip } from '@skeletonlabs/skeleton-svelte'
+  import ExplorerLink from './ExplorerLink.svelte'
+  import Icon from '@iconify/svelte'
+  import Button from './Button.svelte'
+  import Input from './Input.svelte'
+
+  // bridgeTxHash.value = '0xab50111e688b77501c5e26d4c59a8bd8c1b0ae21ea7bf6647b0fde337b9d3c49'
 
   const toast = getContext('toast') as ToastContext
 
@@ -101,7 +108,7 @@
   })
   let tx: Hex | null = $state(null)
   $effect(() => {
-    tx = localStorage.getItem('bridge-tx') as Hex | null
+    tx = bridgeTxHash.value
   })
   const bridgeTokens = transactionButtonPress({
     toast,
@@ -186,7 +193,7 @@
     } else if (bridgeStatus.status === bridgeStatuses.FINALIZED) {
       bridgeStatus = {
         ...bridgeStatus,
-        status: bridgeStatuses.VALIDATING,
+        status: bridgeStatuses.FINALIZED,
         statusIndex: 3,
       }
     } else if (bridgeStatus.status === bridgeStatuses.VALIDATING) {
@@ -219,10 +226,9 @@
     }
   })
   const clearTxTracking = () => {
-    const localTx = localStorage.getItem('bridge-tx')
+    const localTx = bridgeTxHash.value
     if (tx === localTx) {
-      console.log('clearing tx tracking', localTx, bridgeStatus?.deliveredHash)
-      localStorage.removeItem('bridge-tx')
+      bridgeTxHash.value = null
       tx = null
     }
     bridgeStatus = null
@@ -237,18 +243,18 @@
       amountIn.value > maxBridgeable,
   )
   $effect(() => {
-    if (!tx || !destinationBlock) {
+    if (!bridgeTxHash.value || !destinationBlock) {
       return
     }
     const result = liveBridgeStatus({
       bridgeKey,
-      hash: tx,
+      hash: bridgeTxHash.value,
       ticker: destinationBlock,
     })
     result.promise.then((liveResult) => {
       if (result.controller.signal.aborted) return
       if (liveResult?.hash !== tx) {
-        const local = localStorage.getItem('bridge-tx')
+        const local = bridgeTxHash.value
         if (!local) return
         tx = local as Hex
       }
@@ -305,21 +311,31 @@
     if (bridgeStatus?.status === bridgeStatuses.AFFIRMED) {
       const lastTxHash = untrack(() => bridgeStatus?.hash)
       setTimeout(() => {
-        if (lastTxHash === localStorage.getItem('bridge-tx')) {
+        if (lastTxHash === bridgeTxHash.value) {
           clearTxTracking()
         }
       }, 10_000)
     }
   })
-  let editTxInput: HTMLInputElement | null = $state(null)
+  let showTxInput = $state(false)
+  let txHashValue = $state('')
+  $effect(() => {
+    if (bridgeTxHash.value) {
+      txHashValue = bridgeTxHash.value
+    }
+  })
   const toggleEditTxHash = () => {
-    editTxHash = !editTxHash
-    if (editTxHash) {
-      setTimeout(() => {
-        editTxInput?.focus()
-      }, 400)
+    showTxInput = !showTxInput
+  }
+  const updateTxHash = (v: string) => {
+    if (isHex(v) && v.length === 66) {
+      bridgeTxHash.value = v as Hex
     }
   }
+  const hideTxHashInput = () => {
+    showTxInput = false
+  }
+  const isValidTxHash = $derived(isHex(txHashValue) && txHashValue.length === 66)
 </script>
 
 <OnboardStep icon="line-md:chevron-double-down">
@@ -378,17 +394,91 @@
         symbol: 'ETH',
         name: 'Ether',
       }}
-      readonly
+      readonlyInput
+      readonlyTokenSelect
       value={outputAmount}
       onbalanceupdate={() => {}}>
+      {#snippet underinput()}
+        <Button
+          onclick={toggleEditTxHash}
+          class="opacity-0 hover:opacity-100 transition-opacity duration-100 text-surface-contrast-50 absolute top-full left-0">
+          <Icon icon="mdi:pencil" class="size-4 flex" />
+        </Button>
+      {/snippet}
     </SectionInput>
   {/snippet}
   {#snippet button()}
     <OnboardButton
       disabled={disableBridgeButton}
-      requiredChain={availableChains.get(tokenInput!.chainId)!}
+      requiredChain={idToChain.get(tokenInput!.chainId)!}
       onclick={bridgeTokens}
       text="Bridge to PulseChain"
       loadingKey="lifi-quote" />
+  {/snippet}
+  {#snippet progress()}
+    {#if showTxInput}
+      <div class="h-6 w-full relative">
+        <Button
+          onclick={hideTxHashInput}
+          class="text-sm text-contrast-500 text-right absolute top-0 leading-6 flex flex-col gap-1 items-center justify-center size-6 text-surface-contrast-50">
+          <Icon icon="flowbite:close-outline" class="size-4 flex [&>path]:stroke-2" />
+        </Button>
+        <Input
+          value={txHashValue}
+          oninput={(val) => {
+            updateTxHash(val)
+            if (isHex(val) && val.length === 66) {
+              showTxInput = false
+            }
+          }}
+          class="border pl-6 pr-2 py-1 rounded-full text-xs h-full text-ellipsis text-surface-contrast-50 text-right focus:ring-0 {isValidTxHash
+            ? 'border-success-500'
+            : 'border-error-200'}" />
+      </div>
+    {:else if bridgeStatus}
+      <div class="flex flex-row w-full relative grow">
+        <Progress
+          height="h-6"
+          meterBg="bg-success-500"
+          trackClasses="flex rounded-full overflow-hidden inset-shadow-sm border border-success-500"
+          value={percentProgress ?? 30}
+          max={100} />
+        <span
+          class="text-sm text-contrast-500 text-right absolute top-0 leading-6 -translate-x-full flex flex-row gap-1 items-center px-2"
+          style:left={`${percentProgress}%`}>
+          <ExplorerLink
+            path={`/tx/${bridgeStatus?.hash}`}
+            chain={Number(bridgeKey.fromChain)}
+            class="size-6 flex" />
+          <span>{bridgeStatus?.status}</span>
+          {#if bridgeStatus?.status === bridgeStatuses.AFFIRMED}
+            <ExplorerLink
+              path={`/tx/${bridgeStatus?.hash}`}
+              chain={Number(bridgeKey.toChain)}
+              class="size-6 flex" />
+          {:else}
+            <Tooltip
+              interactive={false}
+              triggerClasses="flex"
+              contentClasses="flex bg-tertiary-500 rounded-lg px-2 py-1"
+              openDelay={0}
+              closeDelay={0}
+              positioning={{ placement: 'top' }}>
+              {#snippet trigger()}
+                <Icon icon="mdi:clock" class="size-4 flex" />
+              {/snippet}
+              {#snippet content()}
+                <span>{bridgeStatusETATooltip}</span>
+              {/snippet}
+            </Tooltip>
+          {/if}
+        </span>
+        <Button
+          onclick={clearTxTracking}
+          class="text-sm text-contrast-500 text-right absolute top-0 leading-6 flex flex-row gap-1 items-center size-6 px-1 py-0.5">
+          <Icon icon="mdi:close" class="size-5 flex" />
+        </Button>
+      </div>
+    {/if}
   {/snippet}
 </OnboardStep>

@@ -16,23 +16,17 @@
   importing in this way allows the scripts to be loaded in parallel
   and for us to show a loader until loading is complete
 -->
-<div class="app bg-slate-950">
-  <div class="app">
-    <Nav />
-    <main class="mt-14 box-border flex min-h-screen w-full flex-col bg-slate-950 text-white">
-      <ToastProvider placement="bottom-end">
+<ToastProvider placement="bottom-end">
+  <div class="app bg-slate-950">
+    <div class="app">
+      <Nav />
+      <main class="mt-14 box-border flex min-h-screen w-full flex-col bg-slate-950 text-white">
         {@render children()}
-      </ToastProvider>
-      <Footer />
-    </main>
+        <Footer />
+      </main>
+    </div>
   </div>
-  <!-- {#await import('$lib/pages/Delivery.svelte')}
-  {:then c} -->
-  <!-- <svelte:component this={c.default}> -->
-  <!-- <slot /> -->
-  <!-- </svelte:component> -->
-  <!-- {/await} -->
-</div>
+</ToastProvider>
 
 <style lang="postcss">
   @reference "tailwindcss/theme";

@@ -17,6 +17,7 @@
     onblur?: () => void
     onfocus?: () => void
     oninput?: (e: string) => void
+    onsubmit?: () => void
     setref?: (el: HTMLInputElement) => void
   }
   const {
@@ -34,6 +35,7 @@
     onfocus,
     oninput,
     setref,
+    onsubmit,
   }: Props = $props()
   const defaultClassName = 'flex w-full shadow-xs outline-hidden'
   let input!: HTMLInputElement

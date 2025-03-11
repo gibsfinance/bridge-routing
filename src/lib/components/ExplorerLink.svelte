@@ -1,25 +1,34 @@
 <script lang="ts">
+  import { chainsById } from '$lib/stores/auth/AuthProvider.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import type { Chains } from '$lib/stores/auth/types'
+  import { toChain } from '$lib/stores/auth/types'
   import { domains, addDomain } from '$lib/stores/window.svelte'
+  import type { ClassParam } from '$lib/types.svelte'
   import Icon from '@iconify/svelte'
+  import classNames from 'classnames'
 
   type Props = {
     size?: string
     path: string
-    chain: Chains
+    chain: number
+    class?: ClassParam
+    linkClasses?: ClassParam
   }
-  const { size = '1.5em', path, chain }: Props = $props()
-  const explorer = $derived(chainsMetadata[chain]?.blockExplorers?.default?.url || '')
+  const { class: className = '', path, chain: chainId, linkClasses = '' }: Props = $props()
+  const chain = $derived(chainsMetadata[toChain(chainId)] ?? chainsById.get(chainId))
+  const explorer = $derived(chain?.blockExplorers?.default?.url || '')
   const d = $derived(domains.get(explorer) || '')
   $effect(() => {
     if (explorer) addDomain(explorer)
   })
+  const classes = $derived(classNames('inline mx-1', className))
+  const linkClassNames = $derived(classNames(linkClasses))
 </script>
 
 <a
   href="{d || explorer}{d ? '#' : ''}{path}"
   aria-label="direct{d ? ' to ipfs' : ''} page for {explorer}"
-  target="_blank">
-  <Icon icon="gis:direct" class="inline mx-1" height={size} width={size} />
+  target="_blank"
+  class={linkClassNames}>
+  <Icon icon="gis:direct" class={classes} />
 </a>

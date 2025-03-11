@@ -5,7 +5,7 @@
   import Icon from '@iconify/svelte'
   import Loading from './Loading.svelte'
   import { page } from '$app/state'
-  import { bridgeKey } from '$lib/stores/input.svelte'
+  import { bridgeKey, incrementForcedRefresh } from '$lib/stores/input.svelte'
   import { Chains } from '$lib/stores/auth/types'
   import { addDomain } from '$lib/stores/window.svelte'
   import { innerWidth } from 'svelte/reactivity/window'
@@ -93,7 +93,9 @@
             {/if}
           </li>
           <li class="flex flex-row">
-            <ModalWrapper triggerClasses="flex flex-row items-center px-2 py-1">
+            <ModalWrapper
+              triggerClasses="flex flex-row items-center px-2 py-1"
+              contentWidthClass="max-w-[576px] w-full">
               {#snippet button()}
                 <!-- {#if !isSmall}RPC&nbsp;{/if} -->
                 <Icon icon="gravity-ui:plug-connection" height="1.2em" width="1.2em" />
@@ -106,6 +108,8 @@
                     updates.forEach(([chain, list]) => {
                       rpcs.store.set(chain, list)
                     })
+                    incrementForcedRefresh()
+                    close()
                   }} />
               {/snippet}
             </ModalWrapper>

@@ -14,9 +14,11 @@
   import Loading from './Loading.svelte'
   import { oneEther } from '$lib/stores/bridge-settings.svelte'
   import { untrack } from 'svelte'
+  import type { Hex } from 'viem'
 
   type Props = {
     token: Token
+    account?: string | null | undefined
     onmax?: (balance: bigint) => boolean | void
     onbalanceupdate?: (balance: bigint | null) => void
     roundedClasses?: ClassParam
@@ -29,6 +31,7 @@
   }
   const {
     token,
+    account,
     wrapperSizeClasses = '',
     wrapperClasses: wrapperClassNames = 'relative flex items-center text-xs leading-5 gap-1',
     showLoader = false,
@@ -43,10 +46,10 @@
   $effect(() => untrack(() => latestBlock.watch(token.chainId)))
   $effect(() => {
     const block = untrack(() => latestBlock.block(token.chainId))
-    if (!accountState.address || !block) {
+    if (!account || !block) {
       return
     }
-    return tokenBalance.fetch(token.chainId, token, accountState.address, block)
+    return tokenBalance.fetch(token.chainId, token, account as Hex, block)
   })
 
   $effect(() => {
@@ -55,7 +58,7 @@
   const balance = $derived(tokenBalance.value ?? 0n)
   const disableMax = $derived(balance === 0n)
   const loadingKey = $derived(
-    tokenBalanceLoadingKey(token.chainId, token, accountState.address ?? '0x'),
+    tokenBalanceLoadingKey(token.chainId, token, (account as Hex) ?? '0x'),
   )
   const decimalClassNames = $derived(classNames('h-full', decimalClasses))
   const maxOutBalance = (event: MouseEvent) => {

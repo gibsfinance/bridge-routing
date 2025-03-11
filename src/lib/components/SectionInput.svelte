@@ -17,11 +17,14 @@
     token: Token
     showRadio?: boolean
     disabled?: boolean
-    readonly?: boolean
+    disabledInput?: boolean
+    readonlyInput?: boolean
+    readonlyTokenSelect?: boolean
     focused?: boolean
     oninput?: (v: bigint) => void
     value: bigint | null
     modal?: Snippet<[{ close: () => void }]>
+    underinput?: Snippet
     onmax?: (v: bigint) => void
     onbalanceupdate?: (v: bigint | null) => void
   }
@@ -31,11 +34,14 @@
     label,
     oninput,
     showRadio = false,
-    readonly = false,
+    readonlyInput = false,
+    readonlyTokenSelect = false,
     disabled = false,
     focused = false,
+    disabledInput = false,
     value,
     modal,
+    underinput,
     onmax,
     onbalanceupdate,
   }: Props = $props()
@@ -46,7 +52,7 @@
   class="flex flex-col items-center justify-items-end grow gap-1 rounded-container shadow-inset justify-between w-full preset-outline-surface-500 overflow-hidden relative p-4"
   class:bg-white={focused}
   class:bg-surface-950-50={!focused}
-  class:cursor-not-allowed={readonly}>
+  class:cursor-not-allowed={readonlyInput && readonlyTokenSelect}>
   <div class="flex relative items-center flex-col w-full gap-2">
     <div class="flex flex-row justify-between w-full h-5">
       <span class="text-sm text-gray-500">{label}</span>
@@ -55,7 +61,7 @@
       {/if}
     </div>
     <div class="flex flex-row items-center justify-between w-full">
-      {#if readonly}
+      {#if readonlyInput}
         {@const valIsNumber = typeof value === 'bigint'}
         {@const humanReadable =
           valIsNumber && value !== 0n
@@ -67,7 +73,6 @@
           class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-gray-500 h-10 leading-10"
           style:font-size={`${largeInputFontScaler(humanReadable?.length ?? 0)}px`}
           >{valIsNumber ? humanReadable : '0'}</span>
-        <SelectButtonContents {token} network={token.chainId} hideChevron />
       {:else}
         <NumericInput
           {id}
@@ -76,6 +81,10 @@
           decimals={token.decimals}
           {disabled}
           {oninput} />
+      {/if}
+      {#if readonlyTokenSelect}
+        <SelectButtonContents {token} network={token.chainId} hideChevron />
+      {:else}
         <ModalWrapper
           wrapperClasses="flex items-center justify-center h-full"
           triggerClasses=""
@@ -90,10 +99,11 @@
       {/if}
     </div>
 
-    <div class="flex gap-1 flex-row justify-end grow w-full h-5">
+    <div class="flex gap-1 flex-row-reverse justify-between grow w-full h-5">
       {#if accountState.address && (!!onmax || !!onbalanceupdate)}
         <BalanceReadout
           {token}
+          account={accountState.address}
           showLoader
           roundedClasses={null}
           hideSymbol
@@ -101,6 +111,7 @@
           {onbalanceupdate}
           {onmax} />
       {/if}
+      {@render underinput?.()}
     </div>
   </div>
 </label>

@@ -1,4 +1,5 @@
 import type { Chain } from 'viem/chains'
+import * as networks from 'viem/chains'
 
 /**
  * Add here your chain id as hex, be sure to add your chain in the chainsMetadata object too
@@ -35,3 +36,7 @@ export enum Provider {
   PULSECHAIN = 'pulsechain',
   TOKENSEX = 'tokensex',
 }
+
+export const idToChain = new Map<number, Chain>(
+  Object.values(networks).map((chain) => [chain.id, chain] as [number, Chain]),
+)

@@ -25,7 +25,7 @@
   import type { Chain as LIFIChain } from '@lifi/sdk'
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { getContext } from 'svelte'
-    import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
+  import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
 
   const toast = getContext('toast') as ToastContext
   let tokenInput: Token = $state({
@@ -57,6 +57,7 @@
 
   let everLoaded = $state(false)
   $effect(() => {
+    if (everLoaded) return
     loadData().then(async () => {
       const previousSettings = untrack(() => foreignBridgeInputs.value)
       const loadedFromChain = untrack(
@@ -73,12 +74,11 @@
       }
       amountInput = previousSettings?.fromAmount ? BigInt(previousSettings.fromAmount) : 0n
       const tokensDestination = untrack(() => availableTokensPerOriginChain.get(1)!)
-      const tokenDestination =
-        (previousSettings?.toToken
-          ? tokensDestination.find(
-              (tkn) => getAddress(tkn.address) === getAddress(previousSettings.toToken),
-            )
-          : tokensDestination[0]) ?? tokensDestination[0]
+      const tokenDestination = previousSettings?.toToken
+        ? tokensDestination.find(
+            (tkn) => getAddress(tkn.address) === getAddress(previousSettings.toToken),
+          )
+        : tokensDestination[0]
       if (tokenDestination) {
         tokenOutput = tokenDestination
       }
@@ -290,7 +290,7 @@
       label="Output"
       token={tokenOutWithPrefixedName}
       value={amountOutput}
-      disabled
+      readonlyInput
       onbalanceupdate={() => {}}>
       {#snippet modal({ close })}
         <TokenSelect
