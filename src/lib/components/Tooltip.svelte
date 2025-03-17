@@ -2,15 +2,17 @@
   import { Tooltip } from '@skeletonlabs/skeleton-svelte'
   import type { Snippet } from 'svelte'
   import classNames from 'classnames'
+  import type { ClassParam } from '$lib/types.svelte'
   type Props = {
     placement?: 'top' | 'bottom' | 'left' | 'right'
     maxWidth?: string
     tooltip?: string
     children?: Snippet
-    class?: string
+    class?: ClassParam
     openDelay?: number
     closeDelay?: number
-    positionerClassName?: string
+    positionerClassName?: ClassParam
+    triggerClassName?: ClassParam
   }
   let {
     placement,
@@ -21,6 +23,7 @@
     positionerClassName,
     openDelay = 0,
     closeDelay = 0,
+    triggerClassName,
   }: Props = $props()
   let open = $state(false)
   const classes = $derived(classNames('relative flex tooltip-container', className))
@@ -28,6 +31,7 @@
   const onOpenChange = (details: { open: boolean }) => {
     open = details.open
   }
+  const triggerClasses = $derived(classNames('flex', triggerClassName))
 </script>
 
 <Tooltip
@@ -36,7 +40,7 @@
   {closeDelay}
   interactive={false}
   {classes}
-  triggerClasses="flex"
+  {triggerClasses}
   contentBase="card preset-filled-tertiary-500 text-sm px-2 py-1 {maxWidth}"
   {positionerClasses}
   {openDelay}

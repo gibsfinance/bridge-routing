@@ -13,8 +13,8 @@
   import OnboardForeignBridge from './OnboardForeignBridge.svelte'
   import { untrack } from 'svelte'
   import { activeOnboardStep } from '$lib/stores/storage.svelte'
-  import OnboardRadio from './OnboardRadio.svelte'
-  const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
+
+  const bridgedToken = $derived(bridgeSettings.assetOut as Token | null)
   const tokenInput = $derived(bridgeSettings.assetIn.value)
   // const networkIsSet = $derived(!!accountState.chainId)
   // const networkMatches = $derived(accountState.chainId === Number(bridgeKey.fromChain))
@@ -74,7 +74,7 @@
       <div class="flex flex-row items-center justify-center gap-4">
         <Button class="btn preset-filled-tertiary-950-50 w-fit" onclick={switchToTargetChain}>
           <span>Switch Network</span>
-          <Image src={targetChain.icon} alt={targetChain.name} class="size-4" />
+          <Image src={targetChain.logoURI} alt={targetChain.name} class="size-4" />
         </Button>
       </div>
     {/if} -->

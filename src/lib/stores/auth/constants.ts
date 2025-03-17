@@ -12,7 +12,7 @@ export const chainsMetadata = {
   [Chains.PLS]: {
     ...pulsechain,
     chainId: Chains.PLS,
-    icon: imageLinks.network(pulsechain.id),
+    logoURI: imageLinks.network(pulsechain.id),
     alt: 'a pink blue and purple hexagon with an ekg line running horizontally',
     rpcUrls: {
       default: {
@@ -33,7 +33,7 @@ export const chainsMetadata = {
   [Chains.ETH]: {
     ...mainnet,
     chainId: Chains.ETH,
-    icon: imageLinks.network(mainnet.id),
+    logoURI: imageLinks.network(mainnet.id),
     alt: 'two pyramids joined on one side',
     rpcUrls: {
       default: {
@@ -45,7 +45,7 @@ export const chainsMetadata = {
     ...bsc,
     name: 'Binance Smart Chain',
     chainId: Chains.BNB,
-    icon: bnbNetworkUrl,
+    logoURI: bnbNetworkUrl,
     alt: 'a gold cube with slits in the middle of each side',
     rpcUrls: {
       default: {
@@ -57,7 +57,7 @@ export const chainsMetadata = {
     ...sepolia,
     name: 'Sepolia',
     chainId: Chains.SEP,
-    icon: imageLinks.network(sepolia.id),
+    logoURI: imageLinks.network(sepolia.id),
     alt: 'two pyramids joined on one side',
     rpcUrls: {
       default: {
@@ -69,7 +69,7 @@ export const chainsMetadata = {
     ...pulsechainV4,
     name: 'Pulsechain V4',
     chainId: Chains.V4PLS,
-    icon: plsV4NetworkUrl,
+    logoURI: plsV4NetworkUrl,
     alt: 'a pink blue and purple hexagon with an ekg line running horizontally',
     rpcUrls: {
       default: {

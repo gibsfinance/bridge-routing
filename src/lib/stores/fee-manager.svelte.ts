@@ -11,26 +11,32 @@ export type PathwayExtendableConfig = {
 
 type Contents = Partial<Record<Chains, Partial<Record<Chains, PathwayExtendableConfig>>>>
 
-export const feeCache = $state({
-  [Provider.PULSECHAIN]: {} as Contents,
-  [Provider.TOKENSEX]: {} as Contents,
-})
+// export const feeCache = $state({
+//   [Provider.PULSECHAIN]: {} as Contents,
+//   [Provider.TOKENSEX]: {} as Contents,
+// })
 
-export const settings = {
+export class BridgeSettings {
+  private feeCache = $state({
+    [Provider.PULSECHAIN]: {} as Contents,
+    [Provider.TOKENSEX]: {} as Contents,
+  })
   get(bridgeKey: null | BridgeKey) {
     if (!bridgeKey) return
-    return _.get(feeCache, bridgeKey) as PathwayExtendableConfig | undefined
-  },
+    return _.get(this.feeCache, bridgeKey) as PathwayExtendableConfig | undefined
+  }
   set(bridgeKey: null | BridgeKey, value: PathwayExtendableConfig) {
     if (!bridgeKey) return
     const [provider, fromChain, toChain] = bridgeKey
     const update = {
-      ...feeCache[provider],
+      ...(this.feeCache[provider] ?? {}),
       [fromChain]: {
-        ...feeCache[provider]?.[fromChain],
+        ...(this.feeCache[provider]?.[fromChain] ?? {}),
         [toChain]: value,
       },
     }
-    feeCache[provider] = update
-  },
+    this.feeCache[provider] = update
+  }
 }
+
+export const settings = new BridgeSettings()

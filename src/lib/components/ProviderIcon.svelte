@@ -25,7 +25,7 @@
     [
       'pulsechain',
       {
-        src: chainsMetadata['0x171'].icon,
+        src: chainsMetadata['0x171'].logoURI,
         alt: chainsMetadata['0x171'].alt,
       },
     ],

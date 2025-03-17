@@ -10,8 +10,8 @@
   import { assetLink, latestBlock, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
   import {
     bridgableTokens,
-    bridgeableTokensUnder,
-    bridgeFee,
+    // bridgeableTokensUnder,
+    // bridgeAdminSettings,
     loadFeeFor,
     recipient,
     bridgeKey,
@@ -19,15 +19,15 @@
   // import { onboardSettings } from '$lib/stores/onboard.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
   import { onDestroy, untrack } from 'svelte'
-  import OnboardRadio from './OnboardRadio.svelte'
+  // import OnboardRadio from './OnboardRadio.svelte'
   const openOnRamp = () => {
     modal.open({
       view: 'OnRampProviders',
     })
   }
-  const openZKP2P = () => {
-    open('https://zkp2p.xyz/swap', '_blank')?.focus()
-  }
+  // const openZKP2P = () => {
+  //   open('https://zkp2p.xyz/swap', '_blank')?.focus()
+  // }
   const toggleHelp = () => {
     showTooltips.value = !showTooltips.value
   }
@@ -48,9 +48,10 @@
     }
   })
   $effect(() => {
-    if (!tokenInput) return
-    const tokensUnderBridgeKey = bridgeableTokensUnder({
-      tokens: bridgableTokens.value,
+    const assetOutKey = bridgeSettings.assetOutKey
+    if (!tokenInput || !assetOutKey) return
+    const tokensUnderBridgeKey = bridgableTokens.bridgeableTokensUnder({
+      provider: bridgeKey.provider,
       chain: Number(bridgeKey.toChain),
       partnerChain: Number(bridgeKey.fromChain),
     })
@@ -61,26 +62,28 @@
     link.promise.then((l) => {
       if (link.controller.signal.aborted || !l?.assetOutAddress) return
       // reverse the chains here because we are looking for the destination
-      let assetOut = searchKnownAddresses({
+      const assetOut = searchKnownAddresses({
         tokensUnderBridgeKey,
         address: l?.assetOutAddress,
         customTokens: [],
       })
       assetLink.value = l
-      bridgeSettings.assetOut.value = assetOut
-        ? {
-            ...assetOut,
-            logoURI: tokenInput.logoURI,
-          }
-        : null
+      if (!assetOut) return
+      bridgeSettings.setAssetOut(assetOutKey, {
+        ...assetOut,
+        logoURI: tokenInput.logoURI,
+      })
     })
     return link.cleanup
   })
   $effect(() => {
-    const result = loadFeeFor(bridgeKey)
-    result.promise.then((fee) => {
-      if (result.controller.signal.aborted) return
-      bridgeFee.value = fee
+    const pathway = bridgeKey.pathway
+    if (!pathway) return
+    const result = loadFeeFor({
+      value: bridgeKey.value,
+      pathway,
+      fromChain: Number(bridgeKey.fromChain),
+      toChain: Number(bridgeKey.toChain),
     })
     return result.cleanup
   })

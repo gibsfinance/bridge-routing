@@ -16,17 +16,17 @@ export enum Chains {
 
 export type ChainKey = keyof typeof Chains
 
-export const ChainIdToKey = new Map<Chains, ChainKey>(
+export const chainIdToKey = new Map<Chains, ChainKey>(
   Object.entries(Chains).map(([key, chain]) => [chain, key] as [Chains, ChainKey]),
 )
 
 export const toChain = (chainId: number | string) => `0x${Number(chainId).toString(16)}` as Chains
 
-export const toChainKey = (chainId: number | string) => ChainIdToKey.get(toChain(chainId))
+export const toChainKey = (chainId: number | string) => chainIdToKey.get(toChain(chainId))
 
 export type VisualChain = Chain & {
   chainId: Chains
-  icon: string
+  logoURI: string
   alt: string
 }
 

@@ -6,7 +6,7 @@
   import Icon from '@iconify/svelte'
   import type { Token } from '$lib/types.svelte'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
-  import { Chains } from '$lib/stores/auth/types'
+  import { Chains, Provider } from '$lib/stores/auth/types'
   import VerticalDivider from './ExchangeInputDivider.svelte'
   import NumericInput from './NumericInput.svelte'
   import BalanceReadout from './BalanceReadout.svelte'
@@ -33,19 +33,21 @@
   // import { chainsMetadata } from '$lib/stores/auth/constants'
   import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
   import { bridgableTokens, bridgeableTokensUnder } from '$lib/stores/input.svelte'
-  import OnboardStep from './OnboardStep.svelte'
+  import InputOutputForm from './InputOutputForm.svelte'
   import SectionInput from './SectionInput.svelte'
   import OnboardButton from './OnboardButton.svelte'
   import { pulsechain } from 'viem/chains'
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
+  import OnboardRadio from './OnboardRadio.svelte'
 
   const toast = getContext('toast') as ToastContext
 
   const tokenOutputAddress = $derived(plsOutToken.value)
   const tokens = $derived(
     bridgableTokens.bridgeableTokensUnder({
+      provider: Provider.PULSECHAIN,
       chain: Number(Chains.PLS),
       partnerChain: null,
     }),
@@ -55,7 +57,7 @@
     return tokens.find((t) => getAddress(t.address) === getAddress(tokenOutputAddress)) ?? tokens[0]
   })
   const tokenInURI = $derived(bridgeSettings.assetIn.value?.logoURI)
-  const bridgeTokenOut = $derived(bridgeSettings.assetOut.value as Token | null)
+  const bridgeTokenOut = $derived(bridgeSettings.assetOut as Token | null)
   const tokenIn = $derived(
     bridgeTokenOut && tokenInURI
       ? ({
@@ -86,7 +88,7 @@
     quote.promise.then((result) => {
       if (quote.controller.signal.aborted || !result) return
       quoteResult = result
-      console.log(result)
+      // console.log(result)
       amountToSwapOut = truncateValue(result.outputAmount.value, tokenOut.decimals)
     })
     return quote.cleanup
@@ -155,22 +157,14 @@
     ...tokenOut,
     name: estimatedAmount ? `${estimatedAmount} ${tokenOut.symbol}` : tokenOut.symbol,
   }))
-  // const bridgeableTokensPLS = $derived(
-  //   bridgeableTokensUnder({
-  //     // tokens: bridgableTokens.value,
-  //     chain: Chains.PLS,
-  //     partnerChain: null,
-  //   }),
-  // )
-  // $inspect(bridgeableTokensPLS)
 </script>
 
-<OnboardStep
+<InputOutputForm
   icon="token:swap"
   ondividerclick={() => {
     const futureInput = tokenOut
-    plsOutToken.value = bridgeSettings.assetOut.value?.address as Hex
-    bridgeSettings.assetOut.value = futureInput
+    plsOutToken.value = bridgeSettings.assetOut?.address as Hex
+    bridgeSettings.setAssetOut(bridgeSettings.assetOutKey!, futureInput)
   }}>
   {#snippet input()}
     <SectionInput
@@ -195,13 +189,16 @@
       oninput={(v) => {
         amountToSwapIn = v
       }}>
+      {#snippet radio()}
+        <OnboardRadio />
+      {/snippet}
       {#snippet modal({ close })}
         <TokenSelect
           chains={[Number(Chains.PLS)]}
           {tokens}
           onsubmit={(tkn) => {
             if (tkn) {
-              bridgeSettings.assetOut.value = tkn as Token
+              bridgeSettings.setAssetOut(bridgeSettings.assetOutKey!, tkn as Token)
             }
             close()
           }} />
@@ -271,7 +268,7 @@
       text="Swap"
       loadingKey="pulsex-quote" />
   {/snippet}
-</OnboardStep>
+</InputOutputForm>
 <!-- <div class="flex relative">
   <div
     class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">

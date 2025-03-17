@@ -17,7 +17,7 @@
   import type { Hex } from 'viem'
 
   type Props = {
-    token: Token
+    token: Token | null
     account?: string | null | undefined
     onmax?: (balance: bigint) => boolean | void
     onbalanceupdate?: (balance: bigint | null) => void
@@ -42,23 +42,28 @@
   }: Props = $props()
   const showMax = $state(!!onmax)
   const tokenBalance = $derived(token && new TokenBalanceWatcher())
+  const chainId = $derived(token?.chainId ?? 0)
 
-  $effect(() => untrack(() => latestBlock.watch(token.chainId)))
   $effect(() => {
-    const block = untrack(() => latestBlock.block(token.chainId))
-    if (!account || !block) {
+    if (!chainId) return
+    return untrack(() => latestBlock.watch(chainId))
+  })
+  $effect(() => {
+    const block = untrack(() => latestBlock.block(chainId))
+    if (!account || !block || !token) {
       return
     }
-    return tokenBalance.fetch(token.chainId, token, account as Hex, block)
+    return tokenBalance!.fetch(chainId, token!, account as Hex, block)
   })
 
   $effect(() => {
+    if (!tokenBalance) return
     onbalanceupdate?.(tokenBalance.value)
   })
-  const balance = $derived(tokenBalance.value ?? 0n)
+  const balance = $derived(tokenBalance?.value ?? 0n)
   const disableMax = $derived(balance === 0n)
   const loadingKey = $derived(
-    tokenBalanceLoadingKey(token.chainId, token, (account as Hex) ?? '0x'),
+    token && tokenBalanceLoadingKey(token?.chainId ?? 0, token, (account as Hex) ?? '0x'),
   )
   const decimalClassNames = $derived(classNames('h-full', decimalClasses))
   const maxOutBalance = (event: MouseEvent) => {
@@ -79,13 +84,13 @@
 
 <div class={wrapperClasses}>
   <span class="flex flex-row gap-1 items-center text-gray-500 leading-5 text-[14px]">
-    {#if showLoader && tokenBalance.value === null}
+    {#if showLoader && tokenBalance?.value === null}
       <Loading key={loadingKey} class="w-4 h-5" />
     {/if}
     <span class={decimalClassNames} class:opacity-70={!loading.isResolved(loadingKey)}
-      >{tokenBalance.value === null ? '' : humanReadableText}
+      >{tokenBalance?.value === null ? '' : humanReadableText}
     </span>
-    <span class="flex">{token.symbol}</span>
+    <span class="flex">{token?.symbol}</span>
   </span>
   {#if showMax}
     <button

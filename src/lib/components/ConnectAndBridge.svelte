@@ -1,29 +1,26 @@
 <script lang="ts">
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import * as transactions from '$lib/stores/transactions'
-  import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
+  import {
+    accountState,
+    appkitNetworkById,
+    switchNetwork,
+  } from '$lib/stores/auth/AuthProvider.svelte'
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { formatUnits, type Hex, zeroAddress } from 'viem'
-  import Loading from './Loading.svelte'
   import * as input from '$lib/stores/input.svelte'
   import { assetLink, fromTokenBalance } from '$lib/stores/chain-events.svelte'
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { connect } from '$lib/stores/auth/AuthProvider.svelte'
   import { getContext } from 'svelte'
+  import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
+  import Button from './Button.svelte'
 
-  const toast = getContext('toast')
+  const toast = getContext('toast') as ToastContext
 
   const { shouldDeliver } = input
 
-  let disabledByClick = $state(false)
-  const tokenBalance = $derived(fromTokenBalance.value || 0n)
-  const walletAccount = $derived(accountState.address)
-  const disabled = $derived(
-    disabledByClick ||
-      BigInt(walletAccount || 0n) === 0n ||
-      bridgeSettings.amountToBridge === 0n ||
-      bridgeSettings.amountToBridge > tokenBalance,
-  )
+  const tokenBalance = $derived(fromTokenBalance.value ?? 0n)
   const initiateBridge = async () => {
     if (!bridgeSettings.foreignDataParam) {
       return
@@ -136,7 +133,16 @@
   let amountInBefore = ''
   const sendIncreaseApproval = transactionButtonPress({
     toast,
-    steps: [increaseApproval],
+    steps: [
+      async () => {
+        return transactions.checkAndRaiseApproval({
+          token: bridgeSettings.assetIn.value!.address as Hex,
+          spender: accountState.address!,
+          chainId: Number(input.bridgeKey.fromChain),
+          minimum: bridgeSettings.amountToBridge,
+        })
+      },
+    ],
   })
   const decimals = $derived(bridgeSettings.assetIn.value!.decimals)
   const sendInitiateBridge = transactionButtonPress({
@@ -154,11 +160,63 @@
       }
     },
   })
-  const testId = 'progression-button'
+  // const testId = 'progression-button'
   const isNative = $derived(bridgeSettings.assetIn.value?.address === zeroAddress)
+  const canDeliver = $derived.by(() => {
+    return (
+      assetLink.value?.originationChainId !== input.bridgeKey.fromChain ||
+      (bridgeSettings.approval.value &&
+        bridgeSettings.approval.value >= bridgeSettings.amountToBridge) ||
+      isNative
+    )
+  })
+  const isRequiredChain = $derived(accountState.chainId === Number(input.bridgeKey.fromChain))
+  const skipApproval = $derived.by(() => {
+    return (
+      assetLink.value?.originationChainId !== input.bridgeKey.fromChain ||
+      (bridgeSettings.approval.value &&
+        bridgeSettings.approval.value >= bridgeSettings.amountToBridge)
+    )
+  })
+  const [possiblyDisabled, text] = $derived.by(() => {
+    if (!accountState?.address) {
+      return [false, 'Connect']
+    }
+    if (!isRequiredChain) {
+      return [false, 'Switch Network']
+    }
+    if (!skipApproval) {
+      return [true, 'Approve']
+    }
+    if (!shouldDeliver.value && bridgeSettings.bridgePathway?.requiresDelivery) {
+      return [true, 'Bridge']
+    }
+    return [true, 'Bridge and Deliver']
+  })
+  const onclick = $derived.by(() => {
+    if (!accountState?.address) {
+      return connect
+    }
+    if (!isRequiredChain) {
+      return () => switchNetwork(appkitNetworkById.get(Number(input.bridgeKey.fromChain)))
+    }
+    if (!skipApproval) {
+      return sendIncreaseApproval
+    }
+    return sendInitiateBridge
+  })
+  const enabled = $derived(
+    !possiblyDisabled ||
+      (!!BigInt(accountState.address ?? 0n) &&
+        bridgeSettings.estimatedCost &&
+        isRequiredChain &&
+        bridgeSettings.amountToBridge > 0n &&
+        bridgeSettings.amountToBridge <= tokenBalance),
+  )
+  // $inspect(disabled, accountState.address, bridgeSettings.amountToBridge, tokenBalance)
 </script>
 
-<div class="flex w-full">
+<!-- <div class="flex w-full">
   {#if walletAccount}
     {#if assetLink.value?.originationChainId !== input.bridgeKey.fromChain || (bridgeSettings.approval.value && bridgeSettings.approval.value >= bridgeSettings.amountToBridge) || isNative}
       <button
@@ -186,11 +244,17 @@
       </button>
     {/if}
   {:else}
-    <button
-      class="px-2 leading-10 bg-tertiary-600 text-white w-full rounded-lg hover:bg-tertiary-500 active:bg-tertiary-500"
-      data-testid={testId}
+    <Button
+      class="leading-10 bg-tertiary-600 text-white w-full rounded-2xl hover:bg-tertiary-500 active:bg-tertiary-500"
       onclick={() => connect()}>
       Sign In
-    </button>
+    </Button>
   {/if}
+</div> -->
+
+<div class="flex w-full">
+  <Button
+    class="bg-tertiary-600 w-full text-surface-contrast-950 leading-10 p-2 rounded-2xl"
+    {onclick}
+    disabled={!enabled}>{text}</Button>
 </div>

@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import { goto } from '$app/navigation'
   import { toPath, bridgeKey } from '$lib/stores/input.svelte'
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
@@ -31,4 +31,4 @@
     onclick={flipDirection}>
     &DoubleDownArrow;
   </button>
-</div>
+</div> -->

@@ -6,26 +6,27 @@
   import { Chains, type Provider, type ChainKey } from '$lib/stores/auth/types'
   import { goto } from '$app/navigation'
   import { getAddress, isAddress, type Hex } from 'viem'
-  const provider = $derived(page.params.provider as Provider)
-  const fromChain = $derived(page.params.fromChain as ChainKey)
-  const toChain = $derived(page.params.toChain as ChainKey)
-  const bridgeKey = $derived([provider, Chains[fromChain], Chains[toChain]] as input.BridgeKey)
+  const provider = page.params.provider as Provider
+  const fromChain = page.params.fromChain as ChainKey
+  const toChain = page.params.toChain as ChainKey
+  const bridgeKey = [provider, Chains[fromChain], Chains[toChain]] as input.BridgeKey
 
-  $effect(() => {
-    if (!pathway(bridgeKey)) {
-      const bridgeKeyPath = input.toPath(input.defaultBridgeKey)
-      goto(`#/delivery/${bridgeKeyPath}/${page.params.assetInAddress}`)
+  // $effect.pre(() => {
+  if (!pathway(bridgeKey)) {
+    const bridgeKeyPath = input.toPath(input.defaultBridgeKey)
+    goto(`#/delivery/${bridgeKeyPath}/${page.params.assetInAddress}`, {})
+  } else {
+    input.bridgeKey.value = bridgeKey
+    let assetInAddress = page.params.assetInAddress as Hex | null
+    if (assetInAddress && isAddress(assetInAddress)) {
+      assetInAddress = getAddress(assetInAddress)
     } else {
-      input.bridgeKey.value = bridgeKey
-      let assetInAddress = page.params.assetInAddress as Hex | null
-      if (assetInAddress && isAddress(assetInAddress)) {
-        assetInAddress = getAddress(assetInAddress)
-      } else {
-        assetInAddress = null
-      }
-      input.assetInAddress.value = assetInAddress
+      assetInAddress = null
     }
-  })
+    console.log('setting assetInAddress', assetInAddress)
+    input.bridgeKey.assetInAddress = assetInAddress
+  }
+  // })
   const props = $props()
 </script>
 

@@ -9,6 +9,7 @@
     iconWrapperSizeClasses?: ClassParam
     iconWrapperColorClasses?: ClassParam
     positionClasses?: ClassParam
+    zClasses?: ClassParam
     class?: ClassParam
     onclick?: null | (() => void)
   }
@@ -16,10 +17,11 @@
     verticalSizeClasses = 'w-full',
     positionClasses = 'relative',
     iconWrapperSizeClasses = 'size-12',
+    zClasses = 'z-10',
     children,
     onclick: onClick,
   }: Props = $props()
-  const classes = $derived(classNames(verticalSizeClasses, positionClasses))
+  const classes = $derived(classNames(verticalSizeClasses, positionClasses, zClasses))
   const iconWrapperClasses = $derived(
     classNames(
       iconWrapperSizeClasses,

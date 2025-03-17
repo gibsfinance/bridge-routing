@@ -8,7 +8,7 @@ export class LoadingCounter {
   get resolved() {
     return this.value.total === 0
   }
-  isResolved(key?: string | string[]) {
+  isResolved(key?: string | string[] | null) {
     if (!key) return this.resolved
     if (Array.isArray(key))
       return key.reduce((total, k) => total + (this.value.categories[k] || 0), 0) === 0

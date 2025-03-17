@@ -2,5 +2,5 @@
   import { page } from '$app/state'
   import { goto } from '$app/navigation'
   import { zeroAddress } from 'viem'
-  goto(`#/delivery/${page.params.provider}/${page.params.fromChain}/ETH/${zeroAddress}`)
+  goto(`#/delivery/${page.params.provider}/${page.params.fromChain}/PLS/${zeroAddress}`)
 </script>

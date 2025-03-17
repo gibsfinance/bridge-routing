@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import { Chains, toChain } from '$lib/stores/auth/types'
   import Icon from '@iconify/svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
@@ -81,4 +81,4 @@
     <StaticNetworkImage network={providedNetwork} {sizeClasses} />
     <span class="leading-8">{network.name}</span>
   </div>
-{/if}
+{/if} -->

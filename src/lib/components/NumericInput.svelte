@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
   import { numberWithCommas, stripNonNumber } from '$lib/stores/utils'
   import classNames from 'classnames'
   import type { ClassParam } from '$lib/types.svelte'
@@ -13,48 +14,61 @@
     value?: bigint | null
     decimals?: number
     disabled?: boolean
-    oninput?: (value: bigint) => void
+    oninput?: (value: bigint) => bigint | undefined | void
     onblur?: FormEventHandler<HTMLInputElement>
     onfocus?: FormEventHandler<HTMLInputElement>
     class?: ClassParam
+    sizeClass?: ClassParam
     paddingClass?: ClassParam
+    textClass?: ClassParam
     placeholder?: string
     fit?: boolean
+    fontSizeInput?: number | null
   }
   const {
     fit = false,
     id = _.uniqueId('numeric-input-'),
     value: startingValue = null,
     decimals = 18,
+    fontSizeInput,
     placeholder = '0',
     disabled = false,
-    class:
-      className = 'w-full input ring-0 focus:ring-0 text-surface-contrast-50 text-right font-inter',
+    class: className = 'input ring-0 focus:ring-0',
+    sizeClass = 'w-full',
     paddingClass = 'py-0 px-0',
+    textClass = 'text-right font-inter text-surface-contrast-50 placeholder:text-surface-contrast-50',
     ...props
   }: Props = $props()
   let focused = $state(false)
+
   let selectionEnd = $state<number | null>(null)
-  const decimalValue = $derived(startingValue ? formatUnits(startingValue, decimals) : null)
-  let value = $derived.by(() => {
+  const decimalValue = $derived(
+    startingValue !== null ? formatUnits(startingValue, decimals) : null,
+  )
+  const value = $derived.by(() => {
     if (!decimalValue) return decimalValue
-    if (selectionEnd === null) return numberWithCommas(decimalValue)
     return numberWithCommas(decimalValue)
   })
-  const classes = $derived(classNames(className, paddingClass))
+  const classes = $derived(classNames(sizeClass, className, textClass, paddingClass))
+  let inputRef: HTMLInputElement | null = null
+  const fontSize = $derived(
+    fontSizeInput === undefined ? largeInputFontScaler(value?.length) : fontSizeInput,
+  )
   const oninput: FormEventHandler<HTMLInputElement> = (e) => {
-    const val = (e.target as HTMLInputElement).value
-    let bestGuess = startingValue
+    const currentTextValue = (e.target as HTMLInputElement).value
+    let bestGuess = untrack(() => startingValue)
     try {
-      const stripped = stripNonNumber(val)
+      const stripped = stripNonNumber(currentTextValue)
       bestGuess = parseUnits(stripped, decimals)
     } catch (err) {}
     // if the parsed value fails, then we use the previous value or the best guess
     selectionEnd = (e.target as HTMLInputElement).selectionEnd
-    props.oninput?.(bestGuess ?? 0n)
+    const clamped = props.oninput?.(bestGuess ?? 0n)
+    if (clamped !== undefined && inputRef) {
+      // startingValue = clamped
+      inputRef.value = numberWithCommas(formatUnits(clamped, decimals))
+    }
   }
-  let inputRef: HTMLInputElement | null = null
-  const fontSize = $derived(largeInputFontScaler(value?.length))
   const onfocus: FormEventHandler<HTMLInputElement> = (e) => {
     focused = true
     props.onfocus?.(e)

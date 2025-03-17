@@ -53,7 +53,7 @@
     <GreenBadge icon="carbon:network-4" />
     <span class="ml-2">RPCs</span>
   </h2>
-  <p class="text-center pt-3 text-sm text-gray-400 max-w-md m-auto">
+  <p class="text-center text-sm text-gray-400 max-w-md mx-auto">
     Endpoints will be used under the same public client, and will use batching where possible.
   </p>
   <div class="overflow-y-scroll flex flex-col max-h-64 h-full px-4">

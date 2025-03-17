@@ -32,7 +32,7 @@
   <Image
     class={classes}
     {sizeClasses}
-    src={icon ?? visualChain?.icon ?? imageLinks.network(Number(network))}
+    src={icon ?? visualChain?.logoURI ?? imageLinks.network(Number(network))}
     alt={visualChain?.alt || null} />
   {#if provider}
     <div class={providerWrapperClasses}>

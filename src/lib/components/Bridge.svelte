@@ -2,11 +2,14 @@
   import FromNetwork from './FromNetwork.svelte'
   import ToNetwork from './ToNetwork.svelte'
   import ConnectAndBridge from './ConnectAndBridge.svelte'
+  import * as nav from '$lib/stores/nav.svelte'
   import NetworkDirection from './NetworkDirection.svelte'
   import Settings from './Settings.svelte'
   import * as customTokens from '$lib/stores/custom-tokens.svelte'
   import Details from './Details.svelte'
   import * as transactions from '$lib/stores/transactions'
+  import BridgeSettings from './BridgeSettings.svelte'
+  import BridgeAdvancedMode from './BridgeAdvancedMode.svelte'
   import {
     details,
     bridgeSettings,
@@ -14,63 +17,70 @@
     type ExtraDataOptions,
     updateAssetOut,
     loadPriceCorrective,
+    assetSources,
   } from '$lib/stores/bridge-settings.svelte'
   import {
     bridgeKey,
-    assetInAddress,
     loadFeeFor,
-    bridgeFee,
-    clientFromChain,
+    // bridgeAdminSettings,
+    // clientFromChain,
+    toPath,
+    unwrap,
+    isUnwrappable,
   } from '$lib/stores/input.svelte'
+  import { settings as bridgeAdminSettings } from '$lib/stores/fee-manager.svelte'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
-    watchFinalizedBlocks,
-    unwatchFinalizedBlocks,
+    // watchFinalizedBlocks,
+    // unwatchFinalizedBlocks,
     fromTokenBalance,
     toTokenBalance,
     minAmount,
     latestBlock,
     loadAssetLink,
     assetLink,
+    watchFinalizedBlocksForOneChain,
   } from '$lib/stores/chain-events.svelte'
-  import type { Token } from '$lib/types.svelte'
-  import { getAddress } from 'viem'
-  import { windowStore } from '$lib/stores/window.svelte'
+  import { getAddress, zeroAddress, type Hex } from 'viem'
   import { untrack } from 'svelte'
   import { loading } from '$lib/stores/loading.svelte'
+  import InputOutputForm from './InputOutputForm.svelte'
+  import { nativeAssetOut } from '$lib/stores/config.svelte'
+  import BridgeHeader from './BridgeHeader.svelte'
+  import { advancedMode } from '$lib/stores/storage.svelte'
 
-  const toggleDropdowns = (type: string) => {
-    if (details.value === type) details.value = null
-    else details.value = type as ExtraDataOptions
-  }
   // watch for finalized blocks to update balances
   $effect(() => {
-    const result = loadFeeFor(bridgeKey)
-    result.promise.then((fee) => {
-      if (result.controller.signal.aborted) return
-      bridgeFee.value = fee
+    const pathway = bridgeKey.pathway
+    if (!pathway) return
+    const result = loadFeeFor({
+      value: bridgeKey.value,
+      pathway,
+      fromChain: Number(bridgeKey.fromChain),
+      toChain: Number(bridgeKey.toChain),
     })
     return result.cleanup
   })
-  $effect(() => {
-    const finalizedBlocksCleanup = watchFinalizedBlocks()
-    return () => {
-      unwatchFinalizedBlocks(finalizedBlocksCleanup)
-    }
-  })
+  $effect(() => watchFinalizedBlocksForOneChain(Number(bridgeKey.fromChain)))
   $effect(() => {
     if (!bridgeSettings.assetIn.value) return
     return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
   })
   $effect(() => {
-    if (assetInAddress.value && bridgeSettings.assetIn.value?.address) {
-      if (getAddress(assetInAddress.value) === getAddress(bridgeSettings.assetIn.value?.address)) {
+    const keyAddress = bridgeKey.assetInAddress
+    if (!keyAddress) return
+    const assetIn = untrack(() => bridgeSettings.assetIn.value)
+    if (keyAddress && assetIn?.address) {
+      if (getAddress(keyAddress) === getAddress(assetIn?.address)) {
+        // if we don't return here, we have an infinite loop for some reason
+        // console.log('assetIn already set', keyAddress, assetIn?.address)
         return
       }
     }
+    // console.log('updating assetIn', keyAddress)
     const updatingAssetIn = updateAssetIn({
-      bridgeKey,
-      address: assetInAddress.value,
+      bridgeKey: bridgeKey.value,
+      address: keyAddress as Hex,
       customTokens: customTokens.tokens.value,
     })
     updatingAssetIn.promise.then((asset) => {
@@ -96,37 +106,57 @@
     if (!assetIn || !assetLink.value) return
     // console.log('assetIn', JSON.stringify(assetLink.value, null, 2))
     const updatingAssetOut = updateAssetOut({
-      bridgeKey,
+      toChainId: Number(bridgeKey.toChain),
       assetInput: assetIn,
       assetLink: assetLink.value,
     })
+    const assetOutKey = `${bridgeKey.path}/${assetIn.address.toLowerCase()}`
     updatingAssetOut.promise.then((asset) => {
       if (updatingAssetOut.controller.signal.aborted) return
-      bridgeSettings.assetOut.value = asset
+      if (asset) {
+        bridgeSettings.setAssetOut(assetOutKey, asset)
+      } else {
+        // some fallback logic - never been bridged yet
+      }
     })
     return updatingAssetOut.cleanup
   })
+  const ticker = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
   $effect(() => {
-    const block = untrack(() => latestBlock.block(Number(bridgeKey.fromChain)))
-    if (!block) return
+    console.log('checking price corrective')
+    if (!ticker || !bridgeSettings.assetOut) return
     const priceCorrective = loadPriceCorrective({
-      bridgeKey,
-      assetOut: bridgeSettings.assetOut.value as Token,
+      bridgeKey: bridgeKey.value,
+      assetOut: bridgeSettings.assetOut,
       assetLink: assetLink.value,
-      block,
+      block: ticker,
       amountToBridge: bridgeSettings.amountToBridge,
     })
     priceCorrective.promise.then((price) => {
       if (priceCorrective.controller.signal.aborted) return
+      console.log(
+        // bridgeKey.value,
+        // bridgeSettings.assetOut,
+        // assetLink.value,
+        'priceloaded',
+        price,
+        // bridgeSettings.amountToBridge,
+      )
       bridgeSettings.priceCorrective.value = price ?? 0n
     })
     return priceCorrective.cleanup
   })
   $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.fromChain))))
   $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.toChain))))
+  const originationBlock = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
   $effect(() => {
-    const originationBlock = untrack(() => latestBlock.block(Number(bridgeKey.fromChain)))
     if (!bridgeSettings.assetIn.value || !accountState.address || originationBlock) return
+    // console.log(
+    //   'fetching fromTokenBalance',
+    //   bridgeSettings.assetIn.value,
+    //   accountState.address,
+    //   originationBlock,
+    // )
     return fromTokenBalance.fetch(
       Number(bridgeKey.fromChain),
       bridgeSettings.assetIn.value,
@@ -134,31 +164,61 @@
       originationBlock,
     )
   })
+  const destinationBlock = $derived(latestBlock.block(Number(bridgeKey.toChain)))
   $effect(() => {
-    const destinationBlock = untrack(() => latestBlock.block(Number(bridgeKey.toChain)))
-    if (!bridgeSettings.assetOut.value?.address || !accountState.address || destinationBlock) {
+    // console.log(
+    //   'toTokenBalance',
+    //   Number(bridgeKey.toChain),
+    //   bridgeSettings.assetOut?.address,
+    //   accountState.address,
+    //   destinationBlock,
+    // )
+    if (!bridgeSettings.assetOut?.address || !accountState.address || !destinationBlock) {
       return
     }
     return toTokenBalance.fetch(
       Number(bridgeKey.toChain),
-      bridgeSettings.assetOut.value as Token,
+      bridgeSettings.assetOut,
       accountState.address,
       destinationBlock,
     )
   })
-  const loadApproval = loading.loadsAfterTick<bigint>(
+  const loadApproval = loading.loadsAfterTick<bigint, transactions.ApprovalParameters>(
     'approval',
     async (inputs: transactions.ApprovalParameters) => {
-      const result = await transactions.checkAllowance(inputs)
+      const result = await transactions
+        .checkAllowance(inputs)
+        .catch(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 500))
+          return transactions.checkAllowance(inputs)
+        })
+        .catch(() => {
+          console.error('unable to load allowance', inputs)
+          return 0n
+        })
       return result
     },
   )
+  const originationTicker = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
+  // const destinationTicker = $derived(latestBlock.block(Number(bridgeKey.toChain)))
   $effect(() => {
+    const account = accountState.address
+    const token = bridgeSettings.assetIn.value?.address
+    const bridgePath = bridgeKey.pathway?.from
+    if (!account || !bridgePath || !token || !bridgeKey.fromChain || !originationTicker) return
+    // console.log(
+    //   'loading approval',
+    //   account,
+    //   token,
+    //   bridgePath,
+    //   bridgeKey.fromChain,
+    //   originationTicker,
+    // )
     const result = loadApproval({
-      walletAccount: accountState.address,
-      bridgeKey: bridgeKey.value,
-      assetLink: assetLink.value,
-      publicClient: clientFromChain(Number(bridgeKey.fromChain)),
+      account,
+      token: token as Hex,
+      spender: bridgePath,
+      chainId: Number(bridgeKey.fromChain),
     })
     result.promise.then((approval) => {
       if (result.controller.signal.aborted) return
@@ -166,21 +226,51 @@
     })
     return result.cleanup
   })
+  const assetOutAddress = $derived(bridgeSettings.assetOut?.address)
+  const futureAssetOutAddress = $derived.by(() => {
+    if (!assetOutAddress) {
+      return null
+    }
+    const wrapped = nativeAssetOut[bridgeKey.toChain]
+    if (!wrapped || getAddress(assetOutAddress) !== getAddress(wrapped)) {
+      return assetOutAddress
+    }
+    if (
+      unwrap.value &&
+      bridgeSettings.assetOut &&
+      isUnwrappable(bridgeSettings.assetOut, bridgeKey.value)
+    ) {
+      return zeroAddress
+    }
+    return assetOutAddress
+  })
+  const dividerDisabled = $derived(!assetOutAddress)
+  // $inspect(unwrap.value, bridgeKey.toChain, futureAssetOutAddress)
+  const ondividerclick = () => {
+    nav.delivery.shallow(bridgeKey.partner, futureAssetOutAddress as string)
+  }
 </script>
 
-<div
-  class="bg-slate-200 p-3 sm:p-4 shadow-inner text-slate-950 my-8"
-  class:rounded-lg={windowStore.large}>
-  <FromNetwork />
-  <NetworkDirection />
-  <ToNetwork ontoggle={toggleDropdowns} asset={bridgeSettings.assetOut.value} />
-  {#if details.value === 'settings'}
-    <Settings />
-  {/if}
-  {#if details.value === 'details'}
-    <Details asset={bridgeSettings.assetOut.value} />
-  {/if}
-  <div class="mt-4">
-    <ConnectAndBridge />
+<div class="flex flex-col max-w-lg">
+  <BridgeHeader />
+  <div class="flex flex-col max-w-lg mx-auto w-full p-2 bg-white card rounded-3xl relative">
+    <InputOutputForm
+      icon="mdi:swap-horizontal"
+      ondividerclick={dividerDisabled ? null : ondividerclick}>
+      {#snippet input()}
+        <FromNetwork />
+      {/snippet}
+      {#snippet output()}
+        <ToNetwork asset={bridgeSettings.assetOut} />
+      {/snippet}
+      {#snippet info()}
+        {#if advancedMode.value}
+          <BridgeAdvancedMode asset={bridgeSettings.assetOut} />
+        {/if}
+      {/snippet}
+      {#snippet button()}
+        <ConnectAndBridge />
+      {/snippet}
+    </InputOutputForm>
   </div>
 </div>

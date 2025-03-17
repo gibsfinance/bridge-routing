@@ -25,7 +25,10 @@ import { tokenToPair } from './utils'
 import { gql, GraphQLClient } from 'graphql-request'
 import { Cache } from './cache'
 
-const watchFinalizedBlocksForSingleChain = (chainId: number, onBlock: (block: Block) => void) => {
+export const watchFinalizedBlocksForSingleChain = (
+  chainId: number,
+  onBlock: (block: Block) => void,
+) => {
   const client = input.clientFromChain(chainId)
   return client.watchBlocks({
     blockTag: 'finalized',
@@ -36,6 +39,12 @@ const watchFinalizedBlocksForSingleChain = (chainId: number, onBlock: (block: Bl
 }
 
 export const finalizedBlocks = new SvelteMap<number, bigint | null>()
+
+export const watchFinalizedBlocksForOneChain = (chainId: number) => {
+  return watchFinalizedBlocksForSingleChain(chainId, (v) => {
+    untrack(() => finalizedBlocks.set(chainId, v.number))
+  })
+}
 
 export const watchFinalizedBlocks = () =>
   Object.keys(chainsMetadata)
@@ -169,23 +178,24 @@ export class TokenBalanceWatcher {
     if (!ticker || !token) return
     const requestResult = getTokenBalance(chainId, token, walletAccount)
     if (!requestResult) {
-      return
+      return () => {}
     }
     this.balanceCleanup = requestResult.cleanup
     requestResult.promise.then((v) => {
+      // console.log(this.key, v)
       if (requestResult.controller.signal.aborted) {
         this.value = null
-        return
+        return () => {}
       }
       this.clearLongtailBalances()
       balanceCache.set(this.key, { time: Date.now(), value: v })
-      if (v !== untrack(() => this.value)) {
-        this.value = v
-      }
+      this.value = v
+      // if (v !== untrack(() => this.value)) {
+      // }
     })
-    // return () => {
-    //   this.cleanup()
-    // }
+    return () => {
+      this.cleanup()
+    }
   }
 }
 
@@ -268,7 +278,7 @@ export class MinBridgeAmount {
     // these clients should already be created, so we should not be doing any harm by accessing them
     const path = pathway(bridgeKey)
     if (!path || !assetIn) {
-      return
+      return () => {}
     }
     this.value = null
     const result = loading.loadsAfterTick<bigint>('min-amount', () => {
@@ -769,7 +779,7 @@ export const bridgeStatuses = {
 
 export type BridgeStatus = keyof typeof bridgeStatuses
 export type LiveBridgeStatusParams = {
-  bridgeKey: input.BridgeKeyStore
+  bridgeKey: input.BridgeKey
   hash: Hex
   ticker: Block
 }
@@ -843,7 +853,8 @@ export const liveBridgeStatus = loading.loadsAfterTick<
   async (params: LiveBridgeStatusParams) => {
     const { bridgeKey, hash } = params
     // if (!chain || !chainPartner || !hash) return null
-    const client = input.clientFromChain(Number(bridgeKey.fromChain))
+    const [, fromChain] = bridgeKey
+    const client = input.clientFromChain(Number(fromChain))
     const receipt = await client.getTransactionReceipt({
       hash,
     })
@@ -869,10 +880,11 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     if (statusIndex < statusToIndex(bridgeStatuses.MINED)) {
       return params
     }
-    const urls = _.get(bridgeGraphqlUrl, bridgeKey.value)
+    const [, fromChain] = bridgeKey
+    const urls = _.get(bridgeGraphqlUrl, bridgeKey)
     if (!urls) return null
     // where the signing happens
-    const client = input.clientFromChain(Number(bridgeKey.fromChain))
+    const client = input.clientFromChain(Number(fromChain))
     const [finalizedBlock, foreignStatus] = await Promise.all([
       client.getBlock({
         blockTag: 'finalized',
@@ -905,7 +917,7 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     if (params.status !== bridgeStatuses.FINALIZED || !messageId) {
       return params
     }
-    const urls = _.get(bridgeGraphqlUrl, bridgeKey.value)
+    const urls = _.get(bridgeGraphqlUrl, bridgeKey)
     if (!urls) return null
     // where the signing happens
     // const client = graphqlClient(urls.home)

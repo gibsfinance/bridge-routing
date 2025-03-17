@@ -34,7 +34,7 @@ export class LocalProxy<T extends object> extends ProxyStore<T> {
   }
 }
 
-export class LocalProxyProp<T, B extends object> {
+export class LocalProxyProp<T, B extends object, O extends object> {
   constructor(
     protected storage: LocalProxy<B>,
     protected key: string[],
@@ -49,5 +49,8 @@ export class LocalProxyProp<T, B extends object> {
   }
   set value(v: T) {
     this.storage.update(this.key, v)
+  }
+  extend(current: O) {
+    this.storage.update(this.key, { ...(this.value ?? {}), ...current })
   }
 }

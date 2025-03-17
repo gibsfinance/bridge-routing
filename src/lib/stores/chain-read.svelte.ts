@@ -1,4 +1,4 @@
-import { erc20Abi, type Hex } from 'viem'
+import { erc20Abi, maxUint256, zeroAddress, type Hex } from 'viem'
 import { clientFromChain } from './input.svelte'
 
 export type ApprovalParameters = {
@@ -8,12 +8,10 @@ export type ApprovalParameters = {
   account: Hex
 }
 
-export const checkAllowance = async ({
-  token,
-  spender,
-  chainId,
-  account,
-}: ApprovalParameters) => {
+export const checkAllowance = async ({ token, spender, chainId, account }: ApprovalParameters) => {
+  if (token === zeroAddress) {
+    return maxUint256
+  }
   const client = clientFromChain(chainId)
   if (!account) {
     throw new Error('No account')

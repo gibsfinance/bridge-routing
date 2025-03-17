@@ -6,10 +6,12 @@
   import Image from './Image.svelte'
   import classNames from 'classnames'
   import { availableChains } from '$lib/stores/lifi.svelte'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
+  import { toChain } from '$lib/stores/auth/types'
 
   type Props = {
     class?: ClassParam
-    asset: Token
+    asset: Token | null
     network?: number
     tokenSizeClasses?: string
     networkSizeClasses?: string
@@ -20,21 +22,24 @@
     networkSizeClasses = 'size-4',
     class: className = '',
   }: Props = $props()
-  const chain = $derived(availableChains.get(Number(asset.chainId)))
-  const src = $derived(asset?.logoURI || assetSources(asset))
+  const chainId = $derived(asset?.chainId ? Number(asset.chainId) : 0)
+  const chain = $derived(availableChains.get(chainId) ?? chainsMetadata[toChain(chainId)])
+  const src = $derived(asset?.logoURI ?? assetSources(asset))
   const tokenClasses = $derived(`overflow-hidden absolute`)
   const classes = $derived(
     classNames('flex basis-auto relative text-surface-contrast-50', tokenSizeClasses, className),
   )
 </script>
 
-<span class={classes} title={asset.symbol}>
-  <TokenIcon visible sizeClasses={tokenSizeClasses} class={tokenClasses} {src} />
-  {#if chain && loading.isResolved('token')}
-    <Image
-      class="network-image absolute -right-0.5 -bottom-0.5 rounded-full"
-      sizeClasses={networkSizeClasses}
-      src={chain.logoURI}
-      alt={chain.name} />
+<span class={classes} title={asset?.symbol ?? ''}>
+  {#if src}
+    <TokenIcon visible sizeClasses={tokenSizeClasses} class={tokenClasses} {src} />
+    {#if chain && loading.isResolved('token')}
+      <Image
+        class="network-image absolute -right-0.5 -bottom-0.5 rounded-full bg-surface-50"
+        sizeClasses={networkSizeClasses}
+        src={chain.logoURI}
+        alt={chain.name} />
+    {/if}
   {/if}
 </span>

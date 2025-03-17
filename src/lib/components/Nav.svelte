@@ -38,7 +38,7 @@
   const isSmall = $derived(innerWidth.current && innerWidth.current < 768)
 </script>
 
-<div class="fixed z-40 -mb-10 flex h-10">
+<div class="fixed z-10 -mb-10 flex h-10">
   <nav
     class="fixed right-0 left-0 flex h-14 flex-row bg-surface-950-50 p-2 leading-8 shadow-inner text-surface-contrast-50">
     <div class="m-auto flex w-full max-w-5xl justify-between">
@@ -95,7 +95,8 @@
           <li class="flex flex-row">
             <ModalWrapper
               triggerClasses="flex flex-row items-center px-2 py-1"
-              contentWidthClass="max-w-[576px] w-full">
+              contentWidthClass="max-w-[576px] w-full"
+              contentHeightClass="max-h-[460px] h-full">
               {#snippet button()}
                 <!-- {#if !isSmall}RPC&nbsp;{/if} -->
                 <Icon icon="gravity-ui:plug-connection" height="1.2em" width="1.2em" />

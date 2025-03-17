@@ -23,15 +23,15 @@
     triggerClasses = '',
     wrapperClasses,
     contentClasses,
-    contentWidthClass,
-    contentHeightClass,
+    contentWidthClass = 'max-w-(--container-lg) w-full',
+    contentHeightClass = 'h-full max-h-[512px]',
     contentBorderClass,
   }: Props = $props()
   let open = $state(false)
   const classes = $derived(classNames(wrapperClasses))
   const triggerBase = $derived(classNames(triggerClasses))
-  const contentWidth = $derived(classNames('max-w-(--container-lg) w-full', contentWidthClass))
-  const contentHeight = $derived(classNames('h-full max-h-[512px]', contentHeightClass))
+  const contentWidth = $derived(classNames(contentWidthClass))
+  const contentHeight = $derived(classNames(contentHeightClass))
   const contentBorder = $derived(classNames('border border-surface-200', contentBorderClass))
   const contentBase = $derived(
     classNames(

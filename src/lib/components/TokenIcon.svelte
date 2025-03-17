@@ -3,7 +3,7 @@
   import Image from './Image.svelte'
   import classNames from 'classnames'
   type Props = {
-    src: string
+    src: string | null
     alt?: string
     sizeClasses?: string
     visible?: boolean
@@ -23,13 +23,15 @@
   }
   const onload = markLoaded(true)
   const onerror = markLoaded(false)
-  const classes = $derived(classNames(`rounded-full ${className} ${!loaded ? 'invisible' : ''}`))
+  const classes = $derived(classNames('rounded-full', className, !loaded ? 'invisible' : ''))
   const iconClass = $derived(
-    classNames(`absolute opacity-70 ${className} ${sizeClasses} ${!loaded ? '' : 'invisible'}`),
+    classNames('absolute opacity-70', className, !loaded ? '' : 'invisible', sizeClasses),
   )
 </script>
 
 <div class="flex relative rounded-full">
-  <Icon icon="nrk:media-404-notfound" class={iconClass} data-src={src} />
-  <Image {src} {alt} {onload} {onerror} class={classes} {sizeClasses} {containerClasses} />
+  <Icon icon="nrk:media-404-notfound" class={iconClass} data-src={src ?? `${src}`} />
+  {#if src}
+    <Image {src} {alt} {onload} {onerror} class={classes} {sizeClasses} {containerClasses} />
+  {/if}
 </div>

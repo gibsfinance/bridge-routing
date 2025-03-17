@@ -14,19 +14,20 @@
   import TokenSelectInput from './TokenSelectInput.svelte'
   import { appkitNetworkById, chainsById } from '$lib/stores/auth/AuthProvider.svelte'
   import Button from './Button.svelte'
-  import NetworkImage from './NetworkImage.svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import { Popover } from '@skeletonlabs/skeleton-svelte'
   import { availableChains } from '$lib/stores/lifi.svelte'
   import Loading from './Loading.svelte'
   import { loading } from '$lib/stores/loading.svelte'
+  import * as imageLinks from '$lib/stores/image-links'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
+  import { Provider, toChain } from '$lib/stores/auth/types'
   type Props = {
     onsubmit?: (token: Token | null) => void
     onnetworkchange?: (chain: number) => void
     chains: [number, ...number[]]
-    tokens?: Token[]
+    tokens: Token[]
     showCustomTokens?: boolean
-    partnerChain?: number | null
     selectedChain?: number
   }
   let {
@@ -35,7 +36,6 @@
     chains,
     tokens,
     showCustomTokens = false,
-    partnerChain,
     selectedChain = 0,
   }: Props = $props()
   let custom!: Token
@@ -109,19 +109,20 @@
     return custom
   }
   const fullTokenSet = $derived.by(() => {
-    const bridgeable =
-      tokens ??
-      _.flatMap(chains, (chain) =>
-        bridgableTokens.bridgeableTokensUnder({
-          chain,
-          partnerChain: partnerChain ?? null,
-        }),
-      )
+    // const bridgeable =
+    //   tokens ??
+    //   _.flatMap(chains, (chain) =>
+    //     bridgableTokens.bridgeableTokensUnder({
+    //       provider: Provider.PULSECHAIN,
+    //       chain,
+    //       partnerChain: partnerChain ?? null,
+    //     }),
+    //   )
     if (!showCustomTokens) {
-      return bridgeable
+      return tokens
     }
     const custom = customTokens.tokens.value
-    return custom.concat(bridgeable)
+    return custom.concat(tokens)
   })
   const filteredSubset = $derived(
     getSubset(fullTokenSet, searchValue, showAllTokens, showAllChains),
@@ -179,7 +180,10 @@
             chainSelectOpen = !chainSelectOpen
           }}>
           {#snippet trigger()}
-            {@const network = availableChains.get(chains[selectedChain])!}
+            {@const network = availableChains.get(chains[selectedChain]) ?? {
+              id: chains[selectedChain],
+              logoURI: imageLinks.network(chains[selectedChain]),
+            }}
             <StaticNetworkImage
               network={network.id}
               sizeClasses="size-6 rounded-lg"
@@ -190,7 +194,11 @@
             <span class="text-sm text-gray-500 px-4 pt-2">Select Network</span>
             <ul class="flex flex-col">
               {#each chains as chain}
-                {@const network = availableChains.get(chain)!}
+                {@const network = availableChains.get(chain) ?? {
+                  id: chain,
+                  logoURI: imageLinks.network(chain),
+                  name: chainsMetadata[toChain(chain)].name,
+                }}
                 <li class="flex flex-row grow">
                   <Button
                     class="flex flex-row items-center px-4 py-2 hover:bg-surface-100 grow"

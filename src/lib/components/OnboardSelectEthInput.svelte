@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import type { Token } from '$lib/types.svelte'
   import { zeroAddress } from 'viem'
   import TokenInfo from './TokenInfo.svelte'
@@ -23,7 +23,7 @@
     children,
   }: { namePrefix?: string; side?: 'left' | 'right'; children?: Snippet } = $props()
 
-  const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
+  const bridgedToken = $derived(bridgeSettings.assetOut as Token | null)
   const updateTokenInput = (token: Token) => {
     bridgeSettings.assetIn.value = token
   }
@@ -44,9 +44,10 @@
     }
   })
   $effect(() => {
-    if (!tokenInput) return
-    const tokensUnderBridgeKey = bridgeableTokensUnder({
-      tokens: bridgableTokens.value,
+    const assetOutKey = bridgeSettings.assetOutKey
+    if (!tokenInput || !assetOutKey) return
+    const tokensUnderBridgeKey = bridgableTokens.bridgeableTokensUnder({
+      provider: Provider.PULSECHAIN,
       chain: Number(bridgeKey.toChain),
       partnerChain: Number(bridgeKey.fromChain),
     })
@@ -63,12 +64,10 @@
         customTokens: [],
       })
       assetLink.value = l
-      bridgeSettings.assetOut.value = assetOut
-        ? {
-            ...assetOut,
-            logoURI: tokenInput.logoURI,
-          }
-        : null
+      bridgeSettings.setAssetOut(assetOutKey, {
+        ...assetOut,
+        logoURI: tokenInput.logoURI,
+      } as Token)
     })
     return link.cleanup
   })
@@ -131,4 +130,4 @@
     </ModalWrapper>
     {@render children?.()}
   </div>
-{/if}
+{/if} -->

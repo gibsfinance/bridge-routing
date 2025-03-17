@@ -1,4 +1,5 @@
 import * as rpcs from '$lib/stores/rpcs.svelte'
+import { page } from '$app/state'
 import * as abis from './abis'
 import * as imageLinks from '$lib/stores/image-links'
 import {
@@ -14,16 +15,21 @@ import {
   fallback,
   type PublicClient,
   webSocket,
+  isAddress,
 } from 'viem'
-import { ChainIdToKey, Chains, Provider, toChain } from './auth/types'
+import { chainIdToKey, Chains, Provider, toChain } from './auth/types'
 import { settings, type PathwayExtendableConfig } from './fee-manager.svelte'
 import {
   blacklist,
+  defaultAssetIn,
+  isProd,
   nativeAssetOut,
   nativeTokenName,
   nativeTokenSymbol,
   pathway,
   pathways,
+  validBridgeKeys,
+  type Pathway,
 } from '$lib/stores/config.svelte'
 import {
   NullableProxyStore,
@@ -44,49 +50,24 @@ export const incrementForcedRefresh = () => {
   forcedRefresh.value += 1n
 }
 
-// leave this here to help with testing. it is useful
-// to be able to force a refresh to see what happens to the ui
-// to see what is affected by incrementing this value
-// ;(window as any).incrementForcedRefresh = incrementForcedRefresh
-
-// const humanReadableSet = (current: string | null, v: string | null) => {
-//   if (!v) {
-//     if (current) {
-//       return v
-//     }
-//     return
-//   }
-//   const val = stripNonNumber(v)
-//   if (isZero(val)) {
-//     // the input is a string of zeros
-//     return val
-//   }
-//   const dec = countDecimals(v)
-//   const parsed = parseUnits(val, decimals)
-//   const readable = humanReadableNumber(parsed, {
-//     decimals,
-//     decimalCount: dec,
-//   })
-//   if (current === readable) {
-//     return
-//   }
-//   return readable
-// }
-
-// export const limit = new NullableProxyStore<string>(null, humanReadableSet)
 export const limit = new NullableProxyStore<bigint>()
 
-// let decimals = 18
-
-// export const setLimitDecimals = (d: number) => {
-//   decimals = d
-// }
-
 export const amountIn = new NullableProxyStore<bigint>()
-// export const amountIn = new NullableProxyStore<string>(null, humanReadableSet)
 
-export const fee = new NullableProxyStore<bigint>()
-// export const fee = new NullableProxyStore<string>(null, humanReadableSet)
+export const oneEther = 10n ** 18n
+
+export const basisPoints = 10_000n
+
+export const percentFee = new NullableProxyStore<bigint>(null, (_, v) => {
+  if (v === null) return v
+  if (v > oneEther / 10n) return oneEther / 10n
+  if (v < 0n) return 0n
+  return v
+})
+
+export const gasTipFee = new NullableProxyStore<bigint>()
+
+export const fixedFee = new NullableProxyStore<bigint>()
 
 export enum FeeType {
   PERCENT = '%',
@@ -112,14 +93,28 @@ export type BridgeKey = [Provider, Chains, Chains]
 
 export const defaultBridgeKey = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS] as BridgeKey
 
+const getDefaultAssetInAddress = () => {
+  const assetInAddress =
+    page.params.assetInAddress || defaultAssetIn(defaultBridgeKey)?.address || null
+  if (assetInAddress && isAddress(assetInAddress)) {
+    return getAddress(assetInAddress)
+  }
+  return null
+}
+
 export class BridgeKeyStore {
   private val = $state(defaultBridgeKey)
+  assetInAddress = $state(getDefaultAssetInAddress())
   get value() {
     return this.val
   }
   set value(v: BridgeKey) {
     if (!Array.isArray(v) || v.length !== 3) {
       throw new Error('invalid bridge key')
+    }
+    const allKeys = validBridgeKeys(isProd.value)
+    if (!_.find(allKeys, (key) => _.isEqual(key, v))) {
+      throw new Error('unknown bridge key')
     }
     this.val = v
   }
@@ -165,7 +160,7 @@ export const bridgeKey = new BridgeKeyStore()
 // export class AssetInAddressStore {
 //   value = $state(page.params.assetInAddress || defaultAssetIn(bridgeKey.value)?.address || null)
 // }
-export const assetInAddress = new NullableProxyStore<Hex>()
+// export const assetInAddress = new NullableProxyStore<Hex>()
 
 export const chainIdToChain = (chainId: Chains) => {
   const found = appkitNetworkList.find((n) => n.id === Number(chainId))!
@@ -178,12 +173,16 @@ export const chainIdToChain = (chainId: Chains) => {
 
 export const toPath = (bridgeKey: BridgeKey) => {
   const [provider, fromChain, toChain] = bridgeKey
-  return `${provider}/${ChainIdToKey.get(fromChain)!}/${ChainIdToKey.get(toChain)!}` as const
+  return `${provider}/${chainIdToKey.get(fromChain)!}/${chainIdToKey.get(toChain)!}` as const
 }
 
 export class BridgeableTokensStore {
   value = $state<Token[]>([])
-  bridgeableTokensUnder(options: { chain: number; partnerChain: number | null }) {
+  bridgeableTokensUnder(options: {
+    chain: number
+    partnerChain: number | null
+    provider: Provider
+  }) {
     return bridgeableTokensUnder({
       tokens: this.value,
       ...options,
@@ -194,29 +193,71 @@ export class BridgeableTokensStore {
   }
 }
 
+const imageLists = [
+  imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo'),
+  imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo'),
+  imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo'),
+  imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo'),
+  imageLinks.list('/testnet-v4-pulsechain-bridge/foreign?extensions=bridgeInfo'),
+  imageLinks.list('/testnet-v4-pulsechain-bridge/home?extensions=bridgeInfo'),
+  imageLinks.list('/pulsex'),
+  imageLinks.list('/piteas'),
+  imageLinks.list('/pls369'),
+]
 export const bridgableTokens = new BridgeableTokensStore()
 export const loadLists = loading.loadsAfterTick<Token[] | null>(
   'loadLists',
   async (_input: undefined, c: AbortController) => {
-    const opts = { signal: c.signal }
-    return await Promise.all([
-      fetch(imageLinks.list('/pulsechain-bridge/foreign?extensions=bridgeInfo'), opts),
-      fetch(imageLinks.list('/pulsechain-bridge/home?extensions=bridgeInfo'), opts),
-      fetch(imageLinks.list('/tokensex-bridge/foreign?extensions=bridgeInfo'), opts),
-      fetch(imageLinks.list('/tokensex-bridge/home?extensions=bridgeInfo'), opts),
-      fetch(imageLinks.list('/testnet-v4-pulsechain-bridge/foreign?extensions=bridgeInfo'), opts),
-      fetch(imageLinks.list('/testnet-v4-pulsechain-bridge/home?extensions=bridgeInfo'), opts),
-    ])
+    const opts = { signal: c.signal } as const
+    return await Promise.all(imageLists.map((l) => fetch(l, opts)))
   },
   (lists: Response[]) => {
-    return Promise.all(lists.map(async (r) => (await r.json()) as TokenList))
+    return Promise.all(
+      lists.map(
+        async (r, index) =>
+          (await r.json().catch((err) => {
+            console.error('failed to load token list', imageLists[index])
+            throw err
+          })) as TokenList,
+      ),
+    )
   },
   (lists: TokenList[]): Token[] =>
-    Object.values(
-      _.keyBy(_.flatten(_.map(lists, 'tokens')), ({ chainId, address }) => {
-        return getAddress(address, Number(chainId))
-      }),
+    _.uniqBy(
+      [
+        ..._(lists)
+          .map('tokens')
+          .flatten()
+          .reduce((agg, t) => {
+            const key = `${t.chainId}/${t.address}`.toLowerCase()
+            let exists = agg.get(key)
+            if (!exists) {
+              agg.set(key, t)
+              exists = t
+            }
+            if (!exists?.logoURI && t.logoURI) {
+              exists.logoURI = t.logoURI
+            }
+            return agg
+          }, new Map<string, Token>())
+          .values(),
+      ],
+      ({ chainId, address }) => `${chainId}/${address}`.toLowerCase(),
     ),
+  // .map((t) => {
+  //   return {
+  //     ...t,
+  //     logoURI: imageLinks.image(t),
+  //   }
+  // })
+  // Object.values(
+  //   _.keyBy(_.flatten(_.map(lists, 'tokens')), ({
+  //     chainId,
+  //     address,
+  //   }) => {
+  //     return getAddress(address, Number(chainId))
+  //   }),
+  // )
 )
 // should only be loaded once at the start of the app
 const cancellableLoadLists = loadLists()
@@ -228,15 +269,17 @@ cancellableLoadLists.promise.then((tokens: Token[] | null) => {
 })
 
 export const bridgeableTokensUnder = ({
+  provider,
   tokens,
   chain,
   partnerChain,
 }: {
+  provider: Provider
   tokens: Token[]
   chain: number
   partnerChain: number | null
 }) => {
-  const grouping = [Provider.PULSECHAIN, toChain(chain)]
+  const grouping = [provider, toChain(chain)]
   const parentConf = _.get(pathways, grouping)
   if (!parentConf) {
     throw new Error('no pathway found')
@@ -247,10 +290,9 @@ export const bridgeableTokensUnder = ({
 
   if (!conf) throw new Error('no pathway found')
   const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token
-  const sortedList = _.uniqBy(
-    _.sortBy(tokens, ['name', 'chainId']),
-    ({ chainId, address }) => `${chainId}-${getAddress(address)}`,
-  )
+  const sortedList = _(tokens)
+    .sortBy(['name', 'chainId'])
+    .uniqBy(({ chainId, address }) => `${chainId}-${getAddress(address)}`)
     .map((item) => {
       if (defaultAssetIn && getAddress(defaultAssetIn.address) === getAddress(item.address)) {
         return defaultAssetIn
@@ -258,6 +300,7 @@ export const bridgeableTokensUnder = ({
       return item
     })
     .filter((tkn) => tkn.chainId === Number(chain))
+    .value()
   let list: Token[] = []
   if (sortedList.length) {
     const bridgedWrappedAssetOut = sortedList.find(
@@ -293,16 +336,17 @@ export const bridgeableTokensUnder = ({
       ({ chainId, address }) => `${chainId}/${getAddress(address)}`,
     ).filter((tkn) => !blacklist.has(tkn.address as Hex))
   }
-  return list.map((token) => {
-    // register on a central cache so that tokens that are gotten from onchain
-    // still have all extensions
-    return token.logoURI
-      ? token
-      : {
-          ...token,
-          logoURI: imageLinks.image(token),
-        }
-  })
+  return list
+  //   .map((token) => {
+  //   // register on a central cache so that tokens that are gotten from onchain
+  //   // still have all extensions
+  //   // return token.logoURI
+  //   //   ? token
+  //   //   : {
+  //   //       ...token,
+  //   //       logoURI: imageLinks.image(token),
+  //   //     }
+  // })
 }
 
 // export const assetInAddress = (bridgeKey: BridgeKey, assetInAddress: Hex) => {
@@ -321,14 +365,14 @@ export const isNative = ($asset: Token | TokenOut | null, $bridgeKey: BridgeKey 
   )
 }
 export const isUnwrappable = (
-  $asset: Pick<Token, 'extensions'> | null,
-  $bridgeKey: BridgeKey | null,
+  asset: Pick<Token, 'extensions'> | null,
+  bridgeKey: BridgeKey | null,
 ) => {
-  if (!$bridgeKey || !$asset) {
+  if (!bridgeKey || !asset) {
     return false
   }
-  const [, , toChain] = $bridgeKey
-  return nativeAssetOut[toChain] === $asset.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
+  const [, , toChain] = bridgeKey
+  return nativeAssetOut[toChain] === asset.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
 }
 
 export const walletClient = new NullableProxyStore<WalletClient>(null)
@@ -361,7 +405,9 @@ export const clientFromChain = (chainId: number) => {
     return existing.client
   }
   const chain = [...Object.values(networks)].find((chain) => chain.id === chainId)
-  // console.log(chainId, chain)
+  // if (chainId === 56) {
+  //   console.trace()
+  // }
   const transport = !urls?.length
     ? http()
     : fallback(
@@ -483,37 +529,39 @@ export const canChangeUnwrap = (bridgeKey: BridgeKey, assetIn: Token | null) =>
 //   ([$assetIn, $bridgeKey]) => !!$assetIn && isUnwrappable($assetIn, $bridgeKey),
 // )
 
-export const fromChainMulticall = (bridgeKey: BridgeKeyStore) => {
-  const metadata = chainsMetadata[bridgeKey.fromChain]
+export const chainMulticall = (chainId: number) => {
+  const metadata = chainsMetadata[toChain(chainId)]
   return getContract({
     abi: multicall3Abi,
-    client: clientFromChain(Number(bridgeKey.fromChain)),
+    client: clientFromChain(chainId),
     address: metadata.contracts!.multicall3!.address,
   })
 }
 
-export const toChainMulticall = (bridgeKey: BridgeKeyStore) => {
-  const metadata = chainsMetadata[bridgeKey.toChain]
-  return getContract({
-    abi: multicall3Abi,
-    client: clientFromChain(Number(bridgeKey.toChain)),
-    address: metadata.contracts!.multicall3!.address,
-  })
+type InputLoadFeeFor = {
+  value: BridgeKey
+  fromChain: number
+  toChain: number
+  pathway: Pathway
 }
-
-export const loadFeeFor = loading.loadsAfterTick<PathwayExtendableConfig>(
+export const loadFeeFor = loading.loadsAfterTick<PathwayExtendableConfig, InputLoadFeeFor>(
   'bridge-fee',
-  async (bridgeKey: BridgeKeyStore) => {
-    if (!bridgeKey.value) {
+  async (bridgeKey: InputLoadFeeFor) => {
+    if (!bridgeKey) {
       return null
     }
     const s = settings.get(bridgeKey.value)
     const path = bridgeKey.pathway
-    if (!path || (s && s.feeManager)) {
+    if (!path) {
+      return null
+    }
+    if (s && s.feeManager) {
       return s
     }
     const multicall =
-      path.feeManager === 'from' ? fromChainMulticall(bridgeKey) : toChainMulticall(bridgeKey)
+      path.feeManager === 'from'
+        ? chainMulticall(bridgeKey.fromChain)
+        : chainMulticall(bridgeKey.toChain)
 
     const [feeManagerResponse] = await multicall.read.aggregate3([
       [
@@ -591,10 +639,10 @@ export const loadFeeFor = loading.loadsAfterTick<PathwayExtendableConfig>(
   },
 )
 
-export const bridgeFee = new NullableProxyStore<PathwayExtendableConfig>()
+// export const bridgeAdminSettings = new NullableProxyStore<PathwayExtendableConfig>()
 
 /** the estimated gas that will be consumed by running the foreign transaction */
-export const estimatedGas = new ProxyStore<bigint>(400_000n)
+export const estimatedGas = new ProxyStore<bigint>(500_000n)
 
 export const shouldDeliver = new ProxyStore<boolean>(true)
 

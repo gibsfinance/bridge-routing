@@ -3,7 +3,7 @@
   import TokenIcon from './TokenIcon.svelte'
   import type { Token } from '$lib/types.svelte'
   import { isHex, zeroAddress, type Hex } from 'viem'
-  import { Chains, idToChain } from '$lib/stores/auth/types'
+  import { Chains, idToChain, Provider } from '$lib/stores/auth/types'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
     assetSources,
@@ -28,18 +28,19 @@
   import {
     amountIn,
     bridgableTokens,
-    bridgeableTokensUnder,
-    bridgeFee,
+    // bridgeableTokensUnder,
+    // bridgeAdminSettings,
     loadFeeFor,
     recipient,
     bridgeKey,
   } from '$lib/stores/input.svelte'
-  import { humanReadableNumber, usd } from '$lib/stores/utils'
-  import AssetWithNetwork from './AssetWithNetwork.svelte'
+  import { settings as bridgeAdminSettings } from '$lib/stores/fee-manager.svelte'
+  // import { humanReadableNumber, usd } from '$lib/stores/utils'
+  // import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { SvelteMap } from 'svelte/reactivity'
   import { untrack } from 'svelte'
   import { bridgeTxHash, foreignBridgeInputs, storage } from '$lib/stores/storage.svelte'
-  import OnboardStep from './OnboardStep.svelte'
+  import InputOutputForm from './InputOutputForm.svelte'
   import SectionInput from './SectionInput.svelte'
   import TokenSelect from './TokenSelect.svelte'
   import OnboardButton from './OnboardButton.svelte'
@@ -52,14 +53,13 @@
   import Icon from '@iconify/svelte'
   import Button from './Button.svelte'
   import Input from './Input.svelte'
-
-  // bridgeTxHash.value = '0xab50111e688b77501c5e26d4c59a8bd8c1b0ae21ea7bf6647b0fde337b9d3c49'
+  import OnboardRadio from './OnboardRadio.svelte'
 
   const toast = getContext('toast') as ToastContext
 
-  const bridgedToken = $derived(bridgeSettings.assetOut.value as Token | null)
+  const bridgedToken = $derived(bridgeSettings.assetOut as Token | null)
   const bridgeAmount = $derived(amountIn.value ?? 0n)
-  const bridgeFeePercent = $derived(bridgeFee.value?.feeF2H ?? 0n)
+  const bridgeFeePercent = $derived(bridgeAdminSettings.get(bridgeKey.value)?.feeF2H ?? 0n)
   const bridgeFeeAmount = $derived((bridgeFeePercent * bridgeAmount) / oneEther)
   const outputAmount = $derived(bridgeAmount - bridgeFeeAmount)
   const tokenInput = $derived(bridgeSettings.assetIn.value)
@@ -67,9 +67,10 @@
   let editTxHash = $state(false)
   let editTxHashValue = $state('')
   $effect(() => {
-    if (!tokenInput) return
-    const tokensUnderBridgeKey = bridgeableTokensUnder({
-      tokens: bridgableTokens.value,
+    const assetOutKey = bridgeSettings.assetOutKey
+    if (!tokenInput || !assetOutKey) return
+    const tokensUnderBridgeKey = bridgableTokens.bridgeableTokensUnder({
+      provider: Provider.PULSECHAIN,
       chain: Number(bridgeKey.toChain),
       partnerChain: Number(bridgeKey.fromChain),
     })
@@ -86,20 +87,22 @@
         customTokens: [],
       })
       assetLink.value = l
-      bridgeSettings.assetOut.value = assetOut
-        ? {
-            ...assetOut,
-            logoURI: tokenInput.logoURI,
-          }
-        : null
+      if (!assetOut) return
+      bridgeSettings.setAssetOut(assetOutKey, {
+        ...assetOut,
+        logoURI: tokenInput.logoURI,
+      })
     })
     return link.cleanup
   })
   $effect(() => {
-    const result = loadFeeFor(bridgeKey)
-    result.promise.then((fee) => {
-      if (result.controller.signal.aborted) return
-      bridgeFee.value = fee
+    const pathway = bridgeKey.pathway
+    if (!pathway) return
+    const result = loadFeeFor({
+      value: bridgeKey.value,
+      pathway,
+      fromChain: Number(bridgeKey.fromChain),
+      toChain: Number(bridgeKey.toChain),
     })
     return result.cleanup
   })
@@ -110,7 +113,7 @@
   $effect(() => {
     tx = bridgeTxHash.value
   })
-  const bridgeTokens = transactionButtonPress({
+  const incrementApproval = transactionButtonPress({
     toast,
     steps: [
       async () => {
@@ -122,6 +125,11 @@
           minimum: bridgeAmount,
         })
       },
+    ],
+  })
+  const initiateBridge = transactionButtonPress({
+    toast,
+    steps: [
       async () => {
         const tx = await transactions.sendTransaction({
           account: accountState.address,
@@ -138,10 +146,23 @@
       },
     ],
   })
-  // const setTxHash = (hash: Hex) => {
-  //   tx = hash
-  //   // localStorage.setItem('bridge-tx', hash)
-  // }
+  const bridgeTokens = () => {
+    if (needsApproval) return incrementApproval()
+    return initiateBridge()
+  }
+  const needsApproval = $derived.by(() => {
+    return (
+      assetLink.value?.originationChainId === bridgeKey.fromChain ||
+      !bridgeSettings.approval.value ||
+      bridgeSettings.approval.value < bridgeSettings.amountToBridge
+    )
+  })
+  // $inspect(
+  //   needsApproval,
+  //   assetLink.value?.originationChainId,
+  //   bridgeSettings.approval.value,
+  //   bridgeSettings.amountToBridge,
+  // )
   let usdMultiplier = $state(0n)
   const wplsTokenPrice = new SvelteMap<string, bigint>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
@@ -235,13 +256,13 @@
   }
   let maxBridgeable = $state(0n as bigint | null)
   const disableBridgeButton = $derived(
-    // bridgeStatus !== null ||
     !maxBridgeable ||
       !amountIn.value ||
       !minAmount.value ||
       amountIn.value < minAmount.value ||
       amountIn.value > maxBridgeable,
   )
+  // $inspect(disableBridgeButton, maxBridgeable, amountIn.value, minAmount.value)
   $effect(() => {
     if (!bridgeTxHash.value || !destinationBlock) {
       return
@@ -338,7 +359,7 @@
   const isValidTxHash = $derived(isHex(txHashValue) && txHashValue.length === 66)
 </script>
 
-<OnboardStep icon="line-md:chevron-double-down">
+<InputOutputForm icon="line-md:chevron-double-down">
   {#snippet input()}
     <SectionInput
       focused
@@ -351,7 +372,6 @@
         symbol: 'ETH',
         name: 'Ether',
       }}
-      showRadio
       value={amountIn.value}
       onbalanceupdate={(balance) => {
         maxBridgeable = balance
@@ -362,11 +382,14 @@
       oninput={(v) => {
         amountIn.value = v
       }}>
+      {#snippet radio()}
+        <OnboardRadio />
+      {/snippet}
       {#snippet modal({ close })}
         <TokenSelect
           chains={[Number(Chains.ETH)]}
-          tokens={bridgeableTokensUnder({
-            tokens: bridgableTokens.value,
+          tokens={bridgableTokens.bridgeableTokensUnder({
+            provider: Provider.PULSECHAIN,
             chain: Number(bridgeKey.fromChain),
             partnerChain: Number(bridgeKey.toChain),
           })}
@@ -412,7 +435,7 @@
       disabled={disableBridgeButton}
       requiredChain={idToChain.get(tokenInput!.chainId)!}
       onclick={bridgeTokens}
-      text="Bridge to PulseChain"
+      text={needsApproval ? 'Approve' : 'Bridge to PulseChain'}
       loadingKey="lifi-quote" />
   {/snippet}
   {#snippet progress()}
@@ -481,4 +504,4 @@
       </div>
     {/if}
   {/snippet}
-</OnboardStep>
+</InputOutputForm>

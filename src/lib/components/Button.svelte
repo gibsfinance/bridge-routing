@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
+  import type { EventHandler } from 'svelte/elements'
   type Props = {
     type?: 'button' | 'submit' | 'reset'
     class?: string
     children?: Snippet
-    onclick?: () => void
+    onclick?: EventHandler
     title?: string
     disabled?: boolean
   }

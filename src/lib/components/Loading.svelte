@@ -4,7 +4,7 @@
   import type { Snippet } from 'svelte'
   type Props = {
     class?: string
-    key?: string | string[]
+    key?: string | string[] | null
     contents?: Snippet
     loader?: Snippet
   }

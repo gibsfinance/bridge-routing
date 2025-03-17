@@ -1,4 +1,5 @@
 import type classNames from 'classnames'
+import { untrack } from 'svelte'
 import type { Hex, Abi } from 'viem'
 
 export type Call = {
@@ -45,7 +46,10 @@ export class ProxyStore<T> {
     this.val = v
   }
   set value(v: T) {
-    const validated = this.validation(this.value, v)
+    const validated = this.validation(
+      untrack(() => this.value),
+      v,
+    )
     if (validated === undefined) return
     this.val = validated
   }

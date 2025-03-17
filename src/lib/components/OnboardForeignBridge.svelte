@@ -1,5 +1,5 @@
 <script lang="ts">
-  import OnboardStep from './OnboardStep.svelte'
+  import InputOutputForm from './InputOutputForm.svelte'
   import * as transactions from '$lib/stores/transactions'
   import { formatUnits, getAddress, zeroAddress, type Hex } from 'viem'
   import TokenAndNetworkSelector from './TokenAndNetworkSelector.svelte'
@@ -26,6 +26,7 @@
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
+    import OnboardRadio from './OnboardRadio.svelte'
 
   const toast = getContext('toast') as ToastContext
   let tokenInput: Token = $state({
@@ -212,7 +213,7 @@
     toast,
     steps: [
       async () => {
-        console.log('checking approval')
+        // console.log('checking approval')
         return await transactions.checkAndRaiseApproval({
           token: tokenInput!.address! as Hex,
           spender: latestQuote!.transactionRequest!.to as Hex,
@@ -247,7 +248,7 @@
   })
 </script>
 
-<OnboardStep
+<InputOutputForm
   icon="material-symbols:captive-portal"
   ondividerclick={tokenInput.chainId === tokenOutput.chainId
     ? () => {
@@ -273,6 +274,9 @@
       oninput={(v) => {
         amountInput = v
       }}>
+      {#snippet radio()}
+        <OnboardRadio />
+      {/snippet}
       {#snippet modal({ close })}
         <TokenAndNetworkSelector
           chainId={Number(tokenInput.chainId)}
@@ -313,4 +317,4 @@
       text="Bridge to Ethereum"
       loadingKey="lifi-quote" />
   {/snippet}
-</OnboardStep>
+</InputOutputForm>
