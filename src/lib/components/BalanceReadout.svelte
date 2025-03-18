@@ -43,7 +43,7 @@
 
   $effect.pre(() => (chainId ? untrack(() => latestBlock.watch(chainId)) : undefined))
   const block = $derived(latestBlock.block(chainId))
-  $effect(() => {
+  $effect.pre(() => {
     return tokenBalance.fetch({
       chainId,
       token: token,

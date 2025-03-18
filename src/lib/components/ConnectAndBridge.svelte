@@ -173,7 +173,6 @@
     if (!skipApproval) {
       return hasSufficientApproval
     }
-    console.log('tokenBalance', tokenBalance, input.amountIn.value)
     return !input.amountIn.value || input.amountIn.value > tokenBalance
   })
   const text = $derived.by(() => {

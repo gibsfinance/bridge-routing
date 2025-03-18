@@ -227,7 +227,7 @@
 
 <div class="flex flex-col max-w-lg">
   <BridgeHeader />
-  <div class="flex flex-col max-w-lg mx-auto w-full p-2 bg-white card rounded-3xl relative">
+  <div class="flex flex-col max-w-lg mx-auto w-full p-2 bg-white card rounded-3xl relative overflow-hidden">
     <InputOutputForm
       icon="mdi:swap-horizontal"
       ondividerclick={dividerDisabled ? null : ondividerclick}>

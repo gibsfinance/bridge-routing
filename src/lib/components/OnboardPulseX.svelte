@@ -8,36 +8,15 @@
   } from '$lib/stores/bridge-settings.svelte'
   import { getPulseXQuote } from '$lib/stores/pulsex/quote.svelte'
   import type { SerializedTrade } from '$lib/stores/pulsex/transformers'
-  import Icon from '@iconify/svelte'
   import type { Token } from '$lib/types.svelte'
-  import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
-  import VerticalDivider from './ExchangeInputDivider.svelte'
-  import NumericInput from './NumericInput.svelte'
-  import BalanceReadout from './BalanceReadout.svelte'
   import { formatUnits, getAddress, zeroAddress, type Hex } from 'viem'
   import { latestBlock } from '$lib/stores/chain-events.svelte'
-  import Loading from './Loading.svelte'
-  import Button from './Button.svelte'
-  // import { sendTransaction } from '@wagmi/core'
-  // import { wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
-  // import * as SDK from '@pulsex/sdk'
-
-  // import { onboardSettings } from '$lib/stores/onboard.svelte'
-  import { plsOutToken } from '$lib/stores/storage.svelte'
-  import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
-  import GuideStep from './GuideStep.svelte'
-  import ModalWrapper from './ModalWrapper.svelte'
+  import { plsOutToken, showTooltips } from '$lib/stores/storage.svelte'
   import TokenSelect from './TokenSelect.svelte'
-  import TokenInfo from './TokenInfo.svelte'
-  import GuideShield from './GuideShield.svelte'
-  import { showTooltips, storage } from '$lib/stores/storage.svelte'
-  // import { untrack } from 'svelte'
   import { humanReadableNumber } from '$lib/stores/utils'
-  // import { clientFromChain } from '$lib/stores/input.svelte'
-  // import { chainsMetadata } from '$lib/stores/auth/constants'
   import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
-  import { bridgableTokens, bridgeableTokensUnder, bridgeKey } from '$lib/stores/input.svelte'
+  import { bridgableTokens, bridgeKey } from '$lib/stores/input.svelte'
   import InputOutputForm from './InputOutputForm.svelte'
   import SectionInput from './SectionInput.svelte'
   import OnboardButton from './OnboardButton.svelte'
@@ -46,6 +25,8 @@
   import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
   import OnboardRadio from './OnboardRadio.svelte'
+  import GuideShield from './GuideShield.svelte'
+  import GuideStep from './GuideStep.svelte'
 
   const toast = getContext('toast') as ToastContext
 
@@ -58,7 +39,6 @@
     }),
   )
   const tokenOut = $derived.by(() => {
-    // const tokens =
     return tokens.find((t) => getAddress(t.address) === getAddress(tokenOutputAddress)) ?? tokens[0]
   })
   const tokenInURI = $derived(bridgeSettings.assetIn.value?.logoURI)
@@ -116,9 +96,6 @@
     }
     return int
   }
-  const swapButtonClassNames = $derived(
-    'bg-tertiary-500 text-surface-contrast-950 rounded-none size-16 text-base flex flex-row items-center justify-center shrink-0',
-  )
   const swapRouterAddress = '0xDA9aBA4eACF54E0273f56dfFee6B8F1e20B23Bba'
   const swapDisabled = $derived(!amountToSwapIn || !amountToSwapOut || !quoteMatchesLatest)
   const swapTokens = transactionButtonPress({
@@ -146,22 +123,6 @@
       },
     ],
   })
-
-  const estimatedAmount = $derived.by(() => {
-    if (!quoteMatchesLatest) return ''
-    const amountToSwapOutInt = amountToSwapOut ?? 0n
-    const amountToSwapOutToken = amountToSwapOutInt / oneEther
-    const lengthInt = amountToSwapOutToken.toString().length
-    const maxDecimals = Math.max(4, 9 - Math.max(0, lengthInt - 5))
-    return humanReadableNumber(amountToSwapOutInt, {
-      decimals: tokenOut.decimals,
-      maxDecimals,
-    })
-  })
-  const tokenOutWithPrefixedName = $derived.by(() => ({
-    ...tokenOut,
-    name: estimatedAmount ? `${estimatedAmount} ${tokenOut.symbol}` : tokenOut.symbol,
-  }))
 </script>
 
 <InputOutputForm
@@ -224,35 +185,6 @@
           }} />
       {/snippet}
     </SectionInput>
-    <!-- {#if tokenIn}
-      <label
-        for="amount-to-swap-in"
-        class="flex flex-row items-center w-1/2 justify-end pr-5 gap-1">
-        <div class="flex flex-row-reverse items-center gap-1 absolute top-0 left-0">
-          {#if accountState.address}
-            <BalanceReadout
-              token={tokenIn}
-              showLoader
-              roundedClasses="rounded-tl"
-              hideSymbol
-              decimalLimit={9}
-              onmax={(balance) => {
-                amountToSwapIn = balance
-              }} />
-          {/if}
-        </div>
-        <NumericInput
-          class="w-full input ring-0 focus:ring-0 text-right placeholder:text-gray-600 text-surface-contrast-50 text-base"
-          value={amountToSwapIn}
-          id="amount-to-swap-in"
-          decimals={tokenIn.decimals}
-          oninput={(v) => {
-            amountToSwapIn = v
-            amountToSwapOut = null
-          }} />
-        <AssetWithNetwork asset={tokenIn} network={Number(Chains.PLS)} />
-      </label>
-    {/if} -->
   {/snippet}
   {#snippet output()}
     <SectionInput
@@ -290,86 +222,21 @@
       loadingKey="pulsex-quote" />
   {/snippet}
 </InputOutputForm>
-<!-- <div class="flex relative">
-  <div
-    class="w-full card preset-outline-surface-500 bg-surface-950-50 shadow-sm hover:shadow-lg transition-all duration-100 overflow-hidden">
-    <header class="flex flex-row justify-between relative h-16">
-      {#if tokenIn}
-        <label
-          for="amount-to-swap-in"
-          class="flex flex-row items-center w-1/2 justify-end pr-5 gap-1">
-          <div class="flex flex-row-reverse items-center gap-1 absolute top-0 left-0">
-            {#if accountState.address}
-              <BalanceReadout
-                token={tokenIn}
-                showLoader
-                roundedClasses="rounded-tl"
-                hideSymbol
-                decimalLimit={9}
-                onmax={(balance) => {
-                  amountToSwapIn = balance
-                }} />
-            {/if}
-          </div>
-          <NumericInput
-            class="w-full input ring-0 focus:ring-0 text-right placeholder:text-gray-600 text-surface-contrast-50 text-base"
-            value={amountToSwapIn}
-            id="amount-to-swap-in"
-            decimals={tokenIn.decimals}
-            oninput={(v) => {
-              amountToSwapIn = v
-              amountToSwapOut = null
-            }} />
-          <AssetWithNetwork asset={tokenIn} network={Number(Chains.PLS)} />
-        </label>
-        <VerticalDivider>
-          <Icon
-            icon="gridicons:chevron-right"
-            class="text-surface-500 bg-surface-950-50 rounded-full w-full h-full ring-2 ring-current ring-inset p-0.5" />
-        </VerticalDivider>
-        <div class="flex flex-row grow items-center w-1/2 justify-end">
-          <label
-            for="amount-to-swap-out"
-            class="flex flex-row grow items-center h-full gap-1 min-w-0">
-            <ModalWrapper
-              wrapperClasses="grow h-full flex w-full"
-              triggerClasses="pl-4 py-4 flex relative grow justify-end h-full items-center gap-2 text-surface-contrast-50 group w-full">
-              {#snippet button()}
-                <TokenInfo
-                  token={tokenOutWithPrefixedName}
-                  truncate={8}
-                  externalGroup
-                  wrapperSizeClasses="h-8 min-w-0 overflow-hidden flex grow px-1"
-                  nameClasses="text-base truncate" />
-              {/snippet}
-              {#snippet contents({ close })}
-                <TokenSelect
-                  showCustomTokens
-                  chain={Chains.PLS}
-                  onsubmit={(tkn) => {
-                    plsOutToken.value = tkn.address as Hex
-                    close()
-                  }} />
-              {/snippet}
-            </ModalWrapper>
-          </label>
-          <Button disabled={swapDisabled} class={swapButtonClassNames} onclick={swapTokens}>
-            <Loading key="pulsex-quote">
-              {#snippet contents()}Go{/snippet}
-            </Loading>
-          </Button>
-        </div>
-      {/if}
-    </header>
+
+{#if showTooltips.value}
+  <div class="absolute top-0 left-0 w-full h-full">
+    <GuideShield show={true} />
+    <GuideStep step={1} triggerClass="absolute top-9 right-5">
+      <p>Select the token you wish to swap from.</p>
+    </GuideStep>
+    <GuideStep step={2} triggerClass="absolute top-24 left-5">
+      <p>Set an amount to swap.</p>
+    </GuideStep>
+    <GuideStep step={3} triggerClass="absolute right-5 bottom-36 mx-auto">
+      <p>Select output token.</p>
+    </GuideStep>
+    <GuideStep step={4} triggerClass="absolute left-0 right-0 mx-auto bottom-5">
+      <p>Initiate the swap.</p>
+    </GuideStep>
   </div>
-  <GuideShield show={showTooltips.value} class="rounded-xl" />
-  <div class="absolute top-2 right-1/4 -translate-x-1/2 pointer-events-none">
-    <GuideStep step={7}>Select your output token</GuideStep>
-  </div>
-  <div class="absolute top-1/2 left-1/4 -translate-y-1/2 -translate-x-1/2 pointer-events-none">
-    <GuideStep step={8}>Input an amount to swap to your output token</GuideStep>
-  </div>
-  <div class="absolute bottom-1 right-16 translate-x-1/2 pointer-events-none">
-    <GuideStep step={9}>Initiate swap transaction</GuideStep>
-  </div>
-</div> -->
+{/if}

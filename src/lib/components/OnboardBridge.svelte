@@ -40,7 +40,12 @@
   // import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { SvelteMap } from 'svelte/reactivity'
   import { untrack } from 'svelte'
-  import { bridgeTxHash, foreignBridgeInputs, storage } from '$lib/stores/storage.svelte'
+  import {
+    bridgeTxHash,
+    foreignBridgeInputs,
+    showTooltips,
+    storage,
+  } from '$lib/stores/storage.svelte'
   import InputOutputForm from './InputOutputForm.svelte'
   import SectionInput from './SectionInput.svelte'
   import TokenSelect from './TokenSelect.svelte'
@@ -55,6 +60,8 @@
   import Button from './Button.svelte'
   import Input from './Input.svelte'
   import OnboardRadio from './OnboardRadio.svelte'
+  import GuideShield from './GuideShield.svelte'
+  import GuideStep from './GuideStep.svelte'
 
   const toast = getContext('toast') as ToastContext
 
@@ -510,3 +517,18 @@
     {/if}
   {/snippet}
 </InputOutputForm>
+
+{#if showTooltips.value}
+  <div class="absolute top-0 left-0 w-full h-full">
+    <GuideShield show={true} />
+    <GuideStep step={1} triggerClass="absolute top-9 right-5">
+      <p>Select the token you wish to bridge to Pulsechain.</p>
+    </GuideStep>
+    <GuideStep step={2} triggerClass="absolute top-24 left-5">
+      <p>Set an amount to bridge.</p>
+    </GuideStep>
+    <GuideStep step={3} triggerClass="absolute left-0 right-0 mx-auto bottom-5">
+      <p>Initiate the bridge.</p>
+    </GuideStep>
+  </div>
+{/if}

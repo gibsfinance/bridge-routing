@@ -6,7 +6,7 @@
   type Props = {
     placement?: 'top' | 'bottom' | 'left' | 'right'
     children: any
-    step: number
+    step: number | string
     triggerClass?: ClassParam
     contentClass?: ClassParam
   }
