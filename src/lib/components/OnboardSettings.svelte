@@ -39,18 +39,18 @@
   $effect.pre(() => {
     bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
   })
-  $effect(() => {
-    if (!tokenInput) {
-      bridgeSettings.assetIn.value = {
-        logoURI: `https://gib.show/image/1/${zeroAddress}`,
-        name: 'Ether',
-        symbol: 'ETH',
-        decimals: 18,
-        chainId: 1,
-        address: zeroAddress,
-      }
-    }
-  })
+  // $effect(() => {
+  //   if (!tokenInput) {
+  //     bridgeSettings.assetIn.value = {
+  //       logoURI: `https://gib.show/image/1/${zeroAddress}`,
+  //       name: 'Ether',
+  //       symbol: 'ETH',
+  //       decimals: 18,
+  //       chainId: 1,
+  //       address: zeroAddress,
+  //     }
+  //   }
+  // })
   $effect(() => {
     const assetInAddress = tokenInput?.address
     if (!assetInAddress) return

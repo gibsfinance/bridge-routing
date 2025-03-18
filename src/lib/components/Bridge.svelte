@@ -8,23 +8,15 @@
   import * as transactions from '$lib/stores/transactions'
   import BridgeAdvancedMode from './BridgeAdvancedMode.svelte'
   import {
-    details,
     bridgeSettings,
     updateAssetIn,
-    type ExtraDataOptions,
     updateAssetOut,
     loadPriceCorrective,
-    assetSources,
     assetOutKey,
   } from '$lib/stores/bridge-settings.svelte'
-  import { bridgeKey, loadFeeFor, toPath, unwrap, isUnwrappable } from '$lib/stores/input.svelte'
-  import { settings as bridgeAdminSettings } from '$lib/stores/fee-manager.svelte'
+  import { bridgeKey, loadFeeFor, unwrap, isUnwrappable } from '$lib/stores/input.svelte'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
-    // watchFinalizedBlocks,
-    // unwatchFinalizedBlocks,
-    fromTokenBalance,
-    toTokenBalance,
     minAmount,
     latestBlock,
     loadAssetLink,
@@ -227,7 +219,8 @@
 
 <div class="flex flex-col max-w-lg">
   <BridgeHeader />
-  <div class="flex flex-col max-w-lg mx-auto w-full p-2 bg-white card rounded-3xl relative overflow-hidden">
+  <div
+    class="flex flex-col max-w-lg mx-auto w-full p-2 bg-white card rounded-3xl relative overflow-hidden">
     <InputOutputForm
       icon="mdi:swap-horizontal"
       ondividerclick={dividerDisabled ? null : ondividerclick}>

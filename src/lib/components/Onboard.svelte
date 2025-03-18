@@ -21,18 +21,18 @@
   $effect.pre(() => {
     bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
   })
-  $effect(() => {
-    if (!tokenInput) {
-      bridgeSettings.assetIn.value = {
-        logoURI: `https://gib.show/image/1/${zeroAddress}`,
-        name: 'Ether',
-        symbol: 'ETH',
-        decimals: 18,
-        chainId: 1,
-        address: zeroAddress,
-      }
-    }
-  })
+  // $effect(() => {
+  //   if (!tokenInput) {
+  //     bridgeSettings.assetIn.value = {
+  //       logoURI: `https://gib.show/image/1/${zeroAddress}`,
+  //       name: 'Ether',
+  //       symbol: 'ETH',
+  //       decimals: 18,
+  //       chainId: 1,
+  //       address: zeroAddress,
+  //     }
+  //   }
+  // })
   const targetChain = $derived(chainsMetadata[bridgeKey.fromChain])
   const switchToTargetChain = () => {
     modal.open({
@@ -58,6 +58,7 @@
       })
     return price.cleanup
   })
+  $inspect(activeOnboardStep.value)
 </script>
 
 {#if tokenInput}

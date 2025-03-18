@@ -47,9 +47,11 @@
     chainId: 1,
     address: zeroAddress,
   })
-  $effect(() => {
-    bridgeSettings.assetIn.value = tokenOutput
-  })
+  $inspect(tokenInput)
+  // $effect(() => {
+  //   console.log('setting assetIn', tokenOutput)
+  //   bridgeSettings.assetIn.value = tokenOutput
+  // })
   let amountInput = $state(0n)
   let maxBridgeable = $state(0n as bigint | null)
   $effect(() => {
@@ -122,18 +124,6 @@
       !fromAddress ||
       !toAddress
     ) {
-      // console.log(
-      //   'no quote inputs',
-      //   fromChain,
-      //   toChain,
-      //   fromToken,
-      //   toToken,
-      //   amountInput,
-      //   fromAddress,
-      //   toAddress,
-      //   tokenInput.address,
-      //   tokenOutput.address,
-      // )
       return null
     }
     return {
