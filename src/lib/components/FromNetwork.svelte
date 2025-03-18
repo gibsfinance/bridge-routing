@@ -11,6 +11,7 @@
   import { isProd, pathways, validBridgeKeys } from '$lib/stores/config.svelte'
   import { Chains, toChain } from '$lib/stores/auth/types'
   import _ from 'lodash'
+  import { fromTokenBalance } from '$lib/stores/chain-events.svelte'
 
   const chooseTokenSubmit = async (token: Token) => {
     const bridgeKey = input.bridgeKey.value
@@ -34,7 +35,15 @@
     ] as input.BridgeKey
     nav.delivery.shallow(options, token.address)
   }
+  const keepBalance = (bal: bigint | null) => {
+    fromTokenBalance.value = bal
+  }
   const handleInput = (amount: bigint) => {
+    // if (balance !== null) {
+    //   if (amount > balance) {
+    //     amount = balance
+    //   }
+    // }
     input.amountIn.value = amount
   }
   const handleMaxBalance = (bal: bigint) => {
@@ -60,7 +69,7 @@
   label="Input"
   focused
   token={bridgeSettings.assetIn.value}
-  onbalanceupdate={() => {}}
+  onbalanceupdate={keepBalance}
   value={bridgeSettings.amountToBridge ?? 0n}
   onmax={handleMaxBalance}
   oninput={handleInput}>
