@@ -47,7 +47,7 @@
     chainId: 1,
     address: zeroAddress,
   })
-  $inspect(tokenInput)
+  // $inspect(tokenInput)
   // $effect(() => {
   //   console.log('setting assetIn', tokenOutput)
   //   bridgeSettings.assetIn.value = tokenOutput
@@ -69,14 +69,15 @@
         () => availableChains.get(previousSettings?.fromChain ?? 137)!,
       )
       await loadTokensForChains(loadedFromChain)
-      const tokens = untrack(() => availableTokensPerOriginChain.get(loadedFromChain.id)!)
-      const target =
-        (previousSettings?.fromToken
-          ? tokens.find((tkn) => tkn.address === previousSettings.fromToken)
-          : tokens[0]) ?? tokens[0]
-      if (target) {
-        tokenInput = target
-      }
+      // const tokens = untrack(() => availableTokensPerOriginChain.get(loadedFromChain.id)!)
+      // const target =
+      //   (previousSettings?.fromToken
+      //     ? tokens.find((tkn) => tkn.address === previousSettings.fromToken)
+      //     : tokens[0]) ?? tokens[0]
+      // if (target) {
+      //   console.log('setting tokenInput', target)
+      //   tokenInput = target
+      // }
       amountInput = previousSettings?.fromAmount ? BigInt(previousSettings.fromAmount) : 0n
       const tokensDestination = untrack(() => availableTokensPerOriginChain.get(1)!)
       const tokenDestination = previousSettings?.toToken

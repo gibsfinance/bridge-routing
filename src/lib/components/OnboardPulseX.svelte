@@ -38,20 +38,20 @@
       partnerChain: null,
     }),
   )
+  const defaultTokenIn = $derived(tokens.find((t) => t.symbol === 'wWETH'))
   const tokenOut = $derived.by(() => {
     return tokens.find((t) => getAddress(t.address) === getAddress(tokenOutputAddress)) ?? tokens[0]
   })
   const tokenInURI = $derived(bridgeSettings.assetIn.value?.logoURI)
-  const bridgeTokenOut = $derived(bridgeSettings.assetOut as Token | null)
+  const bridgeTokenOut = $derived((bridgeSettings.assetOut as Token | null) ?? defaultTokenIn)
   const tokenIn = $derived(
-    bridgeTokenOut && tokenInURI
+    bridgeTokenOut
       ? ({
           ...bridgeTokenOut,
-          logoURI: tokenInURI,
+          logoURI: tokenInURI ?? null,
         } as Token)
       : null,
   )
-  // let amountInControl = $state(true)
   let amountToSwapIn = $state<bigint | null>(0n)
   let amountToSwapOut = $state<bigint | null>(null)
   let quoteResult = $state<SerializedTrade | null>(null)
@@ -197,6 +197,7 @@
         symbol: 'ETH',
         name: 'Ether',
       }}
+      readonlyInput
       onbalanceupdate={() => {}}
       value={amountToSwapOut ?? 0n}>
       {#snippet modal({ close })}
