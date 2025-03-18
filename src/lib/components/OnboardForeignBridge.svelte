@@ -26,7 +26,7 @@
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
-    import OnboardRadio from './OnboardRadio.svelte'
+  import OnboardRadio from './OnboardRadio.svelte'
 
   const toast = getContext('toast') as ToastContext
   let tokenInput: Token = $state({
@@ -299,6 +299,7 @@
       {#snippet modal({ close })}
         <TokenSelect
           chains={[Number(Chains.ETH)]}
+          selectedChain={Number(tokenOutput.chainId)}
           tokens={availableTokensPerOriginChain.get(1)!}
           onsubmit={(tkn) => {
             if (tkn) {

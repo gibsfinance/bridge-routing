@@ -95,7 +95,6 @@
           <li class="flex flex-row">
             <ModalWrapper
               triggerClasses="flex flex-row items-center px-2 py-1"
-              contentWidthClass="max-w-[576px] w-full"
               contentHeightClass="max-h-[460px] h-full">
               {#snippet button()}
                 <!-- {#if !isSmall}RPC&nbsp;{/if} -->

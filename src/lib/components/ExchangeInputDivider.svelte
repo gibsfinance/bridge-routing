@@ -17,7 +17,7 @@
     verticalSizeClasses = 'w-full',
     positionClasses = 'relative',
     iconWrapperSizeClasses = 'size-12',
-    zClasses = 'z-10',
+    zClasses = '',
     children,
     onclick: onClick,
   }: Props = $props()

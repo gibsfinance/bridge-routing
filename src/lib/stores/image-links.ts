@@ -11,7 +11,12 @@ export const list = (path: string) => {
   return `${imageRoot}/list${path}`
 }
 
-export const network = (chainId: number) => `${imageRoot}/image/${Number(chainId)}`
+export const network = (chainId: number) => {
+  if (!chainId) {
+    console.trace('network image')
+  }
+  return `${imageRoot}/image/${Number(chainId)}`
+}
 
 export const image = (t: MinimalTokenInfo) =>
   t.logoURI || `${network(t.chainId)}/${getAddress(t.address)}`

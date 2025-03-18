@@ -35,9 +35,8 @@
     onfocus,
     oninput,
     setref,
-    onsubmit,
   }: Props = $props()
-  const defaultClassName = 'flex w-full shadow-xs outline-hidden'
+  const defaultClassName = 'flex w-full outline-hidden'
   let input!: HTMLInputElement
   onMount(() => {
     if (autoFocus) {

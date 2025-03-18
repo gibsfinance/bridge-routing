@@ -6,6 +6,7 @@
   import { Chains, idToChain, Provider } from '$lib/stores/auth/types'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
+    assetOutKey,
     assetSources,
     bridgeSettings,
     oneEther,
@@ -65,10 +66,13 @@
   const tokenInput = $derived(bridgeSettings.assetIn.value)
 
   let editTxHash = $state(false)
-  let editTxHashValue = $state('')
   $effect(() => {
-    const assetOutKey = bridgeSettings.assetOutKey
-    if (!tokenInput || !assetOutKey) return
+    const assetOutputKey = assetOutKey({
+      bridgeKeyPath: bridgeKey.path,
+      assetInAddress: tokenInput?.address as Hex,
+      unwrap: false,
+    })
+    if (!tokenInput || !assetOutputKey) return
     const tokensUnderBridgeKey = bridgableTokens.bridgeableTokensUnder({
       provider: Provider.PULSECHAIN,
       chain: Number(bridgeKey.toChain),
@@ -88,7 +92,7 @@
       })
       assetLink.value = l
       if (!assetOut) return
-      bridgeSettings.setAssetOut(assetOutKey, {
+      bridgeSettings.setAssetOut(assetOutputKey, {
         ...assetOut,
         logoURI: tokenInput.logoURI,
       })
@@ -193,7 +197,7 @@
   const incrementBridgeStatus = () => {
     if (bridgeStatus === null) {
       bridgeStatus = {
-        bridgeKey,
+        bridgeKey: bridgeKey.value,
         hash: tx!,
         ticker: untrack(() => latestBlock.block(Number(bridgeKey.toChain))!),
         status: bridgeStatuses.SUBMITTED,
@@ -268,7 +272,7 @@
       return
     }
     const result = liveBridgeStatus({
-      bridgeKey,
+      bridgeKey: bridgeKey.value,
       hash: bridgeTxHash.value,
       ticker: destinationBlock,
     })
@@ -388,6 +392,7 @@
       {#snippet modal({ close })}
         <TokenSelect
           chains={[Number(Chains.ETH)]}
+          selectedChain={Number(bridgeKey.fromChain)}
           tokens={bridgableTokens.bridgeableTokensUnder({
             provider: Provider.PULSECHAIN,
             chain: Number(bridgeKey.fromChain),

@@ -21,7 +21,7 @@
     readonlyTokenSelect?: boolean
     focused?: boolean
     oninput?: (v: bigint) => void
-    value: bigint | null
+    value: string | bigint | null
     modal?: Snippet<[{ close: () => void }]>
     radio?: Snippet
     underinput?: Snippet
@@ -64,13 +64,13 @@
       <span
         class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-surface-contrast-50 h-10 leading-10"
         style:font-size={`${largeInputFontScaler(humanReadable?.length ?? 0)}px`}
-        >{valIsNumber ? humanReadable : '0'}</span>
+        >{!token?.decimals || value === null ? '0' : humanReadable}</span>
     {:else}
       <NumericInput
         {id}
         class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-surface-contrast-50 h-10 leading-10 tracking-tight"
         textClass="text-left font-inter text-surface-contrast-50"
-        {value}
+        value={typeof value === 'bigint' ? value : null}
         decimals={token?.decimals ?? 0}
         {disabled}
         {oninput} />

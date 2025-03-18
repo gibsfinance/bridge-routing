@@ -1,6 +1,6 @@
 import { zeroAddress, type Hex } from 'viem'
 import { LocalProxy, LocalProxyProp } from './localstorage.svelte'
-import type { FeeType } from './input.svelte'
+import { FeeType } from './input.svelte'
 
 export type DefaultSettings = {
   showTooltips: boolean
@@ -46,10 +46,13 @@ export type BridgeSettings = {
   unwrap: boolean
   costLimit: bigint
   deliveryFee: bigint
+  deliveryFeeLocked: boolean
+  costLimitLocked: boolean
 }
 
-export const bridgeSettings = new LocalProxyProp(
-  storage,
-  ['bridgeSettings'],
-  null as BridgeSettings | null,
-)
+export const bridgeSettings = new LocalProxyProp(storage, ['bridgeSettings'], {
+  feeType: FeeType.PERCENT,
+  unwrap: true,
+  deliveryFeeLocked: false,
+  costLimitLocked: false,
+} as Partial<BridgeSettings> | null)

@@ -1,14 +1,11 @@
 <script lang="ts">
+  import * as input from '$lib/stores/input.svelte'
   import FromNetwork from './FromNetwork.svelte'
   import ToNetwork from './ToNetwork.svelte'
   import ConnectAndBridge from './ConnectAndBridge.svelte'
   import * as nav from '$lib/stores/nav.svelte'
-  import NetworkDirection from './NetworkDirection.svelte'
-  import Settings from './Settings.svelte'
   import * as customTokens from '$lib/stores/custom-tokens.svelte'
-  import Details from './Details.svelte'
   import * as transactions from '$lib/stores/transactions'
-  import BridgeSettings from './BridgeSettings.svelte'
   import BridgeAdvancedMode from './BridgeAdvancedMode.svelte'
   import {
     details,
@@ -18,12 +15,11 @@
     updateAssetOut,
     loadPriceCorrective,
     assetSources,
+    assetOutKey,
   } from '$lib/stores/bridge-settings.svelte'
   import {
     bridgeKey,
     loadFeeFor,
-    // bridgeAdminSettings,
-    // clientFromChain,
     toPath,
     unwrap,
     isUnwrappable,
@@ -103,18 +99,22 @@
   })
   $effect(() => {
     const assetIn = bridgeSettings.assetIn.value
-    if (!assetIn || !assetLink.value) return
-    // console.log('assetIn', JSON.stringify(assetLink.value, null, 2))
+    const assetOutputKey = assetOutKey({
+      bridgeKeyPath: bridgeKey.path,
+      assetInAddress: assetIn?.address as Hex,
+      unwrap: unwrap.value,
+    })
+    if (!assetIn || !assetOutputKey || !assetLink.value) return
     const updatingAssetOut = updateAssetOut({
       toChainId: Number(bridgeKey.toChain),
       assetInput: assetIn,
       assetLink: assetLink.value,
+      unwrap: unwrap.value,
     })
-    const assetOutKey = `${bridgeKey.path}/${assetIn.address.toLowerCase()}`
     updatingAssetOut.promise.then((asset) => {
       if (updatingAssetOut.controller.signal.aborted) return
       if (asset) {
-        bridgeSettings.setAssetOut(assetOutKey, asset)
+        bridgeSettings.setAssetOut(assetOutputKey, asset)
       } else {
         // some fallback logic - never been bridged yet
       }
@@ -123,7 +123,6 @@
   })
   const ticker = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
   $effect(() => {
-    console.log('checking price corrective')
     if (!ticker || !bridgeSettings.assetOut) return
     const priceCorrective = loadPriceCorrective({
       bridgeKey: bridgeKey.value,
@@ -134,55 +133,36 @@
     })
     priceCorrective.promise.then((price) => {
       if (priceCorrective.controller.signal.aborted) return
-      console.log(
-        // bridgeKey.value,
-        // bridgeSettings.assetOut,
-        // assetLink.value,
-        'priceloaded',
-        price,
-        // bridgeSettings.amountToBridge,
-      )
       bridgeSettings.priceCorrective.value = price ?? 0n
     })
     return priceCorrective.cleanup
   })
-  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.fromChain))))
-  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.toChain))))
-  const originationBlock = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
-  $effect(() => {
-    if (!bridgeSettings.assetIn.value || !accountState.address || originationBlock) return
-    // console.log(
-    //   'fetching fromTokenBalance',
-    //   bridgeSettings.assetIn.value,
-    //   accountState.address,
-    //   originationBlock,
-    // )
-    return fromTokenBalance.fetch(
-      Number(bridgeKey.fromChain),
-      bridgeSettings.assetIn.value,
-      accountState.address,
-      originationBlock,
-    )
-  })
-  const destinationBlock = $derived(latestBlock.block(Number(bridgeKey.toChain)))
-  $effect(() => {
-    // console.log(
-    //   'toTokenBalance',
-    //   Number(bridgeKey.toChain),
-    //   bridgeSettings.assetOut?.address,
-    //   accountState.address,
-    //   destinationBlock,
-    // )
-    if (!bridgeSettings.assetOut?.address || !accountState.address || !destinationBlock) {
-      return
-    }
-    return toTokenBalance.fetch(
-      Number(bridgeKey.toChain),
-      bridgeSettings.assetOut,
-      accountState.address,
-      destinationBlock,
-    )
-  })
+  const fromChainId = $derived(Number(bridgeKey.fromChain))
+  const toChainId = $derived(Number(bridgeKey.toChain))
+  // const originationBlock = $derived(latestBlock.block(fromChainId))
+  $effect.pre(() => untrack(() => latestBlock.watch(fromChainId)))
+  $effect.pre(() => untrack(() => latestBlock.watch(toChainId)))
+  // $effect.pre(() => {
+  //   if (!bridgeSettings.assetIn.value || !accountState.address || !originationBlock) return
+  //   return fromTokenBalance.fetch(
+  //     Number(bridgeKey.fromChain),
+  //     bridgeSettings.assetIn.value,
+  //     accountState.address,
+  //     originationBlock,
+  //   )
+  // })
+  // const destinationBlock = $derived(latestBlock.block(Number(bridgeKey.toChain)))
+  // $effect(() => {
+  //   if (!bridgeSettings.assetOut?.address || !accountState.address || !destinationBlock) {
+  //     return
+  //   }
+  //   return toTokenBalance.fetch(
+  //     Number(bridgeKey.toChain),
+  //     bridgeSettings.assetOut,
+  //     accountState.address,
+  //     destinationBlock,
+  //   )
+  // })
   const loadApproval = loading.loadsAfterTick<bigint, transactions.ApprovalParameters>(
     'approval',
     async (inputs: transactions.ApprovalParameters) => {
@@ -200,20 +180,22 @@
     },
   )
   const originationTicker = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
-  // const destinationTicker = $derived(latestBlock.block(Number(bridgeKey.toChain)))
   $effect(() => {
     const account = accountState.address
     const token = bridgeSettings.assetIn.value?.address
     const bridgePath = bridgeKey.pathway?.from
-    if (!account || !bridgePath || !token || !bridgeKey.fromChain || !originationTicker) return
-    // console.log(
-    //   'loading approval',
-    //   account,
-    //   token,
-    //   bridgePath,
-    //   bridgeKey.fromChain,
-    //   originationTicker,
-    // )
+    if (
+      !account ||
+      !bridgePath ||
+      !token ||
+      !bridgeKey.fromChain ||
+      !originationTicker ||
+      !assetLink.value ||
+      assetLink.value.assetInAddress !== token ||
+      Number(bridgeKey.fromChain) !== bridgeSettings.assetIn.value?.chainId
+    ) {
+      return
+    }
     const result = loadApproval({
       account,
       token: token as Hex,
@@ -245,8 +227,8 @@
     return assetOutAddress
   })
   const dividerDisabled = $derived(!assetOutAddress)
-  // $inspect(unwrap.value, bridgeKey.toChain, futureAssetOutAddress)
   const ondividerclick = () => {
+    input.amountIn.value = null
     nav.delivery.shallow(bridgeKey.partner, futureAssetOutAddress as string)
   }
 </script>

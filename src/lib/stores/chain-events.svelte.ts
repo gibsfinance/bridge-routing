@@ -169,20 +169,29 @@ export class TokenBalanceWatcher {
     return `${this.chainId}-${this.walletAccount}-${this.token?.address}`.toLowerCase()
   }
 
-  fetch(chainId: number, token: Token, walletAccount: Hex, ticker: Block | null | undefined) {
+  fetch({
+    chainId,
+    token,
+    account,
+    block: ticker,
+  }: {
+    chainId: number
+    token: Token | null
+    account: Hex | null
+    block: Block | null | undefined
+  }) {
     this.cleanup()
     this.chainId = chainId
     this.token = token
-    this.walletAccount = walletAccount
+    this.walletAccount = account
     // call this function whenever a new block is ticked over
-    if (!ticker || !token) return
-    const requestResult = getTokenBalance(chainId, token, walletAccount)
+    if (!ticker || !token || !account) return () => {}
+    const requestResult = getTokenBalance(chainId, token, account)
     if (!requestResult) {
       return () => {}
     }
     this.balanceCleanup = requestResult.cleanup
     requestResult.promise.then((v) => {
-      // console.log(this.key, v)
       if (requestResult.controller.signal.aborted) {
         this.value = null
         return () => {}
@@ -190,8 +199,6 @@ export class TokenBalanceWatcher {
       this.clearLongtailBalances()
       balanceCache.set(this.key, { time: Date.now(), value: v })
       this.value = v
-      // if (v !== untrack(() => this.value)) {
-      // }
     })
     return () => {
       this.cleanup()

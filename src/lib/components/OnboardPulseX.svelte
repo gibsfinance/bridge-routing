@@ -1,6 +1,11 @@
 <script lang="ts">
   import * as transactions from '$lib/stores/transactions'
-  import { assetSources, bridgeSettings, oneEther } from '$lib/stores/bridge-settings.svelte'
+  import {
+    assetOutKey,
+    assetSources,
+    bridgeSettings,
+    oneEther,
+  } from '$lib/stores/bridge-settings.svelte'
   import { getPulseXQuote } from '$lib/stores/pulsex/quote.svelte'
   import type { SerializedTrade } from '$lib/stores/pulsex/transformers'
   import Icon from '@iconify/svelte'
@@ -32,7 +37,7 @@
   // import { clientFromChain } from '$lib/stores/input.svelte'
   // import { chainsMetadata } from '$lib/stores/auth/constants'
   import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
-  import { bridgableTokens, bridgeableTokensUnder } from '$lib/stores/input.svelte'
+  import { bridgableTokens, bridgeableTokensUnder, bridgeKey } from '$lib/stores/input.svelte'
   import InputOutputForm from './InputOutputForm.svelte'
   import SectionInput from './SectionInput.svelte'
   import OnboardButton from './OnboardButton.svelte'
@@ -164,7 +169,14 @@
   ondividerclick={() => {
     const futureInput = tokenOut
     plsOutToken.value = bridgeSettings.assetOut?.address as Hex
-    bridgeSettings.setAssetOut(bridgeSettings.assetOutKey!, futureInput)
+    const key = assetOutKey({
+      bridgeKeyPath: bridgeKey.path,
+      assetInAddress: tokenIn?.address as Hex,
+      unwrap: false,
+    })
+    if (key) {
+      bridgeSettings.setAssetOut(key, futureInput)
+    }
   }}>
   {#snippet input()}
     <SectionInput
@@ -195,10 +207,18 @@
       {#snippet modal({ close })}
         <TokenSelect
           chains={[Number(Chains.PLS)]}
+          selectedChain={Number(Chains.PLS)}
           {tokens}
           onsubmit={(tkn) => {
             if (tkn) {
-              bridgeSettings.setAssetOut(bridgeSettings.assetOutKey!, tkn as Token)
+              const key = assetOutKey({
+                bridgeKeyPath: bridgeKey.path,
+                assetInAddress: tokenIn?.address as Hex,
+                unwrap: false,
+              })
+              if (key) {
+                bridgeSettings.setAssetOut(key, tkn as Token)
+              }
             }
             close()
           }} />
@@ -250,6 +270,7 @@
       {#snippet modal({ close })}
         <TokenSelect
           chains={[Number(Chains.PLS)]}
+          selectedChain={Number(Chains.PLS)}
           {tokens}
           onsubmit={(tkn) => {
             if (tkn) {

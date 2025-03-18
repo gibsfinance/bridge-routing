@@ -7,7 +7,7 @@
     placement?: 'right' | 'left'
     tooltip?: string
   }
-  let {
+  const {
     show = false,
     disabled = false,
     placement = 'right' as 'right' | 'left',
@@ -17,25 +17,18 @@
 </script>
 
 {#if show}
-  <Tooltip {tooltip} {placement}>
-    <div
-      role="alert"
-      class="absolute h-6 w-6 top-0 -translate-x-1/2 -translate-y-1/2 text-center font-black text-white rounded-md leading-6 text-sm z-20"
-      class:positioned-left={placement === 'left'}
-      class:positioned-right={placement === 'right'}
-      class:bg-red-600={!disabled && resolved}
-      class:bg-red-400={disabled || !resolved}>
-      !!
-    </div>
-  </Tooltip>
+  <div
+    class="absolute top-0"
+    class:left-0={placement === 'left'}
+    class:right-0={placement === 'right'}>
+    <Tooltip {tooltip} {placement} gutter={0}>
+      <div
+        role="alert"
+        class="h-6 w-6 top-0 translate-x-1/2 -translate-y-1/2 text-center font-black text-white rounded-md leading-6 text-sm z-20"
+        class:bg-red-600={!disabled && resolved}
+        class:bg-red-400={disabled || !resolved}>
+        !!
+      </div>
+    </Tooltip>
+  </div>
 {/if}
-<!--
-<style lang="postcss">
-  @reference "tailwindcss/theme";
-  .positioned-right {
-    @apply left-full -translate-x-1/2;
-  }
-  .positioned-left {
-    @apply right-full translate-x-1/2;
-  }
-</style> -->

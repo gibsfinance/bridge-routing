@@ -1,15 +1,12 @@
 <script lang="ts">
   import { humanReadableNumber } from '$lib/stores/utils'
   import type { ClassParam, Token } from '$lib/types.svelte'
-  // import Tooltip from './Tooltip.svelte'
   import { loading } from '$lib/stores/loading.svelte'
-  import { toChain } from '$lib/stores/auth/types'
   import {
     latestBlock,
     tokenBalanceLoadingKey,
     TokenBalanceWatcher,
   } from '$lib/stores/chain-events.svelte'
-  import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import classNames from 'classnames'
   import Loading from './Loading.svelte'
   import { oneEther } from '$lib/stores/bridge-settings.svelte'
@@ -40,20 +37,19 @@
     onmax,
     onbalanceupdate,
   }: Props = $props()
+  const tokenBalance = new TokenBalanceWatcher()
   const showMax = $state(!!onmax)
-  const tokenBalance = $derived(token && new TokenBalanceWatcher())
   const chainId = $derived(token?.chainId ?? 0)
 
+  $effect.pre(() => (chainId ? untrack(() => latestBlock.watch(chainId)) : undefined))
+  const block = $derived(latestBlock.block(chainId))
   $effect(() => {
-    if (!chainId) return
-    return untrack(() => latestBlock.watch(chainId))
-  })
-  $effect(() => {
-    const block = untrack(() => latestBlock.block(chainId))
-    if (!account || !block || !token) {
-      return
-    }
-    return tokenBalance!.fetch(chainId, token!, account as Hex, block)
+    return tokenBalance.fetch({
+      chainId,
+      token: token,
+      account: account as Hex,
+      block,
+    })
   })
 
   $effect(() => {

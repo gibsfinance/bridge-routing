@@ -67,6 +67,11 @@ export class LoadingCounter {
 }
 export const loading = new LoadingCounter()
 
+setInterval(() => {
+  if (loading.resolved) return
+  console.log(loading.value.total, { ...loading.value.categories })
+}, 10_000)
+
 export const resolved = <T>(val: T) => {
   return {
     cleanup: () => {},

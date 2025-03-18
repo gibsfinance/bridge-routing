@@ -13,6 +13,7 @@
     closeDelay?: number
     positionerClassName?: ClassParam
     triggerClassName?: ClassParam
+    gutter?: number
   }
   let {
     placement,
@@ -24,6 +25,7 @@
     openDelay = 0,
     closeDelay = 0,
     triggerClassName,
+    gutter = 4,
   }: Props = $props()
   let open = $state(false)
   const classes = $derived(classNames('relative flex tooltip-container', className))
@@ -36,7 +38,7 @@
 
 <Tooltip
   {open}
-  positioning={{ placement, gutter: 4 }}
+  positioning={{ placement, gutter }}
   {closeDelay}
   interactive={false}
   {classes}

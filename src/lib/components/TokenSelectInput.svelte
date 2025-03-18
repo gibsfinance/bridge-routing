@@ -3,7 +3,7 @@
   import Input from './Input.svelte'
   import classNames from 'classnames'
   import type { ClassParam } from '$lib/types.svelte'
-  import type { Snippet } from 'svelte'
+  import { tick, type Snippet } from 'svelte'
   type Props = {
     value: string
     roundedClasses?: ClassParam
@@ -27,6 +27,14 @@
   const classes = $derived(
     classNames(paddingClasses, roundedClasses, backgroundClasses, borderClasses),
   )
+  let inputRef: HTMLInputElement | null = $state(null)
+  $effect(() => {
+    if (inputRef) {
+      tick().then(() => {
+        inputRef?.focus()
+      })
+    }
+  })
 </script>
 
 <label class="flex h-fit flex-row items-center px-6 py-2" for={searchInputId}>
@@ -38,7 +46,10 @@
       placeholder="Search Tokens"
       class={classes}
       {value}
-      {oninput} />
+      {oninput}
+      setref={(el) => {
+        inputRef = el
+      }} />
     <div class="absolute right-0">
       {@render icon?.()}
     </div>

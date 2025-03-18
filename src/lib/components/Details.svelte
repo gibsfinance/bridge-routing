@@ -10,7 +10,8 @@
   import * as input from '$lib/stores/input.svelte'
   import Tooltip from './Tooltip.svelte'
   import { Chains } from '$lib/stores/auth/types'
-  const { bridgeKey, feeType, fee: inputFee, shouldDeliver } = input
+  const { bridgeKey, shouldDeliver } = input
+  const feeType = $derived(bridgeSettings.feeType)
   const oneEther = 10n ** 18n
   const path = $derived(bridgeKey.pathway)
   const fee = $derived(
@@ -20,7 +21,7 @@
     bridgeSettings.amountToBridge - (bridgeSettings.amountToBridge * fee) / oneEther,
   )
   const estimated = $derived(
-    shouldDeliver ? afterBridge - bridgeSettings.estimatedCost : afterBridge,
+    shouldDeliver ? afterBridge - (bridgeSettings.estimatedCost ?? 0n) : afterBridge,
   )
   const minimumDelivered = $derived(
     shouldDeliver ? afterBridge - bridgeSettings.limit : afterBridge,
@@ -66,7 +67,7 @@
           <span class="flex flex-row items-end self-end relative">
             <Loading key="gas">
               {#snippet contents()}{humanReadableNumber(
-                  shouldDeliver.value ? bridgeSettings.estimatedNetworkCost : 0n,
+                  shouldDeliver.value ? (bridgeSettings.estimatedTokenNetworkCost ?? 0n) : 0n,
                   { decimals: asset.decimals },
                 )}{/snippet}
             </Loading>&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
@@ -77,29 +78,28 @@
     {#if bridgeKey.fromChain === Chains.PLS || bridgeKey.fromChain === Chains.V4PLS}
       <div class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
         <span class="w-32">
-          {#if feeType.value === input.FeeType.GAS_TIP}Estimated
+          {#if feeType === input.FeeType.GAS_TIP}Estimated
           {/if}Cost
         </span>
         <span class="flex flex-row justify-between grow">
           <span>
-            {#if feeType.value === input.FeeType.GAS_TIP}
-              ⛽&nbsp;+&nbsp;{input.fee.value}%
-            {:else if feeType.value === input.FeeType.PERCENT}
-              -{input.fee.value}%
+            {#if feeType === input.FeeType.GAS_TIP}
+              ⛽&nbsp;+&nbsp;{input.gasTipFee.value}%
+            {:else if feeType === input.FeeType.PERCENT}
+              -{input.percentFee.value}%
             {/if}
           </span>
           <Tooltip tooltip="cost as configured by the fee settings">
             <span
               class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center relative">
-              {#if feeType.value === input.FeeType.PERCENT}
-                {humanReadableNumber(bridgeSettings.limitFromPercent, {
+              {#if feeType === input.FeeType.PERCENT}
+                {humanReadableNumber(bridgeSettings.estimatedCost ?? 0n, {
                   decimals: asset.decimals,
                 })}
               {:else}<Loading key="gas"
-                  >{#snippet contents()}{humanReadableNumber(
-                      bridgeSettings.estimatedCost,
-                      { decimals: asset.decimals },
-                    )}{/snippet}</Loading
+                  >{#snippet contents()}{humanReadableNumber(bridgeSettings.estimatedCost ?? 0n, {
+                      decimals: asset.decimals,
+                    })}{/snippet}</Loading
                 >{/if}&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
             </span>
           </Tooltip>
@@ -107,7 +107,7 @@
         <UndercompensatedWarning />
       </div>
     {/if}
-    {#if feeType.value !== input.FeeType.GAS_TIP}
+    {#if feeType !== input.FeeType.GAS_TIP}
       <div class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
         <span class="w-32">Delivered</span>
         <span class="flex flex-row items-end self-end">
@@ -127,10 +127,9 @@
         <span class="w-32">Estimated Delivery</span>
         <span class="flex flex-row items-end self-end">
           ~&nbsp;<Loading key="gas"
-            >{#snippet contents()}{humanReadableNumber(
-                estimated < 0n ? 0n : estimated,
-                { decimals: asset.decimals },
-              )}{/snippet}</Loading
+            >{#snippet contents()}{humanReadableNumber(estimated < 0n ? 0n : estimated, {
+                decimals: asset.decimals,
+              })}{/snippet}</Loading
           >&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
         </span>
       </div>
@@ -159,9 +158,9 @@
         <span class="flex flex-row items-end self-end font-mono text-right">
           (in-{formatEther(
             fee * 100n,
-          )}%)-{#if feeType.value === input.FeeType.FIXED}fixed=out{:else if feeType.value === input.FeeType.GAS_TIP}min(limit,base*{input
-              .fee.value}%)=out{:else if feeType.value === input.FeeType.PERCENT}{input.fee
-              .value}%=out
+          )}%)-{#if feeType === input.FeeType.FIXED}fixed=out{:else if feeType === input.FeeType.GAS_TIP}min(limit,base*{input
+              .gasTipFee.value}%)=out{:else if feeType === input.FeeType.PERCENT}{input
+              .percentFee.value}%=out
           {/if}
         </span>
       </span>

@@ -1,12 +1,16 @@
 <script lang="ts">
   import type { Token } from '$lib/types.svelte'
-  import { zeroAddress } from 'viem'
+  import { zeroAddress, type Hex } from 'viem'
   import Button from './Button.svelte'
   import Icon from '@iconify/svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
   import { accountState, modal, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
   import ConnectButton from './ConnectButton.svelte'
-  import { bridgeSettings, searchKnownAddresses } from '$lib/stores/bridge-settings.svelte'
+  import {
+    assetOutKey,
+    bridgeSettings,
+    searchKnownAddresses,
+  } from '$lib/stores/bridge-settings.svelte'
   import { assetLink, latestBlock, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
   import {
     bridgableTokens,
@@ -48,8 +52,14 @@
     }
   })
   $effect(() => {
-    const assetOutKey = bridgeSettings.assetOutKey
-    if (!tokenInput || !assetOutKey) return
+    const assetInAddress = tokenInput?.address
+    if (!assetInAddress) return
+    const assetOutputKey = assetOutKey({
+      bridgeKeyPath: bridgeKey.path,
+      assetInAddress: assetInAddress as Hex,
+      unwrap: false,
+    })
+    if (!assetOutputKey) return
     const tokensUnderBridgeKey = bridgableTokens.bridgeableTokensUnder({
       provider: bridgeKey.provider,
       chain: Number(bridgeKey.toChain),
@@ -69,7 +79,7 @@
       })
       assetLink.value = l
       if (!assetOut) return
-      bridgeSettings.setAssetOut(assetOutKey, {
+      bridgeSettings.setAssetOut(assetOutputKey, {
         ...assetOut,
         logoURI: tokenInput.logoURI,
       })

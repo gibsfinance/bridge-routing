@@ -23,7 +23,8 @@
     triggerClasses = '',
     wrapperClasses,
     contentClasses,
-    contentWidthClass = 'max-w-(--container-lg) w-full',
+    // contentWidthClass = 'max-w-(--container-lg) w-full',
+    contentWidthClass = 'max-w-[548px] w-full',
     contentHeightClass = 'h-full max-h-[512px]',
     contentBorderClass,
   }: Props = $props()

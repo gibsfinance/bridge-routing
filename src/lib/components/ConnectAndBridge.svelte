@@ -119,17 +119,6 @@
       ...transactions.options(chainsMetadata[input.bridgeKey.fromChain].id),
     })
   }
-  // const increaseApproval = async () => {
-  //   if (!bridgeSettings.bridgePathway || !bridgeSettings.assetIn.value) {
-  //     return
-  //   }
-  //   return transactions.sendApproval({
-  //     token: bridgeSettings.assetIn.value.address as Hex,
-  //     spender: bridgeSettings.bridgePathway.from,
-  //     chainId: chainsMetadata[input.bridgeKey.fromChain].id,
-  //     account: input.amountIn.value!,
-  //   })
-  // }
   let amountInBefore = ''
   const sendIncreaseApproval = transactionButtonPress({
     toast,
@@ -137,7 +126,7 @@
       async () => {
         return transactions.checkAndRaiseApproval({
           token: bridgeSettings.assetIn.value!.address as Hex,
-          spender: accountState.address!,
+          spender: bridgeSettings.bridgePathway!.from!,
           chainId: Number(input.bridgeKey.fromChain),
           minimum: bridgeSettings.amountToBridge,
         })
@@ -149,112 +138,79 @@
     toast,
     steps: [
       () => {
-        amountInBefore = formatUnits(input.amountIn.value!, decimals)
+        amountInBefore = formatUnits(bridgeSettings.amountToBridge, decimals)
         return initiateBridge()
       },
     ],
     after: () => {
-      const previousAmount = formatUnits(input.amountIn.value!, decimals)
+      const previousAmount = formatUnits(bridgeSettings.amountToBridge!, decimals)
       if (amountInBefore === previousAmount) {
         input.amountIn.value = null
       }
     },
   })
   // const testId = 'progression-button'
-  const isNative = $derived(bridgeSettings.assetIn.value?.address === zeroAddress)
+  const inputIsNative = $derived(bridgeSettings.assetIn.value?.address === zeroAddress)
+  const isBridgeToken = $derived(assetLink.value?.originationChainId !== input.bridgeKey.fromChain)
   const canDeliver = $derived.by(() => {
-    return (
-      assetLink.value?.originationChainId !== input.bridgeKey.fromChain ||
-      (bridgeSettings.approval.value &&
-        bridgeSettings.approval.value >= bridgeSettings.amountToBridge) ||
-      isNative
-    )
+    return isBridgeToken || hasSufficientApproval || inputIsNative
   })
   const isRequiredChain = $derived(accountState.chainId === Number(input.bridgeKey.fromChain))
+  const hasSufficientApproval = $derived(
+    !!bridgeSettings.approval.value &&
+      bridgeSettings.approval.value >= bridgeSettings.amountToBridge,
+  )
   const skipApproval = $derived.by(() => {
-    return (
-      assetLink.value?.originationChainId !== input.bridgeKey.fromChain ||
-      (bridgeSettings.approval.value &&
-        bridgeSettings.approval.value >= bridgeSettings.amountToBridge)
-    )
+    return isBridgeToken || hasSufficientApproval || inputIsNative
   })
-  const [possiblyDisabled, text] = $derived.by(() => {
+  const disabled = $derived.by(() => {
     if (!accountState?.address) {
-      return [false, 'Connect']
+      return false
     }
     if (!isRequiredChain) {
-      return [false, 'Switch Network']
+      return false
     }
     if (!skipApproval) {
-      return [true, 'Approve']
+      return hasSufficientApproval
     }
-    if (!shouldDeliver.value && bridgeSettings.bridgePathway?.requiresDelivery) {
-      return [true, 'Bridge']
-    }
-    return [true, 'Bridge and Deliver']
+    return !input.amountIn.value
   })
+  const text = $derived.by(() => {
+    if (!accountState?.address) {
+      return 'Connect'
+    }
+    if (!isRequiredChain) {
+      return 'Switch Network'
+    }
+    if (!skipApproval) {
+      return 'Approve'
+    }
+    const requiresDelivery = bridgeSettings.bridgePathway?.requiresDelivery
+    if ((!shouldDeliver.value && requiresDelivery) || !requiresDelivery) {
+      return 'Bridge'
+    }
+    return 'Bridge and Deliver'
+  })
+  const switchToChain = $derived(() =>
+    switchNetwork(appkitNetworkById.get(Number(input.bridgeKey.fromChain))),
+  )
   const onclick = $derived.by(() => {
     if (!accountState?.address) {
       return connect
     }
     if (!isRequiredChain) {
-      return () => switchNetwork(appkitNetworkById.get(Number(input.bridgeKey.fromChain)))
+      return switchToChain
     }
     if (!skipApproval) {
       return sendIncreaseApproval
     }
     return sendInitiateBridge
   })
-  const enabled = $derived(
-    !possiblyDisabled ||
-      (!!BigInt(accountState.address ?? 0n) &&
-        bridgeSettings.estimatedCost &&
-        isRequiredChain &&
-        bridgeSettings.amountToBridge > 0n &&
-        bridgeSettings.amountToBridge <= tokenBalance),
-  )
-  // $inspect(disabled, accountState.address, bridgeSettings.amountToBridge, tokenBalance)
 </script>
-
-<!-- <div class="flex w-full">
-  {#if walletAccount}
-    {#if assetLink.value?.originationChainId !== input.bridgeKey.fromChain || (bridgeSettings.approval.value && bridgeSettings.approval.value >= bridgeSettings.amountToBridge) || isNative}
-      <button
-        data-testid={testId}
-        class="px-2 text-white w-full rounded-lg active:bg-tertiary-500 leading-10 flex items-center justify-center"
-        class:hover:bg-tertiary-500={!disabled}
-        class:bg-tertiary-600={!disabled}
-        class:bg-tertiary-400={disabled}
-        class:cursor-not-allowed={disabled}
-        class:shadow-md={!disabled}
-        {disabled}
-        onclick={sendInitiateBridge}>
-        <div class="size-5"></div
-        >&nbsp;Bridge{#if shouldDeliver.value && bridgeSettings.bridgePathway?.requiresDelivery}
-          &nbsp;+&nbsp;Deliver{:else if !shouldDeliver.value && bridgeSettings.bridgePathway?.requiresDelivery}&nbsp;Only{/if}&nbsp;<div
-          class="size-5"><Loading key="user" /></div>
-      </button>
-    {:else}
-      <button
-        data-testid={testId}
-        class="px-2 text-white w-full rounded-lg active:bg-tertiary-500 leading-10 flex items-center justify-center hover:bg-tertiary-500 bg-tertiary-600 shadow-md"
-        onclick={sendIncreaseApproval}>
-        <div class="size-5"></div>&nbsp;Approve
-        {bridgeSettings.assetIn.value?.symbol}&nbsp;<div class="size-5"><Loading key="user" /></div>
-      </button>
-    {/if}
-  {:else}
-    <Button
-      class="leading-10 bg-tertiary-600 text-white w-full rounded-2xl hover:bg-tertiary-500 active:bg-tertiary-500"
-      onclick={() => connect()}>
-      Sign In
-    </Button>
-  {/if}
-</div> -->
 
 <div class="flex w-full">
   <Button
     class="bg-tertiary-600 w-full text-surface-contrast-950 leading-10 p-2 rounded-2xl"
     {onclick}
-    disabled={!enabled}>{text}</Button>
+    {disabled}>{text}</Button>
 </div>

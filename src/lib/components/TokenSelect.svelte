@@ -6,13 +6,13 @@
   import { getAddress, isAddress } from 'viem'
   import Icon from '@iconify/svelte'
   import { multicallErc20 } from '$lib/utils.svelte'
-  import { bridgableTokens, clientFromChain } from '$lib/stores/input.svelte'
+  import { clientFromChain } from '$lib/stores/input.svelte'
   import _ from 'lodash'
   import TokenInfo from './TokenInfo.svelte'
   import Infinite from './Infinite.svelte'
   import { InfiniteStore } from '$lib/stores/infinite.svelte'
   import TokenSelectInput from './TokenSelectInput.svelte'
-  import { appkitNetworkById, chainsById } from '$lib/stores/auth/AuthProvider.svelte'
+  import { chainsById } from '$lib/stores/auth/AuthProvider.svelte'
   import Button from './Button.svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import { Popover } from '@skeletonlabs/skeleton-svelte'
@@ -49,11 +49,6 @@
   // if you add a whitelist
   let showAllTokens = $state(false)
   let showAllChains = $state(false)
-  let currentChain = $state(chains[0])
-
-  $effect(() => {
-    onnetworkchange?.(currentChain)
-  })
 
   const getSubset = ($tokens: Token[], val: string, allTokens: boolean, allChains: boolean) => {
     let tkns = $tokens
@@ -180,9 +175,9 @@
             chainSelectOpen = !chainSelectOpen
           }}>
           {#snippet trigger()}
-            {@const network = availableChains.get(chains[selectedChain]) ?? {
-              id: chains[selectedChain],
-              logoURI: imageLinks.network(chains[selectedChain]),
+            {@const network = availableChains.get(selectedChain) ?? {
+              id: selectedChain,
+              logoURI: imageLinks.network(selectedChain),
             }}
             <StaticNetworkImage
               network={network.id}
@@ -201,10 +196,13 @@
                 }}
                 <li class="flex flex-row grow">
                   <Button
-                    class="flex flex-row items-center px-4 py-2 hover:bg-surface-100 grow"
+                    class="flex flex-row items-center px-4 py-2 hover:bg-surface-100 grow border-l-2 {chain ===
+                    selectedChain
+                      ? 'border-primary-500'
+                      : 'border-transparent'}"
                     onclick={() => {
-                      onnetworkchange(chain)
                       chainSelectOpen = false
+                      onnetworkchange?.(chain)
                     }}>
                     <StaticNetworkImage
                       network={network.id}
@@ -238,12 +236,11 @@
       {/each}
       <Infinite tag="li" class="flex" onloadmore={loadMore}>
         {#if showCustomTokens}
-          <button
-            class="flex grow flex-row items-center py-2 leading-8"
-            class:cursor-pointer={!addButtonDisabled}
+          <Button
+            class="flex grow flex-row items-center py-2 leading-8 {addButtonDisabled
+              ? 'cursor-not-allowed opacity-70'
+              : 'cursor-pointer'}"
             disabled={addButtonDisabled}
-            class:opacity-70={addButtonDisabled}
-            class:cursor-not-allowed={addButtonDisabled}
             onclick={() => addCustom(custom)}>
             <Icon icon="ic:baseline-add" height="1.5em" width="1.5em" />
             <Icon class="ml-2" icon="ph:question" height={32} width={32} />
@@ -265,7 +262,7 @@
               {/await}
             {/if}
             <span class="pl-2 leading-8">&nbsp;</span>
-          </button>
+          </Button>
         {/if}
       </Infinite>
     </ul>

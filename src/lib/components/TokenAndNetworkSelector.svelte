@@ -195,7 +195,7 @@
   onsubmit={(token) => {
     onsubmit(token, chains[selectedChainIndex])
   }}
-  selectedChain={selectedChainIndex}
+  selectedChain={chains[selectedChainIndex]}
   onnetworkchange={(chainId) => {
     const index = chains.indexOf(chainId)
     if (index !== -1) {

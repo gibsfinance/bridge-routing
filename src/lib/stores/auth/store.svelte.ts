@@ -1,21 +1,20 @@
 import type { Hex, PublicClient } from 'viem'
-import { Chains } from './types'
 import { normalize } from 'viem/ens'
-import * as input from '$lib/stores/input.svelte'
+import { loading } from '../loading.svelte'
 
-export const accountENS = async (address: Hex | null | undefined) => {
-  if (!address) {
-    return undefined
-  }
-  const ethPublicClient = input.clientFromChain(Chains.ETH)
-  return ethPublicClient.getEnsName({ address }).then((ens) => ens)
+type EnsToAddressArgs = {
+  client: PublicClient
+  ens: string
 }
 
-export const ensToAddress = async (publicClient: PublicClient, ens: string) => {
-  if (!publicClient.chain?.contracts?.ensRegistry) {
-    return null
-  }
-  return publicClient.getEnsAddress({
-    name: normalize(ens),
-  })
-}
+export const ensToAddress = loading.loadsAfterTick<Hex | null, EnsToAddressArgs>(
+  'ens',
+  async ({ client, ens }: EnsToAddressArgs) => {
+    if (!client.chain?.contracts?.ensRegistry) {
+      return null
+    }
+    return client.getEnsAddress({
+      name: normalize(ens),
+    })
+  },
+)
