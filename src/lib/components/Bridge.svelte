@@ -17,13 +17,7 @@
     assetSources,
     assetOutKey,
   } from '$lib/stores/bridge-settings.svelte'
-  import {
-    bridgeKey,
-    loadFeeFor,
-    toPath,
-    unwrap,
-    isUnwrappable,
-  } from '$lib/stores/input.svelte'
+  import { bridgeKey, loadFeeFor, toPath, unwrap, isUnwrappable } from '$lib/stores/input.svelte'
   import { settings as bridgeAdminSettings } from '$lib/stores/fee-manager.svelte'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
@@ -58,13 +52,11 @@
     return result.cleanup
   })
   $effect(() => watchFinalizedBlocksForOneChain(Number(bridgeKey.fromChain)))
-  $effect(() => {
-    if (!bridgeSettings.assetIn.value) return
-    return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
-  })
+  $effect(() => minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value))
   $effect(() => {
     const keyAddress = bridgeKey.assetInAddress
-    if (!keyAddress) return
+    const tokens = input.bridgableTokens.value
+    if (!keyAddress || !tokens.length) return
     const assetIn = untrack(() => bridgeSettings.assetIn.value)
     if (keyAddress && assetIn?.address) {
       if (getAddress(keyAddress) === getAddress(assetIn?.address)) {
@@ -73,11 +65,11 @@
         return
       }
     }
-    // console.log('updating assetIn', keyAddress)
     const updatingAssetIn = updateAssetIn({
       bridgeKey: bridgeKey.value,
       address: keyAddress as Hex,
       customTokens: customTokens.tokens.value,
+      tokens,
     })
     updatingAssetIn.promise.then((asset) => {
       if (updatingAssetIn.controller.signal.aborted) return

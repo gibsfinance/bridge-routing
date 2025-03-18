@@ -23,7 +23,6 @@
     } else {
       assetInAddress = null
     }
-    console.log('setting assetInAddress', assetInAddress)
     input.bridgeKey.assetInAddress = assetInAddress
   }
   // })

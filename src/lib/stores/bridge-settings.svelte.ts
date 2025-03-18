@@ -532,17 +532,19 @@ export type UpdateAssetInParams = {
   bridgeKey: BridgeKey
   address: Hex | null
   customTokens: Token[]
+  tokens: Token[]
 }
 
 export const updateAssetIn = loading.loadsAfterTick<Token | null, UpdateAssetInParams>(
   'asset-in',
-  async ({ bridgeKey, address, customTokens }: UpdateAssetInParams) => {
+  async ({ bridgeKey, address, customTokens, tokens }: UpdateAssetInParams) => {
     if (!address) {
       return null
     }
 
     const [provider, fromChain, toChain] = bridgeKey
-    const tokensUnderBridgeKey = input.bridgableTokens.bridgeableTokensUnder({
+    const tokensUnderBridgeKey = input.bridgeableTokensUnder({
+      tokens,
       provider: provider,
       chain: Number(fromChain),
       partnerChain: Number(toChain),
@@ -553,10 +555,8 @@ export const updateAssetIn = loading.loadsAfterTick<Token | null, UpdateAssetInP
       tokensUnderBridgeKey,
     })
     if (foundAssetIn) {
-      // console.log('foundAssetIn - known', foundAssetIn)
       return foundAssetIn
     }
-    // console.log('getting asset from chain', bridgeKey.fromChain, address)
     return await getAsset(fromChain, address)
   },
 )
@@ -570,11 +570,11 @@ export const searchKnownAddresses = ({
   tokensUnderBridgeKey: Token[]
   customTokens: Token[]
 }) => {
-  return tokensUnderBridgeKey.length
-    ? _.find(tokensUnderBridgeKey, { address: getAddress(address) }) ||
-        _.find(customTokens, { address: getAddress(address) }) ||
-        null
-    : null
+  return (
+    _.find(tokensUnderBridgeKey, { address: getAddress(address) }) ??
+    _.find(customTokens, { address: getAddress(address) }) ??
+    null
+  )
 }
 
 export const getAsset = async (chainId: Chains, assetInAddress: Hex) => {
@@ -592,7 +592,7 @@ export const getAsset = async (chainId: Chains, assetInAddress: Hex) => {
   }
   const asset = await multicallErc20({
     client: input.clientFromChain(Number(chainId)),
-    chain: chainsMetadata[toChain(chainId)],
+    chain: chainsMetadata[chainId],
     target: assetInAddress,
   }).catch(() => null)
   if (!asset) {
@@ -690,6 +690,7 @@ export const updateAssetOut = ({
         res.logoURI = imageLinks.image(res)
       } else {
         // assumptions
+        console.log('assetInput', assetInput)
         res = {
           ...assetInput,
           chainId: Number(toChainId),

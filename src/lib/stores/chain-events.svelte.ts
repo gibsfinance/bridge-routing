@@ -281,7 +281,7 @@ export class MinBridgeAmount {
     this.val = v
   }
 
-  fetch(bridgeKey: input.BridgeKey, assetIn: Token) {
+  fetch(bridgeKey: input.BridgeKey, assetIn: Token | null) {
     // these clients should already be created, so we should not be doing any harm by accessing them
     const path = pathway(bridgeKey)
     if (!path || !assetIn) {

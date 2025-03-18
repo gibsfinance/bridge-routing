@@ -307,16 +307,7 @@ export const bridgeableTokensUnder = ({
     : Object.values(parentConf)[0]
 
   if (!conf) throw new Error('no pathway found')
-  // const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token
   const sortedList = _(tokens)
-    // .sortBy(['name', 'chainId'])
-    // .uniqBy(({ chainId, address }) => `${chainId}-${getAddress(address)}`)
-    // .map((item) => {
-    //   if (defaultAssetIn && getAddress(defaultAssetIn.address) === getAddress(item.address)) {
-    //     return defaultAssetIn
-    //   }
-    //   return item
-    // })
     .filter((tkn) => tkn.chainId === Number(chain))
     .value()
   let list: Token[] = []
@@ -324,6 +315,8 @@ export const bridgeableTokensUnder = ({
     const bridgedWrappedAssetOut = sortedList.find(
       (tkn) => tkn.address === nativeAssetOut[toChain(chain)],
     )
+    const tokenAddress =
+      bridgedWrappedAssetOut?.extensions?.bridgeInfo?.[Number(partnerChain)]?.tokenAddress
     list = _.uniqBy(
       [
         {
@@ -332,44 +325,27 @@ export const bridgeableTokensUnder = ({
           name: nativeTokenName[toChain(chain)],
           decimals: 18,
           symbol: nativeTokenSymbol[toChain(chain)],
-          // logoURI: '',
-          extensions: bridgedWrappedAssetOut
-            ? {
+          extensions: !bridgedWrappedAssetOut
+            ? null
+            : {
                 wrapped: {
                   address: bridgedWrappedAssetOut.address,
                 },
-                bridgeInfo: partnerChain
-                  ? {
+                bridgeInfo: !partnerChain
+                  ? null
+                  : {
                       [Number(partnerChain)]: {
-                        tokenAddress:
-                          bridgedWrappedAssetOut.extensions?.bridgeInfo?.[Number(partnerChain)]
-                            ?.tokenAddress,
+                        tokenAddress,
                       },
-                    }
-                  : null,
-              }
-            : null,
+                    },
+              },
         } as Token,
       ].concat(sortedList),
       ({ chainId, address }) => `${chainId}/${getAddress(address)}`,
     ).filter((tkn) => !blacklist.has(tkn.address as Hex))
   }
   return list
-  //   .map((token) => {
-  //   // register on a central cache so that tokens that are gotten from onchain
-  //   // still have all extensions
-  //   // return token.logoURI
-  //   //   ? token
-  //   //   : {
-  //   //       ...token,
-  //   //       logoURI: imageLinks.image(token),
-  //   //     }
-  // })
 }
-
-// export const assetInAddress = (bridgeKey: BridgeKey, assetInAddress: Hex) => {
-//   return bridgeKey && getAddress(assetInAddress || defaultAssetIn(bridgeKey)!.address)
-// }
 
 export const unwrap = new ProxyStore<boolean>(true)
 
