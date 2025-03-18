@@ -29,6 +29,7 @@
   const amountOut = $derived(bridgeSettings.estimatedAmountOut ?? 0n)
   const value = $derived(amountOut ? humanReadableNumber(amountOut, { decimals }) : '0')
   const inputValue = $derived(amountAfterBridgeFee && feeIsEstimated ? `~${value}` : value)
+  $inspect(out)
 </script>
 
 <SectionInput

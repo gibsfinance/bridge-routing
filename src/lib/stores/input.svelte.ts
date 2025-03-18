@@ -18,7 +18,7 @@ import {
   isAddress,
 } from 'viem'
 import { chainIdToKey, Chains, Provider, toChain } from './auth/types'
-import { settings, type PathwayExtendableConfig } from './fee-manager.svelte'
+import { settingKey, settings, type PathwayExtendableConfig } from './fee-manager.svelte'
 import {
   blacklist,
   defaultAssetIn,
@@ -144,9 +144,9 @@ export class BridgeKeyStore {
   get pathway() {
     return pathway(this.value)
   }
-  get settings() {
-    return settings.get(this.value)
-  }
+  // get settings() {
+  //   return settings.get(this.value)
+  // }
   get destinationSupportsEIP1559() {
     return this.toChain === Chains.BNB ? false : true
   }
@@ -545,7 +545,7 @@ export const loadFeeFor = loading.loadsAfterTick<PathwayExtendableConfig, InputL
     if (!bridgeKey) {
       return null
     }
-    const s = settings.get(bridgeKey.value)
+    const s = settings.get(settingKey(bridgeKey.value))
     const path = bridgeKey.pathway
     if (!path) {
       return null
@@ -629,7 +629,7 @@ export const loadFeeFor = loading.loadsAfterTick<PathwayExtendableConfig, InputL
       feeH2F: BigInt(feeH2F.returnData),
       feeF2H: BigInt(feeF2H.returnData),
     } as PathwayExtendableConfig
-    settings.set(bridgeKey.value, setting)
+    settings.set(settingKey(bridgeKey.value), setting)
     return setting
   },
 )

@@ -17,7 +17,6 @@
     input.amountIn.value = null
     input.resetFeeInputs()
     input.bridgeKey.assetInAddress = null
-    console.log(input.bridgeKey.value, zeroAddress)
     nav.delivery.shallow(input.bridgeKey.value, zeroAddress)
   }
 </script>

@@ -24,7 +24,7 @@ import _ from 'lodash'
 import { uniV2Routers, nativeAssetOut, pathway, whitelisted, pathways } from './config.svelte'
 import * as abis from './abis'
 import * as imageLinks from './image-links'
-import { settings } from './fee-manager.svelte'
+import { settingKey, settings } from './fee-manager.svelte'
 import type { BridgeKey } from '$lib/stores/input.svelte'
 import { accountState } from './auth/AuthProvider.svelte'
 import { SvelteMap } from 'svelte/reactivity'
@@ -80,10 +80,10 @@ export class BridgeSettings {
     return pathway(input.bridgeKey.value)
   })
   bridgeFees = $derived.by(() => {
-    return settings.get(input.bridgeKey.value)
+    return settings.get(settingKey(input.bridgeKey.value))
   })
   bridgeFee = $derived.by(() => {
-    const setting = settings.get(input.bridgeKey.value)
+    const setting = settings.get(settingKey(input.bridgeKey.value))
     const path = pathway(input.bridgeKey.value)
     return (path?.toHome ? setting?.feeF2H : setting?.feeH2F) ?? null
   })
