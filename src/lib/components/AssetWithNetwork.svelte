@@ -29,12 +29,13 @@
   const classes = $derived(
     classNames('flex basis-auto relative text-surface-contrast-50', tokenSizeClasses, className),
   )
+  const finishedLoading = $derived(chain && loading.isResolved('token'))
 </script>
 
 <span class={classes} title={asset?.symbol ?? ''}>
   {#if src}
     <TokenIcon visible sizeClasses={tokenSizeClasses} class={tokenClasses} {src} />
-    {#if chain && loading.isResolved('token')}
+    {#if finishedLoading}
       <Image
         class="network-image absolute -right-0.5 -bottom-0.5 rounded-full bg-surface-50"
         sizeClasses={networkSizeClasses}

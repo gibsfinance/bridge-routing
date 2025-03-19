@@ -83,7 +83,7 @@
         triggerClasses=""
         contentClasses="">
         {#snippet button()}
-          <SelectButtonContents {token} network={token?.chainId ?? 0} />
+          <SelectButtonContents {token} network={token?.chainId ?? 0} class="bg-white" />
         {/snippet}
         {#snippet contents({ close })}
           {@render modal?.({ close })}

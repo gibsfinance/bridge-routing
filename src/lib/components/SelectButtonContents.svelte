@@ -1,19 +1,31 @@
 <script lang="ts">
   import AssetWithNetwork from './AssetWithNetwork.svelte'
-  import type { Token } from '$lib/types.svelte'
+  import type { ClassParam, Token } from '$lib/types.svelte'
   import Icon from '@iconify/svelte'
+  import classNames from 'classnames'
 
   type Props = {
     token: Token | null
     network?: number
     hideChevron?: boolean
     disableHover?: boolean
+    class?: ClassParam
   }
-  const { token, network, hideChevron = false, disableHover = false }: Props = $props()
+  const {
+    class: className,
+    token,
+    network,
+    hideChevron = false,
+    disableHover = false,
+  }: Props = $props()
+  const classes = classNames(
+    'flex flex-row items-center justify-center h-full p-0.5 rounded-full',
+    className,
+  )
 </script>
 
 <div
-  class="flex flex-row items-center justify-center h-full p-0.5 rounded-full"
+  class={classes}
   class:hover:bg-surface-900-100={!disableHover}
   class:border={!hideChevron}
   class:shadow-sm={!hideChevron}
