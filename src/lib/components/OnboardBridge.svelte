@@ -35,7 +35,7 @@
     recipient,
     bridgeKey,
   } from '$lib/stores/input.svelte'
-  import { settings as bridgeAdminSettings } from '$lib/stores/fee-manager.svelte'
+  import { settings as bridgeAdminSettings, settingKey } from '$lib/stores/fee-manager.svelte'
   // import { humanReadableNumber, usd } from '$lib/stores/utils'
   // import AssetWithNetwork from './AssetWithNetwork.svelte'
   import { SvelteMap } from 'svelte/reactivity'
@@ -67,7 +67,9 @@
 
   const bridgedToken = $derived(bridgeSettings.assetOut as Token | null)
   const bridgeAmount = $derived(amountIn.value ?? 0n)
-  const bridgeFeePercent = $derived(bridgeAdminSettings.get(bridgeKey.value)?.feeF2H ?? 0n)
+  const bridgeFeePercent = $derived(
+    bridgeAdminSettings.get(settingKey(bridgeKey.value))?.feeF2H ?? 0n,
+  )
   const bridgeFeeAmount = $derived((bridgeFeePercent * bridgeAmount) / oneEther)
   const outputAmount = $derived(bridgeAmount - bridgeFeeAmount)
   const tokenInput = $derived(bridgeSettings.assetIn.value)

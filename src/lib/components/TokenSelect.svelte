@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Toggle from '$lib/components/Toggle.svelte'
   import * as customTokens from '$lib/stores/custom-tokens.svelte'
   import type { Token } from '$lib/types.svelte'
   import type { Hex } from 'viem'
@@ -21,7 +20,8 @@
   import { loading } from '$lib/stores/loading.svelte'
   import * as imageLinks from '$lib/stores/image-links'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { Provider, toChain } from '$lib/stores/auth/types'
+  import { toChain } from '$lib/stores/auth/types'
+
   type Props = {
     onsubmit?: (token: Token | null) => void
     onnetworkchange?: (chain: number) => void
@@ -104,15 +104,6 @@
     return custom
   }
   const fullTokenSet = $derived.by(() => {
-    // const bridgeable =
-    //   tokens ??
-    //   _.flatMap(chains, (chain) =>
-    //     bridgableTokens.bridgeableTokensUnder({
-    //       provider: Provider.PULSECHAIN,
-    //       chain,
-    //       partnerChain: partnerChain ?? null,
-    //     }),
-    //   )
     if (!showCustomTokens) {
       return tokens
     }
@@ -227,11 +218,11 @@
     <ul class="flex grow flex-col overflow-y-scroll h-full">
       {#each subset as token}
         <li class="flex hover:bg-surface-900-100 relative">
-          <button
+          <Button
             class="relative flex grow cursor-pointer flex-row py-2"
             onclick={() => selectToken(token)}>
             <TokenInfo {token} truncate={6} />
-          </button>
+          </Button>
         </li>
       {/each}
       <Infinite tag="li" class="flex" onloadmore={loadMore}>
@@ -267,17 +258,4 @@
       </Infinite>
     </ul>
   </div>
-  <!-- <div class="flex flex-row">
-    <label class="flex items-center py-2 pr-6 pl-6 text-slate-400" for="">
-      <span class="mr-3 text-sm">
-        <span class="font-medium text-slate-400">Show All Tokens</span>
-      </span>
-      <Toggle
-        screenReaderText="Show All Tokens"
-        checked={showAllChains}
-        onchange={() => {
-          showAllChains = !showAllChains
-        }} />
-    </label>
-  </div> -->
 </div>

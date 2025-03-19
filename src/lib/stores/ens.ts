@@ -32,7 +32,7 @@ export const ens = (target: ChainKey): Writable<Entry> => {
     const { address, ens } = get(input)
     if (ens) {
       const tld = ensTld(ens)
-      const addr = await clientFromChain(Chains[tld]).getEnsAddress({
+      const addr = await clientFromChain(Number(Chains[tld])).getEnsAddress({
         name: ens,
       })
       const latest = get(input)
@@ -46,7 +46,7 @@ export const ens = (target: ChainKey): Writable<Entry> => {
       })
     } else {
       const addr = address as Hex
-      const ens = await clientFromChain(Chains[target]).getEnsName({
+      const ens = await clientFromChain(Number(Chains[target])).getEnsName({
         address: addr,
       })
       const latest = get(input)

@@ -212,6 +212,10 @@ const nativeAssets = Object.entries(chainsMetadata).map(([chain, metadata]) => {
     chainId: Number(chain),
     address: zeroAddress as Hex,
     ...metadata.nativeCurrency,
+    logoURI: imageLinks.image({
+      chainId: Number(chain),
+      address: zeroAddress,
+    }),
   }
 })
 export const loadLists = loading.loadsAfterTick<Token[] | null>(
@@ -255,7 +259,11 @@ export const loadLists = loading.loadsAfterTick<Token[] | null>(
       ])
         .sortBy((a) => {
           // put pulsechain -> foreign tokens last
-          return a.name.toLowerCase().includes(' from pulsechain') ? 1 : 0
+          return a.name.toLowerCase().includes(' from pulsechain')
+            ? 2
+            : a.address === zeroAddress
+              ? 0
+              : 1
         })
         .value(),
       ({ chainId, address }) => `${chainId}/${address}`.toLowerCase(),

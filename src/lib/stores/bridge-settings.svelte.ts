@@ -72,7 +72,6 @@ export class BridgeSettings {
     return this.assetOuts.get(key) ?? null
   }
   setAssetOut(assetOutKey: string, assetOut: Token) {
-    // console.log('setAssetOut', assetOutKey, assetOut)
     this.assetOuts.set(assetOutKey, assetOut)
   }
 
@@ -623,16 +622,19 @@ const backupAssetIn = {
 } as Token
 
 export const updateAssetOut = ({
-  toChainId,
+  bridgeKey,
   assetInput,
   assetLink,
   unwrap,
 }: {
-  toChainId: number
+  bridgeKey: input.BridgeKey
   assetInput: Token
   assetLink: chainEvents.TokenBridgeInfo
   unwrap: boolean
 }) => {
+  const [, fromChain, toChain] = bridgeKey
+  const fromChainId = Number(fromChain)
+  const toChainId = Number(toChain)
   if (!toChainId || !assetInput || !assetLink) {
     return resolved(null)
   }
@@ -640,14 +642,14 @@ export const updateAssetOut = ({
   if (!assetOutAddress) {
     return resolved(null)
   }
-  if (unwrap && getAddress(nativeAssetOut[toChain(toChainId)]) === getAddress(assetOutAddress)) {
+  if (unwrap && getAddress(nativeAssetOut[toChain]) === getAddress(assetOutAddress)) {
     const assetOut = {
       address: zeroAddress,
-      chainId: Number(toChain(toChainId)),
-      ...chainsMetadata[toChain(toChainId)].nativeCurrency,
+      chainId: Number(toChain),
+      ...chainsMetadata[toChain].nativeCurrency,
       logoURI: imageLinks.images([
-        `${Number(toChain(toChainId))}/${zeroAddress}`,
-        `${Number(toChain(toChainId))}/${assetOutAddress}`,
+        `${Number(toChain)}/${zeroAddress}`,
+        `${Number(toChain)}/${assetOutAddress}`,
       ]),
     }
     return resolved(assetOut)
@@ -671,7 +673,7 @@ export const updateAssetOut = ({
       }
       return await multicallErc20({
         client: input.clientFromChain(toChainId),
-        chain: chainsMetadata[toChain(toChainId)],
+        chain: chainsMetadata[toChain],
         target: assetOutAddress,
       }).catch(() => null)
     },
@@ -687,7 +689,11 @@ export const updateAssetOut = ({
           chainId: Number(toChainId),
           address: assetOutAddress,
         } as Token
-        res.logoURI = imageLinks.image(res)
+        // res.logoURI = imageLinks.image(res)
+        res.logoURI = imageLinks.images([
+          `${Number(toChainId)}/${assetOutAddress}`,
+          `${fromChainId}/${assetInput.address}`,
+        ])
       } else {
         // assumptions
         console.log('assetInput', assetInput)

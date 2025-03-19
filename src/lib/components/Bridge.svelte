@@ -90,7 +90,7 @@
     })
     if (!assetIn || !assetOutputKey || !assetLink.value) return
     const updatingAssetOut = updateAssetOut({
-      toChainId: Number(bridgeKey.toChain),
+      bridgeKey: bridgeKey.value,
       assetInput: assetIn,
       assetLink: assetLink.value,
       unwrap: unwrap.value,
@@ -215,6 +215,7 @@
     input.amountIn.value = null
     nav.delivery.shallow(bridgeKey.partner, futureAssetOutAddress as string)
   }
+  $inspect(bridgeSettings.assetOut)
 </script>
 
 <div class="flex flex-col max-w-lg">

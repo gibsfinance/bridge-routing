@@ -8,12 +8,19 @@
   import { humanReadableNumber } from '$lib/stores/utils'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import { assetLink, minAmount } from '$lib/stores/chain-events.svelte'
+  import { settingKey } from '$lib/stores/fee-manager.svelte'
   type Props = {
     asset: Token | null
   }
   const { asset = null }: Props = $props()
   const out = $derived(
-    asset && assetLink.value && minAmount.value && bridgeSettings.bridgeFee !== null ? asset : null,
+    asset &&
+      assetLink.value !== null &&
+      minAmount.value !== null &&
+      settingKey(input.bridgeKey.value) &&
+      bridgeSettings.bridgeFee !== null
+      ? asset
+      : null,
   )
   $effect(() => {
     input.recipient.value = accountState.address ?? zeroAddress
@@ -29,7 +36,6 @@
   const amountOut = $derived(bridgeSettings.estimatedAmountOut ?? 0n)
   const value = $derived(amountOut ? humanReadableNumber(amountOut, { decimals }) : '0')
   const inputValue = $derived(amountAfterBridgeFee && feeIsEstimated ? `~${value}` : value)
-  $inspect(out)
 </script>
 
 <SectionInput
