@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import { onMount } from 'svelte'
 
   export let rows: string[] = []
@@ -81,4 +81,4 @@
     list-style-type: none;
     display: flex;
   }
-</style>
+</style> -->

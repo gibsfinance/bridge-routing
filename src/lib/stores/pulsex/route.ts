@@ -1,4 +1,4 @@
-import { type Currency, Price } from '@pulsex/sdk'
+import { type Currency, type Price } from '@pulsex/sdk'
 
 import { type BaseRoute, type Pool, RouteType, PoolType, type Route } from './types'
 import { getOutputCurrency, getTokenPrice, involvesCurrency } from './pool'

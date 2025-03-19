@@ -1,5 +1,4 @@
 <script lang="ts">
-  import SmallInput from './SmallInput.svelte'
   import { isAddress, zeroAddress, getAddress, type Hex } from 'viem'
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import * as input from '$lib/stores/input.svelte'
@@ -73,9 +72,6 @@
     }
   }
   const canUnwrap = $derived(input.canChangeUnwrap(bridgeKey.value, bridgeSettings.assetIn.value))
-  // const canToggleUnwrap = $derived(
-  //   canChangeUnwrap(bridgeKey.value, bridgeSettings.assetIn.value)
-  // )
 </script>
 
 <div class="flex flex-col gap-2">

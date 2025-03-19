@@ -152,9 +152,9 @@
   // const testId = 'progression-button'
   const inputIsNative = $derived(bridgeSettings.assetIn.value?.address === zeroAddress)
   const isBridgeToken = $derived(assetLink.value?.originationChainId !== input.bridgeKey.fromChain)
-  const canDeliver = $derived.by(() => {
-    return isBridgeToken || hasSufficientApproval || inputIsNative
-  })
+  // const canDeliver = $derived.by(() => {
+  //   return isBridgeToken || hasSufficientApproval || inputIsNative
+  // })
   const isRequiredChain = $derived(accountState.chainId === Number(input.bridgeKey.fromChain))
   const hasSufficientApproval = $derived(
     !!bridgeSettings.approval.value &&

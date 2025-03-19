@@ -9,7 +9,7 @@
     inputClass?: string
     oninput?: (e: string) => void
   }
-  let {
+  const {
     value: startValue = '',
     suffix = '',
     editOnLeft = false,
@@ -18,9 +18,6 @@
     inputClass: inputClassName,
   }: Props = $props()
   let value = $state(startValue)
-  // export let value = writable('')
-  // export let suffix = ''
-  // export let editOnLeft = false
   const changeFromEvent: FormEventHandler<HTMLInputElement> = (e) => {
     value = e.currentTarget.value
     oninput?.(e.currentTarget.value)
@@ -29,10 +26,6 @@
   const focusOnInput = () => {
     input.focus()
     input.setSelectionRange(0, input.value.length)
-  }
-  const ensureValue = () => {
-    if (!input.value) {
-    }
   }
 </script>
 
@@ -49,8 +42,7 @@
       {value}
       spellcheck="false"
       bind:this={input}
-      oninput={changeFromEvent}
-      onblur={ensureValue} />
+      oninput={changeFromEvent} />
   </div>
   {#if suffix}{suffix}&nbsp;{:else if !editOnLeft}&nbsp;{/if}
   {#if !editOnLeft}

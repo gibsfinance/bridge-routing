@@ -5,7 +5,7 @@
   import Input from './Input.svelte'
   import Button from './Button.svelte'
   import { SvelteMap } from 'svelte/reactivity'
-  import { toChain, type Chains } from '$lib/stores/auth/types'
+  import { toChain } from '$lib/stores/auth/types'
   import _ from 'lodash'
   type Data = [number, string[]][]
   type Props = {

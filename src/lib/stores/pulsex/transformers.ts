@@ -1,4 +1,4 @@
-import { ChainId } from '@pulsex/chains'
+import type { ChainId } from '@pulsex/chains'
 import { type Currency, CurrencyAmount, ERC20Token, Native, Percent, TradeType } from '@pulsex/sdk'
 import { type Address, zeroAddress } from 'viem'
 import {

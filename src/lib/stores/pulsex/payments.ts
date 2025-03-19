@@ -1,4 +1,4 @@
-import { Percent, Token, validateAndParseAddress } from '@pulsex/sdk'
+import { type Percent, type Token, validateAndParseAddress } from '@pulsex/sdk'
 import { type Address, encodeFunctionData } from 'viem'
 import { peripheryPaymentsWithFeeABI } from './abis/IPeripheryPaymentsWithFee'
 

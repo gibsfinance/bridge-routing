@@ -1,5 +1,5 @@
 import { type Hex, type Address, encodeFunctionData } from 'viem'
-import { type Percent, Token, validateAndParseAddress } from '@pulsex/sdk'
+import { type Percent, type Token, validateAndParseAddress } from '@pulsex/sdk'
 import { type FeeOptions, Payments } from './payments'
 import { peripheryPaymentsWithFeeExtendedAbi } from './abis/IPeripheryPaymentsWithFeeExtended'
 

@@ -1,5 +1,4 @@
 import { type Currency, PairV1, PairV2, Price, CurrencyAmount } from '@pulsex/sdk'
-// import { getSwapOutput } from '@pulsex/stable-swap-sdk'
 import memoize from 'lodash/memoize.js'
 import { type Address, parseUnits } from 'viem'
 

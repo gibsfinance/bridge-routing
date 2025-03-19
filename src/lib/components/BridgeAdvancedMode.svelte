@@ -1,11 +1,8 @@
 <script lang="ts">
-  import { untrack } from 'svelte'
   import Button from './Button.svelte'
   import Section from './Section.svelte'
   import NumericInput from './NumericInput.svelte'
   import * as input from '$lib/stores/input.svelte'
-  import { formatEther, formatUnits, parseEther, parseUnits } from 'viem'
-  import NetworkSummary from './NetworkSummary.svelte'
   import { humanReadableNumber } from '$lib/stores/utils'
   import Loading from '$lib/components/Loading.svelte'
   import { loading } from '$lib/stores/loading.svelte'
@@ -13,39 +10,21 @@
   import { innerWidth } from 'svelte/reactivity/window'
   import UndercompensatedWarning from '$lib/components/warnings/Undercompensated.svelte'
   import FeeTypeToggle from '$lib/components/FeeTypeToggle.svelte'
-  import { assetSources, bridgeSettings, oneEther } from '$lib/stores/bridge-settings.svelte'
-  import { toTokenBalance } from '$lib/stores/chain-events.svelte'
+  import { bridgeSettings, oneEther } from '$lib/stores/bridge-settings.svelte'
   import { Chains } from '$lib/stores/auth/types'
-  import SmallInput from './SmallInput.svelte'
   import * as utils from '$lib/utils.svelte'
-  import type { Token, TokenOut } from '$lib/types.svelte'
+  import type { Token } from '$lib/types.svelte'
   import Tooltip from './Tooltip.svelte'
-  import SlideToggle from './SlideToggle.svelte'
-  import { bridgeKey } from '$lib/stores/input.svelte'
-  import SectionInput from './SectionInput.svelte'
-  import TokenSelect from './TokenSelect.svelte'
-  import type { EventHandler } from 'svelte/elements'
-  import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import { bridgeSettings as storageBridgeSettings } from '$lib/stores/storage.svelte'
   import Settings from './Settings.svelte'
   import ButtonToggle from './ButtonToggle.svelte'
   type Props = {
-    // ontoggle: (type: string) => void
     asset: Token | null
   }
   const { shouldDeliver } = input
   const { asset = null }: Props = $props()
-  // const feeToCrossBridge = $derived(bridgeSettings.bridgeFee)
-  const destinationNetwork = $derived(bridgeKey.toChain)
   const unwrap = $derived(bridgeSettings.unwrap)
 
-  // const showToolbox = (type: string) => {
-  //   ontoggle(type)
-  // }
-  // lock toggles
-  // let costLimitLocked = $state(false)
-  // let deliveryFeeLocked = $state(false)
-  const fontSizeInput = 'calc(0.875rem* var(--text-scaling))'
   const deliveryFeeLocked = $derived(storageBridgeSettings.value?.deliveryFeeLocked ?? false)
   const costLimitLocked = $derived(storageBridgeSettings.value?.costLimitLocked ?? false)
   const feeType = $derived(storageBridgeSettings.value?.feeType ?? input.FeeType.PERCENT)
@@ -88,11 +67,6 @@
     }),
   )
   const etherBasedGasTipFeeLength = $derived(etherBasedGasTipFee.length ?? 0)
-  // const networkCostTooltip = $derived(
-  //   `\ncurrently: ${humanReadableNumber(bridgeSettings.estimatedTokenNetworkCost ?? 0n, {
-  //     decimals: asset?.decimals || 18,
-  //   })} ${utils.nativeSymbol(asset, unwrap)}`,
-  // )
 </script>
 
 <Section id="bridge-advanced-mode" focused>
@@ -299,21 +273,6 @@
         {/if}
       </div>
     {/if}
-    <!-- <div class="flex flex-row leading-8 justify-between">
-      <div class="flex flex-row">
-        <button
-          type="button"
-          name="transaction-settings"
-          class="flex mr-2"
-          onclick={() => showToolbox('settings')}>⚙️</button>
-        <button
-          type="button"
-          name="transaction-details"
-          class="flex"
-          onclick={() => showToolbox('details')}>📐</button>
-      </div>
-    </div> -->
-    <!-- settings below -->
     <div class="mt-1">
       <Settings />
     </div>

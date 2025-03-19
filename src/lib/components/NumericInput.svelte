@@ -27,7 +27,7 @@
     fontSizeInput?: string | number | null
   }
   const {
-    fit = false,
+    // fit = false,
     id = _.uniqueId('numeric-input-'),
     value: startingValue = null,
     decimals = 18,
@@ -41,9 +41,9 @@
     fontSizeClass,
     ...props
   }: Props = $props()
-  let focused = $state(false)
+  // let focused = $state(false)
 
-  let selectionEnd = $state<number | null>(null)
+  // let selectionEnd = $state<number | null>(null)
   const decimalValue = $derived(
     startingValue !== null ? formatUnits(startingValue, decimals) : null,
   )
@@ -63,11 +63,12 @@
     try {
       const stripped = stripNonNumber(currentTextValue)
       bestGuess = parseUnits(stripped, decimals)
-    } catch (err) {
+    } catch {
+      console.log('failed to parse', currentTextValue)
       failed = true
     }
     // if the parsed value fails, then we use the previous value or the best guess
-    selectionEnd = (e.target as HTMLInputElement).selectionEnd
+    // selectionEnd = (e.target as HTMLInputElement).selectionEnd
     const clamped = props.oninput?.(bestGuess ?? 0n)
     if (clamped !== undefined && inputRef && clamped !== bestGuess && !failed) {
       // startingValue = clamped
@@ -75,11 +76,11 @@
     }
   }
   const onfocus: FormEventHandler<HTMLInputElement> = (e) => {
-    focused = true
+    // focused = true
     props.onfocus?.(e)
   }
   const onblur: FormEventHandler<HTMLInputElement> = (e) => {
-    focused = false
+    // focused = false
     props.onblur?.(e)
   }
   // $inspect(value, value.length)

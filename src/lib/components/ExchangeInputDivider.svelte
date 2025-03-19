@@ -2,8 +2,9 @@
   import classNames from 'classnames'
   import type { ClassParam } from '$lib/types.svelte'
   import Button from './Button.svelte'
+  import type { Snippet } from 'svelte'
   type Props = {
-    children?: () => any
+    children?: Snippet
     verticalSizeClasses?: ClassParam
     verticalColorClasses?: ClassParam
     iconWrapperSizeClasses?: ClassParam

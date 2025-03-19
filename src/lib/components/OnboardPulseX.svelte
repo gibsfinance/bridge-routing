@@ -1,11 +1,6 @@
 <script lang="ts">
   import * as transactions from '$lib/stores/transactions'
-  import {
-    assetOutKey,
-    assetSources,
-    bridgeSettings,
-    oneEther,
-  } from '$lib/stores/bridge-settings.svelte'
+  import { assetOutKey, assetSources, bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { getPulseXQuote } from '$lib/stores/pulsex/quote.svelte'
   import type { SerializedTrade } from '$lib/stores/pulsex/transformers'
   import type { Token } from '$lib/types.svelte'
@@ -14,7 +9,6 @@
   import { latestBlock } from '$lib/stores/chain-events.svelte'
   import { plsOutToken, showTooltips } from '$lib/stores/storage.svelte'
   import TokenSelect from './TokenSelect.svelte'
-  import { humanReadableNumber } from '$lib/stores/utils'
   import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
   import { bridgableTokens, bridgeKey } from '$lib/stores/input.svelte'
   import InputOutputForm from './InputOutputForm.svelte'
@@ -85,7 +79,7 @@
   const truncateValue = (value: string, decimals: number) => {
     const int = BigInt(value)
     const decimal = formatUnits(int, decimals)
-    const [i, d] = decimal.split('.')
+    const [i] = decimal.split('.')
     if (i.length > 3) {
       // truncate to half the number of decimals
       const targetDecimals = Math.floor(decimals / 2)
@@ -153,7 +147,7 @@
       }}
       showRadio
       value={amountToSwapIn ?? 0n}
-      onbalanceupdate={(balance) => {
+      onbalanceupdate={() => {
         // maxBridgeable = balance
       }}
       onmax={(balance) => {

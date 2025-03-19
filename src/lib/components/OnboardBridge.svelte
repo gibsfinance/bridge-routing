@@ -1,6 +1,5 @@
 <script lang="ts">
   import * as transactions from '$lib/stores/transactions'
-  import TokenIcon from './TokenIcon.svelte'
   import type { Token } from '$lib/types.svelte'
   import { isHex, zeroAddress, type Hex } from 'viem'
   import { Chains, idToChain, Provider } from '$lib/stores/auth/types'
@@ -12,15 +11,10 @@
     oneEther,
     searchKnownAddresses,
   } from '$lib/stores/bridge-settings.svelte'
-  import NumericInput from './NumericInput.svelte'
-  import VerticalDivider from './ExchangeInputDivider.svelte'
-  import BalanceReadout from './BalanceReadout.svelte'
-  import Loader from './Loader.svelte'
   import {
     assetLink,
     loadAssetLink,
     minAmount,
-    watchWplsUSDPrice,
     liveBridgeStatus,
     bridgeStatuses,
     type ContinuedLiveBridgeStatusParams,
@@ -29,28 +23,17 @@
   import {
     amountIn,
     bridgableTokens,
-    // bridgeableTokensUnder,
-    // bridgeAdminSettings,
     loadFeeFor,
     recipient,
     bridgeKey,
   } from '$lib/stores/input.svelte'
   import { settings as bridgeAdminSettings, settingKey } from '$lib/stores/fee-manager.svelte'
-  // import { humanReadableNumber, usd } from '$lib/stores/utils'
-  // import AssetWithNetwork from './AssetWithNetwork.svelte'
-  import { SvelteMap } from 'svelte/reactivity'
   import { untrack } from 'svelte'
-  import {
-    bridgeTxHash,
-    foreignBridgeInputs,
-    showTooltips,
-    storage,
-  } from '$lib/stores/storage.svelte'
+  import { bridgeTxHash, foreignBridgeInputs, showTooltips } from '$lib/stores/storage.svelte'
   import InputOutputForm from './InputOutputForm.svelte'
   import SectionInput from './SectionInput.svelte'
   import TokenSelect from './TokenSelect.svelte'
   import OnboardButton from './OnboardButton.svelte'
-  import { availableChains } from '$lib/stores/lifi.svelte'
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
@@ -74,7 +57,6 @@
   const outputAmount = $derived(bridgeAmount - bridgeFeeAmount)
   const tokenInput = $derived(bridgeSettings.assetIn.value)
 
-  let editTxHash = $state(false)
   $effect(() => {
     const assetOutputKey = assetOutKey({
       bridgeKeyPath: bridgeKey.path,
@@ -176,28 +158,28 @@
   //   bridgeSettings.approval.value,
   //   bridgeSettings.amountToBridge,
   // )
-  let usdMultiplier = $state(0n)
-  const wplsTokenPrice = new SvelteMap<string, bigint>()
-  const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
+  // let usdMultiplier = $state(0n)
+  // const wplsTokenPrice = new SvelteMap<string, bigint>()
+  // const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
   const destinationBlock = $derived(latestBlock.block(Number(bridgeKey.toChain)))
-  $effect(() => {
-    if (!destinationBlock) return
-    const watcher = watchWplsUSDPrice(destinationBlock)
-    watcher.promise.then((price) => {
-      if (watcher.controller.signal.aborted) return
-      usdMultiplier = price ?? 0n
-    })
-    return watcher.cleanup
-  })
-  const priceAsInt = $derived(wplsTokenPrice.get(key) ?? 0n)
-  const usdValueInt = $derived(
-    priceAsInt && usdMultiplier ? ((priceAsInt ?? 0n) * oneEther) / usdMultiplier : 0n,
-  )
-  const usdValueTokenAmount = $derived(
-    !amountIn.value
-      ? 0n
-      : (usdValueInt * amountIn.value) / 10n ** BigInt(tokenInput?.decimals ?? 18),
-  )
+  // $effect(() => {
+  //   if (!destinationBlock) return
+  //   const watcher = watchWplsUSDPrice(destinationBlock)
+  //   watcher.promise.then((price) => {
+  //     if (watcher.controller.signal.aborted) return
+  //     usdMultiplier = price ?? 0n
+  //   })
+  //   return watcher.cleanup
+  // })
+  // const priceAsInt = $derived(wplsTokenPrice.get(key) ?? 0n)
+  // const usdValueInt = $derived(
+  //   priceAsInt && usdMultiplier ? ((priceAsInt ?? 0n) * oneEther) / usdMultiplier : 0n,
+  // )
+  // const usdValueTokenAmount = $derived(
+  //   !amountIn.value
+  //     ? 0n
+  //     : (usdValueInt * amountIn.value) / 10n ** BigInt(tokenInput?.decimals ?? 18),
+  // )
   let bridgeStatus = $state<ContinuedLiveBridgeStatusParams | null>(null)
   $effect(() => {
     if (!bridgeSettings.assetIn.value) return
@@ -240,10 +222,10 @@
       bridgeStatus = null
     }
   }
-  const bridgeGoClassNames = $derived(
-    'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-6 w-16 flex basis-auto text-base' +
-      (bridgeStatus !== null && !editTxHash ? ' rounded-b-none' : ''),
-  )
+  // const bridgeGoClassNames = $derived(
+  //   'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-6 w-16 flex basis-auto text-base' +
+  //     (bridgeStatus !== null && !editTxHash ? ' rounded-b-none' : ''),
+  // )
   const percentProgress = $derived.by(() => {
     if (bridgeStatus === null) return 0
     switch (bridgeStatus.status) {
@@ -299,45 +281,44 @@
   const bridgeStatusETATooltip = $derived.by(() => {
     const slotCount = 32n
     const blockTime = 12n
-    switch (bridgeStatus?.status) {
-      case bridgeStatuses.SUBMITTED:
-        return 'This transaction is still being validated by the network.'
-      case bridgeStatuses.MINED:
-        const currentlyFinalizedBlock = bridgeStatus?.finalizedBlock?.number
-        const currentBlock = untrack(() => latestBlock.block(Number(bridgeKey.fromChain))?.number)
-        let estimatedFutureFinalizedBlock = currentlyFinalizedBlock
-        const minedBlock = bridgeStatus.receipt?.blockNumber
-        if (
-          !currentlyFinalizedBlock ||
-          !estimatedFutureFinalizedBlock ||
-          !minedBlock ||
-          !currentBlock
-        )
-          return 'mined'
-        let delta = minedBlock - currentBlock + 96n + 6n
-        if (delta < 0n) {
-          return '<20s'
-        }
-        delta += 3n
-        while (estimatedFutureFinalizedBlock < minedBlock) {
-          estimatedFutureFinalizedBlock += slotCount
-        }
-        if (estimatedFutureFinalizedBlock === currentlyFinalizedBlock) {
-          return '<20s'
-        }
-        const totalSeconds = delta * blockTime
-        const seconds = totalSeconds % 60n
-        const minutes = (totalSeconds - seconds) / 60n
-        if (minutes > 3n) {
-          return `<${minutes}m`
-        } else if (!minutes) {
-          return `<${seconds}s`
-        }
-        return `<${minutes}m ${seconds}s`
-      case bridgeStatuses.FINALIZED:
+    if (bridgeStatus?.status === bridgeStatuses.SUBMITTED) {
+      return 'This transaction is still being validated by the network.'
+    } else if (bridgeStatus?.status === bridgeStatuses.MINED) {
+      const currentlyFinalizedBlock = bridgeStatus?.finalizedBlock?.number
+      const currentBlock = untrack(() => latestBlock.block(Number(bridgeKey.fromChain))?.number)
+      let estimatedFutureFinalizedBlock = currentlyFinalizedBlock
+      const minedBlock = bridgeStatus.receipt?.blockNumber
+      if (
+        !currentlyFinalizedBlock ||
+        !estimatedFutureFinalizedBlock ||
+        !minedBlock ||
+        !currentBlock
+      )
+        return 'mined'
+      let delta = minedBlock - currentBlock + 96n + 6n
+      if (delta < 0n) {
         return '<20s'
-      case bridgeStatuses.VALIDATING:
-        return '<10s'
+      }
+      delta += 3n
+      while (estimatedFutureFinalizedBlock < minedBlock) {
+        estimatedFutureFinalizedBlock += slotCount
+      }
+      if (estimatedFutureFinalizedBlock === currentlyFinalizedBlock) {
+        return '<20s'
+      }
+      const totalSeconds = delta * blockTime
+      const seconds = totalSeconds % 60n
+      const minutes = (totalSeconds - seconds) / 60n
+      if (minutes > 3n) {
+        return `<${minutes}m`
+      } else if (!minutes) {
+        return `<${seconds}s`
+      }
+      return `<${minutes}m ${seconds}s`
+    } else if (bridgeStatus?.status === bridgeStatuses.FINALIZED) {
+      return '<20s'
+    } else if (bridgeStatus?.status === bridgeStatuses.VALIDATING) {
+      return '<10s'
     }
     return null
   })

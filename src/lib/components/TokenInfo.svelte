@@ -5,7 +5,7 @@
   import { ellipsis } from '$lib/stores/utils'
   import classNames from 'classnames'
   import type { ClassParam } from '$lib/types.svelte'
-    import { zeroAddress } from 'viem'
+  import { zeroAddress } from 'viem'
   type Props = {
     token: Token
     truncate?: number

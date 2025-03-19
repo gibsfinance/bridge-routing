@@ -14,7 +14,6 @@
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import type { RelayerQuoteResponseData } from '@lifi/types'
   import _ from 'lodash'
-  import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { foreignBridgeInputs, showTooltips } from '$lib/stores/storage.svelte'
   import { untrack } from 'svelte'
   import { latestBlock } from '$lib/stores/chain-events.svelte'

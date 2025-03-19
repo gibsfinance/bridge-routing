@@ -1,37 +1,23 @@
 <script lang="ts">
-  import type { Token } from '$lib/types.svelte'
   import { zeroAddress, type Hex } from 'viem'
   import Button from './Button.svelte'
   import Icon from '@iconify/svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
   import { accountState, modal, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
-  import ConnectButton from './ConnectButton.svelte'
   import {
     assetOutKey,
     bridgeSettings,
     searchKnownAddresses,
   } from '$lib/stores/bridge-settings.svelte'
   import { assetLink, latestBlock, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
-  import {
-    bridgableTokens,
-    // bridgeableTokensUnder,
-    // bridgeAdminSettings,
-    loadFeeFor,
-    recipient,
-    bridgeKey,
-  } from '$lib/stores/input.svelte'
-  // import { onboardSettings } from '$lib/stores/onboard.svelte'
+  import { bridgableTokens, loadFeeFor, recipient, bridgeKey } from '$lib/stores/input.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
   import { onDestroy, untrack } from 'svelte'
-  // import OnboardRadio from './OnboardRadio.svelte'
   const openOnRamp = () => {
     modal.open({
       view: 'OnRampProviders',
     })
   }
-  // const openZKP2P = () => {
-  //   open('https://zkp2p.xyz/swap', '_blank')?.focus()
-  // }
   const toggleHelp = () => {
     showTooltips.value = !showTooltips.value
   }
@@ -39,18 +25,6 @@
   $effect.pre(() => {
     bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
   })
-  // $effect(() => {
-  //   if (!tokenInput) {
-  //     bridgeSettings.assetIn.value = {
-  //       logoURI: `https://gib.show/image/1/${zeroAddress}`,
-  //       name: 'Ether',
-  //       symbol: 'ETH',
-  //       decimals: 18,
-  //       chainId: 1,
-  //       address: zeroAddress,
-  //     }
-  //   }
-  // })
   $effect(() => {
     const assetInAddress = tokenInput?.address
     if (!assetInAddress) return

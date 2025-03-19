@@ -3,9 +3,10 @@
   import { showTooltips } from '$lib/stores/storage.svelte'
   import classNames from 'classnames'
   import type { ClassParam } from '$lib/types.svelte'
+  import type { Snippet } from 'svelte'
   type Props = {
     placement?: 'top' | 'bottom' | 'left' | 'right'
-    children: any
+    children: Snippet
     step: number | string
     triggerClass?: ClassParam
     contentClass?: ClassParam

@@ -26,7 +26,7 @@
   const minimumDelivered = $derived(
     shouldDeliver ? afterBridge - bridgeSettings.limit : afterBridge,
   )
-  const fromChainId = $derived(bridgeKey.fromChain)
+  // const fromChainId = $derived(bridgeKey.fromChain)
   type Props = {
     asset: TokenMetadata | null
   }
@@ -159,8 +159,8 @@
           (in-{formatEther(
             fee * 100n,
           )}%)-{#if feeType === input.FeeType.FIXED}fixed=out{:else if feeType === input.FeeType.GAS_TIP}min(limit,base*{input
-              .gasTipFee.value}%)=out{:else if feeType === input.FeeType.PERCENT}{input
-              .percentFee.value}%=out
+              .gasTipFee.value}%)=out{:else if feeType === input.FeeType.PERCENT}{input.percentFee
+              .value}%=out
           {/if}
         </span>
       </span>

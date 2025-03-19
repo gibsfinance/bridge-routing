@@ -74,7 +74,7 @@
       tkns = tkns.filter(filter)
     }
     if (allChains) return tkns
-    const [inside, outside] = _.partition(tkns, onlyFromCurrentNetwork)
+    const inside = _.filter(tkns, onlyFromCurrentNetwork)
     return inside
   }
 

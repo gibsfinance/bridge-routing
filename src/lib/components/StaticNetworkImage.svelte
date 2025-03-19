@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Chains, toChain, type ChainsMetadata, type VisualChain } from '$lib/stores/auth/types'
+  import { toChain, type VisualChain } from '$lib/stores/auth/types'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import ProviderIcon from './ProviderIcon.svelte'
   import Image from './Image.svelte'

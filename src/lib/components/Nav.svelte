@@ -30,7 +30,7 @@
   const gotoOnboard = async () => {
     await goto('#/onboard')
   }
-  const txnText = $derived(innerWidth.current && innerWidth.current < 512 ? 'Txns' : 'Transactions')
+  // const txnText = $derived(innerWidth.current && innerWidth.current < 512 ? 'Txns' : 'Transactions')
   const destinationBridgeKey = $derived(bridgeKey.toChain)
   const isDeliveryRoute = $derived(page.route.id?.includes('/delivery'))
   const isOnboardRoute = $derived(page.route.id?.includes('/onboard'))

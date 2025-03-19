@@ -28,7 +28,7 @@
       <ExchangeInputDivider onclick={ondividerclick} positionClasses="relative flex order-2">
         <Icon
           {icon}
-          class="rounded-full w-full h-full ring-4 text-surface-contrast-100 ring-inset ring-white p-2 bg-white border {!!ondividerclick
+          class="rounded-full w-full h-full ring-4 text-surface-contrast-100 ring-inset ring-white p-2 bg-white border {ondividerclick
             ? 'shadow hover:shadow-md transition-all duration-100'
             : ''}" />
       </ExchangeInputDivider>

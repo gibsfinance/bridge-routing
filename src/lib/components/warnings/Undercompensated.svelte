@@ -1,24 +1,10 @@
 <script lang="ts">
   import Warning from '../Warning.svelte'
-  import {
-    // amountAfterBridgeFee,
-    // estimatedCost,
-    // desiredCompensationRatio,
-    // estimatedNetworkCost,
-    oneEther,
-    bridgeSettings,
-  } from '$lib/stores/bridge-settings.svelte'
-  import { bridgeKey, FeeType, gasTipFee, percentFee } from '$lib/stores/input.svelte'
-  import { formatEther } from 'viem'
+  import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
+  import { bridgeKey, FeeType } from '$lib/stores/input.svelte'
   const estimatedNativeNetworkCostWithBuffer = $derived(
     (bridgeSettings.estimatedNativeNetworkCost ?? 0n) * 2n,
   )
-  // $inspect(
-  //   formatEther(estimatedNativeNetworkCostWithBuffer),
-  //   formatEther(bridgeSettings.availableCompensationMaximum ?? 0n),
-  //   bridgeSettings.feeType,
-  //   gasTipFee.value,
-  // )
   const amountAfterBridgeFee = $derived(bridgeSettings.amountAfterBridgeFee ?? 0n)
   const availableCompensationMaximum = $derived(bridgeSettings.availableCompensationMaximum ?? 0n)
   const estimatedNetworkCostGreaterThanAvailableCompensation = $derived(
@@ -33,7 +19,6 @@
       (estimatedNetworkCostGreaterThanAvailableCompensation ||
         limitIsGreaterThan10PercentOfTotalBridging),
   )
-  // $inspect(showUndercompensated)
 </script>
 
 {#if bridgeSettings.amountAfterBridgeFee}

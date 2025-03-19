@@ -1,5 +1,5 @@
-import { type BigintIsh } from '@pulsex/sdk'
-import { type Hex } from 'viem'
+import type { BigintIsh } from '@pulsex/sdk'
+import type { Hex } from 'viem'
 
 /**
  * Generated method parameters for executing a call.
