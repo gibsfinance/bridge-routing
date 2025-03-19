@@ -36,7 +36,11 @@ export const activeOnboardStep = new LocalProxyProp(storage, ['activeOnboardStep
 
 export const plsOutToken = new LocalProxyProp(storage, ['plsOutToken'], zeroAddress as Hex)
 
-export const bridgeTxHash = new LocalProxyProp(storage, ['bridgeTxHash'], null as Hex | null)
+export type BridgeTx = {
+  hash?: Hex | null
+  showEdit?: boolean
+}
+export const bridgeTx = new LocalProxyProp(storage, ['bridgeTx'], null as BridgeTx | null)
 
 export const advancedMode = new LocalProxyProp(storage, ['advancedMode'], false)
 

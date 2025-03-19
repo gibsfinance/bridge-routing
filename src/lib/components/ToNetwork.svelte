@@ -9,6 +9,8 @@
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import { assetLink, minAmount } from '$lib/stores/chain-events.svelte'
   import { settingKey } from '$lib/stores/fee-manager.svelte'
+  import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
+
   type Props = {
     asset: Token | null
   }
@@ -45,4 +47,7 @@
   readonlyInput
   readonlyTokenSelect
   onbalanceupdate={() => {}}>
+  {#snippet underinput()}
+    <BridgeProgressTxInputToggle />
+  {/snippet}
 </SectionInput>

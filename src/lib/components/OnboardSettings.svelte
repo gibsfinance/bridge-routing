@@ -3,7 +3,7 @@
   import Button from './Button.svelte'
   import Icon from '@iconify/svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
-  import { accountState, modal, destroy } from '$lib/stores/auth/AuthProvider.svelte'
+  import { accountState, modal } from '$lib/stores/auth/AuthProvider.svelte'
   import { Popover } from '@skeletonlabs/skeleton-svelte'
   import {
     assetOutKey,
@@ -13,13 +13,10 @@
   import { assetLink, latestBlock, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
   import { bridgableTokens, loadFeeFor, recipient, bridgeKey } from '$lib/stores/input.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
-  import { onDestroy, untrack } from 'svelte'
+  import { untrack } from 'svelte'
   import Image from './Image.svelte'
   import coinbase from '../../images/providers/coinbase.svg?raw'
   import meldio from '../../images/providers/meld-io.svg?raw'
-  // const coinbase = new URL('/images/providers/coinbase.svg', import.meta.url).href
-  // const meldio = new URL('/images/providers/meld-io.svg', import.meta.url).href
-  console.log(coinbase, meldio)
   const openOnRamp = () => {
     modal.open({
       view: 'OnRampProviders',
@@ -87,7 +84,7 @@
     if (!bridgeSettings.assetIn.value) return
     return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
   })
-  onDestroy(destroy)
+  // onDestroy(destroy)
   let onrampOpen = $state(false)
 </script>
 

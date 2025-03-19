@@ -28,8 +28,7 @@
     bridgeKey,
   } from '$lib/stores/input.svelte'
   import { settings as bridgeAdminSettings, settingKey } from '$lib/stores/fee-manager.svelte'
-  import { untrack } from 'svelte'
-  import { bridgeTxHash, foreignBridgeInputs, showTooltips } from '$lib/stores/storage.svelte'
+  import { bridgeTx, foreignBridgeInputs, showTooltips } from '$lib/stores/storage.svelte'
   import InputOutputForm from './InputOutputForm.svelte'
   import SectionInput from './SectionInput.svelte'
   import TokenSelect from './TokenSelect.svelte'
@@ -37,14 +36,13 @@
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
-  import { Progress, Tooltip } from '@skeletonlabs/skeleton-svelte'
-  import ExplorerLink from './ExplorerLink.svelte'
   import Icon from '@iconify/svelte'
   import Button from './Button.svelte'
-  import Input from './Input.svelte'
   import OnboardRadio from './OnboardRadio.svelte'
   import GuideShield from './GuideShield.svelte'
   import GuideStep from './GuideStep.svelte'
+  import BridgeProgress from './BridgeProgress.svelte'
+    import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
 
   const toast = getContext('toast') as ToastContext
 
@@ -57,7 +55,7 @@
     }),
   )
   const bridgedToken = $derived(
-    (!bridgedTokenKey ? null : (bridgeSettings.assetOuts.get(bridgedTokenKey)) as Token | null),
+    !bridgedTokenKey ? null : (bridgeSettings.assetOuts.get(bridgedTokenKey) as Token | null),
   )
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(
@@ -124,10 +122,10 @@
   $effect(() => {
     recipient.value = accountState.address ?? zeroAddress
   })
-  let tx: Hex | null = $state(null)
-  $effect(() => {
-    tx = bridgeTxHash.value
-  })
+  // let tx: Hex | null = $state(null)
+  // $effect(() => {
+  //   tx = bridgeTx.value.
+  // })
   const incrementApproval = transactionButtonPress({
     toast,
     steps: [
@@ -151,10 +149,8 @@
           chainId: Number(bridgeKey.fromChain),
           ...bridgeSettings.transactionInputs,
         })
-        bridgeTxHash.value = tx
-        incrementBridgeStatus()
-        transactions.wait(tx).then(() => {
-          incrementBridgeStatus()
+        bridgeTx.extend({
+          hash: tx,
         })
         return tx
       },
@@ -180,7 +176,7 @@
   // let usdMultiplier = $state(0n)
   // const wplsTokenPrice = new SvelteMap<string, bigint>()
   // const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
-  const destinationBlock = $derived(latestBlock.block(Number(bridgeKey.toChain)))
+  // const destinationBlock = $derived(latestBlock.block(Number(bridgeKey.toChain)))
   // $effect(() => {
   //   if (!destinationBlock) return
   //   const watcher = watchWplsUSDPrice(destinationBlock)
@@ -199,75 +195,6 @@
   //     ? 0n
   //     : (usdValueInt * amountIn.value) / 10n ** BigInt(tokenInput?.decimals ?? 18),
   // )
-  let bridgeStatus = $state<ContinuedLiveBridgeStatusParams | null>(null)
-  $effect(() => {
-    if (!bridgeSettings.assetIn.value) return
-    return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
-  })
-  const incrementBridgeStatus = () => {
-    if (bridgeStatus === null) {
-      bridgeStatus = {
-        bridgeKey: bridgeKey.value,
-        hash: tx!,
-        ticker: untrack(() => latestBlock.block(Number(bridgeKey.toChain))!),
-        status: bridgeStatuses.SUBMITTED,
-        statusIndex: 0,
-      }
-    } else if (bridgeStatus.status === bridgeStatuses.SUBMITTED) {
-      bridgeStatus = {
-        ...bridgeStatus,
-        status: bridgeStatuses.MINED,
-        statusIndex: 1,
-      }
-    } else if (bridgeStatus.status === bridgeStatuses.MINED) {
-      bridgeStatus = {
-        ...bridgeStatus,
-        status: bridgeStatuses.FINALIZED,
-        statusIndex: 2,
-      }
-    } else if (bridgeStatus.status === bridgeStatuses.FINALIZED) {
-      bridgeStatus = {
-        ...bridgeStatus,
-        status: bridgeStatuses.FINALIZED,
-        statusIndex: 3,
-      }
-    } else if (bridgeStatus.status === bridgeStatuses.VALIDATING) {
-      bridgeStatus = {
-        ...bridgeStatus,
-        status: bridgeStatuses.AFFIRMED,
-        statusIndex: 4,
-      }
-    } else if (bridgeStatus.status === bridgeStatuses.AFFIRMED) {
-      bridgeStatus = null
-    }
-  }
-  // const bridgeGoClassNames = $derived(
-  //   'btn bg-tertiary-500 text-surface-contrast-950 h-16 rounded-none px-6 w-16 flex basis-auto text-base' +
-  //     (bridgeStatus !== null && !editTxHash ? ' rounded-b-none' : ''),
-  // )
-  const percentProgress = $derived.by(() => {
-    if (bridgeStatus === null) return 0
-    switch (bridgeStatus.status) {
-      case bridgeStatuses.SUBMITTED:
-        return 30
-      case bridgeStatuses.MINED:
-        return 50
-      case bridgeStatuses.FINALIZED:
-        return 75
-      // case bridgeStatuses.VALIDATING:
-      //   return 80
-      case bridgeStatuses.AFFIRMED:
-        return 100
-    }
-  })
-  const clearTxTracking = () => {
-    const localTx = bridgeTxHash.value
-    if (tx === localTx) {
-      bridgeTxHash.value = null
-      tx = null
-    }
-    bridgeStatus = null
-  }
   let maxBridgeable = $state(0n as bigint | null)
   const disableBridgeButton = $derived(
     !maxBridgeable ||
@@ -277,99 +204,9 @@
       amountIn.value > maxBridgeable,
   )
   // $inspect(disableBridgeButton, maxBridgeable, amountIn.value, minAmount.value)
-  $effect(() => {
-    if (!bridgeTxHash.value || !destinationBlock) {
-      return
-    }
-    const result = liveBridgeStatus({
-      bridgeKey: bridgeKey.value,
-      hash: bridgeTxHash.value,
-      ticker: destinationBlock,
-    })
-    result.promise.then((liveResult) => {
-      if (result.controller.signal.aborted) return
-      if (liveResult?.hash !== tx) {
-        const local = bridgeTxHash.value
-        if (!local) return
-        tx = local as Hex
-      }
-      bridgeStatus = liveResult ?? null
-    })
-    return result.cleanup
-  })
-  const bridgeStatusETATooltip = $derived.by(() => {
-    const slotCount = 32n
-    const blockTime = 12n
-    if (bridgeStatus?.status === bridgeStatuses.SUBMITTED) {
-      return 'This transaction is still being validated by the network.'
-    } else if (bridgeStatus?.status === bridgeStatuses.MINED) {
-      const currentlyFinalizedBlock = bridgeStatus?.finalizedBlock?.number
-      const currentBlock = untrack(() => latestBlock.block(Number(bridgeKey.fromChain))?.number)
-      let estimatedFutureFinalizedBlock = currentlyFinalizedBlock
-      const minedBlock = bridgeStatus.receipt?.blockNumber
-      if (
-        !currentlyFinalizedBlock ||
-        !estimatedFutureFinalizedBlock ||
-        !minedBlock ||
-        !currentBlock
-      )
-        return 'mined'
-      let delta = minedBlock - currentBlock + 96n + 6n
-      if (delta < 0n) {
-        return '<20s'
-      }
-      delta += 3n
-      while (estimatedFutureFinalizedBlock < minedBlock) {
-        estimatedFutureFinalizedBlock += slotCount
-      }
-      if (estimatedFutureFinalizedBlock === currentlyFinalizedBlock) {
-        return '<20s'
-      }
-      const totalSeconds = delta * blockTime
-      const seconds = totalSeconds % 60n
-      const minutes = (totalSeconds - seconds) / 60n
-      if (minutes > 3n) {
-        return `<${minutes}m`
-      } else if (!minutes) {
-        return `<${seconds}s`
-      }
-      return `<${minutes}m ${seconds}s`
-    } else if (bridgeStatus?.status === bridgeStatuses.FINALIZED) {
-      return '<20s'
-    } else if (bridgeStatus?.status === bridgeStatuses.VALIDATING) {
-      return '<10s'
-    }
-    return null
-  })
-  $effect(() => {
-    if (bridgeStatus?.status === bridgeStatuses.AFFIRMED) {
-      const lastTxHash = untrack(() => bridgeStatus?.hash)
-      setTimeout(() => {
-        if (lastTxHash === bridgeTxHash.value) {
-          clearTxTracking()
-        }
-      }, 10_000)
-    }
-  })
-  let showTxInput = $state(false)
-  let txHashValue = $state('')
-  $effect(() => {
-    if (bridgeTxHash.value) {
-      txHashValue = bridgeTxHash.value
-    }
-  })
-  const toggleEditTxHash = () => {
-    showTxInput = !showTxInput
-  }
-  const updateTxHash = (v: string) => {
-    if (isHex(v) && v.length === 66) {
-      bridgeTxHash.value = v as Hex
-    }
-  }
-  const hideTxHashInput = () => {
-    showTxInput = false
-  }
-  const isValidTxHash = $derived(isHex(txHashValue) && txHashValue.length === 66)
+  // const toggleEditTxHash = () => {
+  //   showTxInput = !showTxInput
+  // }
 </script>
 
 <InputOutputForm icon="line-md:chevron-double-down">
@@ -422,11 +259,7 @@
       value={outputAmount}
       onbalanceupdate={() => {}}>
       {#snippet underinput()}
-        <Button
-          onclick={toggleEditTxHash}
-          class="opacity-0 hover:opacity-100 transition-opacity duration-100 text-surface-contrast-50 absolute top-full left-0">
-          <Icon icon="mdi:pencil" class="size-4 flex" />
-        </Button>
+        <BridgeProgressTxInputToggle />
       {/snippet}
     </SectionInput>
   {/snippet}
@@ -439,7 +272,8 @@
       loadingKey="lifi-quote" />
   {/snippet}
   {#snippet progress()}
-    {#if showTxInput}
+    <BridgeProgress />
+    <!-- {#if showTxInput}
       <div class="h-6 w-full relative">
         <Button
           onclick={hideTxHashInput}
@@ -502,7 +336,7 @@
           <Icon icon="mdi:close" class="size-5 flex" />
         </Button>
       </div>
-    {/if}
+    {/if} -->
   {/snippet}
 </InputOutputForm>
 

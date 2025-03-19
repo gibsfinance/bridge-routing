@@ -25,11 +25,11 @@
   } from '$lib/stores/chain-events.svelte'
   import { getAddress, zeroAddress, type Hex } from 'viem'
   import { untrack } from 'svelte'
-  import { loading } from '$lib/stores/loading.svelte'
   import InputOutputForm from './InputOutputForm.svelte'
   import { nativeAssetOut } from '$lib/stores/config.svelte'
   import BridgeHeader from './BridgeHeader.svelte'
   import { advancedMode } from '$lib/stores/storage.svelte'
+  import BridgeProgress from './BridgeProgress.svelte'
 
   // watch for finalized blocks to update balances
   $effect(() => {
@@ -199,6 +199,9 @@
       {/snippet}
       {#snippet button()}
         <ConnectAndBridge />
+      {/snippet}
+      {#snippet progress()}
+        <BridgeProgress />
       {/snippet}
     </InputOutputForm>
   </div>

@@ -4,7 +4,7 @@
   import type { ClassParam } from '$lib/types.svelte'
 
   type Props = {
-    value: string
+    value: string | null
     placeholder?: string
     name?: string
     id?: string
