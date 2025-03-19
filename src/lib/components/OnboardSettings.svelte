@@ -4,6 +4,7 @@
   import Icon from '@iconify/svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
   import { accountState, modal, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
+  import { Popover } from '@skeletonlabs/skeleton-svelte'
   import {
     assetOutKey,
     bridgeSettings,
@@ -13,6 +14,7 @@
   import { bridgableTokens, loadFeeFor, recipient, bridgeKey } from '$lib/stores/input.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
   import { onDestroy, untrack } from 'svelte'
+  import Image from './Image.svelte'
   const openOnRamp = () => {
     modal.open({
       view: 'OnRampProviders',
@@ -86,31 +88,68 @@
   // const toggleShowBridge = () => {
   //   onboardSettings.toggleShowBridge()
   // }
+  let onrampOpen = $state(false)
 </script>
 
 <header class="flex flex-col items-center justify-between gap-2">
-  <div class="flex flex-row w-full items-center relative">
-    <div class="flex flex-row gap-1 grow items-center">
-      <div class="flex flex-row border-surface-100/20 gap-1 py-2">
-        <Button class="gap-1 rounded-l-full px-1" onclick={openOnRamp}>
-          <Icon icon="material-symbols:ramp-left-rounded" mode="svg" class="size-8" />
-        </Button>
-        <!-- <Button class="gap-2 shadow-inner px-1 rounded-l-none" onclick={openZKP2P}> -->
-        <a href="https://zkp2p.xyz/swap" target="_blank" class="flex items-center">
-          <Icon icon="ph:circuitry-fill" mode="svg" class="size-8" />
-        </a>
-        <!-- </Button> -->
-        <Button
-          onclick={toggleHelp}
-          class="flex flex-row items-center italic gap-1 pr-1 border-2 rounded-full {showTooltips.value
-            ? ' '
-            : ' border-transparent'}">
-          <Icon icon="material-symbols:help" mode="svg" class="size-9" />
-          <span class="text-sm pr-1 leading-9" class:invisible={!showTooltips.value}>Dismiss</span>
-        </Button>
-      </div>
+  <div class="flex flex-row w-full items-center justify-between relative">
+    <div class="flex flex-row grow items-center gap-1 h-12">
+      <Button
+        onclick={toggleHelp}
+        class="flex flex-row items-center italic gap-1 pr-1 border-2 rounded-full {showTooltips.value
+          ? ' '
+          : ' border-transparent'}">
+        <Icon icon="material-symbols:help" mode="svg" class="size-9" />
+        <span class="text-sm pr-1 leading-6" class:invisible={!showTooltips.value}>Dismiss</span>
+      </Button>
     </div>
-    <div class="absolute left-1/2 -translate-x-1/2 top-0 h-14 items-center justify-center flex">
+    <div class="flex flex-row gap-1 grow items-center justify-end">
+      <Popover
+        open={onrampOpen}
+        onOpenChange={() => (onrampOpen = !onrampOpen)}
+        positioning={{ placement: 'bottom-end', gutter: 0, shift: 4 }}
+        triggerBase="flex flex-row items-center justify-center size-10 border-2 border-white rounded-full"
+        contentClasses="flex flex-col max-h-64 rounded-2xl bg-surface-50 text-surface-contrast-50 overflow-y-scroll relative border shadow"
+        positionerClasses="pointer-events-auto"
+        modal>
+        {#snippet trigger()}
+          <Icon
+            icon="mdi:bank-circle"
+            mode="svg"
+            class="size-9 rounded-full fill-surface-50 flex transition-all duration-200 {onrampOpen
+              ? 'rotate-180'
+              : ''}" />
+        {/snippet}
+        {#snippet content()}
+          <div class="flex flex-col bg-white">
+            <span class="px-4 pt-2 text-gray-500 text-sm">Onramps</span>
+            <ul class="flex flex-col gap-0">
+              <li class="hover:bg-surface-900-100">
+                <a
+                  href="https://zkp2p.xyz/swap"
+                  target="_blank"
+                  class="flex flex-row gap-4 items-center text-surface-contrast-50 px-4 py-1 justify-between w-full">
+                  <span class="h-full leading-8">zkp2p</span>
+                  <Image src="https://zkp2p.xyz/logo512.png" sizeClasses="size-6" />
+                </a>
+              </li>
+              <li class="hover:bg-surface-900-100">
+                <Button
+                  class="rounded-l-full flex flex-row items-center px-4 py-1 justify-between w-full gap-4"
+                  onclick={openOnRamp}>
+                  <span class="h-full leading-8">Coinbase / Meld.io</span>
+                  <span
+                    class="size-8 border-2 border-surface-contrast-50 rounded-full items-center flex justify-center">
+                    <Icon icon="material-symbols:ramp-left-rounded" mode="svg" class="size-6" />
+                  </span>
+                </Button>
+              </li>
+            </ul>
+          </div>
+        {/snippet}
+      </Popover>
+    </div>
+    <div class="absolute left-1/2 -translate-x-1/2 top-0 h-12 items-center justify-center flex">
       <Icon icon="mingcute:run-fill" mode="svg" class="size-8" />
     </div>
   </div>
