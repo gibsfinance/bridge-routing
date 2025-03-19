@@ -129,18 +129,29 @@
                   href="https://zkp2p.xyz/swap"
                   target="_blank"
                   class="flex flex-row gap-4 items-center text-surface-contrast-50 px-4 py-1 justify-between w-full">
-                  <span class="h-full leading-8">zkp2p</span>
-                  <Image src="https://zkp2p.xyz/logo512.png" sizeClasses="size-6" />
+                  <span class="h-full leading-8">ZKP2P</span>
+                  <span class="size-8 items-center flex justify-center">
+                    <Image src="https://zkp2p.xyz/logo512.png" sizeClasses="size-6" />
+                  </span>
                 </a>
               </li>
               <li class="hover:bg-surface-900-100">
                 <Button
                   class="rounded-l-full flex flex-row items-center px-4 py-1 justify-between w-full gap-4"
                   onclick={openOnRamp}>
-                  <span class="h-full leading-8">Coinbase / Meld.io</span>
-                  <span
-                    class="size-8 border-2 border-surface-contrast-50 rounded-full items-center flex justify-center">
-                    <Icon icon="material-symbols:ramp-left-rounded" mode="svg" class="size-6" />
+                  <span class="h-full leading-8">Coinbase</span>
+                  <span class="size-8 items-center flex justify-center">
+                    <Icon icon="meteor-icons:coinbase" mode="svg" class="size-6" />
+                  </span>
+                </Button>
+              </li>
+              <li class="hover:bg-surface-900-100">
+                <Button
+                  class="rounded-l-full flex flex-row items-center px-4 py-1 justify-between w-full gap-4"
+                  onclick={openOnRamp}>
+                  <span class="h-full leading-8">Meld.io</span>
+                  <span class="size-8 items-center flex justify-center">
+                    <Icon icon="fa-solid:box-open" mode="svg" class="size-6" />
                   </span>
                 </Button>
               </li>
