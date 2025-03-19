@@ -6,6 +6,7 @@ import {
 import { accountState, wagmiAdapter, connect } from './auth/AuthProvider.svelte'
 import { encodeFunctionData, erc20Abi, maxUint256, zeroAddress, type Hex } from 'viem'
 import { type ApprovalParameters, checkAllowance } from './chain-read.svelte'
+import { loading } from './loading.svelte'
 
 export * from './chain-read.svelte'
 
@@ -27,6 +28,16 @@ export const sendApproval = ({
   })
 }
 
+export const loadAllowance = loading.loadsAfterTick<bigint, ApprovalParameters>(
+  'allowance',
+  async (inputs: ApprovalParameters) => {
+    const result = await checkAllowance(inputs).catch(() => {
+      console.error('unable to load allowance', inputs)
+      return 0n
+    })
+    return result
+  },
+)
 export const checkAndRaiseApproval = async ({
   token,
   spender,

@@ -238,3 +238,7 @@ modal.subscribeAccount((account) => {
     accountState.value = account ?? null
   }
 })
+
+export const destroy = async () => {
+  await Promise.all([wagmiAdapter.disconnect(), modal.disconnect()])
+}

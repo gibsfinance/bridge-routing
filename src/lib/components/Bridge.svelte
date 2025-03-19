@@ -123,46 +123,8 @@
   })
   const fromChainId = $derived(Number(bridgeKey.fromChain))
   const toChainId = $derived(Number(bridgeKey.toChain))
-  // const originationBlock = $derived(latestBlock.block(fromChainId))
   $effect.pre(() => untrack(() => latestBlock.watch(fromChainId)))
   $effect.pre(() => untrack(() => latestBlock.watch(toChainId)))
-  // $effect.pre(() => {
-  //   if (!bridgeSettings.assetIn.value || !accountState.address || !originationBlock) return
-  //   return fromTokenBalance.fetch(
-  //     Number(bridgeKey.fromChain),
-  //     bridgeSettings.assetIn.value,
-  //     accountState.address,
-  //     originationBlock,
-  //   )
-  // })
-  // const destinationBlock = $derived(latestBlock.block(Number(bridgeKey.toChain)))
-  // $effect(() => {
-  //   if (!bridgeSettings.assetOut?.address || !accountState.address || !destinationBlock) {
-  //     return
-  //   }
-  //   return toTokenBalance.fetch(
-  //     Number(bridgeKey.toChain),
-  //     bridgeSettings.assetOut,
-  //     accountState.address,
-  //     destinationBlock,
-  //   )
-  // })
-  const loadApproval = loading.loadsAfterTick<bigint, transactions.ApprovalParameters>(
-    'approval',
-    async (inputs: transactions.ApprovalParameters) => {
-      const result = await transactions
-        .checkAllowance(inputs)
-        .catch(async () => {
-          await new Promise((resolve) => setTimeout(resolve, 500))
-          return transactions.checkAllowance(inputs)
-        })
-        .catch(() => {
-          console.error('unable to load allowance', inputs)
-          return 0n
-        })
-      return result
-    },
-  )
   const originationTicker = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
   $effect(() => {
     const account = accountState.address
@@ -180,7 +142,7 @@
     ) {
       return
     }
-    const result = loadApproval({
+    const result = transactions.loadAllowance({
       account,
       token: token as Hex,
       spender: bridgePath,

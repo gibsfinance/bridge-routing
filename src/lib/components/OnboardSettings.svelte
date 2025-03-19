@@ -1,11 +1,9 @@
 <script lang="ts">
-  import coinbase from '../../../static/images/providers/coinbase.svg?raw'
-  import meldio from '../../../static/images/providers/meld-io.svg?raw'
   import { zeroAddress, type Hex } from 'viem'
   import Button from './Button.svelte'
   import Icon from '@iconify/svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
-  import { accountState, modal, wagmiAdapter } from '$lib/stores/auth/AuthProvider.svelte'
+  import { accountState, modal, destroy } from '$lib/stores/auth/AuthProvider.svelte'
   import { Popover } from '@skeletonlabs/skeleton-svelte'
   import {
     assetOutKey,
@@ -17,6 +15,11 @@
   import { showTooltips } from '$lib/stores/storage.svelte'
   import { onDestroy, untrack } from 'svelte'
   import Image from './Image.svelte'
+  import coinbase from '../../images/providers/coinbase.svg?raw'
+  import meldio from '../../images/providers/meld-io.svg?raw'
+  // const coinbase = new URL('/images/providers/coinbase.svg', import.meta.url).href
+  // const meldio = new URL('/images/providers/meld-io.svg', import.meta.url).href
+  console.log(coinbase, meldio)
   const openOnRamp = () => {
     modal.open({
       view: 'OnRampProviders',
@@ -84,9 +87,7 @@
     if (!bridgeSettings.assetIn.value) return
     return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
   })
-  onDestroy(async () => {
-    await Promise.all([wagmiAdapter.disconnect(), modal.disconnect()])
-  })
+  onDestroy(destroy)
   let onrampOpen = $state(false)
 </script>
 

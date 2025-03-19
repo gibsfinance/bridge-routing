@@ -201,11 +201,10 @@
     ...tokenOutput,
     name: estimatedAmount ? `${estimatedAmount} ${tokenOutput.symbol}` : tokenOutput.symbol,
   }))
-  const crossForeignBridge = transactionButtonPress({
+  const getForeignBridgeApproval = transactionButtonPress({
     toast,
     steps: [
       async () => {
-        // console.log('checking approval')
         return await transactions.checkAndRaiseApproval({
           token: tokenInput!.address! as Hex,
           spender: latestQuote!.transactionRequest!.to as Hex,
@@ -213,8 +212,14 @@
           minimum: amountInput,
         })
       },
+    ],
+  })
+  const sendForeignBridgeCrossTransaction = transactionButtonPress({
+    toast,
+    steps: [
       async () => {
         const tx = await transactions.sendTransaction({
+          chainId: Number(tokenInput.chainId),
           account: accountState.address,
           data: latestQuote!.transactionRequest!.data as Hex,
           gas: BigInt(latestQuote!.transactionRequest!.gasLimit ?? 0),
@@ -225,6 +230,42 @@
         return tx
       },
     ],
+  })
+  const needsAllowance = $derived.by(() => {
+    const pushValue = latestQuote?.transactionRequest?.value
+    if (pushValue && BigInt(pushValue) > 0n) {
+      return false
+    }
+    return true
+  })
+  let allowance = $state(null as bigint | null)
+  $effect(() => {
+    const spender = latestQuote?.transactionRequest?.to
+    const token = tokenInput?.address
+    const account = accountState.address
+    const chainId = tokenInput.chainId
+    if (!token || !needsAllowance || !account || !spender || !chainId) {
+      return
+    }
+    const result = transactions.loadAllowance({
+      token: token as Hex,
+      spender: spender as Hex,
+      chainId: Number(chainId),
+      account,
+    })
+    result.promise.then((a) => {
+      if (result.controller.signal.aborted) return
+      allowance = a
+    })
+    return result.cleanup
+  })
+  const crossForeignBridge = $derived.by(() => {
+    if (needsAllowance) {
+      if (!allowance || allowance < amountInput) {
+        return getForeignBridgeApproval
+      }
+    }
+    return sendForeignBridgeCrossTransaction
   })
   const canBridge = $derived.by(() => {
     return (
