@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { ClassParam } from '$lib/types.svelte'
   import type { Snippet } from 'svelte'
 
   type Props = {
@@ -6,14 +7,16 @@
     id: string
     focused?: boolean
     disabled?: boolean
+    class?: ClassParam
   }
   const { children, id, focused = false, disabled = false, class: className = '' }: Props = $props()
 </script>
 
-<!-- text-surface-contrast-50 overflow-hidden shadow border hover:shadow-md transition-all duration-100 -->
 <label
   for={id}
-  class="flex flex-col items-center justify-items-end grow gap-1 rounded-2xl shadow-inset justify-between w-full text-surface-contrast-50 shadow border hover:shadow-md transition-all duration-100 preset-outline-surface-500 relative p-4 {className}"
+  class="flex flex-col items-center justify-items-end grow gap-1 rounded-2xl shadow-inset justify-between w-full text-surface-contrast-50 border transition-all shadow duration-100 preset-outline-surface-500 relative p-4 {className}"
+  class:shadow={focused}
+  class:hover:shadow-md={focused}
   class:bg-white={focused}
   class:bg-surface-950-50={!focused}
   class:cursor-not-allowed={disabled}>

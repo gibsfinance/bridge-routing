@@ -41,7 +41,6 @@
 <SectionInput
   label="Output"
   token={out}
-  focused
   value={inputValue}
   readonlyInput
   readonlyTokenSelect
