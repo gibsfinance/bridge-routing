@@ -57,7 +57,7 @@
     }),
   )
   const bridgedToken = $derived(
-    bridgedTokenKey && (bridgeSettings.assetOuts.get(bridgedTokenKey) as Token | null),
+    (!bridgedTokenKey ? null : (bridgeSettings.assetOuts.get(bridgedTokenKey)) as Token | null),
   )
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(
@@ -370,7 +370,6 @@
     showTxInput = false
   }
   const isValidTxHash = $derived(isHex(txHashValue) && txHashValue.length === 66)
-  $inspect('tokenInput', tokenInput)
 </script>
 
 <InputOutputForm icon="line-md:chevron-double-down">

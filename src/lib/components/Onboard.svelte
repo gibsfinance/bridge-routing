@@ -34,7 +34,6 @@
       })
     return price.cleanup
   })
-  $inspect(activeOnboardStep.value)
 </script>
 
 <div
