@@ -12,10 +12,10 @@
     onclick: () => void
     text: string
     loadingKey: string
-    requiredChain: {
+    requiredChain?: {
       id: number | string
       name: string
-    }
+    } | null
   }
   const {
     disabled: disabledMain,
@@ -41,8 +41,11 @@
     return disabledMain || !loading.isResolved(loadingKey)
   })
   const text = $derived.by(() => {
-    if (!accountState.connected || !requiredChain) {
+    if (!accountState.connected) {
       return 'Connect Wallet'
+    }
+    if (!requiredChain) {
+      return 'Switch Network'
     }
     if (!isRequiredChain) {
       return 'Switch to ' + requiredChain.name

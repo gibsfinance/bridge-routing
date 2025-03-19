@@ -87,11 +87,7 @@
   onDestroy(async () => {
     await Promise.all([wagmiAdapter.disconnect(), modal.disconnect()])
   })
-  // const toggleShowBridge = () => {
-  //   onboardSettings.toggleShowBridge()
-  // }
   let onrampOpen = $state(false)
-  $inspect(coinbase)
 </script>
 
 <header class="flex flex-col items-center justify-between gap-2">

@@ -48,14 +48,34 @@
 
   const toast = getContext('toast') as ToastContext
 
-  const bridgedToken = $derived(bridgeSettings.assetOut as Token | null)
+  const tokenInput = $derived(bridgeSettings.assetIn.value)
+  const bridgedTokenKey = $derived(
+    assetOutKey({
+      bridgeKeyPath: bridgeKey.path,
+      assetInAddress: tokenInput?.address as Hex,
+      unwrap: false,
+    }),
+  )
+  const bridgedToken = $derived(
+    bridgedTokenKey && (bridgeSettings.assetOuts.get(bridgedTokenKey) as Token | null),
+  )
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(
     bridgeAdminSettings.get(settingKey(bridgeKey.value))?.feeF2H ?? 0n,
   )
   const bridgeFeeAmount = $derived((bridgeFeePercent * bridgeAmount) / oneEther)
   const outputAmount = $derived(bridgeAmount - bridgeFeeAmount)
-  const tokenInput = $derived(bridgeSettings.assetIn.value)
+  $effect.pre(() => {
+    if (tokenInput || bridgeKey.fromChain !== Chains.ETH) return
+    bridgeSettings.assetIn.value = {
+      address: zeroAddress,
+      chainId: Number(bridgeKey.fromChain),
+      decimals: 18,
+      logoURI: assetSources(tokenInput),
+      symbol: 'ETH',
+      name: 'Ether',
+    }
+  })
 
   $effect(() => {
     const assetOutputKey = assetOutKey({
@@ -131,7 +151,6 @@
           chainId: Number(bridgeKey.fromChain),
           ...bridgeSettings.transactionInputs,
         })
-        // setTxHash(tx)
         bridgeTxHash.value = tx
         incrementBridgeStatus()
         transactions.wait(tx).then(() => {
@@ -351,6 +370,7 @@
     showTxInput = false
   }
   const isValidTxHash = $derived(isHex(txHashValue) && txHashValue.length === 66)
+  $inspect('tokenInput', tokenInput)
 </script>
 
 <InputOutputForm icon="line-md:chevron-double-down">
@@ -358,14 +378,7 @@
     <SectionInput
       focused
       label="Input"
-      token={tokenInput ?? {
-        address: zeroAddress,
-        chainId: Number(bridgeKey.fromChain),
-        decimals: 18,
-        logoURI: assetSources(tokenInput),
-        symbol: 'ETH',
-        name: 'Ether',
-      }}
+      token={tokenInput}
       value={amountIn.value}
       onbalanceupdate={(balance) => {
         maxBridgeable = balance
@@ -404,14 +417,7 @@
   {#snippet output()}
     <SectionInput
       label="Output"
-      token={bridgedToken ?? {
-        address: zeroAddress,
-        chainId: Number(bridgeKey.toChain),
-        decimals: 18,
-        logoURI: assetSources(bridgedToken),
-        symbol: 'ETH',
-        name: 'Ether',
-      }}
+      token={bridgedToken}
       readonlyInput
       readonlyTokenSelect
       value={outputAmount}
@@ -428,7 +434,7 @@
   {#snippet button()}
     <OnboardButton
       disabled={disableBridgeButton}
-      requiredChain={idToChain.get(tokenInput!.chainId)!}
+      requiredChain={tokenInput?.chainId ? idToChain.get(tokenInput!.chainId) : null}
       onclick={bridgeTokens}
       text={needsApproval ? 'Approve' : 'Bridge to PulseChain'}
       loadingKey="lifi-quote" />

@@ -119,7 +119,7 @@ export const disconnect = async () => {
 }
 
 export const switchNetwork = async (chain: networks.AppKitNetwork | null | undefined) => {
-  console.log('switchNetwork', chain)
+  // console.log('switchNetwork', chain)
   if (chain) {
     try {
       const connectors = getConnectors(wagmiAdapter.wagmiConfig)
