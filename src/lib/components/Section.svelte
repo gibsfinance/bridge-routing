@@ -14,7 +14,7 @@
 
 <label
   for={id}
-  class="flex flex-col items-center justify-items-end grow gap-1 rounded-2xl shadow-inset justify-between w-full text-surface-contrast-50 border transition-all shadow duration-100 preset-outline-surface-500 relative p-4 {className}"
+  class="flex flex-col items-center justify-items-end grow gap-1 rounded-2xl shadow-inset justify-between w-full text-surface-contrast-50 border transition-all duration-100 preset-outline-surface-500 relative p-4 {className}"
   class:shadow={focused}
   class:hover:shadow-md={focused}
   class:bg-white={focused}

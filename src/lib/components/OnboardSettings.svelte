@@ -1,4 +1,6 @@
 <script lang="ts">
+  import coinbase from '../../../static/images/providers/coinbase.svg?raw'
+  import meldio from '../../../static/images/providers/meld-io.svg?raw'
   import { zeroAddress, type Hex } from 'viem'
   import Button from './Button.svelte'
   import Icon from '@iconify/svelte'
@@ -89,6 +91,7 @@
   //   onboardSettings.toggleShowBridge()
   // }
   let onrampOpen = $state(false)
+  $inspect(coinbase)
 </script>
 
 <header class="flex flex-col items-center justify-between gap-2">
@@ -140,8 +143,8 @@
                   class="rounded-l-full flex flex-row items-center px-4 py-1 justify-between w-full gap-4"
                   onclick={openOnRamp}>
                   <span class="h-full leading-8">Coinbase</span>
-                  <span class="size-8 items-center flex justify-center">
-                    <Icon icon="meteor-icons:coinbase" mode="svg" class="size-6" />
+                  <span class="size-8 items-center flex justify-center rounded-md overflow-hidden">
+                    {@html coinbase}
                   </span>
                 </Button>
               </li>
@@ -151,7 +154,7 @@
                   onclick={openOnRamp}>
                   <span class="h-full leading-8">Meld.io</span>
                   <span class="size-8 items-center flex justify-center">
-                    <Icon icon="fa-solid:box-open" mode="svg" class="size-6" />
+                    {@html meldio}
                   </span>
                 </Button>
               </li>
