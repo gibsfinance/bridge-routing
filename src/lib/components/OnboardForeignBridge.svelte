@@ -64,15 +64,6 @@
         () => availableChains.get(previousSettings?.fromChain ?? 137)!,
       )
       await loadTokensForChains(loadedFromChain)
-      // const tokens = untrack(() => availableTokensPerOriginChain.get(loadedFromChain.id)!)
-      // const target =
-      //   (previousSettings?.fromToken
-      //     ? tokens.find((tkn) => tkn.address === previousSettings.fromToken)
-      //     : tokens[0]) ?? tokens[0]
-      // if (target) {
-      //   console.log('setting tokenInput', target)
-      //   tokenInput = target
-      // }
       amountInput = previousSettings?.fromAmount ? BigInt(previousSettings.fromAmount) : 0n
       const tokensDestination = untrack(() => availableTokensPerOriginChain.get(1)!)
       const tokenDestination = previousSettings?.toToken
@@ -272,6 +263,7 @@
       !!accountState.address
     )
   })
+  $inspect(needsAllowance, canBridge)
   const requiredChain = $derived.by(() => {
     return availableChains.get(tokenInput.chainId)! as LIFIChain
   })
@@ -346,7 +338,7 @@
       disabled={!canBridge}
       {requiredChain}
       onclick={crossForeignBridge}
-      text="Bridge to Ethereum"
+      text={needsAllowance ? 'Approve' : 'Swap'}
       loadingKey="lifi-quote" />
   {/snippet}
 </InputOutputForm>

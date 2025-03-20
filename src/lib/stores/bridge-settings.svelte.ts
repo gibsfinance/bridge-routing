@@ -666,9 +666,8 @@ export const updateAssetOut = ({
         return -1n
       })
     },
-    async (data: bigint, abortController: AbortController) => {
+    async (data: bigint) => {
       if (data < 0n) {
-        abortController.abort()
         return null
       }
       return await multicallErc20({

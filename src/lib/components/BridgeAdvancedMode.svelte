@@ -229,7 +229,7 @@
               : 'The max you are willing to tip to the router address'}>
             <span
               class="flex items-center text-sm leading-5 grow w-full justify-end"
-              class:opacity-60={!loading.isResolved('gas')}>
+              class:opacity-75={!loading.isResolved('gas')}>
               {#if feeType === input.FeeType.PERCENT}
                 <span
                   >{humanReadableNumber(costFromInputs ?? 0n, {

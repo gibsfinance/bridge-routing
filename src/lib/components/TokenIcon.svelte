@@ -25,7 +25,7 @@
   const onerror = markLoaded(false)
   const classes = $derived(classNames('rounded-full', className, !loaded ? 'invisible' : ''))
   const iconClass = $derived(
-    classNames('absolute opacity-70', className, !loaded ? '' : 'invisible', sizeClasses),
+    classNames('absolute opacity-75', className, !loaded ? '' : 'invisible', sizeClasses),
   )
 </script>
 

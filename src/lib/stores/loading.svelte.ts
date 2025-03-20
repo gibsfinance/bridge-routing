@@ -46,7 +46,7 @@ export class LoadingCounter {
         cancelled = true
         untrack(() => this.decrement(key))
         if (!abortController.signal.aborted) {
-          abortController.abort()
+          abortController.abort('cancelled')
         }
       }
       let current = Promise.resolve(arg) as Promise<unknown>

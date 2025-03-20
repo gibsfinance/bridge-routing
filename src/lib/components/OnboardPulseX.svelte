@@ -7,7 +7,7 @@
   import { Chains, Provider } from '$lib/stores/auth/types'
   import { formatUnits, getAddress, zeroAddress, type Hex } from 'viem'
   import { latestBlock } from '$lib/stores/chain-events.svelte'
-  import { plsOutToken, showTooltips } from '$lib/stores/storage.svelte'
+  import { plsxTokens, showTooltips, type PulsexTokens } from '$lib/stores/storage.svelte'
   import TokenSelect from './TokenSelect.svelte'
   import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
   import { bridgableTokens, bridgeKey } from '$lib/stores/input.svelte'
@@ -21,10 +21,19 @@
   import OnboardRadio from './OnboardRadio.svelte'
   import GuideShield from './GuideShield.svelte'
   import GuideStep from './GuideStep.svelte'
+  import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
 
   const toast = getContext('toast') as ToastContext
 
-  const tokenOutputAddress = $derived(plsOutToken.value)
+  // const tokenOutputAddress = $derived(plsOutToken.value)
+  const defaultPulsexTokens = {
+    tokenIn: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
+    tokenOut: zeroAddress,
+  } as const
+  const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = $derived({
+    ...defaultPulsexTokens,
+    ...(plsxTokens.value ?? {}),
+  })
   const tokens = $derived(
     bridgableTokens.bridgeableTokensUnder({
       provider: Provider.PULSECHAIN,
@@ -32,20 +41,16 @@
       partnerChain: null,
     }),
   )
-  const defaultTokenIn = $derived(tokens.find((t) => t.symbol === 'wWETH'))
-  const tokenOut = $derived.by(() => {
-    return tokens.find((t) => getAddress(t.address) === getAddress(tokenOutputAddress)) ?? tokens[0]
+  // const defaultTokenIn = $derived(tokens.find((t) => t.symbol === 'wWETH'))
+  const findToken = (address: Hex) => {
+    return tokens.find((t) => getAddress(t.address) === getAddress(address))
+  }
+  const tokenIn = $derived.by(() => {
+    return findToken(tokenInAddress) ?? findToken(defaultPulsexTokens.tokenIn) ?? null
   })
-  const tokenInURI = $derived(bridgeSettings.assetIn.value?.logoURI)
-  const bridgeTokenOut = $derived((bridgeSettings.assetOut as Token | null) ?? defaultTokenIn)
-  const tokenIn = $derived(
-    bridgeTokenOut
-      ? ({
-          ...bridgeTokenOut,
-          logoURI: tokenInURI ?? null,
-        } as Token)
-      : null,
-  )
+  const tokenOut = $derived.by(() => {
+    return findToken(tokenOutAddress) ?? findToken(defaultPulsexTokens.tokenOut) ?? null
+  })
   let amountToSwapIn = $state<bigint | null>(0n)
   let amountToSwapOut = $state<bigint | null>(null)
   let quoteResult = $state<SerializedTrade | null>(null)
@@ -58,6 +63,13 @@
     ) {
       return
     }
+    console.log(
+      'getting quote',
+      tokenIn,
+      tokenOut,
+      amountToSwapIn,
+      latestBlock.block(Number(Chains.PLS)),
+    )
     const quote = getPulseXQuote({
       tokenIn,
       tokenOut,
@@ -92,7 +104,27 @@
   }
   const swapRouterAddress = '0xDA9aBA4eACF54E0273f56dfFee6B8F1e20B23Bba'
   const swapDisabled = $derived(!amountToSwapIn || !amountToSwapOut || !quoteMatchesLatest)
-  const swapTokens = transactionButtonPress({
+  let allowance = $state<bigint | null>(null)
+  $effect.pre(() => {
+    if (!tokenIn || !accountState.address) return
+    const result = transactions.loadAllowance({
+      account: accountState.address,
+      token: tokenIn.address as Hex,
+      spender: swapRouterAddress,
+      chainId: Number(Chains.PLS),
+    })
+    result.promise.then((res) => {
+      if (result.controller.signal.aborted) return
+      allowance = res ?? 0n
+    })
+    return result.cleanup
+  })
+  const needsAllowance = $derived(
+    tokenIn?.address !== zeroAddress &&
+      amountToSwapIn !== null &&
+      (!allowance || allowance < amountToSwapIn),
+  )
+  const askForAllowance = transactionButtonPress({
     toast,
     steps: [
       async () => {
@@ -104,12 +136,17 @@
           minimum: amountToSwapIn!,
         })
       },
+    ],
+  })
+  const swapOnPulseX = transactionButtonPress({
+    toast,
+    steps: [
       async () => {
         const transactionInfo = getTransactionDataFromTrade(Number(Chains.PLS), quoteResult!)
         const tx = await transactions.sendTransaction({
           data: transactionInfo.calldata as Hex,
           to: swapRouterAddress,
-          // gas: BigInt(quoteResult!.gasEstimate!),
+          gas: BigInt(quoteResult!.gasEstimate!),
           value: BigInt(transactionInfo.value),
           chainId: Number(Chains.PLS),
         })
@@ -117,19 +154,41 @@
       },
     ],
   })
+  const swapTokens = $derived(needsAllowance ? askForAllowance : swapOnPulseX)
+  const firstNotMatching = (address: Hex) => {
+    return tokens.find((t) => getAddress(t.address) !== getAddress(address))?.address as Hex
+  }
+  const updatePulsexTokens = (tokens: Partial<PulsexTokens>) => {
+    const updates = {
+      ...tokens,
+    }
+    if (!updates.tokenIn || !updates.tokenOut) {
+      if (tokenInAddress === updates.tokenOut) {
+        updates.tokenIn = firstNotMatching(updates.tokenOut)
+      }
+      if (tokenOutAddress === updates.tokenIn) {
+        updates.tokenOut = firstNotMatching(updates.tokenIn)
+      }
+    }
+    plsxTokens.extend(updates)
+  }
 </script>
 
 <InputOutputForm
   icon="token:swap"
   ondividerclick={() => {
     const futureInput = tokenOut
-    plsOutToken.value = bridgeSettings.assetOut?.address as Hex
+    updatePulsexTokens({
+      tokenOut: tokenIn!.address as Hex,
+      tokenIn: tokenOut!.address as Hex,
+    })
     const key = assetOutKey({
       bridgeKeyPath: bridgeKey.path,
       assetInAddress: tokenIn?.address as Hex,
       unwrap: false,
     })
-    if (key) {
+    // console.log(key, futureInput)
+    if (key && futureInput) {
       bridgeSettings.setAssetOut(key, futureInput)
     }
   }}>
@@ -137,14 +196,7 @@
     <SectionInput
       focused
       label="Input"
-      token={tokenIn ?? {
-        address: zeroAddress,
-        chainId: Number(Chains.PLS),
-        decimals: 18,
-        logoURI: assetSources(tokenIn),
-        symbol: 'ETH',
-        name: 'Ether',
-      }}
+      token={tokenIn}
       showRadio
       value={amountToSwapIn ?? 0n}
       onbalanceupdate={() => {
@@ -184,14 +236,7 @@
   {#snippet output()}
     <SectionInput
       label="Output"
-      token={tokenOut ?? {
-        address: zeroAddress,
-        chainId: Number(Chains.PLS),
-        decimals: 18,
-        logoURI: assetSources(tokenOut),
-        symbol: 'ETH',
-        name: 'Ether',
-      }}
+      token={tokenOut}
       readonlyInput
       onbalanceupdate={() => {}}
       value={amountToSwapOut ?? 0n}>
@@ -203,7 +248,11 @@
           {tokens}
           onsubmit={(tkn) => {
             if (tkn) {
-              plsOutToken.value = tkn.address as Hex
+              // plsOutToken.value = tkn.address as Hex
+              updatePulsexTokens({
+                tokenOut: tkn.address as Hex,
+                // tokenIn: tokenIn!.address as Hex,
+              })
             }
             close()
           }} />
@@ -215,7 +264,7 @@
       requiredChain={pulsechain}
       disabled={swapDisabled}
       onclick={swapTokens}
-      text="Swap"
+      text={needsAllowance ? 'Approve' : 'Swap'}
       loadingKey="pulsex-quote" />
   {/snippet}
 </InputOutputForm>

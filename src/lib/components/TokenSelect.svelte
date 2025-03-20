@@ -240,7 +240,7 @@
         {#if showCustomTokens}
           <Button
             class="flex grow flex-row items-center py-2 leading-8 {addButtonDisabled
-              ? 'cursor-not-allowed opacity-70'
+              ? 'cursor-not-allowed opacity-75'
               : 'cursor-pointer'}"
             disabled={addButtonDisabled}
             onclick={() => addCustom(custom)}>

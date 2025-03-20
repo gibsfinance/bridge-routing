@@ -10,6 +10,7 @@
   import OnboardForeignBridge from './OnboardForeignBridge.svelte'
   import { untrack } from 'svelte'
   import { activeOnboardStep } from '$lib/stores/storage.svelte'
+    import Headline from './Headline.svelte'
 
   const bridgedToken = $derived(bridgeSettings.assetOut as Token | null)
   $effect.pre(() => {

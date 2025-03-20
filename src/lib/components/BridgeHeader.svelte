@@ -4,7 +4,7 @@
   import Button from './Button.svelte'
 </script>
 
-<div class="size-14 py-2 w-full relative flex items-center flex-row">
+<div class="size-12 w-full relative flex items-center flex-row">
   <Button
     class="size-9 rounded-full flex items-center justify-center border-2 transition-all duration-100 {advancedMode.value
       ? ''

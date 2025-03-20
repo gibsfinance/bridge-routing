@@ -1,6 +1,7 @@
 <script lang="ts">
   import BlurryImage from '$lib/components/BlurryImage.svelte'
   import Bridge from '$lib/components/Bridge.svelte'
+  import Headline from '$lib/components/Headline.svelte'
   import { windowStore } from '$lib/stores/window.svelte'
   const bridgeImageFuzzyWebP = new URL('/images/bridge-fuzzy.webp', import.meta.url).href
 </script>
@@ -12,11 +13,8 @@
       image_url="url({bridgeImageFuzzyWebP})"
       blur="9px"
       brightness="100%">
-      <div class="max-w-lg flex flex-col text-lg w-full mt-16">
-        <!-- <h1
-          class="text-white font-italiana z-10 top-0 bottom-0 left-0 right-0 text-center content-center capitalize text-5xl mt-16">
-          delivery
-        </h1> -->
+      <div class="max-w-lg flex flex-col text-lg w-full mt-8">
+        <Headline>delivery</Headline>
         <Bridge />
       </div>
     </BlurryImage>

@@ -82,10 +82,12 @@ export const getPulseXQuote = loading.loadsAfterTick<SerializedTrade, PulsexQuot
       currency: currencyOut,
     } as PulsexQuoteInput
     return new Promise((resolve, reject) => {
-      return quoteFetch(body, controller, {
+      const quote = quoteFetch(body, controller, {
         resolve,
         reject,
       })
+      if (!quote) return
+      return quote.catch(() => {})
     })
   },
 )
@@ -103,9 +105,8 @@ const quoteFetch = _.debounce(
     },
   ) => {
     const quoteURL = 'https://routing-v3.a4056c9392ff6eb5fa7904d106b55a.workers.dev/quote'
-    // console.log('quoteFetch', body, controller.signal)
     if (controller.signal.aborted) {
-      reject(controller.signal.reason)
+      reject()
       return null
     }
     // console.log('fetch', body)
@@ -118,7 +119,6 @@ const quoteFetch = _.debounce(
       },
     })
     const result = (await quote.json()) as SerializedTrade
-    // console.log(result)
     resolve(result)
   },
   1_000,

@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import { humanReadableNumber } from '$lib/stores/utils'
   import { Chains, toChain } from '$lib/stores/auth/types'
   import NetworkImage from './NetworkImage.svelte'
@@ -60,4 +60,4 @@
       {/if}
     </div>
   </div>
-</div>
+</div> -->
