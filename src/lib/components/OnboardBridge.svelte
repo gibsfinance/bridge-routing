@@ -42,7 +42,7 @@
   import GuideShield from './GuideShield.svelte'
   import GuideStep from './GuideStep.svelte'
   import BridgeProgress from './BridgeProgress.svelte'
-    import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
+  import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
 
   const toast = getContext('toast') as ToastContext
 
@@ -351,7 +351,7 @@
       <p>Set an amount to bridge.</p>
     </GuideStep>
     <GuideStep step={3} triggerClass="absolute left-0 right-0 mx-auto bottom-5">
-      <p>Initiate the bridge.</p>
+      <p>Initiate the bridge to PulseChain.</p>
     </GuideStep>
   </div>
 {/if}

@@ -356,7 +356,7 @@
       <p>Select output token on Ethereum.</p>
     </GuideStep>
     <GuideStep step={4} triggerClass="absolute left-0 right-0 mx-auto bottom-5">
-      <p>Initiate the bridge.</p>
+      <p>Initiate cross chain swap to Ethereum.</p>
     </GuideStep>
   </div>
 {/if}
