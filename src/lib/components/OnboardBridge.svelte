@@ -11,11 +11,7 @@
     oneEther,
     searchKnownAddresses,
   } from '$lib/stores/bridge-settings.svelte'
-  import {
-    assetLink,
-    loadAssetLink,
-    minAmount,
-  } from '$lib/stores/chain-events.svelte'
+  import { assetLink, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
   import {
     amountIn,
     bridgableTokens,
@@ -32,8 +28,6 @@
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
-  import Icon from '@iconify/svelte'
-  import Button from './Button.svelte'
   import OnboardRadio from './OnboardRadio.svelte'
   import GuideShield from './GuideShield.svelte'
   import GuideStep from './GuideStep.svelte'

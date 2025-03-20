@@ -16,7 +16,13 @@
     tokens?: Token[]
     selectedToken?: Token | null
   }
-  const { onsubmit, chainId, chains: chainsProp, tokens: tokensProp, selectedToken }: Props = $props()
+  const {
+    onsubmit,
+    chainId,
+    chains: chainsProp,
+    tokens: tokensProp,
+    selectedToken,
+  }: Props = $props()
   const chains = $derived(
     chainsProp ??
       ([...appkitNetworkIds.values()]
@@ -47,7 +53,7 @@
     onsubmit(token, chains[selectedChainIndex])
   }}
   selectedChain={chains[selectedChainIndex]}
-  selectedToken={selectedToken}
+  {selectedToken}
   onnetworkchange={(chainId) => {
     const index = chains.indexOf(chainId)
     if (index !== -1) {

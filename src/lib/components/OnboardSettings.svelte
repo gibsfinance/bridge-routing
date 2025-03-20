@@ -15,8 +15,8 @@
   import { showTooltips } from '$lib/stores/storage.svelte'
   import { untrack } from 'svelte'
   import Image from './Image.svelte'
-  import coinbase from '../../images/providers/coinbase.svg?raw'
-  import meldio from '../../images/providers/meld-io.svg?raw'
+  import coinbase from '$lib/images/providers/coinbase.svg?raw'
+  import meldio from '$lib/images/providers/meld-io.svg?raw'
   const openOnRamp = () => {
     modal.open({
       view: 'OnRampProviders',

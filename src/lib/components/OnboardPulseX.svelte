@@ -1,9 +1,8 @@
 <script lang="ts">
   import * as transactions from '$lib/stores/transactions'
-  import { assetOutKey, assetSources, bridgeSettings } from '$lib/stores/bridge-settings.svelte'
+  import { assetOutKey, bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { getPulseXQuote } from '$lib/stores/pulsex/quote.svelte'
   import type { SerializedTrade } from '$lib/stores/pulsex/transformers'
-  import type { Token } from '$lib/types.svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
   import { formatUnits, getAddress, zeroAddress, type Hex } from 'viem'
   import { latestBlock } from '$lib/stores/chain-events.svelte'
