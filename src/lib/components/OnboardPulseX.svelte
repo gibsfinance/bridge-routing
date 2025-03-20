@@ -163,6 +163,7 @@
         <TokenSelect
           chains={[Number(Chains.PLS)]}
           selectedChain={Number(Chains.PLS)}
+          selectedToken={tokenIn}
           {tokens}
           onsubmit={(tkn) => {
             if (tkn) {
@@ -198,6 +199,7 @@
         <TokenSelect
           chains={[Number(Chains.PLS)]}
           selectedChain={Number(Chains.PLS)}
+          selectedToken={tokenOut}
           {tokens}
           onsubmit={(tkn) => {
             if (tkn) {

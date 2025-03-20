@@ -28,7 +28,7 @@ const fetchChains = _.memoize(async () => {
   return chains
 })
 
-export const loadData = async () => {
+export const loadData = _.memoize(async () => {
   const [chains] = await Promise.all([fetchChains()])
   const c = new Map<string, Chain>()
   chains.forEach((chain) => {
@@ -41,7 +41,7 @@ export const loadData = async () => {
   await loadTokensForChains(ethereum)
   const tokens = availableTokensPerOriginChain.get(ethereum.id)!
   tokenOut.set(tokens[0])
-}
+})
 
 export const targetedOriginChain = $state({
   value: null as null | Chain,

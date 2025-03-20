@@ -29,6 +29,7 @@
     tokens: Token[]
     showCustomTokens?: boolean
     selectedChain?: number
+    selectedToken?: Token | null
   }
   let {
     onsubmit = () => {},
@@ -37,6 +38,7 @@
     tokens,
     showCustomTokens = false,
     selectedChain = 0,
+    selectedToken,
   }: Props = $props()
   let custom!: Token
   const addCustom = (newToken: Token) => {
@@ -104,11 +106,20 @@
     return custom
   }
   const fullTokenSet = $derived.by(() => {
+    const [selected, notSelected] = selectedToken
+      ? _.partition(tokens, (t) => {
+          return (
+            getAddress(t.address) === getAddress(selectedToken?.address) &&
+            t.chainId === selectedChain
+          )
+        })
+      : [[], tokens]
+    const rearranged = [...selected, ...notSelected]
     if (!showCustomTokens) {
-      return tokens
+      return rearranged
     }
     const custom = customTokens.tokens.value
-    return custom.concat(tokens)
+    return custom.concat(rearranged)
   })
   const filteredSubset = $derived(
     getSubset(fullTokenSet, searchValue, showAllTokens, showAllChains),

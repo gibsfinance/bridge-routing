@@ -80,6 +80,7 @@
     <TokenAndNetworkSelector
       {chains}
       {tokens}
+      selectedToken={bridgeSettings.assetIn.value}
       chainId={Number(bridgeKey.fromChain)}
       onsubmit={(tkn, chainId) => {
         if (tkn) {

@@ -232,6 +232,7 @@
         <TokenSelect
           chains={[Number(Chains.ETH)]}
           selectedChain={Number(bridgeKey.fromChain)}
+          selectedToken={tokenInput}
           tokens={bridgableTokens.bridgeableTokensUnder({
             provider: Provider.PULSECHAIN,
             chain: Number(bridgeKey.fromChain),

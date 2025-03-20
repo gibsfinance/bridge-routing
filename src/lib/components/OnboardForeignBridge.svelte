@@ -30,6 +30,7 @@
   import GuideShield from './GuideShield.svelte'
 
   const toast = getContext('toast') as ToastContext
+
   let tokenInput: Token = $state({
     logoURI: `https://gib.show/image/1/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599`,
     name: 'Wrapped Bitcoin',
@@ -46,11 +47,6 @@
     chainId: 1,
     address: zeroAddress,
   })
-  // $inspect(tokenInput)
-  // $effect(() => {
-  //   console.log('setting assetIn', tokenOutput)
-  //   bridgeSettings.assetIn.value = tokenOutput
-  // })
   let amountInput = $state(0n)
   let maxBridgeable = $state(0n as bigint | null)
   $effect(() => {
@@ -313,6 +309,7 @@
       {#snippet modal({ close })}
         <TokenAndNetworkSelector
           chainId={Number(tokenInput.chainId)}
+          selectedToken={tokenInput}
           onsubmit={(token) => {
             if (token) {
               tokenInput = token
@@ -333,6 +330,7 @@
         <TokenSelect
           chains={[Number(Chains.ETH)]}
           selectedChain={Number(tokenOutput.chainId)}
+          selectedToken={tokenOutput}
           tokens={availableTokensPerOriginChain.get(1)!}
           onsubmit={(tkn) => {
             if (tkn) {
