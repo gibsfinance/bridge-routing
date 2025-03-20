@@ -84,7 +84,6 @@
     if (!bridgeSettings.assetIn.value) return
     return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
   })
-  // onDestroy(destroy)
   let onrampOpen = $state(false)
 </script>
 
@@ -123,7 +122,9 @@
             <ul class="flex flex-col gap-0">
               <li class="hover:bg-surface-900-100">
                 <a
-                  href="https://zkp2p.xyz/swap?toToken=ETH{accountState.address ? `&recipientAddress=${accountState.address}` : ''}"
+                  href="https://zkp2p.xyz/swap?toToken=ETH{accountState.address
+                    ? `&recipientAddress=${accountState.address}`
+                    : ''}"
                   target="_blank"
                   class="flex flex-row gap-4 items-center text-surface-contrast-50 px-4 py-1 justify-between w-full">
                   <span class="h-full leading-8">ZKP2P</span>

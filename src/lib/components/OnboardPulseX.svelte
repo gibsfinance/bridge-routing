@@ -170,6 +170,14 @@
         updates.tokenOut = firstNotMatching(updates.tokenIn)
       }
     }
+    console.log(
+      tokens,
+      {
+        tokenInAddress,
+        tokenOutAddress,
+      },
+      updates,
+    )
     plsxTokens.extend(updates)
   }
 </script>
@@ -219,14 +227,9 @@
           {tokens}
           onsubmit={(tkn) => {
             if (tkn) {
-              const key = assetOutKey({
-                bridgeKeyPath: bridgeKey.path,
-                assetInAddress: tokenIn?.address as Hex,
-                unwrap: false,
+              updatePulsexTokens({
+                tokenIn: tkn.address as Hex,
               })
-              if (key) {
-                bridgeSettings.setAssetOut(key, tkn as Token)
-              }
             }
             close()
           }} />
@@ -251,7 +254,6 @@
               // plsOutToken.value = tkn.address as Hex
               updatePulsexTokens({
                 tokenOut: tkn.address as Hex,
-                // tokenIn: tokenIn!.address as Hex,
               })
             }
             close()
