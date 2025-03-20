@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as transactions from '$lib/stores/transactions'
   import type { Token } from '$lib/types.svelte'
-  import { isHex, zeroAddress, type Hex } from 'viem'
+  import { zeroAddress, type Hex } from 'viem'
   import { Chains, idToChain, Provider } from '$lib/stores/auth/types'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
@@ -15,10 +15,6 @@
     assetLink,
     loadAssetLink,
     minAmount,
-    liveBridgeStatus,
-    bridgeStatuses,
-    type ContinuedLiveBridgeStatusParams,
-    latestBlock,
   } from '$lib/stores/chain-events.svelte'
   import {
     amountIn,
@@ -122,10 +118,6 @@
   $effect(() => {
     recipient.value = accountState.address ?? zeroAddress
   })
-  // let tx: Hex | null = $state(null)
-  // $effect(() => {
-  //   tx = bridgeTx.value.
-  // })
   const incrementApproval = transactionButtonPress({
     toast,
     steps: [
@@ -167,34 +159,6 @@
       bridgeSettings.approval.value < bridgeSettings.amountToBridge
     )
   })
-  // $inspect(
-  //   needsApproval,
-  //   assetLink.value?.originationChainId,
-  //   bridgeSettings.approval.value,
-  //   bridgeSettings.amountToBridge,
-  // )
-  // let usdMultiplier = $state(0n)
-  // const wplsTokenPrice = new SvelteMap<string, bigint>()
-  // const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
-  // const destinationBlock = $derived(latestBlock.block(Number(bridgeKey.toChain)))
-  // $effect(() => {
-  //   if (!destinationBlock) return
-  //   const watcher = watchWplsUSDPrice(destinationBlock)
-  //   watcher.promise.then((price) => {
-  //     if (watcher.controller.signal.aborted) return
-  //     usdMultiplier = price ?? 0n
-  //   })
-  //   return watcher.cleanup
-  // })
-  // const priceAsInt = $derived(wplsTokenPrice.get(key) ?? 0n)
-  // const usdValueInt = $derived(
-  //   priceAsInt && usdMultiplier ? ((priceAsInt ?? 0n) * oneEther) / usdMultiplier : 0n,
-  // )
-  // const usdValueTokenAmount = $derived(
-  //   !amountIn.value
-  //     ? 0n
-  //     : (usdValueInt * amountIn.value) / 10n ** BigInt(tokenInput?.decimals ?? 18),
-  // )
   let maxBridgeable = $state(0n as bigint | null)
   const disableBridgeButton = $derived(
     !maxBridgeable ||
@@ -203,10 +167,6 @@
       amountIn.value < minAmount.value ||
       amountIn.value > maxBridgeable,
   )
-  // $inspect(disableBridgeButton, maxBridgeable, amountIn.value, minAmount.value)
-  // const toggleEditTxHash = () => {
-  //   showTxInput = !showTxInput
-  // }
 </script>
 
 <InputOutputForm icon="line-md:chevron-double-down">
@@ -274,70 +234,6 @@
   {/snippet}
   {#snippet progress()}
     <BridgeProgress />
-    <!-- {#if showTxInput}
-      <div class="h-6 w-full relative">
-        <Button
-          onclick={hideTxHashInput}
-          class="text-sm text-contrast-500 text-right absolute top-0 leading-6 flex flex-col gap-1 items-center justify-center size-6 text-surface-contrast-50">
-          <Icon icon="flowbite:close-outline" class="size-4 flex [&>path]:stroke-2" />
-        </Button>
-        <Input
-          value={txHashValue}
-          oninput={(val) => {
-            updateTxHash(val)
-            if (isHex(val) && val.length === 66) {
-              showTxInput = false
-            }
-          }}
-          class="border pl-6 pr-2 py-1 rounded-full text-xs h-full text-ellipsis text-surface-contrast-50 text-right focus:ring-0 {isValidTxHash
-            ? 'border-success-500'
-            : 'border-error-200'}" />
-      </div>
-    {:else if bridgeStatus}
-      <div class="flex flex-row w-full relative grow">
-        <Progress
-          height="h-6"
-          meterBg="bg-success-500"
-          trackClasses="flex rounded-full overflow-hidden inset-shadow-sm border border-success-500"
-          value={percentProgress ?? 30}
-          max={100} />
-        <span
-          class="text-sm text-contrast-500 text-right absolute top-0 leading-6 -translate-x-full flex flex-row gap-1 items-center px-2"
-          style:left={`${percentProgress}%`}>
-          <ExplorerLink
-            path={`/tx/${bridgeStatus?.hash}`}
-            chain={Number(bridgeKey.fromChain)}
-            class="size-6 flex" />
-          <span>{bridgeStatus?.status}</span>
-          {#if bridgeStatus?.status === bridgeStatuses.AFFIRMED}
-            <ExplorerLink
-              path={`/tx/${bridgeStatus?.hash}`}
-              chain={Number(bridgeKey.toChain)}
-              class="size-6 flex" />
-          {:else}
-            <Tooltip
-              interactive={false}
-              triggerClasses="flex"
-              contentClasses="flex bg-tertiary-500 rounded-lg px-2 py-1"
-              openDelay={0}
-              closeDelay={0}
-              positioning={{ placement: 'top' }}>
-              {#snippet trigger()}
-                <Icon icon="mdi:clock" class="size-4 flex" />
-              {/snippet}
-              {#snippet content()}
-                <span>{bridgeStatusETATooltip}</span>
-              {/snippet}
-            </Tooltip>
-          {/if}
-        </span>
-        <Button
-          onclick={clearTxTracking}
-          class="text-sm text-contrast-500 text-right absolute top-0 leading-6 flex flex-row gap-1 items-center size-6 px-1 py-0.5">
-          <Icon icon="mdi:close" class="size-5 flex" />
-        </Button>
-      </div>
-    {/if} -->
   {/snippet}
 </InputOutputForm>
 
