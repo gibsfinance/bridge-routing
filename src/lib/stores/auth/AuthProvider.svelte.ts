@@ -91,15 +91,7 @@ export const modal = createAppKit({
   },
 })
 
-// try {
-//   // modal.disconnect()
-//   modal.resetAccount('eip155')
-// } catch {
-//   console.log('err at disconnect')
-// }
-
 export const connect = async () => {
-  // accountState.modalOpen = true
   await modal.open()
 
   const ethProvider = await EthereumProvider.init({
@@ -119,7 +111,6 @@ export const disconnect = async () => {
 }
 
 export const switchNetwork = async (chain: networks.AppKitNetwork | null | undefined) => {
-  // console.log('switchNetwork', chain)
   if (chain) {
     try {
       const connectors = getConnectors(wagmiAdapter.wagmiConfig)
