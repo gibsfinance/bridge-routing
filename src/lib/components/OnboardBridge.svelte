@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as transactions from '$lib/stores/transactions'
   import type { Token } from '$lib/types.svelte'
-  import { zeroAddress, type Hex } from 'viem'
+  import { maxUint256, zeroAddress, type Hex } from 'viem'
   import { Chains, idToChain, Provider } from '$lib/stores/auth/types'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
@@ -11,7 +11,7 @@
     oneEther,
     searchKnownAddresses,
   } from '$lib/stores/bridge-settings.svelte'
-  import { assetLink, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
+  import { assetLink, latestBlock, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
   import {
     amountIn,
     bridgableTokens,
@@ -112,45 +112,87 @@
   $effect(() => {
     recipient.value = accountState.address ?? zeroAddress
   })
-  const incrementApproval = transactionButtonPress({
-    toast,
-    steps: [
-      async () => {
-        if (!accountState.address) return
-        return await transactions.checkAndRaiseApproval({
-          token: tokenInput!.address! as Hex,
-          spender: bridgeSettings.bridgePathway!.from!,
-          chainId: Number(bridgeKey.fromChain),
-          minimum: bridgeAmount,
-        })
-      },
-    ],
-  })
-  const initiateBridge = transactionButtonPress({
-    toast,
-    steps: [
-      async () => {
-        const tx = await transactions.sendTransaction({
-          account: accountState.address,
-          chainId: Number(bridgeKey.fromChain),
-          ...bridgeSettings.transactionInputs,
-        })
-        bridgeTx.extend({
-          hash: tx,
-        })
-        return tx
-      },
-    ],
-  })
+  const incrementApproval = $derived(
+    transactionButtonPress({
+      toast,
+      chainId: Number(bridgeKey.fromChain),
+      steps: [
+        async () => {
+          if (!accountState.address) return
+          return await transactions.checkAndRaiseApproval({
+            token: tokenInput!.address! as Hex,
+            spender: bridgeSettings.bridgePathway!.from!,
+            chainId: Number(bridgeKey.fromChain),
+            minimum: bridgeAmount,
+          })
+        },
+      ],
+    }),
+  )
+  const initiateBridge = $derived(
+    transactionButtonPress({
+      toast,
+      chainId: Number(bridgeKey.fromChain),
+      steps: [
+        async () => {
+          const tx = await transactions.sendTransaction({
+            account: accountState.address,
+            chainId: Number(bridgeKey.fromChain),
+            ...bridgeSettings.transactionInputs,
+          })
+          bridgeTx.extend({
+            hash: tx,
+          })
+          return tx
+        },
+      ],
+    }),
+  )
   const bridgeTokens = () => {
     if (needsApproval) return incrementApproval()
     return initiateBridge()
   }
+  const originationTicker = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
+  $effect(() => {
+    const account = accountState.address
+    const token = bridgeSettings.assetIn.value?.address
+    const bridgePath = bridgeKey.pathway?.from
+    if (token === zeroAddress) {
+      bridgeSettings.approval.value = maxUint256
+      return
+    }
+    if (
+      !account ||
+      !bridgePath ||
+      !token ||
+      !bridgeKey.fromChain ||
+      !originationTicker ||
+      !assetLink.value ||
+      assetLink.value.assetInAddress !== token ||
+      Number(bridgeKey.fromChain) !== bridgeSettings.assetIn.value?.chainId
+    ) {
+      return
+    }
+    const result = transactions.loadAllowance({
+      account,
+      token: token as Hex,
+      spender: bridgePath,
+      chainId: Number(bridgeKey.fromChain),
+    })
+    result.promise.then((approval) => {
+      if (result.controller.signal.aborted) return
+      bridgeSettings.approval.value = approval ?? 0n
+    })
+    return result.cleanup
+  })
+  const approvalIsLoading = $derived(bridgeSettings.approval.value === null)
+  const approvalIsTooLow = $derived(
+    bridgeSettings.approval.value && bridgeSettings.approval.value < bridgeSettings.amountToBridge,
+  )
   const needsApproval = $derived.by(() => {
     return (
-      assetLink.value?.originationChainId === bridgeKey.fromChain ||
-      !bridgeSettings.approval.value ||
-      bridgeSettings.approval.value < bridgeSettings.amountToBridge
+      assetLink.value?.originationChainId === bridgeKey.fromChain &&
+      (approvalIsLoading || approvalIsTooLow)
     )
   })
   let maxBridgeable = $state(0n as bigint | null)
@@ -220,7 +262,7 @@
       requiredChain={tokenInput?.chainId ? idToChain.get(tokenInput!.chainId) : null}
       onclick={bridgeTokens}
       text={needsApproval ? 'Approve' : 'Bridge to PulseChain'}
-      loadingKey="lifi-quote" />
+      loadingKey="bridge-tokens" />
   {/snippet}
   {#snippet progress()}
     <BridgeProgress />

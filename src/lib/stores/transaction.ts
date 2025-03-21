@@ -12,10 +12,12 @@ export const transactionButtonPress =
   ({
     toast,
     steps,
+    chainId,
     after = noop,
   }: {
     toast: ToastContext
     steps: (() => Promise<Hex | undefined | null>)[]
+    chainId: number
     after?: () => void
   }) =>
   async () => {
@@ -31,13 +33,16 @@ export const transactionButtonPress =
           continue
         }
         const id = `tx-${txHash}`
+        console.log('txHash', txHash)
         toast.create({
           id,
           description: `Transaction submitted`,
           type: 'info',
           duration: 20_000,
         })
-        const receipt = await transactions.wait(txHash)
+        console.log('waiting for tx', txHash)
+        const receipt = await transactions.wait(txHash, chainId)
+        console.log('confirmed', txHash)
         toast.create({
           id,
           description: `Transaction confirmed`,

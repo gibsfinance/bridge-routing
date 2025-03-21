@@ -120,35 +120,41 @@
     })
   }
   let amountInBefore = ''
-  const sendIncreaseApproval = transactionButtonPress({
-    toast,
-    steps: [
-      async () => {
-        return transactions.checkAndRaiseApproval({
-          token: bridgeSettings.assetIn.value!.address as Hex,
-          spender: bridgeSettings.bridgePathway!.from!,
-          chainId: Number(input.bridgeKey.fromChain),
-          minimum: bridgeSettings.amountToBridge,
-        })
-      },
-    ],
-  })
+  const sendIncreaseApproval = $derived(
+    transactionButtonPress({
+      toast,
+      chainId: Number(input.bridgeKey.fromChain),
+      steps: [
+        async () => {
+          return transactions.checkAndRaiseApproval({
+            token: bridgeSettings.assetIn.value!.address as Hex,
+            spender: bridgeSettings.bridgePathway!.from!,
+            chainId: Number(input.bridgeKey.fromChain),
+            minimum: bridgeSettings.amountToBridge,
+          })
+        },
+      ],
+    }),
+  )
   const decimals = $derived(bridgeSettings.assetIn.value!.decimals)
-  const sendInitiateBridge = transactionButtonPress({
-    toast,
-    steps: [
-      () => {
-        amountInBefore = formatUnits(bridgeSettings.amountToBridge, decimals)
-        return initiateBridge()
+  const sendInitiateBridge = $derived(
+    transactionButtonPress({
+      toast,
+      chainId: Number(input.bridgeKey.fromChain),
+      steps: [
+        () => {
+          amountInBefore = formatUnits(bridgeSettings.amountToBridge, decimals)
+          return initiateBridge()
+        },
+      ],
+      after: () => {
+        const previousAmount = formatUnits(bridgeSettings.amountToBridge!, decimals)
+        if (amountInBefore === previousAmount) {
+          input.amountIn.value = null
+        }
       },
-    ],
-    after: () => {
-      const previousAmount = formatUnits(bridgeSettings.amountToBridge!, decimals)
-      if (amountInBefore === previousAmount) {
-        input.amountIn.value = null
-      }
-    },
-  })
+    }),
+  )
   // const testId = 'progression-button'
   const inputIsNative = $derived(bridgeSettings.assetIn.value?.address === zeroAddress)
   const isBridgeToken = $derived(assetLink.value?.originationChainId !== input.bridgeKey.fromChain)

@@ -123,9 +123,11 @@
       amountToSwapIn !== null &&
       (!allowance || allowance < amountToSwapIn),
   )
-  const askForAllowance = transactionButtonPress({
-    toast,
-    steps: [
+  const askForAllowance = $derived(
+    transactionButtonPress({
+      toast,
+      chainId: Number(Chains.PLS),
+      steps: [
       async () => {
         if (swapDisabled) return
         return await transactions.checkAndRaiseApproval({
@@ -135,12 +137,15 @@
           minimum: amountToSwapIn!,
         })
       },
-    ],
-  })
-  const swapOnPulseX = transactionButtonPress({
-    toast,
-    steps: [
-      async () => {
+      ],
+    }),
+  )
+  const swapOnPulseX = $derived(
+    transactionButtonPress({
+      toast,
+      chainId: Number(Chains.PLS),
+      steps: [
+        async () => {
         const transactionInfo = getTransactionDataFromTrade(Number(Chains.PLS), quoteResult!)
         const tx = await transactions.sendTransaction({
           data: transactionInfo.calldata as Hex,
@@ -151,8 +156,9 @@
         })
         return tx
       },
-    ],
-  })
+      ],
+    }),
+  )
   const swapTokens = $derived(needsAllowance ? askForAllowance : swapOnPulseX)
   const firstNotMatching = (address: Hex) => {
     return tokens.find((t) => getAddress(t.address) !== getAddress(address))?.address as Hex

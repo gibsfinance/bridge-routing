@@ -86,8 +86,9 @@ export const sendTransaction = async (opts: SendTransactionParameters) => {
   })
 }
 
-export const wait = async (tx: Hex) => {
+export const wait = async (tx: Hex, chainId: number) => {
   return await waitForTransactionReceipt(wagmiAdapter.wagmiConfig, {
     hash: tx,
+    chainId,
   })
 }

@@ -31,8 +31,8 @@
 
   const toast = getContext('toast') as ToastContext
 
-  let tokenInput: Token | null = $state(null)
-  let tokenOutput: Token | null = $state(null)
+  let tokenInput = $state<Token | null>(null)
+  let tokenOutput = $state<Token | null>(null)
   let amountInput = $state(0n)
   let maxBridgeable = $state(0n as bigint | null)
   const getAddr = (address: Hex | string | null | undefined) => {
@@ -220,6 +220,7 @@
       ? _.noop
       : transactionButtonPress({
           toast,
+          chainId: Number(tokenInput!.chainId),
           steps: [
             async () => {
               const token = tokenInput!
@@ -238,6 +239,7 @@
       ? _.noop
       : transactionButtonPress({
           toast,
+          chainId: Number(tokenInput!.chainId),
           steps: [
             async () => {
               const token = tokenInput!
@@ -380,7 +382,7 @@
       {requiredChain}
       onclick={crossForeignBridge}
       text={needsAllowance ? 'Approve' : 'Swap'}
-      loadingKey="lifi-quote" />
+      loadingKey="lifi-cross-chain-swap" />
   {/snippet}
 </InputOutputForm>
 
