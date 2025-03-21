@@ -53,22 +53,12 @@
   let amountToSwapIn = $state<bigint | null>(0n)
   let amountToSwapOut = $state<bigint | null>(null)
   let quoteResult = $state<SerializedTrade | null>(null)
+  const latestPulseBlock = $derived(latestBlock.block(Number(Chains.PLS)))
   $effect(() => {
-    if (
-      !tokenIn ||
-      !tokenOut ||
-      (!amountToSwapIn && !amountToSwapOut) ||
-      !latestBlock.block(Number(Chains.PLS))
-    ) {
+    if (!tokenIn || !tokenOut || (!amountToSwapIn && !amountToSwapOut) || !latestPulseBlock) {
       return
     }
-    console.log(
-      'getting quote',
-      tokenIn,
-      tokenOut,
-      amountToSwapIn,
-      latestBlock.block(Number(Chains.PLS)),
-    )
+    // console.log('getting quote', tokenIn, tokenOut, amountToSwapIn, latestPulseBlock)
     const quote = getPulseXQuote({
       tokenIn,
       tokenOut,
@@ -128,15 +118,15 @@
       toast,
       chainId: Number(Chains.PLS),
       steps: [
-      async () => {
-        if (swapDisabled) return
-        return await transactions.checkAndRaiseApproval({
-          token: tokenIn!.address! as Hex,
-          spender: swapRouterAddress,
-          chainId: Number(Chains.PLS),
-          minimum: amountToSwapIn!,
-        })
-      },
+        async () => {
+          if (swapDisabled) return
+          return await transactions.checkAndRaiseApproval({
+            token: tokenIn!.address! as Hex,
+            spender: swapRouterAddress,
+            chainId: Number(Chains.PLS),
+            minimum: amountToSwapIn!,
+          })
+        },
       ],
     }),
   )
@@ -146,16 +136,16 @@
       chainId: Number(Chains.PLS),
       steps: [
         async () => {
-        const transactionInfo = getTransactionDataFromTrade(Number(Chains.PLS), quoteResult!)
-        const tx = await transactions.sendTransaction({
-          data: transactionInfo.calldata as Hex,
-          to: swapRouterAddress,
-          gas: BigInt(quoteResult!.gasEstimate!),
-          value: BigInt(transactionInfo.value),
-          chainId: Number(Chains.PLS),
-        })
-        return tx
-      },
+          const transactionInfo = getTransactionDataFromTrade(Number(Chains.PLS), quoteResult!)
+          const tx = await transactions.sendTransaction({
+            data: transactionInfo.calldata as Hex,
+            to: swapRouterAddress,
+            gas: BigInt(quoteResult!.gasEstimate!),
+            value: BigInt(transactionInfo.value),
+            chainId: Number(Chains.PLS),
+          })
+          return tx
+        },
       ],
     }),
   )

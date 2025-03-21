@@ -84,6 +84,7 @@
     })
     return result.cleanup
   })
+  const fromChainLatestBlock = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
   const bridgeStatusETATooltip = $derived.by(() => {
     const slotCount = 32n
     const blockTime = 12n
@@ -91,7 +92,7 @@
       return 'This transaction is still being validated by the network.'
     } else if (bridgeStatus?.status === bridgeStatuses.MINED) {
       const currentlyFinalizedBlock = bridgeStatus?.finalizedBlock?.number
-      const currentBlock = untrack(() => latestBlock.block(Number(bridgeKey.fromChain))?.number)
+      const currentBlock = fromChainLatestBlock?.number
       let estimatedFutureFinalizedBlock = currentlyFinalizedBlock
       const minedBlock = bridgeStatus.receipt?.blockNumber
       if (

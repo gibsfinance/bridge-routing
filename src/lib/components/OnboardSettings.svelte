@@ -78,8 +78,6 @@
   $effect(() => {
     recipient.value = accountState.address ?? zeroAddress
   })
-  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.fromChain))))
-  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.toChain))))
   $effect(() => {
     if (!bridgeSettings.assetIn.value) return
     return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)

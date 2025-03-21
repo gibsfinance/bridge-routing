@@ -123,8 +123,8 @@
   })
   const fromChainId = $derived(Number(bridgeKey.fromChain))
   const toChainId = $derived(Number(bridgeKey.toChain))
-  $effect.pre(() => untrack(() => latestBlock.watch(fromChainId)))
-  $effect.pre(() => untrack(() => latestBlock.watch(toChainId)))
+  $effect.pre(() => latestBlock.watch(fromChainId))
+  $effect.pre(() => latestBlock.watch(toChainId))
   const originationTicker = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
   $effect(() => {
     const account = accountState.address

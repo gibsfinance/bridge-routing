@@ -41,7 +41,7 @@
   const showMax = $state(!!onmax)
   const chainId = $derived(token?.chainId ?? 0)
 
-  $effect.pre(() => (chainId ? untrack(() => latestBlock.watch(chainId)) : undefined))
+  $effect.pre(() => (chainId ? latestBlock.watch(chainId) : undefined))
   const block = $derived(latestBlock.block(chainId))
   $effect.pre(() => {
     return tokenBalance.fetch({

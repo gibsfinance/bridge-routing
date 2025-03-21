@@ -17,10 +17,10 @@
   })
   const wplsTokenPrice = new SvelteMap<string, bigint | null>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
-  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.fromChain))))
-  $effect(() => untrack(() => latestBlock.watch(Number(bridgeKey.toChain))))
+  $effect.pre(() => latestBlock.watch(Number(bridgeKey.fromChain)))
+  $effect.pre(() => latestBlock.watch(Number(bridgeKey.toChain)))
+  const block = $derived(latestBlock.block(Number(bridgeKey.toChain)))
   $effect(() => {
-    const block = latestBlock.block(Number(bridgeKey.toChain))
     if (!bridgedToken || !block) return
     const price = loadPrice(bridgedToken, block)
     price.promise

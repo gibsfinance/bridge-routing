@@ -159,16 +159,16 @@
     })
   })
   let latestQuote: RelayerQuoteResponseData['quote'] | null = $state(null)
+  const outLatestBlock = $derived(!tokenOutput ? null : latestBlock.block(tokenOutput!.chainId))
   $effect(() => {
     const tokenOut = tokenOutput
     if (!tokenOut) return
-    const latestBlockNumber = untrack(() => latestBlock.block(tokenOut.chainId))
-    if (!quoteInputs || !latestBlockNumber || !latestBlockNumber.number) {
+    if (!quoteInputs || !outLatestBlock || !outLatestBlock.number) {
       return
     }
     const quote = getQuoteStep({
       ...quoteInputs,
-      blockNumber: latestBlockNumber.number,
+      blockNumber: outLatestBlock.number,
     })
     quote.promise.then((q) => {
       if (quote.controller.signal.aborted) return
