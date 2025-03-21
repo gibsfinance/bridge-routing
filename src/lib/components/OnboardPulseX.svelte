@@ -5,7 +5,7 @@
   import type { SerializedTrade } from '$lib/stores/pulsex/transformers'
   import { Chains, Provider } from '$lib/stores/auth/types'
   import { formatUnits, getAddress, zeroAddress, type Hex } from 'viem'
-  import { latestBlock } from '$lib/stores/chain-events.svelte'
+  import { blocks } from '$lib/stores/chain-events.svelte'
   import { plsxTokens, showTooltips, type PulsexTokens } from '$lib/stores/storage.svelte'
   import TokenSelect from './TokenSelect.svelte'
   import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
@@ -53,12 +53,11 @@
   let amountToSwapIn = $state<bigint | null>(0n)
   let amountToSwapOut = $state<bigint | null>(null)
   let quoteResult = $state<SerializedTrade | null>(null)
-  const latestPulseBlock = $derived(latestBlock.block(Number(Chains.PLS)))
+  const latestPulseBlock = $derived(blocks.get(Number(Chains.PLS)))
   $effect(() => {
     if (!tokenIn || !tokenOut || (!amountToSwapIn && !amountToSwapOut) || !latestPulseBlock) {
       return
     }
-    // console.log('getting quote', tokenIn, tokenOut, amountToSwapIn, latestPulseBlock)
     const quote = getPulseXQuote({
       tokenIn,
       tokenOut,
@@ -68,7 +67,6 @@
     quote.promise.then((result) => {
       if (quote.controller.signal.aborted || !result) return
       quoteResult = result
-      // console.log(result)
       amountToSwapOut = truncateValue(result.outputAmount.value, tokenOut.decimals)
     })
     return quote.cleanup

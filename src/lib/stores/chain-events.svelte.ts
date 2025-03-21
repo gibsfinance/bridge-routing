@@ -11,6 +11,7 @@ import {
   parseAbi,
   getAddress,
   type TransactionReceipt,
+  type BlockTag,
 } from 'viem'
 import { loading, resolved, type Cleanup } from './loading.svelte'
 import { NullableProxyStore, type Token } from '$lib/types.svelte'
@@ -60,54 +61,55 @@ export const unwatchFinalizedBlocks = (cleanups: Cleanup[]) => {
   cleanups.forEach((cleanup) => cleanup())
 }
 
-export class ChainsState {
-  private blocks = new SvelteMap<number, Block | null>()
-  private chainCounts = new Map<number, number>()
-  block(chain: number) {
-    return this.blocks.get(chain)
+const chainCounts = new Map<number, number>()
+const watchers = new Map<number, Cleanup>()
+export const blocks = new SvelteMap<number, Block | null>()
+export const latestBaseFeePerGas = (chain: number) => {
+  return blocks.get(chain)?.baseFeePerGas ?? 3_000_000_000n
+}
+export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
+  if (!untrack(() => blocks.has(chain))) {
+    // signals a "pending" state
+    untrack(() => blocks.set(chain, null))
   }
-  latestBaseFeePerGas(chain: number) {
-    const perGas = this.block(chain)?.baseFeePerGas
-    if (!perGas) {
-      // on bsc the numbers are fairly fixed
-      return 3_000_000_000n
-    } else {
-      return perGas
-    }
-  }
-  increment(chain: number) {
-    untrack(() => this.chainCounts.set(chain, (this.chainCounts.get(chain) ?? 0) + 1))
-  }
-  decrement(chain: number) {
-    untrack(() => this.chainCounts.set(chain, (this.chainCounts.get(chain) ?? 0) - 1))
-  }
-  watch(chain: number) {
-    if (!this.blocks.has(chain)) {
-      // signals a "pending" state
-      this.blocks.set(chain, null)
-    }
-    this.increment(chain)
+  const current = chainCounts.get(chain) ?? 0
+  let decrement: Cleanup = () => {}
+  if (current === 0) {
+    // console.log('gas increment', chain)
     untrack(() => loading.increment('gas'))
-    const decrement = _.once(() => {
+    decrement = _.once(() => {
+      // console.log('gas decrement', chain)
       untrack(() => loading.decrement('gas'))
     })
-    const cleanup = input.clientFromChain(chain).watchBlocks({
-      emitOnBegin: true,
-      emitMissed: true,
-      onBlock: (block) => {
-        decrement()
-        untrack(() => this.blocks.set(chain, block))
-      },
-    })
-    return () => {
-      decrement()
-      this.decrement(chain)
-      cleanup()
+    watchers.set(
+      chain,
+      input.clientFromChain(chain).watchBlocks({
+        emitOnBegin: true,
+        emitMissed: true,
+        blockTag,
+        onBlock: (block) => {
+          decrement()
+          untrack(() => blocks.set(chain, block))
+        },
+      }),
+    )
+  }
+  chainCounts.set(chain, current + 1)
+  return () => {
+    decrement()
+    const current = chainCounts.get(chain) ?? 0
+    const next = current - 1
+    chainCounts.set(chain, next)
+    if (next === 0) {
+      const watcher = watchers.get(chain)
+      watcher?.()
+      watchers.delete(chain)
     }
   }
 }
 
-export const latestBlock = new ChainsState()
+export const latestBlock = blockWatcher('latest')
+export const finalizedBlock = blockWatcher('finalized')
 
 export const getTokenBalance = (
   chainId: number,

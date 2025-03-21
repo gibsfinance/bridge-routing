@@ -851,7 +851,6 @@ export const loadPriceCorrective = ({
     'gas',
     async () => {
       // fetch the token bridge info for the token that is about to be spent by the delivery service
-      // console.log('partner', partner)
       return await chainEvents.tokenBridgeInfo(partner, {
         ...assetOut,
         address: measurementToken,

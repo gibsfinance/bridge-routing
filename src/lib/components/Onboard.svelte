@@ -2,13 +2,12 @@
   import type { Token } from '$lib/types.svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
-  import { loadPrice, priceInt, latestBlock } from '$lib/stores/chain-events.svelte'
+  import { loadPrice, priceInt, latestBlock, blocks } from '$lib/stores/chain-events.svelte'
   import { bridgeKey } from '$lib/stores/input.svelte'
   import { SvelteMap } from 'svelte/reactivity'
   import OnboardBridge from './OnboardBridge.svelte'
   import OnboardPulseX from './OnboardPulseX.svelte'
   import OnboardForeignBridge from './OnboardForeignBridge.svelte'
-  import { untrack } from 'svelte'
   import { activeOnboardStep } from '$lib/stores/storage.svelte'
 
   const bridgedToken = $derived(bridgeSettings.assetOut as Token | null)
@@ -17,9 +16,9 @@
   })
   const wplsTokenPrice = new SvelteMap<string, bigint | null>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
-  $effect.pre(() => latestBlock.watch(Number(bridgeKey.fromChain)))
-  $effect.pre(() => latestBlock.watch(Number(bridgeKey.toChain)))
-  const block = $derived(latestBlock.block(Number(bridgeKey.toChain)))
+  $effect(() => latestBlock(Number(bridgeKey.fromChain)))
+  $effect(() => latestBlock(Number(bridgeKey.toChain)))
+  const block = $derived(blocks.get(Number(bridgeKey.toChain)))
   $effect(() => {
     if (!bridgedToken || !block) return
     const price = loadPrice(bridgedToken, block)

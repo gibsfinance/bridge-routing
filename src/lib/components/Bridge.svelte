@@ -22,6 +22,7 @@
     loadAssetLink,
     assetLink,
     watchFinalizedBlocksForOneChain,
+    blocks,
   } from '$lib/stores/chain-events.svelte'
   import { getAddress, zeroAddress, type Hex } from 'viem'
   import { untrack } from 'svelte'
@@ -105,7 +106,7 @@
     })
     return updatingAssetOut.cleanup
   })
-  const ticker = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
+  const ticker = $derived(blocks.get(Number(bridgeKey.fromChain)))
   $effect(() => {
     if (!ticker || !bridgeSettings.assetOut) return
     const priceCorrective = loadPriceCorrective({
@@ -123,9 +124,9 @@
   })
   const fromChainId = $derived(Number(bridgeKey.fromChain))
   const toChainId = $derived(Number(bridgeKey.toChain))
-  $effect.pre(() => latestBlock.watch(fromChainId))
-  $effect.pre(() => latestBlock.watch(toChainId))
-  const originationTicker = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
+  $effect(() => latestBlock(fromChainId))
+  $effect(() => latestBlock(toChainId))
+  const originationTicker = $derived(blocks.get(Number(bridgeKey.fromChain))?.number)
   $effect(() => {
     const account = accountState.address
     const token = bridgeSettings.assetIn.value?.address

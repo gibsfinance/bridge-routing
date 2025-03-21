@@ -6,11 +6,11 @@
     latestBlock,
     tokenBalanceLoadingKey,
     TokenBalanceWatcher,
+    blocks,
   } from '$lib/stores/chain-events.svelte'
   import classNames from 'classnames'
   import Loading from './Loading.svelte'
   import { oneEther } from '$lib/stores/bridge-settings.svelte'
-  import { untrack } from 'svelte'
   import type { Hex } from 'viem'
 
   type Props = {
@@ -41,8 +41,8 @@
   const showMax = $state(!!onmax)
   const chainId = $derived(token?.chainId ?? 0)
 
-  $effect.pre(() => (chainId ? latestBlock.watch(chainId) : undefined))
-  const block = $derived(latestBlock.block(chainId))
+  $effect(() => latestBlock(chainId))
+  const block = $derived(blocks.get(chainId))
   $effect.pre(() => {
     return tokenBalance.fetch({
       chainId,
