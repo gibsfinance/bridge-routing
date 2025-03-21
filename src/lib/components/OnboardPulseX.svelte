@@ -93,7 +93,7 @@
   const swapDisabled = $derived(!amountToSwapIn || !amountToSwapOut || !quoteMatchesLatest)
   let allowance = $state<bigint | null>(null)
   $effect.pre(() => {
-    if (!tokenIn || !accountState.address) return
+    if (!tokenIn || !accountState.address || !latestPulseBlock) return
     const result = transactions.loadAllowance({
       account: accountState.address,
       token: tokenIn.address as Hex,
