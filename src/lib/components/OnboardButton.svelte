@@ -52,15 +52,17 @@
     }
     return textMain
   })
-  const onclick = loading.loadsAfterTick(loadingKey, () => {
-    if (!accountState.connected) {
-      return connect()
-    }
-    if (!isRequiredChain) {
-      return switchNetwork(requiredChain as AppKitNetwork)
-    }
-    return onClickMain()
-  })
+  const onclick = $derived(
+    loading.loadsAfterTick(loadingKey, () => {
+      if (!accountState.connected) {
+        return connect()
+      }
+      if (!isRequiredChain) {
+        return switchNetwork(requiredChain as AppKitNetwork)
+      }
+      return onClickMain()
+    }),
+  )
 </script>
 
 <div class="flex flex-row rounded-2xl overflow-hidden">

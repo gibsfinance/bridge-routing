@@ -32,6 +32,12 @@ export const foreignBridgeInputs = new LocalProxyProp(
   null as ForeignBridgeInputs | null,
 )
 
+if (foreignBridgeInputs.value && foreignBridgeInputs.value.fromAmount > 0n) {
+  foreignBridgeInputs.extend({
+    fromAmount: 0n,
+  })
+}
+
 export const activeOnboardStep = new LocalProxyProp(storage, ['activeOnboardStep'], 1)
 
 export type PulsexTokens = {

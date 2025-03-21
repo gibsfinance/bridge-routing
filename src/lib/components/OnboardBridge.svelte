@@ -20,7 +20,7 @@
     bridgeKey,
   } from '$lib/stores/input.svelte'
   import { settings as bridgeAdminSettings, settingKey } from '$lib/stores/fee-manager.svelte'
-  import { bridgeTx, foreignBridgeInputs, showTooltips } from '$lib/stores/storage.svelte'
+  import { bridgeTx, showTooltips } from '$lib/stores/storage.svelte'
   import InputOutputForm from './InputOutputForm.svelte'
   import SectionInput from './SectionInput.svelte'
   import TokenSelect from './TokenSelect.svelte'
@@ -195,10 +195,6 @@
           onsubmit={(tkn) => {
             if (tkn) {
               bridgeSettings.assetIn.value = tkn as Token
-              foreignBridgeInputs.value = {
-                ...foreignBridgeInputs.value!,
-                toToken: tkn.address,
-              }
             }
             close()
           }} />

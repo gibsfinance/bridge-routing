@@ -31,24 +31,26 @@
 
   const toast = getContext('toast') as ToastContext
 
-  let tokenInput: Token = $state({
-    logoURI: `https://gib.show/image/1/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599`,
-    name: 'Wrapped Bitcoin',
-    symbol: 'WBTC',
-    decimals: 8,
-    chainId: 1,
-    address: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599' as string,
-  })
-  let tokenOutput: Token = $state({
-    logoURI: `https://gib.show/image/1/${zeroAddress}`,
-    name: 'Ether',
-    symbol: 'ETH',
-    decimals: 18,
-    chainId: 1,
-    address: zeroAddress,
-  })
+  let tokenInput: Token | null = $state(null)
+  let tokenOutput: Token | null = $state(null)
   let amountInput = $state(0n)
   let maxBridgeable = $state(0n as bigint | null)
+  const getAddr = (address: Hex | string | null | undefined) => {
+    return address ? address.toLowerCase() : null
+  }
+  $effect(() => {
+    if (
+      everLoaded &&
+      tokenInput &&
+      (tokenInput?.chainId !== foreignBridgeInputs.value?.fromChain ||
+        getAddr(tokenInput?.address) !== getAddr(foreignBridgeInputs.value?.fromToken))
+    ) {
+      foreignBridgeInputs.extend({
+        fromChain: tokenInput.chainId,
+        fromToken: tokenInput.address,
+      })
+    }
+  })
   $effect(() => {
     if (maxBridgeable && amountInput > maxBridgeable) {
       amountInput = maxBridgeable
@@ -57,29 +59,49 @@
 
   let everLoaded = $state(false)
   $effect(() => {
+    let cancelled = false
     if (everLoaded) return
     loadData().then(async () => {
+      if (cancelled) return
       const previousSettings = untrack(() => foreignBridgeInputs.value)
-      const loadedFromChain = untrack(
-        () => availableChains.get(previousSettings?.fromChain ?? 137)!,
-      )
-      await loadTokensForChains(loadedFromChain)
+      const loadedFromChain = untrack(() => availableChains.get(previousSettings?.fromChain ?? 1)!)
+      await Promise.all([
+        loadTokensForChains(loadedFromChain),
+        loadTokensForChains(availableChains.get(1)!),
+      ])
       amountInput = previousSettings?.fromAmount ? BigInt(previousSettings.fromAmount) : 0n
       const tokensDestination = untrack(() => availableTokensPerOriginChain.get(1)!)
-      const tokenDestination = previousSettings?.toToken
-        ? tokensDestination.find(
+      const tokensOrigin = untrack(
+        () => availableTokensPerOriginChain.get(previousSettings?.fromChain ?? 1)!,
+      )
+      const tokenOrigin = !previousSettings?.fromToken
+        ? tokensOrigin[0]
+        : tokensOrigin.find(
+            (tkn) => getAddress(tkn.address) === getAddress(previousSettings.fromToken),
+          )
+      if (tokenOrigin) {
+        tokenInput = tokenOrigin
+      }
+      const tokenDestination = !previousSettings?.toToken
+        ? tokensDestination[0]
+        : tokensDestination.find(
             (tkn) => getAddress(tkn.address) === getAddress(previousSettings.toToken),
           )
-        : tokensDestination[0]
       if (tokenDestination) {
         tokenOutput = tokenDestination
       }
       everLoaded = true
     })
+    return () => {
+      cancelled = true
+    }
   })
   const quoteInputs = $derived.by(() => {
-    const fromChain = availableChains.get(tokenInput.chainId)
-    const toChain = availableChains.get(tokenOutput.chainId)
+    const tokenIn = tokenInput
+    const tokenOut = tokenOutput
+    if (!tokenIn || !tokenOut) return null
+    const fromChain = availableChains.get(tokenIn.chainId)
+    const toChain = availableChains.get(tokenOut.chainId)
     if (!fromChain || !toChain) {
       // console.log('no from or to chain', fromChain, toChain)
       return null
@@ -95,10 +117,10 @@
       return null
     }
     const fromToken = originTokens.find(
-      (t) => getAddress(t.address) === getAddress(tokenInput.address),
+      (t) => getAddress(t.address) === getAddress(tokenIn.address),
     )
     const toToken = destinationChain.find(
-      (t) => getAddress(t.address) === getAddress(tokenOutput.address),
+      (t) => getAddress(t.address) === getAddress(tokenOut.address),
     )
     const fromAddress = accountState.address ?? '0x0000000000000000000000000000000000000001'
     let toAddress = fromAddress
@@ -125,7 +147,7 @@
   })
   $effect(() => {
     // storage
-    if (!everLoaded) return
+    if (!everLoaded || !tokenInput || !tokenOutput) return
     const update = {
       fromChain: tokenInput.chainId,
       fromToken: tokenInput.address,
@@ -138,7 +160,9 @@
   })
   let latestQuote: RelayerQuoteResponseData['quote'] | null = $state(null)
   $effect(() => {
-    const latestBlockNumber = untrack(() => latestBlock.block(tokenOutput.chainId))
+    const tokenOut = tokenOutput
+    if (!tokenOut) return
+    const latestBlockNumber = untrack(() => latestBlock.block(tokenOut.chainId))
     if (!quoteInputs || !latestBlockNumber || !latestBlockNumber.number) {
       return
     }
@@ -179,45 +203,58 @@
     return latestQuote.estimate.toAmount ? BigInt(latestQuote.estimate.toAmount) : null
   })
   const estimatedAmount = $derived.by(() => {
-    if (!quoteMatchesLatest) return ''
+    if (!quoteMatchesLatest || !tokenOutput) return ''
     const formatted = formatUnits(BigInt(latestQuote!.estimate.toAmount), tokenOutput.decimals)
     const [i, d] = formatted.split('.')
     return `${i}.${d.slice(0, 9)}`
   })
-  const tokenOutWithPrefixedName = $derived.by(() => ({
-    ...tokenOutput,
-    name: estimatedAmount ? `${estimatedAmount} ${tokenOutput.symbol}` : tokenOutput.symbol,
-  }))
-  const getForeignBridgeApproval = transactionButtonPress({
-    toast,
-    steps: [
-      async () => {
-        return await transactions.checkAndRaiseApproval({
-          token: tokenInput!.address! as Hex,
-          spender: latestQuote!.transactionRequest!.to as Hex,
-          chainId: Number(tokenInput.chainId),
-          minimum: amountInput,
-        })
-      },
-    ],
+  const tokenOutWithPrefixedName = $derived.by(() => {
+    if (!tokenOutput) return null
+    return {
+      ...tokenOutput,
+      name: estimatedAmount ? `${estimatedAmount} ${tokenOutput.symbol}` : tokenOutput.symbol,
+    }
   })
-  const sendForeignBridgeCrossTransaction = transactionButtonPress({
-    toast,
-    steps: [
-      async () => {
-        const tx = await transactions.sendTransaction({
-          chainId: Number(tokenInput.chainId),
-          account: accountState.address,
-          data: latestQuote!.transactionRequest!.data as Hex,
-          gas: BigInt(latestQuote!.transactionRequest!.gasLimit ?? 0),
-          gasPrice: BigInt(latestQuote!.transactionRequest!.gasPrice ?? 0),
-          to: latestQuote!.transactionRequest!.to as Hex,
-          value: BigInt(latestQuote!.transactionRequest!.value ?? 0),
-        })
-        return tx
-      },
-    ],
-  })
+  const getForeignBridgeApproval = $derived(
+    !tokenInput
+      ? _.noop
+      : transactionButtonPress({
+          toast,
+          steps: [
+            async () => {
+              const token = tokenInput!
+              return await transactions.checkAndRaiseApproval({
+                token: token.address! as Hex,
+                spender: latestQuote!.transactionRequest!.to as Hex,
+                chainId: Number(token.chainId),
+                minimum: amountInput,
+              })
+            },
+          ],
+        }),
+  )
+  const sendForeignBridgeCrossTransaction = $derived(
+    !tokenInput
+      ? _.noop
+      : transactionButtonPress({
+          toast,
+          steps: [
+            async () => {
+              const token = tokenInput!
+              const tx = await transactions.sendTransaction({
+                chainId: Number(token.chainId),
+                account: accountState.address,
+                data: latestQuote!.transactionRequest!.data as Hex,
+                gas: BigInt(latestQuote!.transactionRequest!.gasLimit ?? 0),
+                gasPrice: BigInt(latestQuote!.transactionRequest!.gasPrice ?? 0),
+                to: latestQuote!.transactionRequest!.to as Hex,
+                value: BigInt(latestQuote!.transactionRequest!.value ?? 0),
+              })
+              return tx
+            },
+          ],
+        }),
+  )
   const needsAllowance = $derived.by(() => {
     const pushValue = latestQuote?.transactionRequest?.value
     if (pushValue && BigInt(pushValue) > 0n) {
@@ -227,15 +264,17 @@
   })
   let allowance = $state(null as bigint | null)
   $effect(() => {
+    const token = tokenInput
+    if (!token) return
     const spender = latestQuote?.transactionRequest?.to
-    const token = tokenInput?.address
+    const tokenAddress = token.address
     const account = accountState.address
-    const chainId = tokenInput.chainId
-    if (!token || !needsAllowance || !account || !spender || !chainId) {
+    const chainId = token.chainId
+    if (!tokenAddress || !needsAllowance || !account || !spender || !chainId) {
       return
     }
     const result = transactions.loadAllowance({
-      token: token as Hex,
+      token: tokenAddress as Hex,
       spender: spender as Hex,
       chainId: Number(chainId),
       account,
@@ -265,13 +304,15 @@
   })
   $inspect(needsAllowance, canBridge)
   const requiredChain = $derived.by(() => {
-    return availableChains.get(tokenInput.chainId)! as LIFIChain
+    const token = tokenInput
+    if (!token) return null
+    return availableChains.get(token.chainId)! as LIFIChain
   })
 </script>
 
 <InputOutputForm
   icon="material-symbols:captive-portal"
-  ondividerclick={tokenInput.chainId === tokenOutput.chainId
+  ondividerclick={tokenInput && tokenOutput && tokenInput.chainId === tokenOutput.chainId
     ? () => {
         const futureInput = tokenOutput
         tokenOutput = tokenInput
@@ -300,7 +341,7 @@
       {/snippet}
       {#snippet modal({ close })}
         <TokenAndNetworkSelector
-          chainId={Number(tokenInput.chainId)}
+          chainId={Number(tokenInput?.chainId ?? 1)}
           selectedToken={tokenInput}
           onsubmit={(token) => {
             if (token) {
@@ -321,7 +362,7 @@
       {#snippet modal({ close })}
         <TokenSelect
           chains={[Number(Chains.ETH)]}
-          selectedChain={Number(tokenOutput.chainId)}
+          selectedChain={Number(tokenOutput?.chainId ?? 1)}
           selectedToken={tokenOutput}
           tokens={availableTokensPerOriginChain.get(1)!}
           onsubmit={(tkn) => {
