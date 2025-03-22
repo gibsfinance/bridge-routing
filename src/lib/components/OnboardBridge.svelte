@@ -11,7 +11,7 @@
     oneEther,
     searchKnownAddresses,
   } from '$lib/stores/bridge-settings.svelte'
-  import { assetLink, latestBlock, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
+  import { assetLink, blocks, latestBlock, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
   import {
     amountIn,
     bridgableTokens,
@@ -152,7 +152,7 @@
     if (needsApproval) return incrementApproval()
     return initiateBridge()
   }
-  const originationTicker = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
+  const originationTicker = $derived(blocks.get(Number(bridgeKey.fromChain)))
   $effect(() => {
     const account = accountState.address
     const token = bridgeSettings.assetIn.value?.address

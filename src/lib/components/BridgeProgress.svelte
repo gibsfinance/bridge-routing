@@ -12,15 +12,15 @@
     bridgeStatuses,
     type ContinuedLiveBridgeStatusParams,
     latestBlock,
+    blocks,
   } from '$lib/stores/chain-events.svelte'
   import { bridgeKey } from '$lib/stores/input.svelte'
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { Tooltip } from '@skeletonlabs/skeleton-svelte'
   import { untrack } from 'svelte'
-  import Loading from './Loading.svelte'
   import Loader from './Loader.svelte'
 
-  const destinationBlock = $derived(latestBlock.block(Number(bridgeKey.toChain)))
+  const destinationBlock = $derived(blocks.get(Number(bridgeKey.toChain)))
   let txInputValue = $state<Hex | null>(null)
   $effect(() => {
     if (bridgeTx.value?.hash) {
@@ -59,7 +59,7 @@
     }
     bridgeStatus = null
   }
-  const latestBlockObject = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
+  const latestBlockObject = $derived(blocks.get(Number(bridgeKey.fromChain)))
   const gasIsHigh = $derived(
     !!latestBlockObject && latestBlockObject.baseFeePerGas! > 20_000_000n * 10n ** 9n,
   )
@@ -84,7 +84,7 @@
     })
     return result.cleanup
   })
-  const fromChainLatestBlock = $derived(latestBlock.block(Number(bridgeKey.fromChain)))
+  const fromChainLatestBlock = $derived(blocks.get(Number(bridgeKey.fromChain)))
   const bridgeStatusETATooltip = $derived.by(() => {
     const slotCount = 32n
     const blockTime = 12n

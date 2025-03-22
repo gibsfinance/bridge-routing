@@ -16,7 +16,7 @@
   import _ from 'lodash'
   import { foreignBridgeInputs, showTooltips } from '$lib/stores/storage.svelte'
   import { untrack } from 'svelte'
-  import { latestBlock } from '$lib/stores/chain-events.svelte'
+  import { blocks, latestBlock } from '$lib/stores/chain-events.svelte'
   import SectionInput from './SectionInput.svelte'
   import TokenSelect from './TokenSelect.svelte'
   import { Chains } from '$lib/stores/auth/types'
@@ -159,7 +159,7 @@
     })
   })
   let latestQuote: RelayerQuoteResponseData['quote'] | null = $state(null)
-  const outLatestBlock = $derived(!tokenOutput ? null : latestBlock.block(tokenOutput!.chainId))
+  const outLatestBlock = $derived(!tokenOutput ? null : blocks.get(tokenOutput!.chainId))
   $effect(() => {
     const tokenOut = tokenOutput
     if (!tokenOut) return
