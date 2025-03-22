@@ -80,8 +80,11 @@
     {disabled}
     class="bg-tertiary-500 text-surface-contrast-950 h-14 grow text-xl flex flex-row items-center justify-center shrink-0 gap-2"
     {onclick}>
+    <div class="size-6"></div>
     {text}
-    <Loading key={loadingKey} />
+    <div class="size-6">
+      <Loading key={loadingKey} class="size-6" />
+    </div>
   </Button>
   <Button
     class="w-14 bg-tertiary-500 text-surface-contrast-950 group flex items-center justify-center"
