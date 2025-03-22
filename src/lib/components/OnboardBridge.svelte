@@ -11,7 +11,7 @@
     oneEther,
     searchKnownAddresses,
   } from '$lib/stores/bridge-settings.svelte'
-  import { assetLink, blocks, latestBlock, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
+  import { assetLink, blocks, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
   import {
     amountIn,
     bridgableTokens,
