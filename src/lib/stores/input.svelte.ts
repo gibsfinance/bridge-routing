@@ -392,6 +392,10 @@ export const defaultBatchConfig = {
 const chainList = [...Object.values(networks)]
 
 const searchChainsForRpcUrls = (chainId: number) => {
+  if (!chainId) {
+    console.log(chainId)
+    throw new Error('chainId is required')
+  }
   const chain = chainList.find((c) => c.id === chainId)!
   const { http, webSocket = [] } = chain.rpcUrls.default as unknown as {
     http?: string[]
