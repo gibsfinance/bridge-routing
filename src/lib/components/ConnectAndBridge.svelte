@@ -9,15 +9,37 @@
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { formatUnits, type Hex, zeroAddress } from 'viem'
   import * as input from '$lib/stores/input.svelte'
-  import { assetLink, blocks, fromTokenBalance } from '$lib/stores/chain-events.svelte'
+  import {
+    assetLink,
+    blocks,
+    fromTokenBalance,
+    minBridgeAmountIn,
+    minBridgeAmountInKey,
+  } from '$lib/stores/chain-events.svelte'
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { connect } from '$lib/stores/auth/AuthProvider.svelte'
-  import { getContext } from 'svelte'
+  import { getContext, tick } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
   import Button from './Button.svelte'
 
-  const toast = getContext('toast') as ToastContext
+  // const toast = getContext('toast') as ToastContext
 
+  // import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
+  // import { getContext, tick } from 'svelte'
+
+  const toast: ToastContext = getContext('toast')
+  $effect(() => {
+    setTimeout(() => {
+      tick().then(() => {
+        console.log('toast', toast)
+        toast.create({
+          title: 'Hello',
+          description: 'World',
+          type: 'info',
+        })
+      })
+    }, 2_000)
+  })
   const { shouldDeliver } = input
 
   const tokenBalance = $derived(fromTokenBalance.value ?? 0n)
@@ -113,9 +135,11 @@
     if (!assetLink || !bridgeSettings.assetIn.value || !bridgeSettings.transactionInputs) {
       return
     }
+    const chainId = Number(input.bridgeKey.fromChain)
+    const latestBlock = blocks.get(chainId)!
     return await transactions.sendTransaction({
       ...bridgeSettings.transactionInputs,
-      ...transactions.options(chainsMetadata[input.bridgeKey.fromChain].id, blocks.get(Number(input.bridgeKey.fromChain))!),
+      ...transactions.options(chainId, latestBlock),
     })
   }
   let amountInBefore = ''
@@ -169,12 +193,23 @@
   const skipApproval = $derived.by(() => {
     return isBridgeToken || hasSufficientApproval || inputIsNative
   })
+  const minAmount = $derived(
+    minBridgeAmountIn.get(
+      minBridgeAmountInKey(input.bridgeKey.value, bridgeSettings.assetIn.value),
+    ),
+  )
   const disabled = $derived.by(() => {
     if (!accountState?.address) {
       return false
     }
     if (!isRequiredChain) {
       return false
+    }
+    if (minAmount && input.amountIn.value && input.amountIn.value < minAmount) {
+      return true
+    }
+    if (input.recipient.value === zeroAddress) {
+      return true
     }
     if (!skipApproval) {
       return hasSufficientApproval

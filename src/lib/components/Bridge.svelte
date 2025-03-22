@@ -17,12 +17,14 @@
   import { bridgeKey, loadFeeFor, unwrap, isUnwrappable } from '$lib/stores/input.svelte'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import {
-    minAmount,
     latestBlock,
     loadAssetLink,
     assetLink,
     watchFinalizedBlocksForOneChain,
     blocks,
+    fetchMinBridgeAmountIn,
+    minBridgeAmountIn,
+    minBridgeAmountInKey,
   } from '$lib/stores/chain-events.svelte'
   import { getAddress, zeroAddress, type Hex } from 'viem'
   import { untrack } from 'svelte'
@@ -45,7 +47,7 @@
     return result.cleanup
   })
   $effect(() => watchFinalizedBlocksForOneChain(Number(bridgeKey.fromChain)))
-  $effect(() => minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value))
+  $effect(() => fetchMinBridgeAmountIn(bridgeKey.value, bridgeSettings.assetIn.value))
   $effect(() => {
     const keyAddress = bridgeKey.assetInAddress
     const tokens = input.bridgableTokens.value

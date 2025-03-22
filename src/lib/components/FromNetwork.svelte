@@ -11,7 +11,12 @@
   import { isProd, pathways, validBridgeKeys } from '$lib/stores/config.svelte'
   import { Chains, toChain } from '$lib/stores/auth/types'
   import _ from 'lodash'
-  import { fromTokenBalance } from '$lib/stores/chain-events.svelte'
+  import {
+    fromTokenBalance,
+    minBridgeAmountIn,
+    minBridgeAmountInKey,
+  } from '$lib/stores/chain-events.svelte'
+  import { getContext } from 'svelte'
 
   const chooseTokenSubmit = async (token: Token) => {
     const bridgeKey = input.bridgeKey.value
@@ -63,6 +68,13 @@
     const [withImage, withoutImage] = _.partition(sorted, (t) => !!t.logoURI)
     return [...withImage, ...withoutImage]
   })
+  const invalidValue = $derived.by(() => {
+    const minAmount = minBridgeAmountIn.get(
+      minBridgeAmountInKey(bridgeKey.value, bridgeSettings.assetIn.value),
+    )
+    if (!minAmount) return true
+    return !!input.amountIn.value && input.amountIn.value < minAmount
+  })
 </script>
 
 <SectionInput
@@ -72,7 +84,8 @@
   onbalanceupdate={keepBalance}
   value={bridgeSettings.amountToBridge ?? 0n}
   onmax={handleMaxBalance}
-  oninput={handleInput}>
+  oninput={handleInput}
+  {invalidValue}>
   {#snippet radio()}
     <BridgeProviderToggle />
   {/snippet}

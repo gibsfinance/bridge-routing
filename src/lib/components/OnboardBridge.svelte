@@ -11,7 +11,14 @@
     oneEther,
     searchKnownAddresses,
   } from '$lib/stores/bridge-settings.svelte'
-  import { assetLink, blocks, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
+  import {
+    assetLink,
+    blocks,
+    fetchMinBridgeAmountIn,
+    loadAssetLink,
+    minBridgeAmountIn,
+    minBridgeAmountInKey,
+  } from '$lib/stores/chain-events.svelte'
   import {
     amountIn,
     bridgableTokens,
@@ -197,13 +204,18 @@
     )
   })
   let maxBridgeable = $state(0n as bigint | null)
-  const disableBridgeButton = $derived(
-    !maxBridgeable ||
+  $effect(() => fetchMinBridgeAmountIn(bridgeKey.value, tokenInput))
+  const minBridgeAmountKey = $derived(minBridgeAmountInKey(bridgeKey.value, tokenInput))
+  const disableBridgeButton = $derived.by(() => {
+    const minAmountIn = minBridgeAmountIn.get(minBridgeAmountKey)
+    return (
+      !maxBridgeable ||
       !amountIn.value ||
-      !minAmount.value ||
-      amountIn.value < minAmount.value ||
-      amountIn.value > maxBridgeable,
-  )
+      !minAmountIn ||
+      amountIn.value < minAmountIn ||
+      amountIn.value > maxBridgeable
+    )
+  })
 </script>
 
 <InputOutputForm icon="line-md:chevron-double-down">

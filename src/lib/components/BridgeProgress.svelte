@@ -7,7 +7,6 @@
   import { Progress } from '@skeletonlabs/skeleton-svelte'
   import ExplorerLink from './ExplorerLink.svelte'
   import {
-    minAmount,
     liveBridgeStatus,
     bridgeStatuses,
     type ContinuedLiveBridgeStatusParams,
@@ -29,10 +28,6 @@
     }
   })
   let bridgeStatus = $state<ContinuedLiveBridgeStatusParams | null>(null)
-  $effect(() => {
-    if (!bridgeSettings.assetIn.value) return
-    return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
-  })
   const percentProgress = $derived.by(() => {
     if (bridgeStatus === null) return 0
     switch (bridgeStatus.status) {

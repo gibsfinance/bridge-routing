@@ -210,132 +210,36 @@ export class TokenBalanceWatcher {
 
 export const fromTokenBalance = new TokenBalanceWatcher()
 export const toTokenBalance = new TokenBalanceWatcher()
-// export const watchTokenBalance = (
-//   chainId: Chains,
-//   tokenStore: Token | TokenOut | null,
-//   ticker: unknown, // usually a block
-//   isDestination = false,
-// ) => {
-//   let balanceCache = new Map<
-//     string,
-//     {
-//       time: number
-//       value: bigint | null
-//     }
-//   >()
-//   const balanceTTL = 1000 * 60 * 20
-//   setInterval(
-//     () => {
-//       balanceCache.forEach((v, k) => {
-//         if (Date.now() - v.time > balanceTTL) {
-//           balanceCache.delete(k)
-//         }
-//       })
-//     },
-//     1000 * 60 * 5,
-//   )
 
-//   return derived(
-//     [walletAccount, chainId, tokenStore, ticker, input.unwrap, input.bridgeKey],
-//     ([$walletAccount, $chainId, $asset, $ticker, $unwrap], set) => {
-//       if (!$ticker || !$asset || !$walletAccount || $walletAccount === zeroAddress) {
-//         set(null)
-//         return () => {}
-//       }
-//       if (!$asset.address) {
-//         set(null)
-//         return () => {}
-//       }
-//       const $a = $asset as Token
-//       const token =
-//         isDestination && $asset.address === nativeAssetOut[$chainId] && $unwrap
-//           ? {
-//               ...$a,
-//               address: zeroAddress,
-//             }
-//           : $a
-//       const key = `${$chainId}-${$walletAccount}-${token.address}`
-//       if (!balanceCache.has(key)) {
-//         balanceCache = new Map()
-//         set(null)
-//       }
-//       let cancelled = false
-//       const unwatch = getTokenBalance($chainId, token, $walletAccount, (v) => {
-//         if (cancelled) return
-//         balanceCache.set(key, { time: Date.now(), value: v })
-//         set(v)
-//       })
-//       return () => {
-//         cancelled = true
-//         unwatch()
-//       }
-//     },
-//     null as bigint | null,
-//   )
-// }
-
-export class MinBridgeAmount {
-  private val: bigint | null = $state(null)
-  get value() {
-    return this.val
-  }
-  set value(v: bigint | null) {
-    this.val = v
-  }
-
-  fetch(bridgeKey: input.BridgeKey, assetIn: Token | null) {
-    // these clients should already be created, so we should not be doing any harm by accessing them
-    const path = pathway(bridgeKey)
-    if (!path || !assetIn) {
-      return () => {}
-    }
-    this.value = null
-    const result = loading.loadsAfterTick<bigint>('min-amount', () => {
-      const fromPublicClient = input.clientFromChain(Number(bridgeKey[1]))
-      const toPublicClient = input.clientFromChain(Number(bridgeKey[2]))
-      const publicClient = path?.feeManager === 'from' ? fromPublicClient : toPublicClient
-      return publicClient.readContract({
-        abi: abis.inputBridge,
-        functionName: 'minPerTx',
-        args: [assetIn.address as Hex],
-        address: path[path.feeManager],
-      })
-    })()
-    result.promise.then((v) => {
-      if (result.controller.signal.aborted) return
-      this.value = v
-    })
-    return result.cleanup
-  }
+export const minBridgeAmountIn = new SvelteMap<string, bigint | null>()
+export const minBridgeAmountInKey = (bridgeKey: input.BridgeKey, assetIn: Token | null) => {
+  return [...bridgeKey, assetIn?.address].join('-').toLowerCase()
 }
-export const minAmount = new MinBridgeAmount()
-
-// export const minAmount = derived(
-//   [input.bridgePathway, input.fromPublicClient, input.toPublicClient, input.assetIn],
-//   ([$bridgePathway, $fromPublicClient, $toPublicClient, assetIn], set) => {
-//     if (!$bridgePathway || !assetIn) {
-//       set(0n)
-//       return
-//     }
-//     let cancelled = false
-//     const publicClient = $bridgePathway.feeManager === 'from' ? $fromPublicClient : $toPublicClient
-//     publicClient
-//       .readContract({
-//         abi: abis.inputBridge,
-//         functionName: 'minPerTx',
-//         args: [assetIn.address],
-//         address: $bridgePathway[$bridgePathway.feeManager],
-//       })
-//       .then((res) => {
-//         if (cancelled) return
-//         set(res)
-//       })
-//     return () => {
-//       cancelled = true
-//     }
-//   },
-//   0n,
-// )
+export const fetchMinBridgeAmountIn = (bridgeKey: input.BridgeKey, assetIn: Token | null) => {
+  // these clients should already be created, so we should not be doing any harm by accessing them
+  const path = pathway(bridgeKey)
+  if (!path || !assetIn) {
+    return () => {}
+  }
+  const key = minBridgeAmountInKey(bridgeKey, assetIn)
+  // this.value = null
+  const result = loading.loadsAfterTick<bigint>('min-amount', () => {
+    const fromPublicClient = input.clientFromChain(Number(bridgeKey[1]))
+    const toPublicClient = input.clientFromChain(Number(bridgeKey[2]))
+    const publicClient = path?.feeManager === 'from' ? fromPublicClient : toPublicClient
+    return publicClient.readContract({
+      abi: abis.inputBridge,
+      functionName: 'minPerTx',
+      args: [assetIn.address as Hex],
+      address: path[path.feeManager],
+    })
+  })()
+  result.promise.then((v) => {
+    if (result.controller.signal.aborted) return
+    minBridgeAmountIn.set(key, v)
+  })
+  return result.cleanup
+}
 
 const links = _.memoize(
   async ({ chainId, target, address }: { chainId: number; target: Hex; address: Hex }) => {

@@ -2,9 +2,7 @@
   import '../app.css'
   import Nav from '$lib/components/Nav.svelte'
   import Footer from '$lib/components/Footer.svelte'
-  // import Loader from '$lib/components/Loader.svelte'
   import { ToastProvider } from '@skeletonlabs/skeleton-svelte'
-
   const { children } = $props()
 </script>
 
@@ -16,7 +14,10 @@
   importing in this way allows the scripts to be loaded in parallel
   and for us to show a loader until loading is complete
 -->
-<ToastProvider placement="bottom-end">
+<ToastProvider
+  placement="bottom-end"
+  groupZIndex="z-50"
+  toastBase="flex flex-row bg-surface-50 rounded-lg text-surface-contrast-50 text-base">
   <div class="app bg-slate-950">
     <div class="app">
       <Nav />

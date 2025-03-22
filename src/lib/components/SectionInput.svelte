@@ -17,6 +17,7 @@
     token: Token | null
     showRadio?: boolean
     disabled?: boolean
+    invalidValue?: boolean
     readonlyInput?: boolean
     readonlyTokenSelect?: boolean
     focused?: boolean
@@ -33,6 +34,7 @@
     token,
     label,
     oninput,
+    invalidValue = false,
     readonlyInput = false,
     readonlyTokenSelect = false,
     disabled = false,
@@ -45,6 +47,7 @@
     onbalanceupdate,
   }: Props = $props()
   const sectionDisabled = $derived(readonlyInput && readonlyTokenSelect)
+  $inspect(invalidValue)
 </script>
 
 <Section {id} {focused} disabled={sectionDisabled}>
@@ -68,8 +71,10 @@
     {:else}
       <NumericInput
         {id}
-        class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-surface-contrast-50 h-10 leading-10 tracking-tight"
-        textClass="text-left font-inter text-surface-contrast-50"
+        class="w-full input py-0 px-0 ring-0 focus:ring-0 placeholder:text-surface-contrast-50 h-10 leading-10 tracking-tight"
+        textClass="text-left font-inter {invalidValue
+          ? 'text-red-500'
+          : 'text-surface-contrast-50'}"
         value={typeof value === 'bigint' ? value : null}
         decimals={token?.decimals ?? 0}
         {disabled}

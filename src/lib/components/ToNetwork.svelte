@@ -7,7 +7,7 @@
   import { zeroAddress } from 'viem'
   import { humanReadableNumber } from '$lib/stores/utils'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
-  import { assetLink, minAmount } from '$lib/stores/chain-events.svelte'
+  import { assetLink } from '$lib/stores/chain-events.svelte'
   import { settingKey } from '$lib/stores/fee-manager.svelte'
   import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
 
@@ -18,7 +18,6 @@
   const out = $derived(
     asset &&
       assetLink.value !== null &&
-      minAmount.value !== null &&
       settingKey(input.bridgeKey.value) &&
       bridgeSettings.bridgeFee !== null
       ? asset

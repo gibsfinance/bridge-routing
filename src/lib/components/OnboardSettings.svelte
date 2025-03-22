@@ -10,10 +10,9 @@
     bridgeSettings,
     searchKnownAddresses,
   } from '$lib/stores/bridge-settings.svelte'
-  import { assetLink, latestBlock, loadAssetLink, minAmount } from '$lib/stores/chain-events.svelte'
+  import { assetLink, loadAssetLink } from '$lib/stores/chain-events.svelte'
   import { bridgableTokens, loadFeeFor, recipient, bridgeKey } from '$lib/stores/input.svelte'
   import { showTooltips } from '$lib/stores/storage.svelte'
-  import { untrack } from 'svelte'
   import Image from './Image.svelte'
   import coinbase from '$lib/images/providers/coinbase.svg?raw'
   import meldio from '$lib/images/providers/meld-io.svg?raw'
@@ -77,10 +76,6 @@
   })
   $effect(() => {
     recipient.value = accountState.address ?? zeroAddress
-  })
-  $effect(() => {
-    if (!bridgeSettings.assetIn.value) return
-    return minAmount.fetch(bridgeKey.value, bridgeSettings.assetIn.value)
   })
   let onrampOpen = $state(false)
 </script>
