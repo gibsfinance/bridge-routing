@@ -14,7 +14,7 @@
       blur="9px"
       brightness="100%">
       <div class="max-w-lg flex flex-col text-lg w-full mt-8">
-        <Headline>delivery</Headline>
+        <Headline>Delivery</Headline>
         <Bridge />
       </div>
     </BlurryImage>
