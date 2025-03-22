@@ -123,6 +123,7 @@
             spender: swapRouterAddress,
             chainId: Number(Chains.PLS),
             minimum: amountToSwapIn!,
+            latestBlock: latestPulseBlock!,
           })
         },
       ],
@@ -141,6 +142,8 @@
             gas: BigInt(quoteResult!.gasEstimate!),
             value: BigInt(transactionInfo.value),
             chainId: Number(Chains.PLS),
+            maxFeePerGas: latestPulseBlock!.baseFeePerGas! * 2n,
+            maxPriorityFeePerGas: latestPulseBlock!.baseFeePerGas! / 5n,
           })
           return tx
         },

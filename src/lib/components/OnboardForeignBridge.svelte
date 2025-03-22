@@ -229,6 +229,7 @@
                 spender: latestQuote!.transactionRequest!.to as Hex,
                 chainId: Number(token.chainId),
                 minimum: amountInput,
+                latestBlock: blocks.get(Number(token.chainId))!,
               })
             },
           ],

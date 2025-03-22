@@ -4,7 +4,7 @@ import {
   type SendTransactionParameters,
 } from '@wagmi/core'
 import { accountState, wagmiAdapter, connect } from './auth/AuthProvider.svelte'
-import { encodeFunctionData, erc20Abi, maxUint256, zeroAddress, type Hex } from 'viem'
+import { encodeFunctionData, erc20Abi, maxUint256, zeroAddress, type Block, type Hex } from 'viem'
 import { type ApprovalParameters, checkAllowance } from './chain-read.svelte'
 import { loading } from './loading.svelte'
 
@@ -15,8 +15,9 @@ export const sendApproval = ({
   spender,
   amount = maxUint256,
   chainId,
-}: ApprovalParameters & { amount?: bigint }) => {
-  const opts = options(chainId)
+  latestBlock,
+}: ApprovalParameters & { amount?: bigint; latestBlock: Block }) => {
+  const opts = options(chainId, latestBlock)
   return sendTransactionCore(wagmiAdapter.wagmiConfig, {
     ...opts,
     to: token,
@@ -44,12 +45,14 @@ export const checkAndRaiseApproval = async ({
   chainId,
   raiseTo = maxUint256,
   minimum,
+  latestBlock,
 }: {
   token: Hex
   spender: Hex
   chainId: number
   raiseTo?: bigint
   minimum: bigint
+  latestBlock: Block
 }) => {
   if (token === zeroAddress) {
     return null
@@ -59,6 +62,7 @@ export const checkAndRaiseApproval = async ({
     spender: spender ?? zeroAddress,
     token,
     chainId: Number(chainId),
+    latestBlock,
   }
   const approval = await checkAllowance(approvalParams)
   if (approval < minimum) {
@@ -67,11 +71,13 @@ export const checkAndRaiseApproval = async ({
   return null
 }
 
-export const options = (chainId: number) => {
+export const options = (chainId: number, latestBlock: Block) => {
   const options = {
     account: accountState.address,
     type: 'eip1559',
     chainId,
+    maxFeePerGas: latestBlock.baseFeePerGas! * 2n,
+    maxPriorityFeePerGas: latestBlock.baseFeePerGas! / 5n,
   } as const
   return options
 }

@@ -9,7 +9,7 @@
   import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { formatUnits, type Hex, zeroAddress } from 'viem'
   import * as input from '$lib/stores/input.svelte'
-  import { assetLink, fromTokenBalance } from '$lib/stores/chain-events.svelte'
+  import { assetLink, blocks, fromTokenBalance } from '$lib/stores/chain-events.svelte'
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { connect } from '$lib/stores/auth/AuthProvider.svelte'
   import { getContext } from 'svelte'
@@ -113,10 +113,9 @@
     if (!assetLink || !bridgeSettings.assetIn.value || !bridgeSettings.transactionInputs) {
       return
     }
-    // const options = opts()
     return await transactions.sendTransaction({
       ...bridgeSettings.transactionInputs,
-      ...transactions.options(chainsMetadata[input.bridgeKey.fromChain].id),
+      ...transactions.options(chainsMetadata[input.bridgeKey.fromChain].id, blocks.get(Number(input.bridgeKey.fromChain))!),
     })
   }
   let amountInBefore = ''
@@ -131,6 +130,7 @@
             spender: bridgeSettings.bridgePathway!.from!,
             chainId: Number(input.bridgeKey.fromChain),
             minimum: bridgeSettings.amountToBridge,
+            latestBlock: blocks.get(Number(input.bridgeKey.fromChain))!,
           })
         },
       ],

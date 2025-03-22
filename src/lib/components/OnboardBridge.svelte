@@ -124,6 +124,7 @@
             spender: bridgeSettings.bridgePathway!.from!,
             chainId: Number(bridgeKey.fromChain),
             minimum: bridgeAmount,
+            latestBlock: blocks.get(Number(bridgeKey.fromChain))!,
           })
         },
       ],
