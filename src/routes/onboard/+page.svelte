@@ -19,8 +19,8 @@
       image_url="url({onboardImageFuzzy})"
       blur="12px"
       brightness="90%">
-      <div class="flex flex-col text-lg w-full gap-4 mb-16">
-        <div class="mt-16 max-w-lg mx-auto w-full">
+      <div class="flex flex-col text-lg w-full gap-4">
+        <div class="my-16 max-w-lg mx-auto w-full">
           <Headline
             >{#if activeOnboardStep.value === 1}To Ethereum{:else if activeOnboardStep.value === 2}To
               PulseChain{:else if activeOnboardStep.value === 3}Swap on PulseX{/if}</Headline>

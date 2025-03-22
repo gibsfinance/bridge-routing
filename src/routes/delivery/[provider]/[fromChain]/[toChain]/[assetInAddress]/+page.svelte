@@ -9,11 +9,11 @@
 <div class="flex flex-col w-full">
   <div class="flex w-full">
     <BlurryImage
-      min_height={windowStore.large ? 'calc(100vh - 40px)' : 'auto'}
+      min_height={windowStore.large ? 'calc(100vh - 56px)' : 'auto'}
       image_url="url({bridgeImageFuzzyWebP})"
       blur="9px"
       brightness="100%">
-      <div class="max-w-lg flex flex-col text-lg w-full mt-8">
+      <div class="max-w-lg flex flex-col text-lg w-full my-16">
         <Headline>Delivery</Headline>
         <Bridge />
       </div>
