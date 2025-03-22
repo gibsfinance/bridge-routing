@@ -19,6 +19,7 @@
   import { Tooltip } from '@skeletonlabs/skeleton-svelte'
   import { untrack } from 'svelte'
   import Loader from './Loader.svelte'
+  import { Chains } from '$lib/stores/auth/types'
 
   const destinationBlock = $derived(blocks.get(Number(bridgeKey.toChain)))
   let txInputValue = $state<Hex | null>(null)
@@ -59,9 +60,11 @@
     }
     bridgeStatus = null
   }
-  const latestBlockObject = $derived(blocks.get(Number(bridgeKey.fromChain)))
+  $effect(() => latestBlock(Number(Chains.PLS)))
+  const latestPulsechainBlockObject = $derived(blocks.get(Number(Chains.PLS)))
   const gasIsHigh = $derived(
-    !!latestBlockObject && latestBlockObject.baseFeePerGas! > 20_000_000n * 10n ** 9n,
+    !!latestPulsechainBlockObject &&
+      latestPulsechainBlockObject.baseFeePerGas! > 20_000_000n * 10n ** 9n,
   )
   $effect(() => {
     const hash = bridgeTxHash
