@@ -235,7 +235,7 @@
                   >{humanReadableNumber(costFromInputs ?? 0n, {
                     decimals: asset?.decimals ?? 18,
                   })}
-                  {utils.nativeSymbol(asset, unwrap)}</span>
+                  {asset?.symbol}</span>
               {:else if feeType === input.FeeType.GAS_TIP}
                 <!-- put gas tip estimates here -->
                 <NumericInput
@@ -262,7 +262,7 @@
                       costLimitLocked: true,
                     })
                     input.limit.value = e
-                  }} />&nbsp;{utils.nativeSymbol(asset, unwrap)}
+                  }} />&nbsp;{asset?.symbol}
               {/if}
             </span>
           </Tooltip>

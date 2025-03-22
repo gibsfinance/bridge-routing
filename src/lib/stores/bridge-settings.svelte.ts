@@ -146,36 +146,26 @@ export class BridgeSettings {
     return BigInt(this.estimatedGas * this.latestBaseFeePerGas)
   })
   estimatedTokenNetworkCost = $derived.by(() => {
+    const estimatedNativeNetworkCost = this.estimatedNativeNetworkCost
     const priceCorrective = this.priceCorrective.value
-    if (!priceCorrective || !this.oneTokenInt || !this.estimatedNativeNetworkCost) {
-      // console.log(
-      //   'estimatedTokenNetworkCost',
-      //   priceCorrective,
-      //   this.oneTokenInt,
-      //   this.estimatedNativeNetworkCost,
-      // )
+    const decimals = this.assetIn.value?.decimals
+    if (!priceCorrective || !this.oneTokenInt || !estimatedNativeNetworkCost || !decimals) {
       return null
     }
+    const tokenCost = (estimatedNativeNetworkCost * this.oneTokenInt) / priceCorrective
     // console.log(
-    //   this.estimatedNativeNetworkCost,
-    //   this.oneTokenInt,
-    //   priceCorrective,
-    //   (this.estimatedNativeNetworkCost * this.oneTokenInt) / priceCorrective,
+    //   'estimated cost',
+    //   `${formatUnits(estimatedNativeNetworkCost, 18)}ETH`,
+    //   `${formatUnits(tokenCost, decimals)}${this.assetOut?.symbol}`,
     // )
-    return (this.estimatedNativeNetworkCost * this.oneTokenInt) / priceCorrective
+    return tokenCost
   })
   estimatedGas = $derived.by(() => {
     return input.estimatedGas.value
   })
   latestBaseFeePerGas = $derived.by(() => {
-    return chainEvents.latestBlock.latestBaseFeePerGas(Number(input.bridgeKey.value[2]))
+    return chainEvents.latestBaseFeePerGas(Number(input.bridgeKey.value[2]))
   })
-  // clampedReimbersement = $derived.by(() => {
-  //   if (this.feeType === input.FeeType.PERCENT) {
-  //     return this.percentFee
-  //   }
-  //   return this.estimatedNetworkCost > this.limit ? this.limit : this.estimatedNetworkCost
-  // })
   oneTokenInt = $derived.by(() => {
     return this.assetIn.value ? 10n ** BigInt(this.assetIn.value.decimals) : 1n
   })
