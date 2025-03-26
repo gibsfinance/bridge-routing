@@ -59,13 +59,19 @@
   )
   let inputRef: HTMLInputElement | null = null
   let value = $state('')
+  const parsedValue = () => {
+    try {
+      return numberWithCommas(stripNonNumber(value))
+    } catch {
+      return null
+    }
+  }
   $effect.pre(() => {
-    value = startingValue ? numberWithCommas(formatUnits(startingValue, decimals)) : ''
+    value =
+      startingValue !== null
+        ? (parsedValue() ?? numberWithCommas(formatUnits(startingValue, decimals)))
+        : ''
   })
-  // $effect(() => {
-  //   const value = inputRef?.value
-  //   console.log('value', value)
-  // })
   const fontSize = $derived(
     fontSizeInput === undefined ? largeInputFontScaler(value?.length) : fontSizeInput,
   )
@@ -87,7 +93,12 @@
       value: currentTextValue,
       int: bestGuess,
     })
-    if (clamped !== undefined) {
+    console.log(
+      clamped,
+      untrack(() => startingValue),
+      bestGuess,
+    )
+    if (clamped !== undefined && clamped !== bestGuess) {
       value = numberWithCommas(formatUnits(clamped, decimals))
     }
   }

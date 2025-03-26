@@ -239,6 +239,7 @@
     foreignBridgeInputs.value = update
   })
   let latestLifiQuote: RelayerQuoteResponseData['quote'] | null = $state(null)
+  let lifiQuoteError: string | null = $state(null)
   const outLatestBlock = $derived(!tokenOutputLifi ? null : blocks.get(tokenOutputLifi!.chainId))
   const canCrossLifi = $derived.by(() => {
     if (!quoteInputs) return false
@@ -263,6 +264,7 @@
       ...quoteInputs,
       blockNumber: outLatestBlock.number,
     })
+    lifiQuoteError = null
     quote.promise
       .then((q) => {
         if (quote.controller.signal.aborted) return
@@ -271,6 +273,7 @@
       })
       .catch((e) => {
         console.log(e, quoteInputs)
+        lifiQuoteError = 'Quote request resulted in an error, try increasing the amount in'
       })
     return quote.cleanup
   })
@@ -897,6 +900,8 @@
     compressed={!bridgingToEthereum}
     readonlyInput={!bridgingToEthereum}
     readonlyTokenSelect={!bridgingToEthereum}
+    inputWarning={lifiQuoteError ?? null}
+    valueLoadingKey="lifi-quote"
     onbalanceupdate={(balance) => {
       maxCrossToEthereumBridge = balance
     }}

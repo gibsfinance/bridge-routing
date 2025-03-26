@@ -10,8 +10,8 @@
   import BalanceReadout from './BalanceReadout.svelte'
   import { largeInputFontScaler } from '$lib/stores/font-scaler'
   import { humanReadableNumber } from '$lib/stores/utils'
-  import Loader from './Loader.svelte'
   import Loading from './Loading.svelte'
+  import Warning from './Warning.svelte'
 
   type Props = {
     id?: string
@@ -23,6 +23,7 @@
     valueLoadingKey?: string | null
     readonlyInput?: boolean
     readonlyTokenSelect?: boolean
+    inputWarning?: string | null
     focused?: boolean
     compressed?: boolean
     overrideAccount?: string | null
@@ -48,6 +49,7 @@
     overrideAccount,
     value,
     valueLoadingKey,
+    inputWarning,
     compressed = false,
     radio,
     modal,
@@ -69,11 +71,11 @@
     </div>
   {/if}
   <div class="flex flex-row items-center justify-between w-full relative">
-    {#if valueLoadingKey}
-      <div class="absolute inset-0 flex items-center justify-center">
-        <Loading key={valueLoadingKey} />
-      </div>
-    {/if}
+    <Warning
+      show={!!inputWarning}
+      tooltip={inputWarning ?? ''}
+      placement="left"
+      wrapperPositionClass="left-0 -translate-x-full" />
     {#if readonlyInput}
       {@const valIsNumber = typeof value === 'bigint'}
       {@const humanReadable =
@@ -96,6 +98,9 @@
         invalid={invalidValue}
         {disabled}
         {oninput} />
+    {/if}
+    {#if valueLoadingKey}
+      <Loading key={valueLoadingKey} class="px-2 box-content" />
     {/if}
     {#if readonlyTokenSelect}
       <SelectButtonContents {token} network={token?.chainId ?? 0} hideChevron disableHover />

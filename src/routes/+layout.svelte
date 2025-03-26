@@ -16,7 +16,7 @@
 -->
 <ToastProvider
   placement="bottom-end"
-  groupZIndex="z-50"
+  zIndex="z-50"
   toastBase="flex flex-row bg-surface-50 rounded-lg text-surface-contrast-50 text-base">
   <div class="app bg-slate-950">
     <div class="app">
@@ -37,7 +37,7 @@
     flex-direction: column;
     min-height: 100vh;
   }
-  :global(.tooltip::before) {
+  /* :global(.tooltip::before) {
     @apply max-w-96 whitespace-pre-line;
   }
   :global(.tooltip.tooltip-top.tooltip-left-toward-center::before) {
@@ -45,5 +45,5 @@
   }
   :global(.tooltip.tooltip-top.tooltip-right-toward-center::before) {
     @apply left-0 right-auto -translate-x-0;
-  }
+  } */
 </style>
