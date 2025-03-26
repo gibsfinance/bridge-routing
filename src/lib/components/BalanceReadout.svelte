@@ -48,6 +48,7 @@
   })
   const block = $derived(blocks.get(chainId))
   $effect.pre(() => {
+    // console.log('fetching balance', { chainId, token, account, block })
     return tokenBalance.fetch({
       chainId,
       token: token,
@@ -80,6 +81,13 @@
       maxDecimals: 18 - Math.floor(Number(balance / oneEther / 3n)).toString().length,
     }),
   )
+  // $inspect(
+  //   tokenBalance?.value,
+  //   token?.chainId ?? 0,
+  //   token?.address,
+  //   account as Hex,
+  //   humanReadableText,
+  // )
 </script>
 
 <div class={wrapperClasses}>
@@ -87,7 +95,7 @@
     {#if showLoader && tokenBalance?.value === null}
       <Loading key={loadingKey} class="w-4 h-5" />
     {/if}
-    <span class={decimalClassNames} class:opacity-70={!loading.isResolved(loadingKey)}
+    <span class={decimalClassNames} class:opacity-75={!loading.isResolved(loadingKey)}
       >{tokenBalance?.value === null ? '' : humanReadableText}
     </span>
     <span class="flex">{token?.symbol}</span>

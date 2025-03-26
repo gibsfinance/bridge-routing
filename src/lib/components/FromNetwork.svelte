@@ -3,7 +3,7 @@
   import * as input from '$lib/stores/input.svelte'
   import * as nav from '$lib/stores/nav.svelte'
   import { bridgeKey } from '$lib/stores/input.svelte'
-  import type { Token } from '$lib/types.svelte'
+  import type { InputValue, Token } from '$lib/types.svelte'
   import SectionInput from './SectionInput.svelte'
   import TokenAndNetworkSelector from './TokenAndNetworkSelector.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
@@ -16,7 +16,6 @@
     minBridgeAmountIn,
     minBridgeAmountInKey,
   } from '$lib/stores/chain-events.svelte'
-  import { getContext } from 'svelte'
 
   const chooseTokenSubmit = async (token: Token) => {
     const bridgeKey = input.bridgeKey.value
@@ -43,13 +42,10 @@
   const keepBalance = (bal: bigint | null) => {
     fromTokenBalance.value = bal
   }
-  const handleInput = (amount: bigint) => {
-    // if (balance !== null) {
-    //   if (amount > balance) {
-    //     amount = balance
-    //   }
-    // }
-    input.amountIn.value = amount
+  const handleInput = ({ int }: InputValue) => {
+    if (int !== null) {
+      input.amountIn.value = int
+    }
   }
   const handleMaxBalance = (bal: bigint) => {
     input.amountIn.value = bal

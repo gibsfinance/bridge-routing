@@ -25,6 +25,7 @@
     appkitNetworkById,
     connect,
     evmChainsById,
+    getNetwork,
   } from '$lib/stores/auth/AuthProvider.svelte'
   import { ChainType, type RelayerQuoteResponseData } from '@lifi/types'
   import _ from 'lodash'
@@ -204,16 +205,18 @@
       //  ||
       // !toAddressLifi
     ) {
-      console.log(
-        'no quote inputs',
-        fromChain,
-        toChain,
-        fromToken,
-        toToken,
-        amountInputFromLifi,
-        fromAddress,
-        toAddressLifi,
-      )
+      if (amountInputFromLifi) {
+        console.log(
+          'no quote inputs',
+          fromChain,
+          toChain,
+          fromToken,
+          toToken,
+          amountInputFromLifi,
+          fromAddress,
+          toAddressLifi,
+        )
+      }
       return null
     }
     return {
@@ -268,7 +271,7 @@
     quote.promise
       .then((q) => {
         if (quote.controller.signal.aborted) return
-        console.log('quote', q)
+        // console.log('quote', q)
         latestLifiQuote = q
       })
       .catch((e) => {
@@ -860,7 +863,20 @@
     }
     const chainId = activeOnboardStep.value === 2 ? Chains.ETH : Chains.PLS
     const chain = availableChains.get(Number(chainId))!
-    if (!chain) return null
+    if (!chain) {
+      const chain = getNetwork({
+        chainId: Number(chainId),
+        name: chainId,
+      })
+      if (chain) {
+        return {
+          id: chain.id,
+          name: chain.name,
+          chainType: ChainType.EVM,
+        }
+      }
+      return null
+    }
     return {
       id: chain.id,
       name: chain.name,
@@ -981,7 +997,16 @@
         amountIn.value = int
         return int
       }
-    }} />
+    }}
+    onbalanceupdate={() => {
+      // set ethereum balance
+    }}
+    onmax={bridgingToEthereum
+      ? undefined
+      : (balance) => {
+          // set ethereum balance
+          amountIn.value = balance
+        }} />
   <SectionInput
     label="Swap on PulseX"
     focused={activeOnboardStep.value >= 2}
@@ -992,16 +1017,20 @@
     compressed={!swappingOnPulsex}
     readonlyInput={!swappingOnPulsex}
     readonlyTokenSelect
+    onbalanceupdate={() => {}}
     onclick={() => {
       if (bridgingToPulsechain || bridgingToEthereum) {
         activeOnboardStep.value = 3
       }
+    }}
+    onmax={(balance) => {
+      amountInputToPulsex = balance
     }} />
   <SectionInput
     label="Output"
     token={finalTokenOutput}
     value={amountOutputFromPulsex}
-    focused={activeOnboardStep.value === 3}
+    focused={swappingOnPulsex}
     compressed={!swappingOnPulsex}
     readonlyInput
     readonlyTokenSelect

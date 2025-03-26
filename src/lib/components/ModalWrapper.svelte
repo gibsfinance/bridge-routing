@@ -36,7 +36,7 @@
   const contentBorder = $derived(classNames('border border-surface-200', contentBorderClass))
   const contentBase = $derived(
     classNames(
-      'card bg-surface-950-50 space-y-2 text-surface-contrast-50',
+      'card bg-white space-y-2 text-surface-contrast-50',
       contentClasses,
       contentWidth,
       contentHeight,

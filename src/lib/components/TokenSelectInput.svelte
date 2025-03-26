@@ -16,14 +16,13 @@
   const {
     value,
     roundedClasses = 'rounded-full',
-    borderClasses = 'border-none',
-    backgroundClasses = 'bg-surface-900-100',
-    paddingClasses = 'leading-8 pr-4 px-16',
+    borderClasses = 'border border-gray-50 focus:border-gray-50',
+    backgroundClasses = 'bg-white',
+    paddingClasses = 'leading-8 pr-4 pl-18',
     oninput,
     icon,
   }: Props = $props()
   const searchInputId = _.uniqueId('search-input')
-  // "rounded-lg border border-slate-400 pl-6"
   const classes = $derived(
     classNames(paddingClasses, roundedClasses, backgroundClasses, borderClasses),
   )
@@ -50,7 +49,7 @@
       setref={(el) => {
         inputRef = el
       }} />
-    <div class="absolute left-0">
+    <div class="absolute left-0 top-0 bottom-0 m-auto">
       {@render icon?.()}
     </div>
   </div>

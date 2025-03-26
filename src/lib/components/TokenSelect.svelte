@@ -159,7 +159,7 @@
     </Button>
   </div>
   <TokenSelectInput
-    borderClasses="border-none ring-0 focus:ring-0 focus:border-none"
+    borderClasses="ring-0 focus:ring-0"
     value={searchValue}
     oninput={(val) => {
       searchValue = val
@@ -169,9 +169,9 @@
         <!-- for some reason, the modal property is required here -->
         <Popover
           open={chainSelectOpen}
-          triggerBase="flex flex-row items-center py-1 px-2 justify-center"
+          triggerBase="flex flex-row items-center py-1 px-2 justify-center h-full"
           zIndex="50"
-          contentClasses="flex flex-col max-h-64 border rounded-2xl bg-surface-50 text-surface-contrast-50 overflow-y-scroll relative"
+          contentClasses="flex flex-col max-h-64 border rounded-2xl bg-white text-surface-contrast-50 overflow-y-scroll relative"
           positionerClasses="pointer-events-auto"
           modal
           positioning={{
@@ -189,9 +189,9 @@
             }}
             <StaticNetworkImage
               network={network.id}
-              sizeClasses="size-8 rounded-l-full overflow-hidden"
+              sizeClasses="size-9 rounded-l-full overflow-hidden"
               icon={network.logoURI} />
-            <Icon icon="mynaui:chevron-down" class="size-5 ml-1" />
+            <Icon icon="mynaui:chevron-down" class="size-6 ml-0.5" />
           {/snippet}
           {#snippet content()}
             <span class="text-sm text-gray-500 px-4 pt-2">Select Network</span>

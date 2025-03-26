@@ -20,5 +20,5 @@
 <Button class={classes} onclick={() => (activeOnboardStep.value = step)}>
   <Icon
     icon="rivet-icons:chevron-right"
-    class="h-3.5 w-3.5 text-surface-800 {isActive ? '' : 'opacity-40'}" />
+    class="h-3.5 w-3.5 text-surface-800 {isActive ? '' : 'opacity-75'}" />
 </Button>
