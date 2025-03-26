@@ -81,6 +81,7 @@
   import { getPulseXQuote } from '$lib/stores/pulsex/quote.svelte'
   import type { SerializedTrade } from '$lib/stores/pulsex/transformers'
   import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
+  import lifiLogo from '$lib/images/providers/lifi.svg?raw'
 
   const toast = getContext('toast') as ToastContext
 
@@ -1019,7 +1020,15 @@
       : (balance) => {
           // set ethereum balance
           amountIn.value = balance
-        }} />
+        }}>
+    {#snippet radio()}
+      {#if bridgingToEthereum}
+        <span class="text-xs text-gray-500 flex flex-row items-center gap-1"
+          >powered by<span class="[&>svg]:w-9 [&>svg]:h-5 translate-y-0.25">{@html lifiLogo}</span
+          ></span>
+      {/if}
+    {/snippet}
+  </SectionInput>
   <SectionInput
     label="Swap on PulseX"
     focused={activeOnboardStep.value >= 2}
