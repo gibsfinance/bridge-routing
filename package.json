@@ -92,5 +92,9 @@
       "@solana/wallet-adapter-base": "0.9.23",
       "viem": "2.23.14"
     }
+  },
+  "engines": {
+    "node": "23.6.1",
+    "pnpm": "9.15.5"
   }
 }
