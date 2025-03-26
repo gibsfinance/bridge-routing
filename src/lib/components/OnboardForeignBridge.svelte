@@ -370,7 +370,7 @@
   const needsApprovalForLifi = $derived.by(() => {
     return needsAllowanceForLifi && (lifiAllowance === null || lifiAllowance < amountInputFromLifi)
   })
-  $inspect(latestLifiQuote)
+  // $inspect(latestLifiQuote)
   const lifiSpender = $derived.by(() => latestLifiQuote?.transactionRequest?.to)
   $effect(() => {
     const token = tokenInputLifi
@@ -780,7 +780,6 @@
     !pulsexQuoteResult || !amountInputToPulsex || !amountOutputFromPulsex,
   )
   let pulsexAllowance = $state<bigint | null>(null)
-  $inspect('pulsexAllowance', pulsexAllowance)
   $effect.pre(() => {
     if (!tokenInPulsex || !accountState.address || !latestPulseBlock || !swappingOnPulsex) return
     const result = transactions.loadAllowance({
