@@ -376,13 +376,17 @@ export class BridgeSettings {
 
   get transactionInputs() {
     // check that path / bridge key is valid
-    if (!this.bridgePathway) return null
+    if (!this.bridgePathway) {
+      console.log('no bridge pathway')
+      return null
+    }
     // check that recipient is valid
     if (
       !input.recipient.value ||
       !isAddress(input.recipient.value) ||
       accountState.address === zeroAddress
     ) {
+      console.log('no recipient')
       return null
     }
     // check that wallet account is valid
@@ -391,12 +395,19 @@ export class BridgeSettings {
       !isAddress(accountState.address) ||
       accountState.address === zeroAddress
     ) {
+      console.log('no account')
       return null
     }
     // check that asset in is valid
-    if (!this.assetIn.value) return null
+    if (!this.assetIn.value) {
+      console.log('no asset in')
+      return null
+    }
     // check that asset link is valid
-    if (!chainEvents.assetLink.value) return null
+    if (!chainEvents.assetLink.value) {
+      console.log('no asset link')
+      return null
+    }
     let value = 0n
     // we are moving "from" this side, so we need to call a function on the "from" address
     // only relevant for the relayTokens(AndCall) pathway outside of native tokens

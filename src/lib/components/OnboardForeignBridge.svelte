@@ -605,6 +605,11 @@
       chainId: Number(bridgeKey.fromChain),
       steps: [
         async () => {
+          console.log({
+            account: accountState.address as Hex,
+            chainId: Number(bridgeKey.fromChain),
+            ...bridgeSettings.transactionInputs,
+          })
           const tx = await transactions.sendTransaction({
             account: accountState.address as Hex,
             chainId: Number(bridgeKey.fromChain),
@@ -627,6 +632,13 @@
   const needsAllowanceForPulsechainBridge = $derived(
     bridgeApproval !== null && bridgeApproval < bridgeSettings.amountToBridge,
   )
+  bridgeSettings.assetIn.value = {
+    address: zeroAddress,
+    chainId: Number(bridgeKey.fromChain),
+    decimals: 18,
+    symbol: 'ETH',
+    name: 'Ether',
+  }
   $effect(() => {
     const account = accountState.address
     const token = bridgeSettings.assetIn.value?.address

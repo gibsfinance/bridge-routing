@@ -65,7 +65,7 @@
 </script>
 
 <Section {id} {focused} disabled={sectionDisabled} {compressed} {onclick}>
-  {#if !compressed || radio}
+  {#if !compressed}
     <div class="flex flex-row justify-between w-full h-5">
       <span class="text-sm text-gray-500"
         >{#if !compressed}{label}{/if}</span>
