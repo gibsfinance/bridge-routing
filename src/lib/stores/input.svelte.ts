@@ -389,7 +389,7 @@ export const defaultBatchConfig = {
   },
 }
 
-const chainList = [...Object.values(networks)]
+const chainList = [...appkitNetworkList]
 
 const searchChainsForRpcUrls = (chainId: number) => {
   if (!chainId) {

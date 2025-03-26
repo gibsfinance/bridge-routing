@@ -1,8 +1,8 @@
 <script lang="ts">
   import TokenSelect from './TokenSelect.svelte'
-  import { appkitNetworkIds } from '$lib/stores/auth/AuthProvider.svelte'
   import {
-    // think about getting rid of this since it is only relevant for onboard
+    // think about getting rid of this since
+    // it is only relevant for onboard
     availableChains,
     availableTokensPerOriginChain,
     loadTokensForChains,
@@ -12,24 +12,12 @@
   type Props = {
     onsubmit: (token: Token | null, chainId: number | null) => void
     chainId: number
-    chains?: [number, ...number[]]
+    chains: [number, ...number[]]
     tokens?: Token[]
     selectedToken?: Token | null
   }
-  const {
-    onsubmit,
-    chainId,
-    chains: chainsProp,
-    tokens: tokensProp,
-    selectedToken,
-  }: Props = $props()
-  const chains = $derived(
-    chainsProp ??
-      ([...appkitNetworkIds.values()]
-        .filter((id) => availableChains.has(id as number))
-        .map(Number) as [number, ...number[]]),
-  )
-  let selectedChainIndex = $state(0)
+  const { onsubmit, chainId, chains, tokens: tokensProp, selectedToken }: Props = $props()
+  let selectedChainIndex = $state<number>(0)
   $effect(() => {
     selectedChainIndex = chains.indexOf(chainId)
   })

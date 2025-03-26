@@ -1,25 +1,46 @@
 <script lang="ts">
-  import { accountState, connect } from '$lib/stores/auth/AuthProvider.svelte'
+  import { accountState, appkitNetworkById, connect } from '$lib/stores/auth/AuthProvider.svelte'
   import Button from '$lib/components/Button.svelte'
   import Image from './Image.svelte'
   import Icon from '@iconify/svelte'
   import { idToChain } from '$lib/stores/auth/types'
-  import { availableChains } from '$lib/stores/lifi.svelte'
+  import { availableChains, availableChainsByName, loadData } from '$lib/stores/lifi.svelte'
   import * as imageLinks from '$lib/stores/image-links'
+  loadData()
   const targetChain = $derived.by(() => {
     const id = accountState.chainId
-    const chain = !id ? null : availableChains.get(id)
+    if (!id) return null
+    const chainId = Number(id)
+    const chain = availableChains.get(chainId)
     if (chain) {
       return {
         name: chain.name,
         logoURI: chain.logoURI,
       }
     }
-    const network = idToChain.get(id!)!
-    return {
-      name: network.name,
-      logoURI: imageLinks.network(id!),
+    const prefix = accountState.prefix
+    const networkByPrefix = availableChainsByName.get(prefix!)
+    if (networkByPrefix) {
+      return {
+        name: networkByPrefix.name,
+        logoURI: networkByPrefix.logoURI,
+      }
     }
+    const appkitNetwork = appkitNetworkById.get(id!)
+    if (appkitNetwork) {
+      return {
+        name: appkitNetwork.name,
+        logoURI: appkitNetwork.assets?.imageUrl,
+      }
+    }
+    const network = idToChain.get(chainId)
+    if (network) {
+      return {
+        name: network.name,
+        logoURI: imageLinks.network(chainId),
+      }
+    }
+    return null
   })
 </script>
 

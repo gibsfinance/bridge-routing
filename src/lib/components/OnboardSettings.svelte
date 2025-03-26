@@ -12,7 +12,7 @@
   } from '$lib/stores/bridge-settings.svelte'
   import { assetLink, loadAssetLink } from '$lib/stores/chain-events.svelte'
   import { bridgableTokens, loadFeeFor, recipient, bridgeKey } from '$lib/stores/input.svelte'
-  import { showTooltips } from '$lib/stores/storage.svelte'
+  import { activeOnboardStep, showTooltips } from '$lib/stores/storage.svelte'
   import Image from './Image.svelte'
   import coinbase from '$lib/images/providers/coinbase.svg?raw'
   import meldio from '$lib/images/providers/meld-io.svg?raw'
@@ -75,7 +75,7 @@
     return result.cleanup
   })
   $effect(() => {
-    recipient.value = accountState.address ?? zeroAddress
+    recipient.value = (accountState.address ?? zeroAddress) as `0x${string}`
   })
   let onrampOpen = $state(false)
 </script>
@@ -152,7 +152,18 @@
       </Popover>
     </div>
     <div class="absolute left-1/2 -translate-x-1/2 top-0 h-12 items-center justify-center flex">
-      <Icon icon="mingcute:run-fill" mode="svg" class="size-8" />
+      {#each [1, 2, 3] as step}
+        <Button
+          class="flex w-8 items-center flex-row"
+          onclick={() => (activeOnboardStep.value = step)}>
+          <Icon
+            icon="mingcute:run-fill"
+            mode="svg"
+            class="size-8 -mr-1.5 {activeOnboardStep.value < step
+              ? 'text-gray-300 opacity-75'
+              : ''}" />
+        </Button>
+      {/each}
     </div>
   </div>
 </header>

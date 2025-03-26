@@ -1,25 +1,57 @@
-import { ChainType, getChains, getTokens, getQuote, getConnections, createConfig } from '@lifi/sdk'
 import type {
   Chain,
-  Connection,
+  // Connection,
   LiFiStep,
   QuoteRequest,
   RelayerQuoteResponseData,
   Token,
 } from '@lifi/types'
 import { SvelteMap } from 'svelte/reactivity'
-import type { Hex } from 'viem'
+// import type { Hex } from 'viem'
 import { loading } from './loading.svelte'
 import _ from 'lodash'
 import { maxMemoize } from '$lib/utils.svelte'
+import { NullableProxyStore } from '$lib/types.svelte'
+import {
+  getTokenBalance as getTokenBalanceLifi,
+  ChainType,
+  getChains,
+  getTokens,
+  getQuote,
+  // getConnections,
+  createConfig,
+  Solana,
+  // Solana,
+} from '@lifi/sdk'
+import { appkitNetworkById } from './auth/AuthProvider.svelte'
+// import { universalProvider } from './auth/AuthProvider.svelte'
+// import { solanaAdapter } from './auth/AuthProvider.svelte'
 
 const integrator = 'gibs.finance'
 createConfig({
   integrator,
+  debug: true,
+  providers: [
+    Solana({
+      // getWalletAdapter: async () => {
+      //   const wallet = await universalProvider.enable()
+      //   return wallet
+      // },
+    }),
+  ],
 })
 
-export const availableChains = new SvelteMap<number, Chain>()
+export const availableChains = new SvelteMap<number | string, Chain>()
+export const availableChainsByName = new SvelteMap<string, Chain>()
 export const availableTokensPerOriginChain = new SvelteMap<number, Token[]>()
+export const targetedOriginChain = new NullableProxyStore<Chain>()
+export const targetedDestinationChain = new NullableProxyStore<Chain>()
+export const amountIn = new NullableProxyStore<bigint>()
+export const amountOut = new NullableProxyStore<bigint>()
+export const tokenIn = new NullableProxyStore<Token>()
+export const tokenOut = new NullableProxyStore<Token>()
+export const currentStep = new NullableProxyStore<LiFiStep>()
+export const toAddress = new NullableProxyStore<string>()
 
 const fetchChains = _.memoize(async () => {
   const chains = await getChains({
@@ -30,82 +62,16 @@ const fetchChains = _.memoize(async () => {
 
 export const loadData = _.memoize(async () => {
   const [chains] = await Promise.all([fetchChains()])
-  const c = new Map<string, Chain>()
   chains.forEach((chain) => {
-    if (c.has(chain.key)) return
-    c.set(chain.key, chain)
+    if (availableChains.has(chain.id)) return
     availableChains.set(chain.id, chain)
+    availableChainsByName.set(chain.name.toLowerCase(), chain)
   })
   const ethereum = [...availableChains.values()].find((chain) => chain.key === 'eth')!
   targetedDestinationChain.set(ethereum)
   await loadTokensForChains(ethereum)
   const tokens = availableTokensPerOriginChain.get(ethereum.id)!
   tokenOut.set(tokens[0])
-})
-
-export const targetedOriginChain = $state({
-  value: null as null | Chain,
-  set: (chain: null | Chain) => {
-    targetedOriginChain.value = chain
-  },
-})
-
-export const targetedDestinationChain = $state({
-  value: null as null | Chain,
-  set: (chain: null | Chain) => {
-    targetedDestinationChain.value = chain
-  },
-})
-
-export const amountIn = $state({
-  value: null as bigint | null,
-  set: (amount: bigint | null) => {
-    amountIn.value = amount
-  },
-})
-
-export const amountOut = $state({
-  value: null as bigint | null,
-  set: (amount: bigint | null) => {
-    amountOut.value = amount
-  },
-})
-
-export const tokenIn = $state({
-  value: null as null | Token,
-  set: (token: Token | null) => {
-    tokenIn.value = token
-    ensureConnections()
-  },
-})
-
-const connectionsPerInput = new Map<string, Promise<Connection[]>>()
-
-const ensureConnections = async () => {
-  const tokenInput = tokenIn.value
-  const chainInput = targetedOriginChain.value
-  const chainOutput = targetedDestinationChain.value
-  if (!tokenInput || !chainInput || !chainOutput) return
-  const inputKey = `${chainInput.id}-${tokenInput.address}-${chainInput.id}`.toLowerCase()
-  const known = connectionsPerInput.get(inputKey)
-  if (known) return
-  connectionsPerInput.set(inputKey, loadConnections(chainInput, tokenInput, chainOutput))
-}
-
-const loadConnections = async (chainInput: Chain, tokenInput: Token, chainOutput: Chain) => {
-  const { connections } = await getConnections({
-    fromChain: chainInput.id,
-    toChain: chainOutput.id,
-    fromToken: tokenInput.address as Hex,
-  })
-  return connections
-}
-
-export const tokenOut = $state({
-  value: null as null | Token,
-  set: (token: Token | null) => {
-    tokenOut.value = token
-  },
 })
 
 const getTokensAndCache = _.memoize(
@@ -138,24 +104,20 @@ export const flipTokens = () => {
   targetedDestinationChain.set(tempTargetedOriginChain)
 }
 
-export type Proxy<T> = {
-  value: T
-  set: (value: T) => void
+export const lifiQuotes = new SvelteMap<
+  string,
+  {
+    updatedAt: number
+    quote: Promise<RelayerQuoteResponseData['quote']>
+  }
+>()
+
+export const getLifiQuoteKey = (quote: QuoteRequest) => {
+  return JSON.stringify({
+    ...quote,
+    integrator,
+  }).toLowerCase()
 }
-
-export const currentStep = $state({
-  value: null as null | LiFiStep,
-  set: (step: null | LiFiStep) => {
-    currentStep.value = step
-  },
-})
-
-export const toAddress = $state({
-  value: null as null | string,
-  set: (address: null | string) => {
-    toAddress.value = address
-  },
-})
 
 export const getQuoteStep = loading.loadsAfterTick<
   RelayerQuoteResponseData['quote'],
@@ -172,7 +134,7 @@ export const getQuoteStep = loading.loadsAfterTick<
       fromAddress,
       toAddress,
     }: QuoteRequest) => {
-      return await getQuote({
+      const lifiQuoteKey = getLifiQuoteKey({
         fromChain,
         toChain,
         fromToken,
@@ -182,6 +144,61 @@ export const getQuoteStep = loading.loadsAfterTick<
         toAddress,
         integrator,
       })
+      const existingQuote = lifiQuotes.get(lifiQuoteKey)
+      if (existingQuote && existingQuote.updatedAt > Date.now() - 1000 * 60) {
+        return existingQuote.quote
+      }
+      const quote = getQuote({
+        fromChain,
+        toChain,
+        fromToken,
+        toToken,
+        fromAmount,
+        fromAddress,
+        toAddress,
+        integrator,
+      })
+      lifiQuotes.set(lifiQuoteKey, {
+        updatedAt: Date.now(),
+        quote,
+      })
+      return quote
     },
   ),
 )
+
+export const toLifiToken = (token: { chainId: number; address: string }) => {
+  const chain = availableChains.get(token.chainId)
+  if (!chain)
+    return {
+      chain: null,
+      token: null,
+    }
+  const tokens = availableTokensPerOriginChain.get(chain.id)
+  if (!tokens)
+    return {
+      chain,
+      token: null,
+    }
+  const lifiToken = tokens.find((t) => t.address.toLowerCase() === token.address.toLowerCase())
+  if (!lifiToken)
+    return {
+      chain,
+      token: null,
+    }
+  return {
+    chain,
+    token: lifiToken,
+  }
+}
+
+export const getTokenBalance = async (asset: {
+  chainId: number
+  address: string
+  account: string
+}) => {
+  const { token } = toLifiToken(asset)
+  if (!token) return null
+  const balance = await getTokenBalanceLifi(asset.account, token)
+  return balance
+}

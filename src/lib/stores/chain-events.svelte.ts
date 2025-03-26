@@ -1,18 +1,17 @@
 import * as input from './input.svelte'
 import { multicallRead } from '$lib/utils.svelte'
 import * as abis from './abis'
+import * as solanaWeb3 from '@solana/web3.js'
 import {
-  // type PublicClient,
-  type Block,
   getContract,
   erc20Abi,
-  type Hex,
   zeroAddress,
   parseAbi,
   getAddress,
-  type TransactionReceipt,
-  type BlockTag,
+  isHex,
+  erc20Abi_bytes32,
 } from 'viem'
+import type { Block, Hex, TransactionReceipt, BlockTag } from 'viem'
 import { loading, resolved, type Cleanup } from './loading.svelte'
 import { NullableProxyStore, type Token } from '$lib/types.svelte'
 import { bridgeGraphqlUrl, chainsMetadata } from './auth/constants'
@@ -25,6 +24,9 @@ import { Chains, toChain } from '$lib/stores/auth/types'
 import { tokenToPair } from './utils'
 import { gql, GraphQLClient } from 'graphql-request'
 import { Cache } from './cache'
+import { getTokenBalance as getTokenBalanceLifi, availableChains } from './lifi.svelte'
+import { evmChainsById, getNetwork } from './auth/AuthProvider.svelte'
+import { walletConnectProjectId } from '$lib/config'
 
 export const watchFinalizedBlocksForSingleChain = (
   chainId: number,
@@ -67,6 +69,35 @@ export const blocks = new SvelteMap<number, Block | null>()
 export const latestBaseFeePerGas = (chain: number) => {
   return blocks.get(chain)?.baseFeePerGas ?? 3_000_000_000n
 }
+
+export const toEvmStyleBlock = (b: solanaWeb3.ParsedAccountsModeBlockResponse) => {
+  return {
+    number: BigInt(b.blockHeight!),
+    timestamp: BigInt(b.blockTime!),
+    hash: b.blockhash,
+    parentHash: b.previousBlockhash as `0x${string}`,
+    baseFeePerGas: 7n,
+    blobGasUsed: 0n,
+    difficulty: 0n,
+    excessBlobGas: 0n,
+    extraData: '0x',
+    gasLimit: 0n,
+    gasUsed: 0n,
+    logsBloom: '0x',
+    miner: '0x',
+    mixHash: '0x',
+    nonce: '0x',
+    receiptsRoot: '0x',
+    sealFields: [],
+    sha3Uncles: '0x',
+    size: 0n,
+    transactions: [],
+    transactionsRoot: '0x',
+    uncles: [],
+    stateRoot: '0x',
+    totalDifficulty: 0n,
+  } as Block
+}
 export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
   if (!untrack(() => blocks.has(chain))) {
     // signals a "pending" state
@@ -74,6 +105,7 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
   }
   const current = chainCounts.get(chain) ?? 0
   let decrement: Cleanup = () => {}
+  let cancelled = false
   if (current === 0) {
     // console.log('gas increment', chain)
     untrack(() => loading.increment('gas'))
@@ -81,9 +113,62 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
       // console.log('gas decrement', chain)
       untrack(() => loading.decrement('gas'))
     })
-    watchers.set(
-      chain,
-      input.clientFromChain(chain).watchBlocks({
+    const evmChain = evmChainsById.get(chain)
+    let watcher: Cleanup | null = null
+    if (!evmChain) {
+      const availableNetwork = availableChains.get(chain)
+      const network = getNetwork({
+        chainId: chain,
+        name: availableNetwork!.name,
+      })
+      if (network!.name === 'Solana') {
+        const id = `solana:${network!.id}`
+        const url = `${network!.rpcUrls.default.http[0]!}?chainId=${id}&projectId=${walletConnectProjectId}`
+        // console.log('url', url)
+        const connection = new solanaWeb3.Connection(url)
+        const updateBlock = () => {
+          connection
+            .getBlockHeight({
+              commitment: 'confirmed',
+            })
+            .then((v) => {
+              if (!v || cancelled) return
+              return connection.getParsedBlock(v, { commitment: 'confirmed' })
+            })
+            .then((v) => {
+              if (!v || cancelled) return
+              decrement()
+              untrack(() => blocks.set(chain, toEvmStyleBlock(v)))
+            })
+            .catch(() => {
+              decrement()
+              const now = Date.now()
+              untrack(() =>
+                blocks.set(
+                  chain,
+                  toEvmStyleBlock({
+                    blockHeight: now,
+                    blockTime: now,
+                    blockhash: `0x${now.toString(16)}`,
+                    previousBlockhash: `0x${now.toString(16)}`,
+                    parentSlot: now - 1,
+                    transactions: [],
+                  }),
+                ),
+              )
+            })
+        }
+        updateBlock()
+        const interval = setInterval(updateBlock, 60_000)
+        watcher = () => {
+          clearInterval(interval)
+        }
+      } else {
+        // reserved space for bitcoin
+        watcher = () => {}
+      }
+    } else {
+      watcher = input.clientFromChain(chain).watchBlocks({
         emitOnBegin: true,
         emitMissed: true,
         blockTag,
@@ -91,12 +176,14 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
           decrement()
           untrack(() => blocks.set(chain, block))
         },
-      }),
-    )
+      })
+    }
+    watchers.set(chain, watcher)
   }
   chainCounts.set(chain, current + 1)
   return () => {
     decrement()
+    cancelled = true
     const current = chainCounts.get(chain) ?? 0
     const next = current - 1
     chainCounts.set(chain, next)
@@ -111,31 +198,54 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
 export const latestBlock = blockWatcher('latest')
 export const finalizedBlock = blockWatcher('finalized')
 
-export const getTokenBalance = (
-  chainId: number,
-  asset: Token | null,
-  walletAccount: Hex | null,
-) => {
-  // console.log('getTokenBalance', chainId, asset, walletAccount)
-  if (!asset || !walletAccount) return null
-  const publicClient = input.clientFromChain(chainId)
-  const getBalance =
-    asset.address === zeroAddress
-      ? () => publicClient.getBalance({ address: walletAccount })
-      : () =>
-          getContract({
-            address: asset.address as Hex,
-            abi: erc20Abi,
-            client: publicClient,
-          })
-            .read.balanceOf([walletAccount])
-            .catch(() => 0n)
-  const key = tokenBalanceLoadingKey(chainId, asset, walletAccount)
+type TokenBalanceInputs = {
+  chainId: number
+  address: string | null
+  account: string | null
+}
+
+export const getTokenBalance = ({ chainId, address, account }: TokenBalanceInputs) => {
+  if (!address || !account) return null
+  const key = tokenBalanceLoadingKey(chainId, address, account)
+  let getBalance!: () => Promise<bigint | null>
+  if (isHex(account)) {
+    const publicClient = input.clientFromChain(chainId)
+    getBalance =
+      address === zeroAddress
+        ? () => publicClient.getBalance({ address: account })
+        : () =>
+            getContract({
+              address: address as Hex,
+              abi: erc20Abi,
+              client: publicClient,
+            })
+              .read.balanceOf([account])
+              .catch(() => {
+                return getContract({
+                  address: address as Hex,
+                  abi: erc20Abi_bytes32,
+                  client: publicClient,
+                }).read.balanceOf([account])
+              })
+              .catch(() => null)
+  } else {
+    // if the wallet account is not a hex address,
+    // it is a solana, btc or other network address
+    getBalance = () =>
+      getTokenBalanceLifi({
+        chainId,
+        address: address,
+        account: account,
+      }).then((v) => {
+        // console.log('v', v)
+        return v?.amount ?? null
+      })
+  }
   return loading.loadsAfterTick<bigint | null>(key, getBalance)()
 }
 
-export const tokenBalanceLoadingKey = (chainId: number, token: Token, walletAccount: Hex) => {
-  return `balance-${chainId}-${token.address}-${walletAccount}`.toLowerCase()
+export const tokenBalanceLoadingKey = (chainId: number, address: string, account: string) => {
+  return `balance-${chainId}-${address}-${account}`.toLowerCase()
 }
 
 // this is not the optimal way to do this, but these watchers
@@ -147,7 +257,7 @@ export class TokenBalanceWatcher {
   private balanceCleanup: Cleanup | null = null
   private chainId: number | null = null
   private token: Token | null = null
-  private walletAccount: Hex | null = null
+  private walletAccount: string | null = null
   value = $state<bigint | null>(null)
   private clearLongtailBalances() {
     const now = Date.now()
@@ -179,7 +289,7 @@ export class TokenBalanceWatcher {
   }: {
     chainId: number
     token: Token | null
-    account: Hex | null
+    account: string | null
     block: Block | null | undefined
   }) {
     this.cleanup()
@@ -188,7 +298,21 @@ export class TokenBalanceWatcher {
     this.walletAccount = account
     // call this function whenever a new block is ticked over
     if (!ticker || !token || !account) return () => {}
-    const requestResult = getTokenBalance(chainId, token, account)
+    const network = availableChains.get(chainId)
+    if (network) {
+      const accountIsHex = isHex(account)
+      const tokenIsHex = isHex(token?.address)
+      if (network.chainType === 'EVM' && (!accountIsHex || !tokenIsHex)) {
+        return () => {}
+      } else if (network.chainType !== 'EVM' && (accountIsHex || tokenIsHex)) {
+        return () => {}
+      }
+    }
+    const requestResult = getTokenBalance({
+      chainId,
+      address: token?.address,
+      account,
+    })
     if (!requestResult) {
       return () => {}
     }

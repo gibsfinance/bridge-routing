@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { chainsById } from '$lib/stores/auth/AuthProvider.svelte'
+  import { evmChainsById } from '$lib/stores/auth/AuthProvider.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { toChain } from '$lib/stores/auth/types'
   import { domains, addDomain } from '$lib/stores/window.svelte'
@@ -15,7 +15,7 @@
     linkClasses?: ClassParam
   }
   const { class: className = '', path, chain: chainId, linkClasses = '' }: Props = $props()
-  const chain = $derived(chainsMetadata[toChain(chainId)] ?? chainsById.get(chainId))
+  const chain = $derived(chainsMetadata[toChain(chainId)] ?? evmChainsById.get(chainId))
   const explorer = $derived(chain?.blockExplorers?.default?.url || '')
   const d = $derived(domains.get(explorer) || '')
   $effect(() => {

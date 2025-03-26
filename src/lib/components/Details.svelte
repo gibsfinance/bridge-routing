@@ -60,18 +60,21 @@
       <span class="w-32">Network</span>
       <span class="flex flex-row justify-between grow">
         <span>⛽</span>
-        <Tooltip
-          tooltip="the estimated cost to put this transaction on chain in terms of the token being
-              bridged at current gas rates"
-          placement="left">
-          <span class="flex flex-row items-end self-end relative">
-            <Loading key="gas">
-              {#snippet contents()}{humanReadableNumber(
-                  shouldDeliver.value ? (bridgeSettings.estimatedTokenNetworkCost ?? 0n) : 0n,
-                  { decimals: asset.decimals },
-                )}{/snippet}
-            </Loading>&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
-          </span>
+        <Tooltip placement="left">
+          {#snippet trigger()}
+            <span class="flex flex-row items-end self-end relative">
+              <Loading key="gas">
+                {#snippet contents()}{humanReadableNumber(
+                    shouldDeliver.value ? (bridgeSettings.estimatedTokenNetworkCost ?? 0n) : 0n,
+                    { decimals: asset.decimals },
+                  )}{/snippet}
+              </Loading>&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
+            </span>
+          {/snippet}
+          {#snippet content()}
+            the estimated cost to put this transaction on chain in terms of the token being bridged
+            at current gas rates
+          {/snippet}
         </Tooltip>
       </span>
     </div>
@@ -90,18 +93,24 @@
             {/if}
           </span>
           <Tooltip tooltip="cost as configured by the fee settings">
-            <span
-              class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center relative">
-              {#if feeType === input.FeeType.PERCENT}
-                {humanReadableNumber(bridgeSettings.estimatedCost ?? 0n, {
-                  decimals: asset.decimals,
-                })}
-              {:else}<Loading key="gas"
-                  >{#snippet contents()}{humanReadableNumber(bridgeSettings.estimatedCost ?? 0n, {
-                      decimals: asset.decimals,
-                    })}{/snippet}</Loading
-                >{/if}&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
-            </span>
+            {#snippet trigger()}
+              <span
+                class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center relative">
+                {#if feeType === input.FeeType.PERCENT}
+                  {humanReadableNumber(bridgeSettings.estimatedCost ?? 0n, {
+                    decimals: asset.decimals,
+                  })}
+                {:else}<Loading key="gas"
+                    >{#snippet contents()}{humanReadableNumber(bridgeSettings.estimatedCost ?? 0n, {
+                        decimals: asset.decimals,
+                      })}{/snippet}</Loading
+                  >{/if}&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
+              </span>
+            {/snippet}
+            {#snippet content()}
+              the estimated cost to put this transaction on chain in terms of the token being
+              bridged at current gas rates
+            {/snippet}
           </Tooltip>
         </span>
         <UndercompensatedWarning />

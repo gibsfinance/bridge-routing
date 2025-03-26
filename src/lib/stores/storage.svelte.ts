@@ -12,6 +12,7 @@ export type ForeignBridgeInputs = {
   fromAmount: bigint
   // toChain: number - always 1
   toToken: string
+  toAddress: string | null
 }
 const globalDefaultSettings: DefaultSettings = {
   showTooltips: true,
@@ -20,6 +21,7 @@ const globalDefaultSettings: DefaultSettings = {
     fromToken: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599' as Hex,
     fromAmount: 0n,
     toToken: zeroAddress as Hex,
+    toAddress: null,
   } as ForeignBridgeInputs | null,
 }
 export const storage = new LocalProxy('gibs.finance.settings', globalDefaultSettings)

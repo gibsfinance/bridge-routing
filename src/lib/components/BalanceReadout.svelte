@@ -43,7 +43,7 @@
 
   $effect(() => {
     if (chainId) {
-      latestBlock(chainId)
+      return latestBlock(chainId)
     }
   })
   const block = $derived(blocks.get(chainId))
@@ -63,7 +63,7 @@
   const balance = $derived(tokenBalance?.value ?? 0n)
   const disableMax = $derived(balance === 0n)
   const loadingKey = $derived(
-    token && tokenBalanceLoadingKey(token?.chainId ?? 0, token, (account as Hex) ?? '0x'),
+    token && tokenBalanceLoadingKey(token?.chainId ?? 0, token.address, (account as Hex) ?? '0x'),
   )
   const decimalClassNames = $derived(classNames('h-full', decimalClasses))
   const maxOutBalance = (event: MouseEvent) => {

@@ -146,7 +146,7 @@
       return
     }
     const result = transactions.loadAllowance({
-      account,
+      account: account as Hex,
       token: token as Hex,
       spender: bridgePath,
       chainId: Number(bridgeKey.fromChain),

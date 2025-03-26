@@ -65,6 +65,9 @@ export class NullableProxyStore<T> {
   ) {
     this.val = v
   }
+  set(v: T | null) {
+    this.value = v
+  }
   set value(v: T | null) {
     const validated = this.validation(this.value, v)
     if (validated === undefined) return
@@ -76,3 +79,5 @@ export class NullableProxyStore<T> {
 }
 
 export type ClassParam = Parameters<typeof classNames>[0]
+
+export type InputValue = { value: string; int: bigint | null }

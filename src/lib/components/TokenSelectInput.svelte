@@ -18,7 +18,7 @@
     roundedClasses = 'rounded-full',
     borderClasses = 'border-none',
     backgroundClasses = 'bg-surface-900-100',
-    paddingClasses = 'leading-8 px-4',
+    paddingClasses = 'leading-8 pr-4 px-16',
     oninput,
     icon,
   }: Props = $props()
@@ -50,7 +50,7 @@
       setref={(el) => {
         inputRef = el
       }} />
-    <div class="absolute right-0">
+    <div class="absolute left-0">
       {@render icon?.()}
     </div>
   </div>

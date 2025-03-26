@@ -19,7 +19,8 @@
     disableHover = false,
   }: Props = $props()
   const classes = classNames(
-    'flex flex-row items-center justify-center h-full p-0.5 rounded-full',
+    'flex flex-row items-center justify-center h-full p-0.5 rounded-full pl-2',
+    hideChevron ? 'gap-2' : '',
     className,
   )
 </script>
@@ -30,9 +31,11 @@
   class:border={!hideChevron}
   class:shadow-sm={!hideChevron}
   title={token?.address}>
+  <span class="flex flex-row items-center justify-center">
+    <span class="text-surface-contrast-50 leading-8 text-sm font-bold">{token?.symbol}</span>
+    {#if !hideChevron}
+      <Icon icon="mdi:chevron-down" class="text-surface-500 h-6 w-6 justify-self-start" />
+    {/if}
+  </span>
   <AssetWithNetwork asset={token} {network} />
-  <span class="text-surface-contrast-50 leading-8 text-sm pl-2 font-bold">{token?.symbol}</span>
-  {#if !hideChevron}
-    <Icon icon="mdi:chevron-down" class="text-surface-500 h-6 w-6 justify-self-start" />
-  {/if}
 </div>

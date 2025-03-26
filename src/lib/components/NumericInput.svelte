@@ -2,19 +2,18 @@
   import { untrack } from 'svelte'
   import { numberWithCommas, stripNonNumber } from '$lib/stores/utils'
   import classNames from 'classnames'
-  import type { ClassParam } from '$lib/types.svelte'
+  import type { ClassParam, InputValue } from '$lib/types.svelte'
   import _ from 'lodash'
   import type { FormEventHandler } from 'svelte/elements'
   import { formatUnits, parseUnits } from 'viem'
   import { largeInputFontScaler } from '$lib/stores/font-scaler'
-  // import { fitText } from '$lib/stores/fittext'
 
   type Props = {
     id?: string
     value?: bigint | null
     decimals?: number
     disabled?: boolean
-    oninput?: (value: bigint) => bigint | undefined | void
+    oninput?: (values: InputValue) => bigint | undefined | void
     onblur?: FormEventHandler<HTMLInputElement>
     onfocus?: FormEventHandler<HTMLInputElement>
     class?: ClassParam
@@ -23,8 +22,11 @@
     textClass?: ClassParam
     fontSizeClass?: ClassParam
     placeholder?: string
+    validTextClass?: ClassParam
+    invalidTextClass?: ClassParam
     fit?: boolean
     fontSizeInput?: string | number | null
+    invalid?: boolean
   }
   const {
     // fit = false,
@@ -37,22 +39,33 @@
     class: className = 'input ring-0 focus:ring-0',
     sizeClass = 'w-full',
     paddingClass = 'py-0 px-0',
-    textClass = 'text-right font-inter text-surface-contrast-50 placeholder:text-surface-contrast-50',
+    textClass = 'text-right font-inter',
+    validTextClass = 'text-surface-contrast-50 placeholder:text-surface-contrast-50',
+    invalidTextClass = 'text-red-500',
     fontSizeClass,
+    invalid = false,
     ...props
   }: Props = $props()
-  // let focused = $state(false)
-
-  // let selectionEnd = $state<number | null>(null)
-  const decimalValue = $derived(
-    startingValue !== null ? formatUnits(startingValue, decimals) : null,
+  let invalidCharacters = $state(false)
+  const classes = $derived(
+    classNames(
+      sizeClass,
+      className,
+      textClass,
+      paddingClass,
+      fontSizeClass,
+      invalidCharacters || invalid ? invalidTextClass : validTextClass,
+    ),
   )
-  const value = $derived.by(() => {
-    if (!decimalValue) return decimalValue
-    return numberWithCommas(decimalValue)
-  })
-  const classes = $derived(classNames(sizeClass, className, textClass, paddingClass, fontSizeClass))
   let inputRef: HTMLInputElement | null = null
+  let value = $state('')
+  $effect.pre(() => {
+    value = startingValue ? numberWithCommas(formatUnits(startingValue, decimals)) : ''
+  })
+  // $effect(() => {
+  //   const value = inputRef?.value
+  //   console.log('value', value)
+  // })
   const fontSize = $derived(
     fontSizeInput === undefined ? largeInputFontScaler(value?.length) : fontSizeInput,
   )
@@ -60,19 +73,22 @@
     const currentTextValue = (e.target as HTMLInputElement).value
     let bestGuess = untrack(() => startingValue)
     let failed = false
+    const acceptableNonNumeric = currentTextValue.split(',').join('').split('.').join('')
+    invalidCharacters = acceptableNonNumeric !== acceptableNonNumeric.replace(/[^0-9.]/g, '')
     try {
       const stripped = stripNonNumber(currentTextValue)
       bestGuess = parseUnits(stripped, decimals)
     } catch {
-      console.log('failed to parse', currentTextValue)
       failed = true
+      return
     }
     // if the parsed value fails, then we use the previous value or the best guess
-    // selectionEnd = (e.target as HTMLInputElement).selectionEnd
-    const clamped = props.oninput?.(bestGuess ?? 0n)
-    if (clamped !== undefined && inputRef && clamped !== bestGuess && !failed) {
-      // startingValue = clamped
-      inputRef.value = numberWithCommas(formatUnits(clamped, decimals))
+    const clamped = props.oninput?.({
+      value: currentTextValue,
+      int: bestGuess,
+    })
+    if (clamped !== undefined) {
+      value = numberWithCommas(formatUnits(clamped, decimals))
     }
   }
   const onfocus: FormEventHandler<HTMLInputElement> = (e) => {
@@ -83,7 +99,6 @@
     // focused = false
     props.onblur?.(e)
   }
-  // $inspect(value, value.length)
 </script>
 
 <input

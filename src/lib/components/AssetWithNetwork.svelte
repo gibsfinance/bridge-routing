@@ -8,6 +8,7 @@
   import { availableChains } from '$lib/stores/lifi.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { toChain } from '$lib/stores/auth/types'
+  import { zeroAddress } from 'viem'
 
   type Props = {
     class?: ClassParam
@@ -29,7 +30,9 @@
   const classes = $derived(
     classNames('flex basis-auto relative text-surface-contrast-50', tokenSizeClasses, className),
   )
-  const finishedLoading = $derived(chain && loading.isResolved('token'))
+  const finishedLoading = $derived(
+    chain && asset?.address !== zeroAddress && loading.isResolved('token'),
+  )
 </script>
 
 <span class={classes} title={asset?.symbol ?? ''}>
@@ -37,7 +40,7 @@
     <TokenIcon visible sizeClasses={tokenSizeClasses} class={tokenClasses} {src} />
     {#if finishedLoading}
       <Image
-        class="network-image absolute -right-0.5 -bottom-0.5 rounded-full bg-surface-50"
+        class="network-image absolute -left-0.5 -bottom-0.5 rounded-full bg-surface-50"
         sizeClasses={networkSizeClasses}
         src={chain.logoURI}
         alt={chain.name} />

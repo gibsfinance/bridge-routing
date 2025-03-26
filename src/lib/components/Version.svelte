@@ -11,7 +11,12 @@
 </script>
 
 <Button class="relative flex text-center font-mono font-thin leading-8" onclick={openRepo}>
-  <Tooltip tooltip={timestamp} placement="top">
-    v{semver}@{isLocal ? 'local' : githash.slice(0, 10)}
+  <Tooltip placement="top">
+    {#snippet trigger()}
+      v{semver}@{isLocal ? 'local' : githash.slice(0, 10)}
+    {/snippet}
+    {#snippet content()}
+      {timestamp}
+    {/snippet}
   </Tooltip>
 </Button>

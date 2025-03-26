@@ -2,7 +2,7 @@
   import * as customTokens from '$lib/stores/custom-tokens.svelte'
   import type { Token } from '$lib/types.svelte'
   import type { Hex } from 'viem'
-  import { getAddress, isAddress } from 'viem'
+  import { getAddress, isAddress, isHex } from 'viem'
   import Icon from '@iconify/svelte'
   import { multicallErc20 } from '$lib/utils.svelte'
   import { clientFromChain } from '$lib/stores/input.svelte'
@@ -11,7 +11,6 @@
   import Infinite from './Infinite.svelte'
   import { InfiniteStore } from '$lib/stores/infinite.svelte'
   import TokenSelectInput from './TokenSelectInput.svelte'
-  import { chainsById } from '$lib/stores/auth/AuthProvider.svelte'
   import Button from './Button.svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import { Popover } from '@skeletonlabs/skeleton-svelte'
@@ -21,6 +20,7 @@
   import * as imageLinks from '$lib/stores/image-links'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { toChain } from '$lib/stores/auth/types'
+  import { evmChainsById } from '$lib/stores/auth/AuthProvider.svelte'
 
   type Props = {
     onsubmit?: (token: Token | null) => void
@@ -76,11 +76,12 @@
       tkns = tkns.filter(filter)
     }
     if (allChains) return tkns
-    const inside = _.filter(tkns, onlyFromCurrentNetwork)
+    const inside = _.filter(tkns, (tkn) => {
+      return selectedChain === tkn.chainId
+      // return chains.includes(tkn.chainId)
+    })
     return inside
   }
-
-  const onlyFromCurrentNetwork = (tkn: Token) => chains.includes(tkn.chainId)
 
   const loadViaMulticall = async (target: Hex | null) => {
     if (chains.length !== 1) {
@@ -90,8 +91,12 @@
     if (!target) {
       throw new Error('no target')
     }
+    const chain = evmChainsById.get(chainId)
+    if (!chain) {
+      return null
+    }
     const [name, symbol, decimals] = await multicallErc20({
-      chain: chainsById.get(chainId)!,
+      chain,
       client: clientFromChain(chainId),
       target,
     })
@@ -105,11 +110,12 @@
     }
     return custom
   }
+  const isEvm = $derived(isHex(tokens[0].address))
   const fullTokenSet = $derived.by(() => {
     const [selected, notSelected] = selectedToken
       ? _.partition(tokens, (t) => {
           return (
-            getAddress(t.address) === getAddress(selectedToken?.address) &&
+            t.address.toLowerCase() === selectedToken?.address?.toLowerCase() &&
             t.chainId === selectedChain
           )
         })
@@ -163,13 +169,13 @@
         <!-- for some reason, the modal property is required here -->
         <Popover
           open={chainSelectOpen}
-          triggerBase="flex flex-row items-center p-1 justify-center mr-2"
+          triggerBase="flex flex-row items-center py-1 px-2 justify-center"
           zIndex="50"
           contentClasses="flex flex-col max-h-64 border rounded-2xl bg-surface-50 text-surface-contrast-50 overflow-y-scroll relative"
           positionerClasses="pointer-events-auto"
           modal
           positioning={{
-            placement: 'bottom-end',
+            placement: 'bottom-start',
             gutter: 2,
             strategy: 'fixed',
           }}
@@ -183,7 +189,7 @@
             }}
             <StaticNetworkImage
               network={network.id}
-              sizeClasses="size-6 rounded-lg"
+              sizeClasses="size-8 rounded-l-full overflow-hidden"
               icon={network.logoURI} />
             <Icon icon="mynaui:chevron-down" class="size-5 ml-1" />
           {/snippet}
@@ -198,7 +204,7 @@
                 }}
                 <li class="flex flex-row grow">
                   <Button
-                    class="flex flex-row items-center px-4 py-2 hover:bg-surface-100 grow border-l-2 {chain ===
+                    class="flex flex-row items-center pl-[14px] py-1 hover:bg-surface-100 grow border-l-2 {chain ===
                     selectedChain
                       ? 'border-primary-500'
                       : 'border-transparent'}"
@@ -208,7 +214,7 @@
                     }}>
                     <StaticNetworkImage
                       network={network.id}
-                      sizeClasses="size-6 rounded-lg"
+                      sizeClasses="size-8 rounded-lg"
                       icon={network.logoURI} />
                     <span class="ml-2">{network.name}</span>
                   </Button>
@@ -246,7 +252,7 @@
             onclick={() => addCustom(custom)}>
             <Icon icon="ic:baseline-add" height="1.5em" width="1.5em" />
             <Icon class="ml-2" icon="ph:question" height={32} width={32} />
-            {#if !addButtonDisabled}
+            {#if !addButtonDisabled && isHex(searchValueHex)}
               {#await loadViaMulticall(searchValueHex)}
                 <span class="flex flex-row items-center pl-2 leading-8"
                   ><Icon

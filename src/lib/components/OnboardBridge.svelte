@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import * as transactions from '$lib/stores/transactions'
   import type { Token } from '$lib/types.svelte'
   import { maxUint256, zeroAddress, type Hex } from 'viem'
@@ -40,6 +40,7 @@
   import GuideStep from './GuideStep.svelte'
   import BridgeProgress from './BridgeProgress.svelte'
   import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
+  import { ChainType } from '@lifi/types'
 
   const toast = getContext('toast') as ToastContext
 
@@ -117,7 +118,7 @@
     return result.cleanup
   })
   $effect(() => {
-    recipient.value = accountState.address ?? zeroAddress
+    recipient.value = (accountState.address ?? zeroAddress) as Hex
   })
   const incrementApproval = $derived(
     transactionButtonPress({
@@ -144,7 +145,7 @@
       steps: [
         async () => {
           const tx = await transactions.sendTransaction({
-            account: accountState.address,
+            account: accountState.address as Hex,
             chainId: Number(bridgeKey.fromChain),
             ...bridgeSettings.transactionInputs,
           })
@@ -182,7 +183,7 @@
       return
     }
     const result = transactions.loadAllowance({
-      account,
+      account: account as Hex,
       token: token as Hex,
       spender: bridgePath,
       chainId: Number(bridgeKey.fromChain),
@@ -270,9 +271,16 @@
     </SectionInput>
   {/snippet}
   {#snippet button()}
+    {@const chain = idToChain.get(tokenInput!.chainId) ?? {
+      name: '',
+      id: 0,
+    }}
     <OnboardButton
       disabled={disableBridgeButton}
-      requiredChain={tokenInput?.chainId ? idToChain.get(tokenInput!.chainId) : null}
+      requiredChain={{
+        ...chain,
+        chainType: ChainType.EVM,
+      }}
       onclick={bridgeTokens}
       text={needsApproval ? 'Approve' : 'Bridge to PulseChain'}
       loadingKey="bridge-tokens" />
@@ -295,4 +303,4 @@
       <p>Initiate the bridge to PulseChain.</p>
     </GuideStep>
   </div>
-{/if}
+{/if} -->

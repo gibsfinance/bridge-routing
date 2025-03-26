@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import * as transactions from '$lib/stores/transactions'
   import { assetOutKey, bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { getPulseXQuote } from '$lib/stores/pulsex/quote.svelte'
@@ -95,7 +95,7 @@
   $effect.pre(() => {
     if (!tokenIn || !accountState.address || !latestPulseBlock) return
     const result = transactions.loadAllowance({
-      account: accountState.address,
+      account: accountState.address as Hex,
       token: tokenIn.address as Hex,
       spender: swapRouterAddress,
       chainId: Number(Chains.PLS),
@@ -283,4 +283,4 @@
       <p>Initiate the swap.</p>
     </GuideStep>
   </div>
-{/if}
+{/if} -->

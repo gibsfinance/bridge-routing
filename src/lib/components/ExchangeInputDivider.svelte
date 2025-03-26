@@ -3,6 +3,7 @@
   import type { ClassParam } from '$lib/types.svelte'
   import Button from './Button.svelte'
   import type { Snippet } from 'svelte'
+  import Icon from '@iconify/svelte'
   type Props = {
     children?: Snippet
     verticalSizeClasses?: ClassParam
@@ -13,25 +14,35 @@
     zClasses?: ClassParam
     class?: ClassParam
     onclick?: null | (() => void)
+    icon?: string
   }
   const {
     verticalSizeClasses = 'w-full',
-    positionClasses = 'relative',
+    positionClasses = 'relative flex',
     iconWrapperSizeClasses = 'size-12',
     zClasses = '',
-    children,
     onclick: onClick,
+    icon,
   }: Props = $props()
   const classes = $derived(classNames(verticalSizeClasses, positionClasses, zClasses))
   const iconWrapperClasses = $derived(
     classNames(
       iconWrapperSizeClasses,
-      'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-current text-white',
+      'border-current text-white',
       onClick ? 'cursor-pointer' : 'cursor-auto',
     ),
   )
   const onclick = $derived.by(() => onClick ?? (() => {}))
+  const iconClasses = `rounded-full w-full h-full ring-4 text-surface-contrast-100 ring-inset ring-white p-2 bg-white border ${
+    !!onClick ? 'shadow hover:shadow-md transition-all duration-100' : ''
+  }`
 </script>
+
+{#snippet children()}
+  {#if icon}
+    <Icon {icon} class={iconClasses} />
+  {/if}
+{/snippet}
 
 <div class={classes}>
   <Button class={iconWrapperClasses} {onclick}>

@@ -5,48 +5,71 @@
   import type { ClassParam } from '$lib/types.svelte'
   type Props = {
     placement?: 'top' | 'bottom' | 'left' | 'right'
+    positioning?: {
+      placement?: 'top' | 'bottom' | 'left' | 'right'
+      gutter?: number
+    }
     maxWidth?: string
     tooltip?: string
-    children?: Snippet
+    content?: Snippet
     class?: ClassParam
     openDelay?: number
     closeDelay?: number
     positionerClassName?: ClassParam
-    triggerClassName?: ClassParam
+    contentClasses?: ClassParam
+    triggerClasses?: ClassParam
     gutter?: number
+    interactive?: boolean
+    // open: boolean
+    trigger: Snippet
+    onOpenChange?: (details: { open: boolean }) => void
   }
   let {
     placement,
     maxWidth = 'max-w-[380px]',
-    tooltip,
-    children,
     class: className,
     positionerClassName,
     openDelay = 0,
     closeDelay = 0,
-    triggerClassName,
+    triggerClasses: triggerClassNames,
+    contentClasses: contentClassNames,
+    interactive = false,
     gutter = 4,
+    // open = false,
+    onOpenChange,
+    trigger: triggerSnippet,
+    content: contentSnippet,
   }: Props = $props()
   let open = $state(false)
   const classes = $derived(classNames('relative flex tooltip-container', className))
   const positionerClasses = $derived(classNames('pointer-events-none', positionerClassName))
-  const onOpenChange = (details: { open: boolean }) => {
-    open = details.open
-  }
-  const triggerClasses = $derived(classNames('flex', triggerClassName))
+  // const onOpenChange = (details: { open: boolean }) => {
+  //   open = details.open
+  // }
+  const triggerClasses = $derived(classNames('flex', triggerClassNames))
+  const contentBase = $derived(
+    classNames(
+      'card bg-surface-50 text-surface-contrast-50 text-sm px-2 py-1',
+      maxWidth,
+      contentClassNames,
+    ),
+  )
 </script>
 
 <Tooltip
   {open}
   positioning={{ placement, gutter }}
   {closeDelay}
-  interactive={false}
+  {interactive}
   {classes}
   {triggerClasses}
-  contentBase="card preset-filled-tertiary-500 text-sm px-2 py-1 {maxWidth}"
+  {contentBase}
   {positionerClasses}
   {openDelay}
-  {onOpenChange}>
-  {#snippet trigger()}{@render children?.()}{/snippet}
-  {#snippet content()}{tooltip}{/snippet}
+  onOpenChange={({ open }) => {
+    open = open
+    onOpenChange?.({ open })
+  }}>
+  {#snippet trigger()}{@render triggerSnippet?.()}{/snippet}
+  {#snippet content()}{@render contentSnippet?.()}{/snippet}
 </Tooltip>

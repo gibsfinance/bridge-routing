@@ -73,11 +73,14 @@
   <div class="text-surface-contrast-50 w-full text-xs sm:text-sm">
     <div class="flex flex-row items-center leading-8 justify-between w-full text-sm">
       <span>Bridge Fee</span>
-      <Tooltip tooltip="The fee set by the bridge" placement="left">
-        <span class="flex flex-row items-center align-baseline gap-1"
-          ><Loading key="bridge-fee">
-            {#snippet contents()}{bridgeFeeDecimals}{/snippet}
-          </Loading>%</span>
+      <Tooltip placement="left">
+        {#snippet trigger()}
+          <span class="flex flex-row items-center align-baseline gap-1"
+            ><Loading key="bridge-fee">
+              {#snippet contents()}{bridgeFeeDecimals}{/snippet}
+            </Loading>%</span>
+        {/snippet}
+        {#snippet content()}The fee set by the bridge{/snippet}
       </Tooltip>
     </div>
     <!-- from home chain -->
@@ -135,66 +138,67 @@
           {#if shouldDeliver.value}
             <Tooltip
               class="grow flex flex-row items-center"
-              triggerClassName="grow flex flex-row items-center justify-end"
-              placement="top"
-              tooltip={feeType === input.FeeType.FIXED
-                ? 'Fee uses fixed value defined in cost limit'
-                : feeType === input.FeeType.GAS_TIP
-                  ? `Percentage of gas used * ${input.bridgeKey.destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the router for performing this action`
-                  : `The percentage of bridged tokens to use as delivery fee after the bridge fee`}>
-              <!-- <Button
-                title="fee-amount"
-                class="flex flex-row strike tooltip tooltip-top tooltip-left-toward-center items-center relative text-sm {feeType ===
-                input.FeeType.FIXED
-                  ? 'line-through'
-                  : ''}"
-                onclick={focusOnInputChild}> -->
-              {#if feeType === input.FeeType.FIXED}
-                <!-- <span class="flex items-end self-end">0.0%</span> -->
-              {:else if feeType === input.FeeType.GAS_TIP}
-                <span class="grow flex flex-row w-full items-center justify-end">⛽&nbsp;+</span>
-                <span
-                  class="flex flex-row grow leading-8 h-8 min-w-8 text-inherit text-sm items-center justify-end w-fit max-w-24"
-                  style:width={`${etherBasedGasTipFeeLength}em`}>
+              triggerClasses="grow flex flex-row items-center justify-end"
+              placement="top">
+              {#snippet trigger()}
+                {#if feeType === input.FeeType.FIXED}
+                  <!-- <span class="flex items-end self-end">0.0%</span> -->
+                {:else if feeType === input.FeeType.GAS_TIP}
+                  <span class="grow flex flex-row w-full items-center justify-end">⛽&nbsp;+</span>
+                  <span
+                    class="flex flex-row grow leading-8 h-8 min-w-8 text-inherit text-sm items-center justify-end w-fit max-w-24"
+                    style:width={`${etherBasedGasTipFeeLength}em`}>
+                    <NumericInput
+                      sizeClass="flex items-center h-full w-full"
+                      fontSizeInput={null}
+                      {fontSizeClass}
+                      value={input.gasTipFee.value}
+                      decimals={16}
+                      oninput={({ int }) => {
+                        storageBridgeSettings.extend({
+                          deliveryFeeLocked: true,
+                        })
+                        if (int !== null) {
+                          if (int > oneEther * 10n) {
+                            int = oneEther * 10n
+                          }
+                          input.gasTipFee.value = int
+                          return int
+                        }
+                      }} /></span>
+                  <span class="flex-none flex flex-row items-center">%</span>
+                {:else if feeType === input.FeeType.PERCENT}
                   <NumericInput
-                    sizeClass="flex items-center h-full w-full"
+                    sizeClass="flex flex-row w-auto grow leading-8 h-8 text-inherit text-sm"
                     fontSizeInput={null}
                     {fontSizeClass}
-                    value={input.gasTipFee.value}
+                    value={input.percentFee.value ?? 0n}
                     decimals={16}
-                    oninput={(e) => {
+                    oninput={({ int: e }) => {
                       storageBridgeSettings.extend({
                         deliveryFeeLocked: true,
                       })
-                      if (e > oneEther * 10n) {
-                        e = oneEther * 10n
+                      const max = oneEther / 10n
+                      if (e !== null) {
+                        if (feeType === input.FeeType.PERCENT) {
+                          if (e > max) {
+                            e = max
+                          }
+                        }
+                        input.percentFee.value = e
+                        return e
                       }
-                      input.gasTipFee.value = e
-                      return e
-                    }} /></span>
-                <span class="flex-none flex flex-row items-center">%</span>
-              {:else if feeType === input.FeeType.PERCENT}
-                <NumericInput
-                  sizeClass="flex flex-row w-auto grow leading-8 h-8 text-inherit text-sm"
-                  fontSizeInput={null}
-                  {fontSizeClass}
-                  value={input.percentFee.value ?? 0n}
-                  decimals={16}
-                  oninput={(e) => {
-                    storageBridgeSettings.extend({
-                      deliveryFeeLocked: true,
-                    })
-                    const max = oneEther / 10n
-                    if (feeType === input.FeeType.PERCENT) {
-                      if (e > max) {
-                        e = max
-                      }
-                    }
-                    input.percentFee.value = e
-                    return e
-                  }} />
-                <span class="text-sm flex items-center">%</span>
-              {/if}
+                    }} />
+                  <span class="text-sm flex items-center">%</span>
+                {/if}
+              {/snippet}
+              {#snippet content()}
+                {feeType === input.FeeType.FIXED
+                  ? 'Fee uses fixed value defined in cost limit'
+                  : feeType === input.FeeType.GAS_TIP
+                    ? `Percentage of gas used * ${input.bridgeKey.destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the router for performing this action`
+                    : `The percentage of bridged tokens to use as delivery fee after the bridge fee`}
+              {/snippet}
             </Tooltip>
           {:else}
             <span class="flex items-end self-end">0.0%</span>
@@ -203,68 +207,80 @@
         <UndercompensatedWarning />
       </div>
       <div class="flex flex-row leading-8 justify-between items-center h-8">
-        <Tooltip
-          placement="top"
-          tooltip={"Allows cost limit to float with the destination chain's base fee. While unlocked the number in the ui may change. Once a transaction is sent, the number in that transaction's calldata is fixed"}>
-          <button
-            type="button"
-            name="toggle-cost-limit"
-            class="tooltip tooltip-top tooltip-right-toward-center relative text-sm leading-5"
-            onclick={() => {
-              storageBridgeSettings.extend({
-                costLimitLocked: !costLimitLocked,
-              })
-            }}>
-            Cost&nbsp;{#if feeType === input.FeeType.GAS_TIP}Limit&nbsp;<LockIcon
-                locked={costLimitLocked} />{/if}
-          </button>
+        <Tooltip placement="top">
+          {#snippet content()}Allows cost limit to float with the destination chain's base fee.
+            While unlocked the number in the ui may change. Once a transaction is sent, the number
+            in that transaction's calldata is fixed{/snippet}
+          {#snippet trigger()}
+            <Button
+              name="toggle-cost-limit"
+              class="tooltip tooltip-top tooltip-right-toward-center relative text-sm leading-5"
+              onclick={() => {
+                storageBridgeSettings.extend({
+                  costLimitLocked: !costLimitLocked,
+                })
+              }}>
+              Cost&nbsp;{#if feeType === input.FeeType.GAS_TIP}Limit&nbsp;<LockIcon
+                  locked={costLimitLocked} />{/if}
+            </Button>
+          {/snippet}
         </Tooltip>
         {#if shouldDeliver.value}
           <Tooltip
             class="grow justify-end w-full"
-            triggerClassName="grow justify-end w-full"
-            placement="top"
-            tooltip={feeType === input.FeeType.FIXED || feeType === input.FeeType.PERCENT
-              ? 'The fixed fee to tip to an address to perform the work'
-              : 'The max you are willing to tip to the router address'}>
-            <span
-              class="flex items-center text-sm leading-5 grow w-full justify-end"
-              class:opacity-75={!loading.isResolved('gas')}>
-              {#if feeType === input.FeeType.PERCENT}
-                <span
-                  >{humanReadableNumber(costFromInputs ?? 0n, {
-                    decimals: asset?.decimals ?? 18,
-                  })}
-                  {asset?.symbol}</span>
-              {:else if feeType === input.FeeType.GAS_TIP}
-                <!-- put gas tip estimates here -->
-                <NumericInput
-                  value={input.limit.value}
-                  {decimals}
-                  {fontSizeClass}
-                  fontSizeInput={null}
-                  sizeClass="w-full leading-8 h-8 grow"
-                  oninput={(e) => {
-                    storageBridgeSettings.extend({
-                      costLimitLocked: true,
-                    })
-                    input.limit.value = e
-                  }} />
-              {:else if feeType === input.FeeType.FIXED}
-                <NumericInput
-                  value={input.fixedFee.value}
-                  {decimals}
-                  {fontSizeClass}
-                  fontSizeInput={null}
-                  sizeClass="w-full leading-8 h-8 grow"
-                  oninput={(e) => {
-                    storageBridgeSettings.extend({
-                      costLimitLocked: true,
-                    })
-                    input.limit.value = e
-                  }} />&nbsp;{asset?.symbol}
-              {/if}
-            </span>
+            triggerClasses="grow justify-end w-full"
+            placement="top">
+            {#snippet content()}
+              {feeType === input.FeeType.FIXED || feeType === input.FeeType.PERCENT
+                ? 'The fixed fee to tip to an address to perform the work'
+                : 'The max you are willing to tip to the router address'}
+            {/snippet}
+            {#snippet trigger()}
+              <span
+                class="flex items-center text-sm leading-5 grow w-full justify-end"
+                class:opacity-75={!loading.isResolved('gas')}>
+                {#if feeType === input.FeeType.PERCENT}
+                  <span
+                    >{humanReadableNumber(costFromInputs ?? 0n, {
+                      decimals: asset?.decimals ?? 18,
+                    })}
+                    {asset?.symbol}</span>
+                {:else if feeType === input.FeeType.GAS_TIP}
+                  <!-- put gas tip estimates here -->
+                  <NumericInput
+                    value={input.limit.value}
+                    {decimals}
+                    {fontSizeClass}
+                    fontSizeInput={null}
+                    sizeClass="w-full leading-8 h-8 grow"
+                    oninput={({ int }) => {
+                      storageBridgeSettings.extend({
+                        costLimitLocked: true,
+                      })
+                      input.limit.value = int
+                      if (int !== null) {
+                        return int
+                      }
+                    }} />
+                {:else if feeType === input.FeeType.FIXED}
+                  <NumericInput
+                    value={input.fixedFee.value}
+                    {decimals}
+                    {fontSizeClass}
+                    fontSizeInput={null}
+                    sizeClass="w-full leading-8 h-8 grow"
+                    oninput={({ int }) => {
+                      storageBridgeSettings.extend({
+                        costLimitLocked: true,
+                      })
+                      if (int !== null) {
+                        input.limit.value = int
+                        return int
+                      }
+                    }} />&nbsp;{asset?.symbol}
+                {/if}
+              </span>
+            {/snippet}
           </Tooltip>
         {:else}
           <span class="flex text-sm">

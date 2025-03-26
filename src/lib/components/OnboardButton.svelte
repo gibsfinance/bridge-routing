@@ -3,9 +3,15 @@
   import Button from './Button.svelte'
   import Loading from './Loading.svelte'
   import { activeOnboardStep } from '$lib/stores/storage.svelte'
-  import { accountState, connect, switchNetwork } from '$lib/stores/auth/AuthProvider.svelte'
-  import type { AppKitNetwork } from '@reown/appkit/networks'
+  import {
+    accountState,
+    connect,
+    getNetwork,
+    switchNetwork,
+  } from '$lib/stores/auth/AuthProvider.svelte'
   import { loading } from '$lib/stores/loading.svelte'
+  import _ from 'lodash'
+  import type { ChainType } from '@lifi/sdk'
 
   type Props = {
     disabled: boolean
@@ -15,6 +21,7 @@
     requiredChain?: {
       id: number | string
       name: string
+      chainType: ChainType
     } | null
   }
   const {
@@ -24,13 +31,17 @@
     loadingKey,
     requiredChain,
   }: Props = $props()
-  const isRequiredChain = $derived(!!requiredChain && requiredChain.id === accountState.chainId)
-  const incrementOnboardStep = () => {
-    activeOnboardStep.value += 1
-  }
-  const decrementOnboardStep = () => {
-    activeOnboardStep.value -= 1
-  }
+  const isRequiredChain = $derived.by(() => {
+    if (!requiredChain) return false
+    if (requiredChain.chainType !== 'EVM') {
+      const target = getNetwork({
+        chainId: requiredChain.id,
+        name: requiredChain.name,
+      })
+      return !!target
+    }
+    return requiredChain.id === Number(accountState.chainId)
+  })
   const disabled = $derived.by(() => {
     if (!accountState.connected) {
       return false
@@ -58,7 +69,11 @@
         return connect()
       }
       if (!isRequiredChain) {
-        return switchNetwork(requiredChain as AppKitNetwork)
+        const chain = getNetwork({
+          chainId: requiredChain!.id,
+          name: requiredChain!.name,
+        })
+        return switchNetwork(chain!)
       }
       return onClickMain()
     }),
@@ -66,7 +81,7 @@
 </script>
 
 <div class="flex flex-row rounded-2xl overflow-hidden">
-  <Button
+  <!-- <Button
     class="w-14 bg-tertiary-500 text-surface-contrast-950 group flex items-center justify-center"
     onclick={decrementOnboardStep}
     disabled={activeOnboardStep.value === 1}>
@@ -75,7 +90,7 @@
       class="size-7 transition-transform duration-100 {activeOnboardStep.value !== 1
         ? 'group-hover:-translate-x-0.5'
         : ''}" />
-  </Button>
+  </Button> -->
   <Button
     {disabled}
     class="bg-tertiary-500 text-surface-contrast-950 h-14 grow text-xl flex flex-row items-center justify-center shrink-0 gap-2"
@@ -86,7 +101,7 @@
       <Loading key={loadingKey} class="size-6" />
     </div>
   </Button>
-  <Button
+  <!-- <Button
     class="w-14 bg-tertiary-500 text-surface-contrast-950 group flex items-center justify-center"
     onclick={incrementOnboardStep}
     disabled={activeOnboardStep.value === 3}>
@@ -95,5 +110,5 @@
       class="size-7 transition-transform duration-100 {activeOnboardStep.value !== 3
         ? 'group-hover:translate-x-0.5'
         : ''}" />
-  </Button>
+  </Button> -->
 </div>

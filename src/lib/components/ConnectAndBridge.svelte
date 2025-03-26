@@ -140,6 +140,7 @@
     return await transactions.sendTransaction({
       ...bridgeSettings.transactionInputs,
       ...transactions.options(chainId, latestBlock),
+      account: accountState.address as Hex,
     })
   }
   let amountInBefore = ''
@@ -185,7 +186,9 @@
   // const canDeliver = $derived.by(() => {
   //   return isBridgeToken || hasSufficientApproval || inputIsNative
   // })
-  const isRequiredChain = $derived(accountState.chainId === Number(input.bridgeKey.fromChain))
+  const isRequiredChain = $derived(
+    Number(accountState.chainId) === Number(input.bridgeKey.fromChain),
+  )
   const hasSufficientApproval = $derived(
     !!bridgeSettings.approval.value &&
       bridgeSettings.approval.value >= bridgeSettings.amountToBridge,

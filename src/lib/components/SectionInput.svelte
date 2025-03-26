@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Token } from '$lib/types.svelte'
+  import type { InputValue, Token } from '$lib/types.svelte'
   import _ from 'lodash'
   import NumericInput from './NumericInput.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
@@ -10,28 +10,34 @@
   import BalanceReadout from './BalanceReadout.svelte'
   import { largeInputFontScaler } from '$lib/stores/font-scaler'
   import { humanReadableNumber } from '$lib/stores/utils'
+  import Loader from './Loader.svelte'
+  import Loading from './Loading.svelte'
 
   type Props = {
     id?: string
     label?: string
-    token: Token | null
+    token?: Token | null
     showRadio?: boolean
     disabled?: boolean
     invalidValue?: boolean
+    valueLoadingKey?: string | null
     readonlyInput?: boolean
     readonlyTokenSelect?: boolean
     focused?: boolean
-    oninput?: (v: bigint) => void
+    compressed?: boolean
+    overrideAccount?: string | null
+    oninput?: (values: InputValue) => bigint | undefined | void
     value: string | bigint | null
     modal?: Snippet<[{ close: () => void }]>
     radio?: Snippet
     underinput?: Snippet
     onmax?: (v: bigint) => void
     onbalanceupdate?: (v: bigint | null) => void
+    onclick?: () => void
   }
   const {
     id = _.uniqueId('section-input-'),
-    token,
+    token = null,
     label,
     oninput,
     invalidValue = false,
@@ -39,23 +45,35 @@
     readonlyTokenSelect = false,
     disabled = false,
     focused = false,
+    overrideAccount,
     value,
+    valueLoadingKey,
+    compressed = false,
     radio,
     modal,
     underinput,
     onmax,
     onbalanceupdate,
+    onclick,
   }: Props = $props()
   const sectionDisabled = $derived(readonlyInput && readonlyTokenSelect)
-  $inspect(invalidValue)
+  let balance = $state(0n)
 </script>
 
-<Section {id} {focused} disabled={sectionDisabled}>
-  <div class="flex flex-row justify-between w-full h-5">
-    <span class="text-sm text-gray-500">{label}</span>
-    {@render radio?.()}
-  </div>
-  <div class="flex flex-row items-center justify-between w-full">
+<Section {id} {focused} disabled={sectionDisabled} {compressed} {onclick}>
+  {#if !compressed || radio}
+    <div class="flex flex-row justify-between w-full h-5">
+      <span class="text-sm text-gray-500"
+        >{#if !compressed}{label}{/if}</span>
+      {@render radio?.()}
+    </div>
+  {/if}
+  <div class="flex flex-row items-center justify-between w-full relative">
+    {#if valueLoadingKey}
+      <div class="absolute inset-0 flex items-center justify-center">
+        <Loading key={valueLoadingKey} />
+      </div>
+    {/if}
     {#if readonlyInput}
       {@const valIsNumber = typeof value === 'bigint'}
       {@const humanReadable =
@@ -71,12 +89,11 @@
     {:else}
       <NumericInput
         {id}
-        class="w-full input py-0 px-0 ring-0 focus:ring-0 placeholder:text-surface-contrast-50 h-10 leading-10 tracking-tight"
-        textClass="text-left font-inter {invalidValue
-          ? 'text-red-500'
-          : 'text-surface-contrast-50'}"
+        class="w-full input py-0 px-0 ring-0 focus:ring-0 h-10 leading-10 tracking-tight"
+        textClass="text-left font-inter"
         value={typeof value === 'bigint' ? value : null}
         decimals={token?.decimals ?? 0}
+        invalid={invalidValue}
         {disabled}
         {oninput} />
     {/if}
@@ -97,18 +114,25 @@
     {/if}
   </div>
 
-  <div class="flex gap-1 flex-row-reverse justify-between grow w-full h-5">
-    {#if accountState.address && (!!onmax || !!onbalanceupdate)}
-      <BalanceReadout
-        {token}
-        account={accountState.address}
-        showLoader
-        roundedClasses={null}
-        hideSymbol
-        decimalLimit={9}
-        {onbalanceupdate}
-        {onmax} />
-    {/if}
-    {@render underinput?.()}
-  </div>
+  {#if !compressed || underinput}
+    <div class="flex gap-1 flex-row-reverse justify-between grow w-full h-5">
+      {#if (overrideAccount || accountState.address) && (!!onmax || !!onbalanceupdate)}
+        <BalanceReadout
+          {token}
+          account={overrideAccount ?? accountState.address}
+          showLoader
+          roundedClasses={null}
+          hideSymbol
+          decimalLimit={9}
+          onbalanceupdate={!onbalanceupdate
+            ? undefined
+            : (v) => {
+                balance = v ?? 0n
+                onbalanceupdate?.(v)
+              }}
+          {onmax} />
+      {/if}
+      {@render underinput?.()}
+    </div>
+  {/if}
 </Section>
