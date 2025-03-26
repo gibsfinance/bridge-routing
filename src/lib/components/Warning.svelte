@@ -38,7 +38,7 @@
 
 {#if show}
   <div class={wrapperClassNames}>
-    <Tooltip {placement} gutter={0} triggerClasses={triggerClass}>
+    <Tooltip {placement} triggerClasses={triggerClass}>
       {#snippet trigger()}!!{/snippet}
       {#snippet content()}{tooltip}{/snippet}
     </Tooltip>

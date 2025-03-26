@@ -49,7 +49,7 @@
   const triggerClasses = $derived(classNames('flex', triggerClassNames))
   const contentBase = $derived(
     classNames(
-      'card bg-surface-50 text-surface-contrast-50 text-sm px-2 py-1',
+      'card bg-white border text-surface-contrast-50 text-sm px-2 py-1',
       maxWidth,
       contentClassNames,
     ),
@@ -58,6 +58,7 @@
 
 <Tooltip
   {open}
+  arrow
   positioning={{ placement, gutter }}
   {closeDelay}
   {interactive}
@@ -66,9 +67,9 @@
   {contentBase}
   {positionerClasses}
   {openDelay}
-  onOpenChange={({ open }) => {
-    open = open
-    onOpenChange?.({ open })
+  onOpenChange={({ open: openProp }) => {
+    open = openProp
+    onOpenChange?.({ open: openProp })
   }}>
   {#snippet trigger()}{@render triggerSnippet?.()}{/snippet}
   {#snippet content()}{@render contentSnippet?.()}{/snippet}

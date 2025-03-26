@@ -67,10 +67,15 @@
     }
   }
   $effect.pre(() => {
-    value =
-      startingValue !== null
-        ? (parsedValue() ?? numberWithCommas(formatUnits(startingValue, decimals)))
-        : ''
+    if (startingValue === null) {
+      return
+    }
+    const parsedVal = untrack(() => parsedValue())
+    const before = parseUnits(parsedVal ?? '0', decimals)
+    if (parsedVal === null || before === startingValue) {
+      return
+    }
+    value = numberWithCommas(formatUnits(startingValue, decimals))
   })
   const fontSize = $derived(
     fontSizeInput === undefined ? largeInputFontScaler(value?.length) : fontSizeInput,
@@ -89,17 +94,16 @@
       return
     }
     // if the parsed value fails, then we use the previous value or the best guess
+    // console.log(bestGuess, currentTextValue)
+    value = currentTextValue
     const clamped = props.oninput?.({
       value: currentTextValue,
       int: bestGuess,
     })
-    console.log(
-      clamped,
-      untrack(() => startingValue),
-      bestGuess,
-    )
     if (clamped !== undefined && clamped !== bestGuess) {
+      const before = value
       value = numberWithCommas(formatUnits(clamped, decimals))
+      console.log(before, startingValue, value)
     }
   }
   const onfocus: FormEventHandler<HTMLInputElement> = (e) => {

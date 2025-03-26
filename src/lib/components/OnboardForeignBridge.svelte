@@ -93,7 +93,7 @@
     return address ? address.toLowerCase() : null
   }
   const fromChain = $derived.by(() => foreignBridgeInputs.value?.fromChain)
-  const fromChainIsEvm = $derived.by(() => {
+  const lifiFromChainIsEvm = $derived.by(() => {
     const chain = availableChains.get(fromChain!)
     return chain?.chainType === ChainType.EVM
   })
@@ -366,7 +366,7 @@
   )
   const needsAllowanceForLifi = $derived.by(() => {
     const pushValue = latestLifiQuote?.transactionRequest?.value
-    if ((pushValue && BigInt(pushValue) > 0n) || !fromChainIsEvm) {
+    if ((pushValue && BigInt(pushValue) > 0n) || !lifiFromChainIsEvm) {
       return false
     }
     return true
@@ -405,7 +405,7 @@
   // })
   const canBridge = $derived.by(() => {
     if (bridgingToEthereum) {
-      if (!fromChainIsEvm && !destinationAddressIsValid) {
+      if (!lifiFromChainIsEvm && !destinationAddressIsValid) {
         return false
       }
       return (
@@ -563,7 +563,7 @@
       ],
     }),
   )
-  const initiateLifiBridge = $derived(
+  const initiateLifiFromEvmBridge = $derived(
     transactionButtonPress({
       toast,
       chainId: Number(bridgeKey.fromChain),
@@ -819,11 +819,17 @@
       ],
     }),
   )
+  const initiateLifiFromNonEvmBridge = $derived(async () => {
+    console.log('initiateLifiFromNonEvmBridge')
+  })
   const bridgeTokensToEthereumStep = $derived.by(() => {
     if (needsAllowanceForLifi) {
       return incrementLifiAllowance
     }
-    return initiateLifiBridge
+    if (lifiFromChainIsEvm) {
+      return initiateLifiFromEvmBridge
+    }
+    return initiateLifiFromNonEvmBridge
   })
   const bridgeTokensToPulsechainStep = $derived.by(() => {
     if (pulsechainBridgeNeedsApproval) {
@@ -939,7 +945,7 @@
       {/if}
     {/snippet}
   </SectionInput>
-  {#if bridgingToEthereum && !fromChainIsEvm}
+  {#if bridgingToEthereum && !lifiFromChainIsEvm}
     <Input
       class="border rounded-2xl py-2 px-4 focus:ring-0 text-surface-contrast-50 {destinationAddressIsValid ===
       null
