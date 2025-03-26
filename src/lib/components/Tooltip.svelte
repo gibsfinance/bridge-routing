@@ -41,7 +41,7 @@
     content: contentSnippet,
   }: Props = $props()
   let open = $state(false)
-  const classes = $derived(classNames('relative flex tooltip-container', className))
+  const classes = $derived(classNames('flex', className))
   const positionerClasses = $derived(classNames('pointer-events-none', positionerClassName))
   // const onOpenChange = (details: { open: boolean }) => {
   //   open = details.open

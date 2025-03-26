@@ -10,8 +10,16 @@
     step: number | string
     triggerClass?: ClassParam
     contentClass?: ClassParam
+    triggerWrapperPositionClass?: ClassParam
   }
-  const { placement = 'top', children, step, triggerClass, contentClass }: Props = $props()
+  const {
+    placement = 'top',
+    children,
+    step,
+    triggerClass,
+    triggerWrapperPositionClass = 'top-0 left-0',
+    contentClass,
+  }: Props = $props()
   const triggerVisible = $derived(showTooltips.value)
   const contentClasses = $derived(
     classNames('card preset-filled-primary-500 text-sm px-2 py-1', contentClass),
@@ -34,6 +42,7 @@
   closeDelay={0}
   interactive={false}
   {contentClasses}
+  class={triggerWrapperPositionClass}
   {trigger}
   {content}>
 </Tooltip>

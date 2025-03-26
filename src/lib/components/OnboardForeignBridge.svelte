@@ -605,11 +605,6 @@
       chainId: Number(bridgeKey.fromChain),
       steps: [
         async () => {
-          console.log({
-            account: accountState.address as Hex,
-            chainId: Number(bridgeKey.fromChain),
-            ...bridgeSettings.transactionInputs,
-          })
           const tx = await transactions.sendTransaction({
             account: accountState.address as Hex,
             chainId: Number(bridgeKey.fromChain),
@@ -785,6 +780,7 @@
     !pulsexQuoteResult || !amountInputToPulsex || !amountOutputFromPulsex,
   )
   let pulsexAllowance = $state<bigint | null>(null)
+  $inspect('pulsexAllowance', pulsexAllowance)
   $effect.pre(() => {
     if (!tokenInPulsex || !accountState.address || !latestPulseBlock || !swappingOnPulsex) return
     const result = transactions.loadAllowance({
@@ -997,7 +993,6 @@
       placeholder="Ethereum recipient address (0x...)"
       value={destinationAddress}
       oninput={(str) => {
-        console.log('oninput', str)
         foreignBridgeInputs.extend({
           toAddress: str,
         })
@@ -1094,10 +1089,29 @@
 {#if showTooltips.value}
   <div class="absolute top-0 left-0 w-full h-full">
     <GuideShield show={true} />
-    <GuideStep step={1} triggerClass="absolute top-9 right-5">
-      <p>Select the token and network you want to move from.</p>
-    </GuideStep>
-    <GuideStep step={2} triggerClass="absolute top-24 left-5">
+    {#if bridgingToEthereum}
+      <GuideStep step={1} triggerClass="absolute right-24 top-4">
+        <p>Select the token and network you want to move from.</p>
+      </GuideStep>
+      <GuideStep step={2} triggerClass="absolute right-24 bottom-4">
+        <p>Send the token through li.fi to get to Ethereum.</p>
+      </GuideStep>
+    {:else if bridgingToPulsechain}
+      <GuideStep step={1} triggerClass="absolute right-24 top-20">
+        <p>Select the token you wish to bridge to PulseChain.</p>
+      </GuideStep>
+      <GuideStep step={2} triggerClass="absolute right-24 bottom-4">
+        <p>Trigger the bridge to PulseChain.</p>
+      </GuideStep>
+    {:else}
+      <GuideStep step={1} triggerClass="absolute right-24 top-36">
+        <p>Select the token you wish to swap from.</p>
+      </GuideStep>
+      <GuideStep step={2} triggerClass="absolute right-24 bottom-4">
+        <p>Trigger the swap on PulseX.</p>
+      </GuideStep>
+    {/if}
+    <!-- <GuideStep step={2} triggerClass="absolute top-24 left-5">
       <p>Set an amount to bridge.</p>
     </GuideStep>
     <GuideStep step={3} triggerClass="absolute top-1/2 right-5">
@@ -1105,6 +1119,6 @@
     </GuideStep>
     <GuideStep step={4} triggerClass="absolute left-0 right-0 mx-auto bottom-5">
       <p>Initiate cross chain swap to Ethereum.</p>
-    </GuideStep>
+    </GuideStep> -->
   </div>
 {/if}
