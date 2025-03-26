@@ -251,8 +251,8 @@ export const tokenBalanceLoadingKey = (chainId: number, address: string, account
 // this is not the optimal way to do this, but these watchers
 // should only be used for a heavily constrained set of cases
 // the cases are being cleared on a regular interval
-const balanceTTL = 1000 * 60 * 20
-const balanceCache = new Map<string, { time: number; value: bigint | null }>()
+const balanceTTL = 1000 * 60
+export const balances = new SvelteMap<string, { time: number; value: bigint | null }>()
 export class TokenBalanceWatcher {
   private balanceCleanup: Cleanup | null = null
   private chainId: number | null = null
@@ -261,9 +261,9 @@ export class TokenBalanceWatcher {
   value = $state<bigint | null>(null)
   private clearLongtailBalances() {
     const now = Date.now()
-    for (const [key, value] of balanceCache.entries()) {
-      if (now - value.time > balanceTTL || balanceCache.size >= 100) {
-        balanceCache.delete(key)
+    for (const [key, value] of balances.entries()) {
+      if (now - value.time > balanceTTL || balances.size >= 100) {
+        balances.delete(key)
       }
     }
   }
@@ -323,7 +323,7 @@ export class TokenBalanceWatcher {
         return () => {}
       }
       this.clearLongtailBalances()
-      balanceCache.set(this.key, { time: Date.now(), value: v })
+      balances.set(this.key, { time: Date.now(), value: v })
       this.value = v
     })
     return () => {

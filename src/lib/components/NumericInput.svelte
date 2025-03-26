@@ -11,7 +11,7 @@
   type Props = {
     id?: string
     value?: bigint | null
-    decimals?: number
+    decimals?: number | null
     disabled?: boolean
     oninput?: (values: InputValue) => bigint | undefined | void
     onblur?: FormEventHandler<HTMLInputElement>
@@ -32,7 +32,7 @@
     // fit = false,
     id = _.uniqueId('numeric-input-'),
     value: startingValue = null,
-    decimals = 18,
+    decimals,
     fontSizeInput,
     placeholder = '0',
     disabled = false,
@@ -46,7 +46,25 @@
     invalid = false,
     ...props
   }: Props = $props()
+  const parsedValue = () => {
+    try {
+      return stripNonNumber(value)
+    } catch {
+      return null
+    }
+  }
+  const updateValue = (val: string) => {
+    value = val
+    updateInvalidCharacters(val)
+  }
+  const updateInvalidCharacters = (val: string) => {
+    const acceptableNonNumeric = val.split(',').join('').split('.').join('')
+    invalidCharacters = acceptableNonNumeric !== acceptableNonNumeric.replace(/[^0-9.]/g, '')
+  }
+  let inputRef: HTMLInputElement | null = null
   let invalidCharacters = $state(false)
+  let value = $state('')
+  let focused = $state(false)
   const classes = $derived(
     classNames(
       sizeClass,
@@ -57,16 +75,10 @@
       invalidCharacters || invalid ? invalidTextClass : validTextClass,
     ),
   )
-  let inputRef: HTMLInputElement | null = null
-  let value = $state('')
-  const parsedValue = () => {
-    try {
-      return numberWithCommas(stripNonNumber(value))
-    } catch {
-      return null
-    }
-  }
   $effect.pre(() => {
+    if (_.isNil(decimals)) {
+      return
+    }
     if (startingValue === null) {
       return
     }
@@ -75,17 +87,18 @@
     if (parsedVal === null || before === startingValue) {
       return
     }
-    value = numberWithCommas(formatUnits(startingValue, decimals))
+    updateValue(formatUnits(startingValue, decimals))
   })
   const fontSize = $derived(
     fontSizeInput === undefined ? largeInputFontScaler(value?.length) : fontSizeInput,
   )
   const oninput: FormEventHandler<HTMLInputElement> = (e) => {
+    if (_.isNil(decimals)) {
+      return
+    }
     const currentTextValue = (e.target as HTMLInputElement).value
     let bestGuess = untrack(() => startingValue)
     let failed = false
-    const acceptableNonNumeric = currentTextValue.split(',').join('').split('.').join('')
-    invalidCharacters = acceptableNonNumeric !== acceptableNonNumeric.replace(/[^0-9.]/g, '')
     try {
       const stripped = stripNonNumber(currentTextValue)
       bestGuess = parseUnits(stripped, decimals)
@@ -94,26 +107,25 @@
       return
     }
     // if the parsed value fails, then we use the previous value or the best guess
-    // console.log(bestGuess, currentTextValue)
-    value = currentTextValue
+    updateValue(currentTextValue)
     const clamped = props.oninput?.({
       value: currentTextValue,
       int: bestGuess,
     })
     if (clamped !== undefined && clamped !== bestGuess) {
-      const before = value
-      value = numberWithCommas(formatUnits(clamped, decimals))
-      console.log(before, startingValue, value)
+      updateValue(formatUnits(clamped, decimals))
     }
   }
   const onfocus: FormEventHandler<HTMLInputElement> = (e) => {
-    // focused = true
+    focused = true
     props.onfocus?.(e)
   }
   const onblur: FormEventHandler<HTMLInputElement> = (e) => {
-    // focused = false
+    focused = false
+    updateValue(value)
     props.onblur?.(e)
   }
+  const val = $derived(focused ? value : numberWithCommas(value))
 </script>
 
 <input
@@ -125,7 +137,7 @@
   {id}
   {placeholder}
   class={classes}
-  {value}
+  value={val}
   {oninput}
   {onblur}
   {onfocus} />

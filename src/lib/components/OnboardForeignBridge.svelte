@@ -40,11 +40,13 @@
   import { untrack } from 'svelte'
   import {
     assetLink,
+    balances,
     blocks,
     fetchMinBridgeAmountIn,
     loadAssetLink,
     minBridgeAmountIn,
     minBridgeAmountInKey,
+    tokenBalanceLoadingKey,
   } from '$lib/stores/chain-events.svelte'
   import SectionInput from './SectionInput.svelte'
   import TokenSelect from './TokenSelect.svelte'
@@ -280,7 +282,7 @@
       })
     return quote.cleanup
   })
-  const quoteMatchesLatest = $derived.by(() => {
+  const lifiQuoteMatchesLatest = $derived.by(() => {
     if (!latestLifiQuote || !quoteInputs) return false
     const { action } = latestLifiQuote
     const {
@@ -306,25 +308,7 @@
     if (!latestLifiQuote) return null
     return latestLifiQuote.estimate.toAmount ? BigInt(latestLifiQuote.estimate.toAmount) : null
   })
-  const estimatedAmount = $derived.by(() => {
-    if (!quoteMatchesLatest || !tokenOutputLifi) return ''
-    const formatted = formatUnits(
-      BigInt(latestLifiQuote!.estimate.toAmount),
-      tokenOutputLifi.decimals,
-    )
-    const [i, d] = formatted.split('.')
-    return `${i}.${d.slice(0, 9)}`
-  })
-  const tokenOutWithPrefixedName = $derived.by(() => {
-    if (!tokenOutputLifi) return null
-    return {
-      ...tokenOutputLifi,
-      name: estimatedAmount
-        ? `${estimatedAmount} ${tokenOutputLifi.symbol}`
-        : tokenOutputLifi.symbol,
-    }
-  })
-  const getLifiApproval = $derived(
+  const incrementLifiAllowance = $derived(
     !tokenInputLifi
       ? _.noop
       : transactionButtonPress({
@@ -342,9 +326,16 @@
               })
             },
           ],
+          after: () => {
+            const token = tokenInputLifi!
+            if (!token) return
+            balances.delete(
+              tokenBalanceLoadingKey(Number(token.chainId), token.address!, accountState.address!),
+            )
+          },
         }),
   )
-  const sendLifiTransaction = $derived(
+  const initiateLifiFromEvmBridge = $derived(
     !tokenInputLifi
       ? _.noop
       : transactionButtonPress({
@@ -367,15 +358,19 @@
           ],
         }),
   )
+  let lifiAllowance = $state(null as bigint | null)
   const needsAllowanceForLifi = $derived.by(() => {
     const pushValue = latestLifiQuote?.transactionRequest?.value
     if ((pushValue && BigInt(pushValue) > 0n) || !lifiFromChainIsEvm) {
       return false
     }
-    return true
+    return lifiAllowance === null || lifiAllowance < amountInputFromLifi
   })
+  const needsApprovalForLifi = $derived.by(() => {
+    return needsAllowanceForLifi && (lifiAllowance === null || lifiAllowance < amountInputFromLifi)
+  })
+  $inspect(latestLifiQuote)
   const lifiSpender = $derived.by(() => latestLifiQuote?.transactionRequest?.to)
-  let lifiAllowance = $state(null as bigint | null)
   $effect(() => {
     const token = tokenInputLifi
     if (!token) return
@@ -406,13 +401,13 @@
   //   }
   //   return sendLifiTransaction
   // })
-  const canBridge = $derived.by(() => {
+  const buttonEnabled = $derived.by(() => {
     if (bridgingToEthereum) {
       if (!lifiFromChainIsEvm && !destinationAddressIsValid) {
         return false
       }
       return (
-        quoteMatchesLatest &&
+        lifiQuoteMatchesLatest &&
         !!latestLifiQuote &&
         !!amountOutputFromLifi &&
         !!amountInputFromLifi &&
@@ -428,7 +423,7 @@
         amountIn.value > maxCrossPulsechainBridge
       )
     }
-    return !swapDisabled
+    return !swapDisabled && pulsexQuoteMatchesLatest
   })
   const requiredLifiChain = $derived.by(() => {
     const token = tokenInputLifi
@@ -488,7 +483,7 @@
   const bridgeFeeAmount = $derived((bridgeFeePercent * bridgeAmount) / oneEther)
   const amountOutputFromBridge = $derived(bridgeAmount - bridgeFeeAmount)
   let amountInputToPulsex = $state(0n)
-  const amountOutputFromPulsex = $derived(0n)
+  // const amountOutputFromPulsex = $derived(0n)
   // $effect.pre(() => {
   //   if (tokenInput || bridgeKey.fromChain !== Chains.ETH) return
   //   bridgeSettings.assetIn.value = {
@@ -548,43 +543,43 @@
   $effect(() => {
     recipient.value = (accountState.address ?? zeroAddress) as Hex
   })
-  const incrementLifiAllowance = $derived(
-    transactionButtonPress({
-      toast,
-      chainId: Number(bridgeKey.fromChain),
-      steps: [
-        async () => {
-          if (!accountState.address) return
-          return await transactions.checkAndRaiseApproval({
-            token: tokenInputLifi!.address! as Hex,
-            spender: bridgeSettings.bridgePathway!.from!,
-            chainId: Number(bridgeKey.fromChain),
-            minimum: bridgeAmount,
-            latestBlock: blocks.get(Number(bridgeKey.fromChain))!,
-          })
-        },
-      ],
-    }),
-  )
-  const initiateLifiFromEvmBridge = $derived(
-    transactionButtonPress({
-      toast,
-      chainId: Number(bridgeKey.fromChain),
-      steps: [
-        async () => {
-          const tx = await transactions.sendTransaction({
-            account: accountState.address as Hex,
-            chainId: Number(bridgeKey.fromChain),
-            ...bridgeSettings.transactionInputs,
-          })
-          bridgeTx.extend({
-            hash: tx,
-          })
-          return tx
-        },
-      ],
-    }),
-  )
+  // const incrementLifiAllowance = $derived(
+  //   transactionButtonPress({
+  //     toast,
+  //     chainId: Number(bridgeKey.fromChain),
+  //     steps: [
+  //       async () => {
+  //         if (!accountState.address) return
+  //         return await transactions.checkAndRaiseApproval({
+  //           token: tokenInputLifi!.address! as Hex,
+  //           spender: bridgeSettings.bridgePathway!.from!,
+  //           chainId: Number(bridgeKey.fromChain),
+  //           minimum: bridgeAmount,
+  //           latestBlock: blocks.get(Number(bridgeKey.fromChain))!,
+  //         })
+  //       },
+  //     ],
+  //   }),
+  // )
+  // const initiateLifiFromEvmBridge = $derived(
+  //   transactionButtonPress({
+  //     toast,
+  //     chainId: Number(bridgeKey.fromChain),
+  //     steps: [
+  //       async () => {
+  //         const tx = await transactions.sendTransaction({
+  //           account: accountState.address as Hex,
+  //           chainId: Number(bridgeKey.fromChain),
+  //           ...bridgeSettings.transactionInputs,
+  //         })
+  //         bridgeTx.extend({
+  //           hash: tx,
+  //         })
+  //         return tx
+  //       },
+  //     ],
+  //   }),
+  // )
   const incrementApprovalToPulsechain = $derived(
     transactionButtonPress({
       toast,
@@ -690,7 +685,7 @@
   //     amountIn.value > maxCrossPulsechainBridge
   //   )
   // })
-  const lifiNeedsAllowance = false
+  // const lifiNeedsAllowance = false
   // const tokenOutputAddress = $derived(plsOutToken.value)
   const defaultPulsexTokens = {
     tokenIn: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
@@ -716,36 +711,39 @@
   const tokenOut = $derived.by(() => {
     return findToken(tokenOutAddress) ?? findToken(defaultPulsexTokens.tokenOut) ?? null
   })
-  let amountToSwapIn = $state<bigint | null>(0n)
-  let amountToSwapOut = $state<bigint | null>(null)
-  let quoteResult = $state<SerializedTrade | null>(null)
+  // let amountToSwapIn = $state<bigint | null>(0n)
+  // let amountOutputFromPulsex = $state<bigint | null>(null)
+  let pulsexQuoteResult = $state<SerializedTrade | null>(null)
   const latestPulseBlock = $derived(blocks.get(Number(Chains.PLS)))
   $effect(() => {
     if (
       !tokenInPulsex ||
       !tokenOut ||
-      (!amountToSwapIn && !amountToSwapOut) ||
+      !amountInputToPulsex ||
       !latestPulseBlock ||
       !swappingOnPulsex
     ) {
+      console.log(
+        'swapping on pulsex',
+        !tokenInPulsex,
+        !tokenOut,
+        !amountInputToPulsex,
+        !latestPulseBlock,
+        !swappingOnPulsex,
+      )
       return
     }
     const quote = getPulseXQuote({
       tokenIn: tokenInPulsex,
       tokenOut,
-      amountIn: amountToSwapIn,
+      amountIn: amountInputToPulsex,
       amountOut: null,
     })
     quote.promise.then((result) => {
       if (quote.controller.signal.aborted || !result) return
-      quoteResult = result
-      amountToSwapOut = truncateValue(result.outputAmount.value, tokenOut.decimals)
+      pulsexQuoteResult = result
     })
     return quote.cleanup
-  })
-  const pulsexQuoteMatchesLatest = $derived.by(() => {
-    if (!quoteResult || !amountToSwapIn) return false
-    return quoteResult.inputAmount.value === amountToSwapIn.toString()
   })
   const truncateValue = (value: string, decimals: number) => {
     const int = BigInt(value)
@@ -761,8 +759,18 @@
     }
     return int
   }
+  const amountOutputFromPulsex = $derived.by(() => {
+    if (!pulsexQuoteResult || !tokenOut) return null
+    return truncateValue(pulsexQuoteResult.outputAmount.value, tokenOut.decimals)
+  })
+  const pulsexQuoteMatchesLatest = $derived.by(() => {
+    if (!pulsexQuoteResult || !amountInputToPulsex) return false
+    return pulsexQuoteResult.inputAmount.value === amountInputToPulsex.toString()
+  })
   const swapRouterAddress = '0xDA9aBA4eACF54E0273f56dfFee6B8F1e20B23Bba'
-  const swapDisabled = $derived(!amountToSwapIn || !amountToSwapOut || !pulsexQuoteMatchesLatest)
+  const swapDisabled = $derived(
+    !pulsexQuoteResult || !amountInputToPulsex || !amountOutputFromPulsex,
+  )
   let pulsexAllowance = $state<bigint | null>(null)
   $effect.pre(() => {
     if (!tokenInPulsex || !accountState.address || !latestPulseBlock || !swappingOnPulsex) return
@@ -778,11 +786,13 @@
     })
     return result.cleanup
   })
-  const needsAllowanceForPulsex = $derived(
-    tokenInPulsex?.address !== zeroAddress &&
-      amountToSwapIn !== null &&
-      (!pulsexAllowance || pulsexAllowance < amountToSwapIn),
-  )
+  const needsAllowanceForPulsex = $derived.by(() => {
+    return (
+      tokenInPulsex?.address !== zeroAddress &&
+      amountInputToPulsex !== null &&
+      (!pulsexAllowance || pulsexAllowance < amountInputToPulsex)
+    )
+  })
   const incrementPulsexAllowance = $derived(
     transactionButtonPress({
       toast,
@@ -794,7 +804,7 @@
             token: tokenInPulsex!.address! as Hex,
             spender: swapRouterAddress,
             chainId: Number(Chains.PLS),
-            minimum: amountToSwapIn!,
+            minimum: amountInputToPulsex!,
             latestBlock: latestPulseBlock!,
           })
         },
@@ -807,11 +817,14 @@
       chainId: Number(Chains.PLS),
       steps: [
         async () => {
-          const transactionInfo = getTransactionDataFromTrade(Number(Chains.PLS), quoteResult!)
+          const transactionInfo = getTransactionDataFromTrade(
+            Number(Chains.PLS),
+            pulsexQuoteResult!,
+          )
           const tx = await transactions.sendTransaction({
             data: transactionInfo.calldata as Hex,
             to: swapRouterAddress,
-            gas: BigInt(quoteResult!.gasEstimate!),
+            gas: BigInt(pulsexQuoteResult!.gasEstimate!),
             value: BigInt(transactionInfo.value),
             chainId: Number(Chains.PLS),
             maxFeePerGas: latestPulseBlock!.baseFeePerGas! * 2n,
@@ -826,7 +839,7 @@
     console.log('initiateLifiFromNonEvmBridge')
   })
   const bridgeTokensToEthereumStep = $derived.by(() => {
-    if (needsAllowanceForLifi) {
+    if (needsApprovalForLifi) {
       return incrementLifiAllowance
     }
     if (lifiFromChainIsEvm) {
@@ -836,7 +849,7 @@
   })
   const bridgeTokensToPulsechainStep = $derived.by(() => {
     if (pulsechainBridgeNeedsApproval) {
-      return incrementPulsexAllowance
+      return incrementApprovalToPulsechain
     }
     return initiateBridgeToPulsechain
   })
@@ -866,7 +879,7 @@
     if (!chain) {
       const chain = getNetwork({
         chainId: Number(chainId),
-        name: chainId,
+        name: '',
       })
       if (chain) {
         return {
@@ -885,7 +898,7 @@
   })
   const buttonText = $derived.by(() => {
     if (activeOnboardStep.value === 1) {
-      if (needsAllowanceForLifi) {
+      if (needsApprovalForLifi) {
         return 'Approve'
       }
       return 'Exchange'
@@ -904,11 +917,9 @@
     if (activeOnboardStep.value === 1) {
       return 'lifi-quote'
     } else if (activeOnboardStep.value === 2) {
-      return 'bridge-to-ethereum'
-    } else if (activeOnboardStep.value === 3) {
       return 'bridge-to-pulsechain'
     }
-    return 'pulsex-swap'
+    return pulsexQuoteResult ? 'pulsex-quote' : ''
   })
 </script>
 
@@ -920,6 +931,7 @@
     token={tokenInputLifi}
     value={amountInputFromLifi}
     compressed={!bridgingToEthereum}
+    dashWhenCompressed={!bridgingToEthereum}
     readonlyInput={!bridgingToEthereum}
     readonlyTokenSelect={!bridgingToEthereum}
     inputWarning={lifiQuoteError ?? null}
@@ -984,6 +996,7 @@
     token={crossingTokenInput}
     value={bridgingToEthereum ? amountOutputFromLifi : amountIn.value}
     compressed={!bridgingToEthereum && !bridgingToPulsechain}
+    dashWhenCompressed={swappingOnPulsex}
     readonlyInput={!bridgingToPulsechain}
     readonlyTokenSelect={!bridgingToPulsechain}
     valueLoadingKey={bridgingToEthereum ? 'lifi-cross-chain-swap' : null}
@@ -1015,6 +1028,7 @@
       ? amountOutputFromBridge
       : amountInputToPulsex}
     compressed={!swappingOnPulsex}
+    dashWhenCompressed={bridgingToEthereum}
     readonlyInput={!swappingOnPulsex}
     readonlyTokenSelect
     onbalanceupdate={() => {}}
@@ -1025,6 +1039,12 @@
     }}
     onmax={(balance) => {
       amountInputToPulsex = balance
+    }}
+    oninput={({ int }) => {
+      if (int !== null) {
+        amountInputToPulsex = int
+        return int
+      }
     }} />
   <SectionInput
     label="Output"
@@ -1032,6 +1052,7 @@
     value={amountOutputFromPulsex}
     focused={swappingOnPulsex}
     compressed={!swappingOnPulsex}
+    dashWhenCompressed
     readonlyInput
     readonlyTokenSelect
     onbalanceupdate={() => {}}
@@ -1042,7 +1063,7 @@
       }
     }} />
   <OnboardButton
-    disabled={!canBridge}
+    disabled={!buttonEnabled}
     {requiredChain}
     onclick={onButtonClick}
     text={buttonText}

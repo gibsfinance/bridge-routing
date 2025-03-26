@@ -26,6 +26,7 @@
     inputWarning?: string | null
     focused?: boolean
     compressed?: boolean
+    dashWhenCompressed?: boolean
     overrideAccount?: string | null
     oninput?: (values: InputValue) => bigint | undefined | void
     value: string | bigint | null
@@ -51,6 +52,7 @@
     valueLoadingKey,
     inputWarning,
     compressed = false,
+    dashWhenCompressed = false,
     radio,
     modal,
     underinput,
@@ -76,25 +78,27 @@
       tooltip={inputWarning ?? ''}
       placement="left"
       wrapperPositionClass="left-0 -translate-x-full" />
-    {#if readonlyInput}
+    {#if compressed && dashWhenCompressed}
+      <span class="h-10 leading-10 font-inter text-3xl tracking-tight">-</span>
+    {:else if readonlyInput}
       {@const valIsNumber = typeof value === 'bigint'}
       {@const humanReadable =
         valIsNumber && value !== 0n
           ? humanReadableNumber(value, {
               decimals: token?.decimals ?? 0,
             })
-          : value?.toString()}
+          : '-'}
       <span
-        class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-surface-contrast-50 h-10 leading-10"
+        class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-surface-contrast-50 h-10 leading-10 font-inter tracking-tight"
         style:font-size={`${largeInputFontScaler(humanReadable?.length ?? 0)}px`}
-        >{!token?.decimals || value === null ? '0' : humanReadable}</span>
+        >{!token?.decimals ? '0' : humanReadable}</span>
     {:else}
       <NumericInput
         {id}
         class="w-full input py-0 px-0 ring-0 focus:ring-0 h-10 leading-10 tracking-tight"
         textClass="text-left font-inter"
         value={typeof value === 'bigint' ? value : null}
-        decimals={token?.decimals ?? 0}
+        decimals={token?.decimals ?? null}
         invalid={invalidValue}
         {disabled}
         {oninput} />

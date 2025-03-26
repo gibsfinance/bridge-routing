@@ -145,7 +145,7 @@ export const getQuoteStep = loading.loadsAfterTick<
         integrator,
       })
       const existingQuote = lifiQuotes.get(lifiQuoteKey)
-      if (existingQuote && existingQuote.updatedAt > Date.now() - 1000 * 60) {
+      if (existingQuote && existingQuote.updatedAt > Date.now() - 1000 * 30) {
         return existingQuote.quote
       }
       const quote = getQuote({

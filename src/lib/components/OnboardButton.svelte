@@ -49,7 +49,7 @@
     if (!isRequiredChain) {
       return false
     }
-    return disabledMain || !loading.isResolved(loadingKey)
+    return disabledMain
   })
   const text = $derived.by(() => {
     if (!accountState.connected) {

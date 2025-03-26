@@ -18,28 +18,11 @@
   } from '$lib/stores/chain-events.svelte'
   import { transactionButtonPress } from '$lib/stores/transaction'
   import { connect } from '$lib/stores/auth/AuthProvider.svelte'
-  import { getContext, tick } from 'svelte'
+  import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
   import Button from './Button.svelte'
 
-  // const toast = getContext('toast') as ToastContext
-
-  // import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
-  // import { getContext, tick } from 'svelte'
-
   const toast: ToastContext = getContext('toast')
-  $effect(() => {
-    setTimeout(() => {
-      tick().then(() => {
-        console.log('toast', toast)
-        toast.create({
-          title: 'Hello',
-          description: 'World',
-          type: 'info',
-        })
-      })
-    }, 2_000)
-  })
   const { shouldDeliver } = input
 
   const tokenBalance = $derived(fromTokenBalance.value ?? 0n)
