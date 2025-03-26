@@ -57,7 +57,6 @@
   import GuideStep from './GuideStep.svelte'
   import GuideShield from './GuideShield.svelte'
   import Input from './Input.svelte'
-  import NarrowBridgeUI from './NarrowBridgeUI.svelte'
   import {
     assetOutKey,
     assetSources,
