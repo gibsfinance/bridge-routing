@@ -7,7 +7,7 @@
 
 <div class="bg-slate-100">
   <div class="container px-2 py-10 text-center m-auto text-slate-950">
-    <h3 class="text-5xl font-italiana">Onboard</h3>
+    <h3 class="text-5xl font-italiana font-bold">Onboard</h3>
     <h4 class="text-2xl mt-4">move tokens from any chain to PulseChain</h4>
   </div>
 </div>

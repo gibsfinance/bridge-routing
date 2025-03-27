@@ -51,7 +51,7 @@
           src={gibs}
           alt="a yellow hand with index finger and thub rubbing together"
           sizeClasses="size-8" />
-        <span class="text-2xl leading-8">Gibs&nbsp;</span>
+        <span class="text-2xl leading-8 font-bold">Gibs&nbsp;</span>
         <Loading />
       </button>
       <div class="flex grow content-end items-center">
