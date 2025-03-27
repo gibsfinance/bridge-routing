@@ -706,7 +706,7 @@
     ...defaultPulsexTokens,
     ...(plsxTokens.value ?? {}),
   })
-  $inspect(tokenInAddress, tokenOutAddress)
+  // $inspect(tokenInAddress, tokenOutAddress)
   const tokens = $derived(
     bridgableTokens.bridgeableTokensUnder({
       provider: Provider.PULSECHAIN,
@@ -748,7 +748,7 @@
       // )
       return
     }
-    console.log('getting pulsex quote', tokenInPulsex, tokenOutPulsex)
+    // console.log('getting pulsex quote', tokenInPulsex, tokenOutPulsex)
     const quote = getPulseXQuote({
       tokenIn: tokenInPulsex,
       tokenOut: tokenOutPulsex,
@@ -757,7 +757,7 @@
     })
     quote.promise.then((result) => {
       if (quote.controller.signal.aborted || !result) return
-      console.log('pulsex quote result', result)
+      // console.log('pulsex quote result', result)
       pulsexQuoteResult = result
     })
     return quote.cleanup
@@ -780,7 +780,7 @@
     if (!pulsexQuoteResult || !tokenOut) return null
     return truncateValue(pulsexQuoteResult.outputAmount.value, tokenOut.decimals)
   })
-  $inspect(pulsexQuoteResult?.outputAmount, amountOutputFromPulsex)
+  // $inspect(pulsexQuoteResult?.outputAmount, amountOutputFromPulsex)
   const pulsexQuoteMatchesLatest = $derived.by(() => {
     if (!pulsexQuoteResult || !amountInputToPulsex) return false
     return pulsexQuoteResult.inputAmount.value === amountInputToPulsex.toString()
