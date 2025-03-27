@@ -973,7 +973,7 @@
 <div class="flex flex-col gap-2">
   <SectionInput
     showRadio
-    label={bridgingToEthereum ? 'Bridge to Ethereum' : 'Input'}
+    label={bridgingToEthereum ? 'Bridge to Eth' : 'Input'}
     focused={bridgingToEthereum}
     token={tokenInputLifi}
     value={amountInputFromLifi}
