@@ -1,6 +1,7 @@
 import {
   createAppKit,
   type CaipNetwork,
+  type ChainAdapter,
   type ConnectedWalletInfo,
   type UseAppKitAccountReturn,
 } from '@reown/appkit'
@@ -13,7 +14,7 @@ import { walletConnectProjectId as projectId } from '$lib/config'
 import type { GetBalanceReturnType } from '@wagmi/core'
 import { SvelteMap } from 'svelte/reactivity'
 import { SolflareWalletAdapter, PhantomWalletAdapter } from '@solana/wallet-adapter-wallets'
-import type { BaseWalletAdapter } from '@solana/wallet-adapter-base'
+import type { BaseWalletAdapter, SignerWalletAdapter } from '@solana/wallet-adapter-base'
 
 export const appkitNetworkList = [
   networks.mainnet,
@@ -77,7 +78,7 @@ export const solanaAdapter = new SolanaAdapter({
     new PhantomWalletAdapter() as unknown as BaseWalletAdapter,
     new SolflareWalletAdapter() as unknown as BaseWalletAdapter,
   ],
-})
+}) as unknown as SignerWalletAdapter
 
 // 3. Configure the metadata
 const metadata = {
@@ -89,7 +90,7 @@ const metadata = {
 
 // 3. Create the modal
 export const modal = createAppKit({
-  adapters: [wagmiAdapter, solanaAdapter],
+  adapters: [wagmiAdapter, solanaAdapter as unknown as ChainAdapter],
   networks: appkitNetworkList,
   metadata,
   projectId,

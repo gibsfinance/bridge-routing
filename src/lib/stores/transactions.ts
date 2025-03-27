@@ -7,27 +7,15 @@ import {
   accountState,
   wagmiAdapter,
   connect,
-  // solanaAdapter,
+  solanaAdapter,
   modal,
-  // solanaAdapter,
 } from './auth/AuthProvider.svelte'
 import { encodeFunctionData, erc20Abi, maxUint256, zeroAddress, type Block, type Hex } from 'viem'
 import { type ApprovalParameters, checkAllowance } from './chain-read.svelte'
 import { loading } from './loading.svelte'
-// import type { AdapterBlueprint } from '@reown/appkit/adapters'
-import type { SolanaProvider } from '@lifi/sdk'
-// import type Provider from '@walletconnect/universal-provider'
-import {
-  Connection,
-  // PublicKey,
-  // Transaction,
-  // VersionedMessage,
-  // Connection,
-  // TransactionInstruction,
-  VersionedTransaction,
-} from '@solana/web3.js'
-// import Version from '$lib/components/Version.svelte'
+import { Connection, VersionedTransaction } from '@solana/web3.js'
 import { PUBLIC_SOLANA_RPC_URL } from '$env/static/public'
+import type { SolanaProvider } from '@lifi/sdk'
 
 export * from './chain-read.svelte'
 
@@ -132,7 +120,7 @@ export const waitForSolanaTransaction = async (tx: string) => {
       lastValidBlockHeight: b.blockHeight!,
       blockhash: b.blockhash!,
     },
-    'processed',
+    opts.commitment,
   )
 }
 

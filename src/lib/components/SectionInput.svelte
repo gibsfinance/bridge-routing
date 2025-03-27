@@ -79,7 +79,7 @@
       placement="left"
       wrapperPositionClass="left-0 -translate-x-full" />
     {#if compressed && dashWhenCompressed}
-      <span class="h-10 leading-10 font-inter text-3xl tracking-tight">-</span>
+      <span class="h-10 leading-10 font-inter text-[36px] tracking-tight">-</span>
     {:else if readonlyInput}
       {@const valIsNumber = typeof value === 'bigint'}
       {@const humanReadable =

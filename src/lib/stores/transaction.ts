@@ -54,7 +54,7 @@ export const send = async ({
   wait,
 }: {
   toast: ToastContext
-  steps: (() => Promise<Hex | undefined | null>)[]
+  steps: (() => Promise<string | undefined | null>)[]
   after?: () => void
   wait: (txHash: string) => Promise<void>
 }) => {

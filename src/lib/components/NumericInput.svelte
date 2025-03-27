@@ -97,6 +97,10 @@
       return
     }
     const currentTextValue = (e.target as HTMLInputElement).value
+    if (currentTextValue === '.') {
+      updateValue('0.')
+      return
+    }
     let bestGuess = untrack(() => startingValue)
     let failed = false
     try {

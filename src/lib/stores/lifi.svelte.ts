@@ -1,13 +1,12 @@
 import type {
   Chain,
-  // Connection,
+  GetStatusRequest,
   LiFiStep,
   QuoteRequest,
   RelayerQuoteResponseData,
   Token,
 } from '@lifi/types'
 import { SvelteMap } from 'svelte/reactivity'
-// import type { Hex } from 'viem'
 import { loading } from './loading.svelte'
 import _ from 'lodash'
 import { maxMemoize } from '$lib/utils.svelte'
@@ -18,14 +17,11 @@ import {
   getChains,
   getTokens,
   getQuote,
-  // getConnections,
   createConfig,
   Solana,
-  // Solana,
+  getStatus,
 } from '@lifi/sdk'
-import { appkitNetworkById } from './auth/AuthProvider.svelte'
-// import { universalProvider } from './auth/AuthProvider.svelte'
-// import { solanaAdapter } from './auth/AuthProvider.svelte'
+import { solanaAdapter } from './auth/AuthProvider.svelte'
 
 const integrator = 'gibs.finance'
 createConfig({
@@ -33,10 +29,7 @@ createConfig({
   debug: true,
   providers: [
     Solana({
-      // getWalletAdapter: async () => {
-      //   const wallet = await universalProvider.enable()
-      //   return wallet
-      // },
+      getWalletAdapter: async () => solanaAdapter,
     }),
   ],
 })
@@ -201,4 +194,27 @@ export const getTokenBalance = async (asset: {
   if (!token) return null
   const balance = await getTokenBalanceLifi(asset.account, token)
   return balance
+}
+
+export const waitForBridge = async ({
+  timeout,
+  ...options
+}: GetStatusRequest & {
+  timeout: AbortController
+}) => {
+  while (true) {
+    const result = await getStatus(options)
+    if (timeout.signal.aborted) {
+      break
+    }
+    const { status } = result
+    if (status === 'DONE') {
+      return result
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    if (timeout.signal.aborted) {
+      break
+    }
+  }
+  return null
 }

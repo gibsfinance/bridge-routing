@@ -18,6 +18,7 @@
     loadData,
     loadTokensForChains,
     tokenIn,
+    waitForBridge,
   } from '$lib/stores/lifi.svelte'
   import { settings as bridgeAdminSettings, settingKey } from '$lib/stores/fee-manager.svelte'
   import {
@@ -26,6 +27,7 @@
     connect,
     evmChainsById,
     getNetwork,
+    switchNetwork,
   } from '$lib/stores/auth/AuthProvider.svelte'
   import { ChainType, type RelayerQuoteResponseData } from '@lifi/types'
   import _ from 'lodash'
@@ -82,6 +84,7 @@
   import type { SerializedTrade } from '$lib/stores/pulsex/transformers'
   import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
   import lifiLogo from '$lib/images/providers/lifi.svg?raw'
+  import BridgeProgress from './BridgeProgress.svelte'
 
   const toast = getContext('toast') as ToastContext
 
@@ -209,16 +212,16 @@
       // !toAddressLifi
     ) {
       if (amountInputFromLifi) {
-        console.log(
-          'no quote inputs',
-          fromChain,
-          toChain,
-          fromToken,
-          toToken,
-          amountInputFromLifi,
-          fromAddress,
-          toAddressLifi,
-        )
+        // console.log(
+        //   'no quote inputs',
+        //   fromChain,
+        //   toChain,
+        //   fromToken,
+        //   toToken,
+        //   amountInputFromLifi,
+        //   fromAddress,
+        //   toAddressLifi,
+        // )
       }
       return null
     }
@@ -703,6 +706,7 @@
     ...defaultPulsexTokens,
     ...(plsxTokens.value ?? {}),
   })
+  $inspect(tokenInAddress, tokenOutAddress)
   const tokens = $derived(
     bridgableTokens.bridgeableTokensUnder({
       provider: Provider.PULSECHAIN,
@@ -716,6 +720,9 @@
   const tokenInPulsex = $derived.by(() => {
     return findToken(tokenInAddress) ?? findToken(defaultPulsexTokens.tokenIn) ?? null
   })
+  const tokenOutPulsex = $derived.by(() => {
+    return findToken(tokenOutAddress) ?? findToken(defaultPulsexTokens.tokenOut) ?? null
+  })
   const tokenOut = $derived.by(() => {
     return findToken(tokenOutAddress) ?? findToken(defaultPulsexTokens.tokenOut) ?? null
   })
@@ -726,7 +733,7 @@
   $effect(() => {
     if (
       !tokenInPulsex ||
-      !tokenOut ||
+      !tokenOutPulsex ||
       !amountInputToPulsex ||
       !latestPulseBlock ||
       !swappingOnPulsex
@@ -741,14 +748,16 @@
       // )
       return
     }
+    console.log('getting pulsex quote', tokenInPulsex, tokenOutPulsex)
     const quote = getPulseXQuote({
       tokenIn: tokenInPulsex,
-      tokenOut,
+      tokenOut: tokenOutPulsex,
       amountIn: amountInputToPulsex,
       amountOut: null,
     })
     quote.promise.then((result) => {
       if (quote.controller.signal.aborted || !result) return
+      console.log('pulsex quote result', result)
       pulsexQuoteResult = result
     })
     return quote.cleanup
@@ -771,6 +780,7 @@
     if (!pulsexQuoteResult || !tokenOut) return null
     return truncateValue(pulsexQuoteResult.outputAmount.value, tokenOut.decimals)
   })
+  $inspect(pulsexQuoteResult?.outputAmount, amountOutputFromPulsex)
   const pulsexQuoteMatchesLatest = $derived.by(() => {
     if (!pulsexQuoteResult || !amountInputToPulsex) return false
     return pulsexQuoteResult.inputAmount.value === amountInputToPulsex.toString()
@@ -844,23 +854,37 @@
     }),
   )
   $inspect(latestLifiQuote)
-  const initiateLifiFromNonEvmBridge = $derived(() =>
-    sendTransaction({
-      toast,
-      steps: [
-        async () => {
-          const receipt = await transactions.sendTransactionSolana({
-            data: latestLifiQuote!.transactionRequest!.data!,
+  const initiateLifiFromNonEvmBridge = $derived.by(() => {
+    const quote = latestLifiQuote
+    return () =>
+      sendTransaction({
+        toast,
+        steps: [
+          async () => {
+            const receipt = await transactions.sendTransactionSolana({
+              data: quote!.transactionRequest!.data!,
+            })
+            console.log(receipt)
+            return receipt
+          },
+        ],
+        wait: async (txHash) => {
+          const status = await waitForBridge({
+            txHash,
+            fromChain: quote?.action.fromChainId,
+            toChain: quote?.action.toChainId,
+            bridge: quote?.tool,
+            timeout: new AbortController(),
           })
-          console.log(receipt)
-          return receipt
+          console.log('status', status)
+          if (_.isEqual(quote?.action, latestLifiQuote?.action)) {
+            // move the system forward
+            activeOnboardStep.value = 2
+            return
+          }
         },
-      ],
-      wait: async (txHash) => {
-        await transactions.waitForSolanaTransaction(txHash as Hex)
-      },
-    }),
-  )
+      })
+  })
   const bridgeTokensToEthereumStep = $derived.by(() => {
     if (needsApprovalForLifi) {
       return incrementLifiAllowance
@@ -1051,6 +1075,23 @@
       {/if}
     {/snippet}
   </SectionInput>
+  {#if bridgingToPulsechain}
+    <BridgeProgress
+      oncomplete={() => {
+        if (!bridgingToPulsechain) {
+          return
+        }
+        activeOnboardStep.value = 3
+        const chain = getNetwork({
+          chainId: Number(Chains.PLS),
+          name: '',
+        })
+        if (!chain) {
+          return
+        }
+        switchNetwork(chain)
+      }} />
+  {/if}
   <SectionInput
     label="Swap on PulseX"
     focused={activeOnboardStep.value >= 2}

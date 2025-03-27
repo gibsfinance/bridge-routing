@@ -14,11 +14,16 @@
     blocks,
   } from '$lib/stores/chain-events.svelte'
   import { bridgeKey } from '$lib/stores/input.svelte'
-  import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { Tooltip } from '@skeletonlabs/skeleton-svelte'
   import { untrack } from 'svelte'
   import Loader from './Loader.svelte'
   import { Chains } from '$lib/stores/auth/types'
+
+  type BridgeProgressProps = {
+    oncomplete?: () => void
+  }
+
+  const { oncomplete }: BridgeProgressProps = $props()
 
   const destinationBlock = $derived(blocks.get(Number(bridgeKey.toChain)))
   let txInputValue = $state<Hex | null>(null)
@@ -133,6 +138,7 @@
       setTimeout(() => {
         if (lastTxHash === bridgeTx.value?.hash) {
           clearTxTracking()
+          oncomplete?.()
         }
       }, 10_000)
     }
