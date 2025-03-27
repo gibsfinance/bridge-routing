@@ -40,7 +40,7 @@
 
 <div class="fixed z-10 -mb-10 flex h-10">
   <nav
-    class="fixed right-0 left-0 flex h-14 flex-row bg-surface-950-50 p-2 leading-8 shadow-inner text-surface-contrast-50">
+    class="fixed right-0 left-0 flex h-14 flex-row bg-white p-2 leading-8 shadow-inner text-surface-contrast-50">
     <div class="m-auto flex w-full max-w-5xl justify-between">
       <button
         type="button"
@@ -74,19 +74,17 @@
                     type="button"
                     name="transactions"
                     class="flex items-center justify-center">
-                    <!-- {#if !isSmall}{txnText}&nbsp;{/if} -->
                     <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
                   </button>
                 </a>
               </VersionedLink>
-            {:else}
+            {:else if destinationBridgeKey === Chains.BNB}
               <a
                 aria-label="to recent bridge transactions on bsc"
                 href="https://tokensex.link/explorer"
                 target="_blank"
                 class="link">
                 <button type="button" name="transactions" class="flex items-center justify-center">
-                  <!-- {#if !isSmall}{txnText}&nbsp;{/if} -->
                   <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
                 </button>
               </a>
@@ -97,7 +95,6 @@
               triggerClasses="flex flex-row items-center px-2 py-1"
               contentHeightClass="max-h-[460px] h-full">
               {#snippet button()}
-                <!-- {#if !isSmall}RPC&nbsp;{/if} -->
                 <Icon icon="gravity-ui:plug-connection" height="1.2em" width="1.2em" />
               {/snippet}
               {#snippet contents({ close })}
@@ -122,14 +119,12 @@
                 class="link"
                 onkeypress={gotoNativeDelivery}
                 onclick={gotoNativeDelivery}>
-                <!-- {#if !isSmall}Delivery&nbsp;{/if} -->
                 <Icon icon="icon-park-solid:bridge-one" height="1.6em" width="1.6em" /></button>
             </li>
           {/if}
           {#if !isOnboardRoute}
             <li class="flex flex-row items-center">
               <Button class="flex flex-row items-center px-2 py-1" onclick={gotoOnboard}>
-                <!-- {#if !isSmall}Onboard&nbsp;{/if} -->
                 <Icon icon="mingcute:run-fill" stroke-width="1.5" height="1.6em" width="1.6em" />
               </Button>
             </li>

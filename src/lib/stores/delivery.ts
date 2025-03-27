@@ -38,8 +38,8 @@ export const deliverBridge = async (account: Hex, bridge: Bridge) => {
     return
   }
   const sigs = bridge.confirmedSignatures!.items!
-  const originationClient = inputs.clientFromChain(toChain(bridge.originationChainId))
-  const destinationClient = inputs.clientFromChain(toChain(bridge.destinationChainId))
+  const originationClient = inputs.clientFromChain(bridge.originationChainId)
+  const destinationClient = inputs.clientFromChain(bridge.destinationChainId)
   const signatures = await getSignatures(
     originationClient,
     sigs.map((s) => s.transaction!.hash! as Hex),

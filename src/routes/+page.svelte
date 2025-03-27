@@ -1,5 +1,6 @@
 <script lang="ts">
   import BridgeExplainer from '$lib/components/BridgeExplainer.svelte'
+  import OnboardExplainer from '$lib/components/OnboardExplainer.svelte'
   import Welcome from '$lib/components/Welcome.svelte'
 </script>
 
@@ -9,5 +10,5 @@
 </svelte:head>
 
 <Welcome />
-
+<OnboardExplainer />
 <BridgeExplainer />

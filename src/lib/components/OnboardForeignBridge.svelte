@@ -53,7 +53,7 @@
   import { Chains, Provider } from '$lib/stores/auth/types'
   import OnboardButton from './OnboardButton.svelte'
   import type { Chain as LIFIChain } from '@lifi/sdk'
-  import { transactionButtonPress } from '$lib/stores/transaction'
+  import { transactionButtonPress, send as sendTransaction } from '$lib/stores/transaction'
   import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
   import OnboardRadio from './OnboardRadio.svelte'
@@ -731,14 +731,14 @@
       !latestPulseBlock ||
       !swappingOnPulsex
     ) {
-      console.log(
-        'swapping on pulsex',
-        !tokenInPulsex,
-        !tokenOut,
-        !amountInputToPulsex,
-        !latestPulseBlock,
-        !swappingOnPulsex,
-      )
+      // console.log(
+      //   'swapping on pulsex',
+      //   !tokenInPulsex,
+      //   !tokenOut,
+      //   !amountInputToPulsex,
+      //   !latestPulseBlock,
+      //   !swappingOnPulsex,
+      // )
       return
     }
     const quote = getPulseXQuote({
@@ -843,9 +843,24 @@
       ],
     }),
   )
-  const initiateLifiFromNonEvmBridge = $derived(async () => {
-    console.log('initiateLifiFromNonEvmBridge')
-  })
+  $inspect(latestLifiQuote)
+  const initiateLifiFromNonEvmBridge = $derived(() =>
+    sendTransaction({
+      toast,
+      steps: [
+        async () => {
+          const receipt = await transactions.sendTransactionSolana({
+            data: latestLifiQuote!.transactionRequest!.data!,
+          })
+          console.log(receipt)
+          return receipt
+        },
+      ],
+      wait: async (txHash) => {
+        await transactions.waitForSolanaTransaction(txHash as Hex)
+      },
+    }),
+  )
   const bridgeTokensToEthereumStep = $derived.by(() => {
     if (needsApprovalForLifi) {
       return incrementLifiAllowance
@@ -1005,6 +1020,7 @@
     compressed={!bridgingToEthereum && !bridgingToPulsechain}
     dashWhenCompressed={swappingOnPulsex}
     readonlyInput={!bridgingToPulsechain}
+    overrideAccount={lifiFromChainIsEvm ? null : destinationAddress}
     readonlyTokenSelect={!bridgingToPulsechain}
     valueLoadingKey={bridgingToEthereum ? 'lifi-cross-chain-swap' : null}
     onclick={() => {

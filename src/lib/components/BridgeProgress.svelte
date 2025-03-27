@@ -5,7 +5,7 @@
   import Icon from '@iconify/svelte'
   import Input from './Input.svelte'
   import { Progress } from '@skeletonlabs/skeleton-svelte'
-  import ExplorerLink from './ExplorerLink.svelte'
+  import ExplorerLink from './DirectLink.svelte'
   import {
     liveBridgeStatus,
     bridgeStatuses,

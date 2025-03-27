@@ -10,7 +10,6 @@ import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { NullableProxyStore } from '$lib/types.svelte'
 import * as chains from 'viem/chains'
 import { walletConnectProjectId as projectId } from '$lib/config'
-import { UniversalProvider } from '@walletconnect/universal-provider'
 import type { GetBalanceReturnType } from '@wagmi/core'
 import { SvelteMap } from 'svelte/reactivity'
 import { SolflareWalletAdapter, PhantomWalletAdapter } from '@solana/wallet-adapter-wallets'
@@ -137,6 +136,12 @@ export const switchNetwork = async (chain: CaipNetwork | null | undefined) => {
       // })
     } catch (err) {
       console.error('err at switchNetwork', err)
+      await modal.open({
+        view: 'Networks',
+        // data: {
+        //   caipNetwork: chain as CaipNetwork,
+        // },
+      })
     }
   }
 }
@@ -204,33 +209,6 @@ class AccountState {
   set modalOpen(open: boolean) {
     this.modalIsOpen = open
   }
-  // private setupWatchBalanceCleanup = () => {}
-  // setupWatchBalance() {
-  // this.setupWatchBalanceCleanup?.()
-  // const address = this.address
-  // if (!address) return
-  // this.setupWatchBalanceCleanup = watchBlockNumber(wagmiAdapter.wagmiConfig, {
-  //   chainId: this.chainId!,
-  //   emitOnBegin: true,
-  //   // emitMissed: true,
-  //   onBlockNumber: async () => {
-  //     const balance = await getBalance(wagmiAdapter.wagmiConfig, {
-  //       address,
-  //       chainId: this.chainId!,
-  //     }).catch(() => ({
-  //       value: 0n,
-  //       decimals: 18,
-  //       formatted: '0',
-  //       symbol: 'ETH',
-  //     }))
-  //     this.lastKnownBalances.set(this.caipAddress, {
-  //       lastUpdated: Date.now(),
-  //       ...balance,
-  //     })
-  //   },
-  // })
-  // return this.setupWatchBalanceCleanup
-  // }
 }
 export const accountState = new AccountState()
 

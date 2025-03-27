@@ -43,6 +43,9 @@
     return requiredChain.id === Number(accountState.chainId)
   })
   const disabled = $derived.by(() => {
+    if (!loading.isResolved('user')) {
+      return true
+    }
     if (!accountState.connected) {
       return false
     }

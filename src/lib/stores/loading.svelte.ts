@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import { untrack } from 'svelte'
 
 export class LoadingCounter {
@@ -20,6 +21,7 @@ export class LoadingCounter {
       this.value.categories[key] = (this.value.categories[key] || 0) + 1
     }
     this.value.total += 1
+    return _.once(() => this.decrement(key))
   }
   decrement(key?: string | null) {
     if (key) {
