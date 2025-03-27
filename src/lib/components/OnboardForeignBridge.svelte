@@ -212,16 +212,16 @@
       // !toAddressLifi
     ) {
       if (amountInputFromLifi) {
-        // console.log(
-        //   'no quote inputs',
-        //   fromChain,
-        //   toChain,
-        //   fromToken,
-        //   toToken,
-        //   amountInputFromLifi,
-        //   fromAddress,
-        //   toAddressLifi,
-        // )
+        console.log(
+          'no quote inputs',
+          fromChain,
+          toChain,
+          fromToken,
+          toToken,
+          amountInputFromLifi,
+          fromAddress,
+          toAddressLifi,
+        )
       }
       return null
     }
@@ -259,6 +259,7 @@
     return !(isHex(quoteInputs.fromToken) || isHex(quoteInputs.fromAddress))
   })
   $effect(() => {
+    console.log('can cross lifi', accountState.address)
     if (!tokenOutputLifi) return
     if (
       !quoteInputs ||
@@ -281,6 +282,11 @@
         latestLifiQuote = q
       })
       .catch((e) => {
+        console.log('lifi quote error', e.message)
+        if (e.message.includes('Invalid toAddress')) {
+          lifiQuoteError = 'Invalid recipient address'
+          return
+        }
         console.log(e, quoteInputs)
         lifiQuoteError = 'Quote request resulted in an error, try increasing the amount in'
       })
@@ -948,8 +954,15 @@
       if (needsApprovalForLifi) {
         return 'Approve'
       }
+      // console.log('lifiFromChainIsEvm', lifiFromChainIsEvm, destinationAddressIsValid)
+      if (!lifiFromChainIsEvm) {
+        if (!destinationAddressIsValid) {
+          return 'Enter recipient address'
+        }
+      }
       return 'Exchange'
-    } else if (activeOnboardStep.value === 2) {
+    }
+    if (activeOnboardStep.value === 2) {
       if (needsAllowanceForPulsechainBridge) {
         return 'Approve'
       }

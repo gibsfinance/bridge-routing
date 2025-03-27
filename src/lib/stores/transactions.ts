@@ -7,7 +7,6 @@ import {
   accountState,
   wagmiAdapter,
   connect,
-  solanaAdapter,
   modal,
 } from './auth/AuthProvider.svelte'
 import { encodeFunctionData, erc20Abi, maxUint256, zeroAddress, type Block, type Hex } from 'viem'

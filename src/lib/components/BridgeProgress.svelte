@@ -14,7 +14,7 @@
     blocks,
   } from '$lib/stores/chain-events.svelte'
   import { bridgeKey } from '$lib/stores/input.svelte'
-  import { Tooltip } from '@skeletonlabs/skeleton-svelte'
+  import Tooltip from './Tooltip.svelte'
   import { untrack } from 'svelte'
   import Loader from './Loader.svelte'
   import { Chains } from '$lib/stores/auth/types'
@@ -206,13 +206,7 @@
           chain={Number(bridgeKey.toChain)}
           class="size-6 flex" />
       {:else}
-        <Tooltip
-          interactive={false}
-          triggerClasses="flex"
-          contentClasses="flex bg-tertiary-500 rounded-lg px-2 py-1"
-          openDelay={0}
-          closeDelay={0}
-          positioning={{ placement: 'top' }}>
+        <Tooltip placement="top" gutter={3}>
           {#snippet trigger()}
             <Icon icon="mdi:clock" class="size-4 flex" />
           {/snippet}
@@ -222,13 +216,7 @@
         </Tooltip>
       {/if}
       {#if gasIsHigh}
-        <Tooltip
-          interactive={false}
-          triggerClasses="flex"
-          contentClasses="flex bg-tertiary-500 rounded-lg px-2 py-1"
-          openDelay={0}
-          closeDelay={0}
-          positioning={{ placement: 'top' }}>
+        <Tooltip placement="top">
           {#snippet trigger()}
             <Icon icon="material-symbols:help" class="size-4 flex" />
           {/snippet}

@@ -10,6 +10,7 @@ import {
   getAddress,
   isHex,
   erc20Abi_bytes32,
+  isAddress,
 } from 'viem'
 import type { Block, Hex, TransactionReceipt, BlockTag } from 'viem'
 import { loading, resolved, type Cleanup } from './loading.svelte'
@@ -209,6 +210,9 @@ export const getTokenBalance = ({ chainId, address, account }: TokenBalanceInput
   const key = tokenBalanceLoadingKey(chainId, address, account)
   let getBalance!: () => Promise<bigint | null>
   if (isHex(account)) {
+    if (!isAddress(account)) {
+      return null
+    }
     const publicClient = input.clientFromChain(chainId)
     getBalance =
       address === zeroAddress
@@ -892,9 +896,11 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     // if (!chain || !chainPartner || !hash) return null
     const [, fromChain] = bridgeKey
     const client = input.clientFromChain(Number(fromChain))
-    const receipt = await client.getTransactionReceipt({
-      hash,
-    })
+    const receipt = await client
+      .getTransactionReceipt({
+        hash,
+      })
+      .catch(() => null)
     if (!receipt) {
       // tx has not yet been mined
       console.log('tx has not yet been mined', hash)
