@@ -10,7 +10,6 @@
   const targetChain = $derived.by(() => {
     const id = accountState.chainId
     if (!id) return null
-    console.log(accountState.prefix)
     const chainId = Number(id)
     const chain = availableChains.get(chainId)
     if (chain) {

@@ -37,9 +37,9 @@
     if (bridgeStatus === null) return 0
     switch (bridgeStatus.status) {
       case bridgeStatuses.SUBMITTED:
-        return 30
+        return 40
       case bridgeStatuses.MINED:
-        return 50
+        return 55
       case bridgeStatuses.FINALIZED:
         return 75
       // add this in to show partial signing
