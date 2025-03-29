@@ -14,6 +14,8 @@
         connect()
       },
     },
+    toChain: 1,
+    toToken: '0x0000000000000000000000000000000000000000',
   } as WidgetConfig
 </script>
 

@@ -3,14 +3,19 @@ import {
   waitForTransactionReceipt,
   type SendTransactionParameters,
 } from '@wagmi/core'
-import { accountState, wagmiAdapter, connect, modal } from './auth/AuthProvider.svelte'
+import {
+  accountState,
+  wagmiAdapter,
+  connect,
+  // modal,
+} from './auth/AuthProvider.svelte'
 import { encodeFunctionData, erc20Abi, maxUint256, zeroAddress, type Block, type Hex } from 'viem'
 import { type ApprovalParameters, checkAllowance } from './chain-read.svelte'
 import { loading } from './loading.svelte'
-import { Connection, VersionedTransaction } from '@solana/web3.js'
-import { PUBLIC_SOLANA_RPC_URL } from '$env/static/public'
-import type { SolanaProvider } from '@lifi/sdk'
-import Provider from '@walletconnect/universal-provider'
+// import { Connection, VersionedTransaction } from '@solana/web3.js'
+// import { PUBLIC_SOLANA_RPC_URL } from '$env/static/public'
+// import type { SolanaProvider } from '@lifi/sdk'
+// import Provider from '@walletconnect/universal-provider'
 
 export * from './chain-read.svelte'
 
@@ -104,47 +109,47 @@ export const wait = async (tx: Hex, chainId: number) => {
   })
 }
 
-const connection = new Connection(PUBLIC_SOLANA_RPC_URL!)
-const opts = { commitment: 'confirmed' } as const
+// const connection = new Connection(PUBLIC_SOLANA_RPC_URL!)
+// const opts = { commitment: 'confirmed' } as const
 
-export const waitForSolanaTransaction = async (tx: string) => {
-  const b = await connection.getBlockHeight(opts).then((v) => connection.getParsedBlock(v, opts))
-  return await connection.confirmTransaction(
-    {
-      signature: tx,
-      lastValidBlockHeight: b.blockHeight!,
-      blockhash: b.blockhash!,
-    },
-    opts.commitment,
-  )
-}
+// export const waitForSolanaTransaction = async (tx: string) => {
+//   const b = await connection.getBlockHeight(opts).then((v) => connection.getParsedBlock(v, opts))
+//   return await connection.confirmTransaction(
+//     {
+//       signature: tx,
+//       lastValidBlockHeight: b.blockHeight!,
+//       blockhash: b.blockhash!,
+//     },
+//     opts.commitment,
+//   )
+// }
 
-export const sendTransactionSolana = async (encodedTx: { data: string }) => {
-  const transaction = VersionedTransaction.deserialize(Buffer.from(encodedTx.data, 'base64'))
-  const walletProvider = (await modal.getWalletProvider()) as SolanaProvider
-  // @ts-expect-error does-not-exist
-  const tx = await walletProvider.sendTransaction(transaction, connection, {
-    skipPreflight: true,
-    maxRetries: 10,
-    ...opts,
-  })
-  return tx
-}
+// export const sendTransactionSolana = async (encodedTx: { data: string }) => {
+//   const transaction = VersionedTransaction.deserialize(Buffer.from(encodedTx.data, 'base64'))
+//   const walletProvider = (await modal.getWalletProvider()) as SolanaProvider
+//   // @ts-expect-error does-not-exist
+//   const tx = await walletProvider.sendTransaction(transaction, connection, {
+//     skipPreflight: true,
+//     maxRetries: 10,
+//     ...opts,
+//   })
+//   return tx
+// }
 
-export type UTXOTransactionRequest = {
-  to: string
-  data: string
-  value: string
-}
+// export type UTXOTransactionRequest = {
+//   to: string
+//   data: string
+//   value: string
+// }
 
-export const sendTransactionBitcoin = async (txRequest: UTXOTransactionRequest) => {
-  const walletProvider = (await modal.getWalletProvider()) as Provider
-  console.log(walletProvider, txRequest)
-  // const tx = await walletProvider.sendTransaction(txRequest)
-  // const tx =
-  // await sendTransactionCore(wagmiAdapter.wagmiConfig, {
-  // ...opts,
-  // account: accountState.address,
-  // to: tx.to,
-  // })
-}
+// export const sendTransactionBitcoin = async (txRequest: UTXOTransactionRequest) => {
+//   const walletProvider = (await modal.getWalletProvider()) as Provider
+//   console.log(walletProvider, txRequest)
+//   // const tx = await walletProvider.sendTransaction(txRequest)
+//   // const tx =
+//   // await sendTransactionCore(wagmiAdapter.wagmiConfig, {
+//   // ...opts,
+//   // account: accountState.address,
+//   // to: tx.to,
+//   // })
+// }
