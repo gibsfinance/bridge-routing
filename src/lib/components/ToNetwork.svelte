@@ -4,7 +4,7 @@
   import { bridgeSettings as storageBridgeSettings } from '$lib/stores/storage.svelte'
   import SectionInput from './SectionInput.svelte'
   import type { Token } from '$lib/types.svelte'
-  import { zeroAddress } from 'viem'
+  import { isAddress, zeroAddress, type Hex } from 'viem'
   import { humanReadableNumber } from '$lib/stores/utils'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
   import { assetLink } from '$lib/stores/chain-events.svelte'
@@ -24,7 +24,9 @@
       : null,
   )
   $effect(() => {
-    input.recipient.value = accountState.address ?? zeroAddress
+    input.recipient.value = isAddress(accountState.address ?? '')
+      ? (accountState.address as Hex)
+      : zeroAddress
   })
   const feeIsEstimated = $derived(
     input.shouldDeliver.value &&

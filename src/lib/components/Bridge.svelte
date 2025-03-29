@@ -180,6 +180,7 @@
     input.amountIn.value = null
     nav.delivery.shallow(bridgeKey.partner, futureAssetOutAddress as string)
   }
+  // $inspect(bridgeSettings.assetOut)
 </script>
 
 <div class="flex flex-col max-w-lg">

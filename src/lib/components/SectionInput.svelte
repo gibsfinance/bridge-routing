@@ -87,7 +87,9 @@
           ? humanReadableNumber(value, {
               decimals: token?.decimals ?? 0,
             })
-          : '-'}
+          : _.isString(value)
+            ? value
+            : '-'}
       <span
         class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-surface-contrast-50 h-10 leading-10 font-inter tracking-tight"
         style:font-size={`${largeInputFontScaler(humanReadable?.length ?? 0)}px`}

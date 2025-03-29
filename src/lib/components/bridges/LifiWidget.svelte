@@ -1,7 +1,7 @@
 <script lang="ts">
   import { LiFiWidget, type WidgetConfig } from '@lifi/widget'
   import ReactAdapter from './ReactAdapter.svelte'
-  import { connect } from '$lib/stores/auth/AuthProvider.svelte'
+  // import { connect } from '$lib/stores/auth/AuthProvider.svelte'
 
   const config = {
     theme: {
