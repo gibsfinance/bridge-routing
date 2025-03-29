@@ -54,7 +54,7 @@
   import TokenSelect from './TokenSelect.svelte'
   import { Chains, Provider } from '$lib/stores/auth/types'
   import OnboardButton from './OnboardButton.svelte'
-  import type { Chain as LIFIChain } from '@lifi/sdk'
+  import type { Chain as LIFIChain, LiFiStep } from '@lifi/sdk'
   import { transactionButtonPress, send as sendTransaction } from '$lib/stores/transaction'
   import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
@@ -85,6 +85,12 @@
   import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
   import lifiLogo from '$lib/images/providers/lifi.svg?raw'
   import BridgeProgress from './BridgeProgress.svelte'
+  import { Psbt, networks as bitcoinJsNetworks } from 'bitcoinjs-lib'
+  import Image from './Image.svelte'
+  import ModalWrapper from './ModalWrapper.svelte'
+  import LifiWidget from './bridges/LifiWidget.svelte'
+  import Button from './Button.svelte'
+  import Icon from '@iconify/svelte'
 
   const toast = getContext('toast') as ToastContext
 
@@ -100,9 +106,9 @@
     return address ? address.toLowerCase() : null
   }
   const fromChain = $derived.by(() => foreignBridgeInputs.value?.fromChain)
+  const lifiFromChain = $derived(availableChains.get(fromChain!))
   const lifiFromChainIsEvm = $derived.by(() => {
-    const chain = availableChains.get(fromChain!)
-    return chain?.chainType === ChainType.EVM
+    return lifiFromChain?.chainType === ChainType.EVM
   })
   $effect(() => {
     if (
@@ -162,247 +168,248 @@
       cancelled = true
     }
   })
+  // $inspect(availableChains)
   const fromAddress = $derived.by(() => {
     return accountState.address
   })
-  const toAddressLifi = $derived.by(() => {
-    return isHex(fromAddress) ? fromAddress : destinationAddress
-  })
+  // const toAddressLifi = $derived.by(() => {
+  //   return isHex(fromAddress) ? fromAddress : destinationAddress
+  // })
   const fallbackAddress = '0x0000000000000000000000000000000000000001'
-  const quoteInputs = $derived.by(() => {
-    const tokenIn = tokenInputLifi
-    const tokenOut = tokenOutputLifi
-    if (!tokenIn || !tokenOut) {
-      console.log('no token in or out', tokenIn, tokenOut)
-      return null
-    }
-    const fromChain = availableChains.get(tokenIn.chainId)
-    const toChain = availableChains.get(tokenOut.chainId)
-    if (!fromChain || !toChain) {
-      console.log('no from or to chain', fromChain, toChain)
-      return null
-    }
-    const originTokens = availableTokensPerOriginChain.get(fromChain!.id)
-    if (!originTokens || !originTokens.length) {
-      console.log('no origin tokens', originTokens)
-      return null
-    }
-    const destinationChain = availableTokensPerOriginChain.get(toChain!.id)
-    if (!destinationChain || !destinationChain.length) {
-      console.log('no destination chain tokens', destinationChain)
-      return null
-    }
-    const fromToken = originTokens.find(
-      (t) => t.address.toLowerCase() === tokenIn.address.toLowerCase(),
-    )
-    const toToken = destinationChain.find(
-      (t) => t.address.toLowerCase() === tokenOut.address.toLowerCase(),
-    )
-    // const fromAddress = accountState.address
-    //  ?? '0x0000000000000000000000000000000000000001'
-    // let toAddress = isHex(fromAddress) ? fromAddress : destinationAddress
-    if (
-      !fromChain ||
-      !toChain ||
-      !fromToken ||
-      !toToken ||
-      !amountInputFromLifi ||
-      !fromAddress
-      //  ||
-      // !toAddressLifi
-    ) {
-      if (amountInputFromLifi) {
-        console.log(
-          'no quote inputs',
-          fromChain,
-          toChain,
-          fromToken,
-          toToken,
-          amountInputFromLifi,
-          fromAddress,
-          toAddressLifi,
-        )
-      }
-      return null
-    }
-    return {
-      fromChain: fromChain.id,
-      toChain: toChain.id,
-      fromToken: fromToken.address,
-      toToken: toToken.address,
-      fromAmount: amountInputFromLifi.toString(),
-      fromAddress,
-      toAddress: toAddressLifi ?? fallbackAddress,
-    }
-  })
-  $effect(() => {
-    // storage
-    if (!everLoaded || !tokenInputLifi || !tokenOutputLifi) return
-    const update = {
-      fromChain: tokenInputLifi.chainId,
-      fromToken: tokenInputLifi.address,
-      toToken: tokenOutputLifi.address,
-      fromAmount: amountInputFromLifi,
-      toAddress: (toAddressLifi === fallbackAddress ? null : toAddressLifi) ?? null,
-    }
-    foreignBridgeInputs.value = update
-  })
-  let latestLifiQuote: RelayerQuoteResponseData['quote'] | null = $state(null)
-  let lifiQuoteError: string | null = $state(null)
+  // const quoteInputs = $derived.by(() => {
+  //   const tokenIn = tokenInputLifi
+  //   const tokenOut = tokenOutputLifi
+  //   if (!tokenIn || !tokenOut) {
+  //     console.log('no token in or out', tokenIn, tokenOut)
+  //     return null
+  //   }
+  //   const fromChain = availableChains.get(tokenIn.chainId)
+  //   const toChain = availableChains.get(tokenOut.chainId)
+  //   if (!fromChain || !toChain) {
+  //     console.log('no from or to chain', fromChain, toChain)
+  //     return null
+  //   }
+  //   const originTokens = availableTokensPerOriginChain.get(fromChain!.id)
+  //   if (!originTokens || !originTokens.length) {
+  //     console.log('no origin tokens', originTokens)
+  //     return null
+  //   }
+  //   const destinationChain = availableTokensPerOriginChain.get(toChain!.id)
+  //   if (!destinationChain || !destinationChain.length) {
+  //     console.log('no destination chain tokens', destinationChain)
+  //     return null
+  //   }
+  //   const fromToken = originTokens.find(
+  //     (t) => t.address.toLowerCase() === tokenIn.address.toLowerCase(),
+  //   )
+  //   const toToken = destinationChain.find(
+  //     (t) => t.address.toLowerCase() === tokenOut.address.toLowerCase(),
+  //   )
+  //   // const fromAddress = accountState.address
+  //   //  ?? '0x0000000000000000000000000000000000000001'
+  //   // let toAddress = isHex(fromAddress) ? fromAddress : destinationAddress
+  //   if (
+  //     !fromChain ||
+  //     !toChain ||
+  //     !fromToken ||
+  //     !toToken ||
+  //     !amountInputFromLifi ||
+  //     !fromAddress
+  //     //  ||
+  //     // !toAddressLifi
+  //   ) {
+  //     if (amountInputFromLifi) {
+  //       console.log(
+  //         'no quote inputs',
+  //         fromChain,
+  //         toChain,
+  //         fromToken,
+  //         toToken,
+  //         amountInputFromLifi,
+  //         fromAddress,
+  //         toAddressLifi,
+  //       )
+  //     }
+  //     return null
+  //   }
+  //   return {
+  //     fromChain: fromChain.id,
+  //     toChain: toChain.id,
+  //     fromToken: fromToken.address,
+  //     toToken: toToken.address,
+  //     fromAmount: amountInputFromLifi.toString(),
+  //     fromAddress,
+  //     toAddress: toAddressLifi ?? fallbackAddress,
+  //   }
+  // })
+  // $effect(() => {
+  //   // storage
+  //   if (!everLoaded || !tokenInputLifi || !tokenOutputLifi) return
+  //   const update = {
+  //     fromChain: tokenInputLifi.chainId,
+  //     fromToken: tokenInputLifi.address,
+  //     toToken: tokenOutputLifi.address,
+  //     fromAmount: amountInputFromLifi,
+  //     toAddress: (toAddressLifi === fallbackAddress ? null : toAddressLifi) ?? null,
+  //   }
+  //   foreignBridgeInputs.value = update
+  // })
+  // let latestLifiQuote: LiFiStep | null = $state(null)
+  // let lifiQuoteError: string | null = $state(null)
   const outLatestBlock = $derived(!tokenOutputLifi ? null : blocks.get(tokenOutputLifi!.chainId))
-  const canCrossLifi = $derived.by(() => {
-    if (!quoteInputs) return false
-    const inputChain = availableChains.get(quoteInputs.fromChain)
-    if (inputChain?.chainType === ChainType.EVM) {
-      return isHex(quoteInputs.fromToken) && isHex(quoteInputs.fromAddress)
-    }
-    return !(isHex(quoteInputs.fromToken) || isHex(quoteInputs.fromAddress))
-  })
-  $effect(() => {
-    console.log('can cross lifi', accountState.address)
-    if (!tokenOutputLifi) return
-    if (
-      !quoteInputs ||
-      !outLatestBlock ||
-      !outLatestBlock.number ||
-      !canCrossLifi ||
-      !bridgingToEthereum
-    ) {
-      return
-    }
-    const quote = getLifiQuoteStep({
-      ...quoteInputs,
-      blockNumber: outLatestBlock.number,
-    })
-    lifiQuoteError = null
-    quote.promise
-      .then((q) => {
-        if (quote.controller.signal.aborted) return
-        // console.log('quote', q)
-        latestLifiQuote = q
-      })
-      .catch((e) => {
-        console.log('lifi quote error', e.message)
-        if (e.message.includes('Invalid toAddress')) {
-          lifiQuoteError = 'Invalid recipient address'
-          return
-        }
-        console.log(e, quoteInputs)
-        lifiQuoteError = 'Quote request resulted in an error, try increasing the amount in'
-      })
-    return quote.cleanup
-  })
-  const lifiQuoteMatchesLatest = $derived.by(() => {
-    if (!latestLifiQuote || !quoteInputs) return false
-    const { action } = latestLifiQuote
-    const {
-      fromChainId: fromChain,
-      fromToken,
-      toChainId: toChain,
-      toToken,
-      fromAddress,
-      toAddress,
-    } = action
-    const derived = {
-      fromChain,
-      fromToken: fromToken.address,
-      toChain,
-      toToken: toToken.address,
-      fromAddress,
-      toAddress,
-      fromAmount: quoteInputs.fromAmount,
-    }
-    return _.isEqual(derived, quoteInputs)
-  })
-  const amountOutputFromLifi = $derived.by(() => {
-    if (!latestLifiQuote) return null
-    return latestLifiQuote.estimate.toAmount ? BigInt(latestLifiQuote.estimate.toAmount) : null
-  })
-  const incrementLifiAllowance = $derived(
-    !tokenInputLifi
-      ? _.noop
-      : transactionButtonPress({
-          toast,
-          chainId: Number(tokenInputLifi!.chainId),
-          steps: [
-            async () => {
-              const token = tokenInputLifi!
-              return await transactions.checkAndRaiseApproval({
-                token: token.address! as Hex,
-                spender: latestLifiQuote!.transactionRequest!.to as Hex,
-                chainId: Number(token.chainId),
-                minimum: amountInputFromLifi,
-                latestBlock: blocks.get(Number(token.chainId))!,
-              })
-            },
-          ],
-          after: () => {
-            const token = tokenInputLifi!
-            if (!token) return
-            balances.delete(
-              tokenBalanceLoadingKey(Number(token.chainId), token.address!, accountState.address!),
-            )
-          },
-        }),
-  )
-  const initiateLifiFromEvmBridge = $derived(
-    !tokenInputLifi
-      ? _.noop
-      : transactionButtonPress({
-          toast,
-          chainId: Number(tokenInputLifi!.chainId),
-          steps: [
-            async () => {
-              const token = tokenInputLifi!
-              const tx = await transactions.sendTransaction({
-                chainId: Number(token.chainId),
-                account: accountState.address as Hex,
-                data: latestLifiQuote!.transactionRequest!.data as Hex,
-                gas: BigInt(latestLifiQuote!.transactionRequest!.gasLimit ?? 0),
-                gasPrice: BigInt(latestLifiQuote!.transactionRequest!.gasPrice ?? 0),
-                to: latestLifiQuote!.transactionRequest!.to as Hex,
-                value: BigInt(latestLifiQuote!.transactionRequest!.value ?? 0),
-              })
-              return tx
-            },
-          ],
-        }),
-  )
-  let lifiAllowance = $state(null as bigint | null)
-  const needsAllowanceForLifi = $derived.by(() => {
-    const pushValue = latestLifiQuote?.transactionRequest?.value
-    if ((pushValue && BigInt(pushValue) > 0n) || !lifiFromChainIsEvm) {
-      return false
-    }
-    return lifiAllowance === null || lifiAllowance < amountInputFromLifi
-  })
-  const needsApprovalForLifi = $derived.by(() => {
-    return needsAllowanceForLifi && (lifiAllowance === null || lifiAllowance < amountInputFromLifi)
-  })
+  // const canCrossLifi = $derived.by(() => {
+  //   if (!quoteInputs) return false
+  //   const inputChain = availableChains.get(quoteInputs.fromChain)
+  //   if (inputChain?.chainType === ChainType.EVM) {
+  //     return isHex(quoteInputs.fromToken) && isHex(quoteInputs.fromAddress)
+  //   }
+  //   return !(isHex(quoteInputs.fromToken) || isHex(quoteInputs.fromAddress))
+  // })
+  // $effect(() => {
+  //   console.log('can cross lifi', accountState.address)
+  //   if (!tokenOutputLifi) return
+  //   if (
+  //     !quoteInputs ||
+  //     !outLatestBlock ||
+  //     !outLatestBlock.number ||
+  //     !canCrossLifi ||
+  //     !bridgingToEthereum
+  //   ) {
+  //     return
+  //   }
+  //   const quote = getLifiQuoteStep({
+  //     ...quoteInputs,
+  //     blockNumber: outLatestBlock.number,
+  //   })
+  //   lifiQuoteError = null
+  //   quote.promise
+  //     .then((q) => {
+  //       if (quote.controller.signal.aborted) return
+  //       // console.log('quote', q)
+  //       latestLifiQuote = q
+  //     })
+  //     .catch((e) => {
+  //       console.log('lifi quote error', e.message)
+  //       if (e.message.includes('Invalid toAddress')) {
+  //         lifiQuoteError = 'Invalid recipient address'
+  //         return
+  //       }
+  //       console.log(e, quoteInputs)
+  //       lifiQuoteError = 'Quote request resulted in an error, try increasing the amount in'
+  //     })
+  //   return quote.cleanup
+  // })
+  // const lifiQuoteMatchesLatest = $derived.by(() => {
+  //   if (!latestLifiQuote || !quoteInputs) return false
+  //   const { action } = latestLifiQuote
+  //   const {
+  //     fromChainId: fromChain,
+  //     fromToken,
+  //     toChainId: toChain,
+  //     toToken,
+  //     fromAddress,
+  //     toAddress,
+  //   } = action
+  //   const derived = {
+  //     fromChain,
+  //     fromToken: fromToken.address,
+  //     toChain,
+  //     toToken: toToken.address,
+  //     fromAddress,
+  //     toAddress,
+  //     fromAmount: quoteInputs.fromAmount,
+  //   }
+  //   return _.isEqual(derived, quoteInputs)
+  // })
+  // const amountOutputFromLifi = $derived.by(() => {
+  //   if (!latestLifiQuote) return null
+  //   return latestLifiQuote.estimate.toAmount ? BigInt(latestLifiQuote.estimate.toAmount) : null
+  // })
+  // const incrementLifiAllowance = $derived(
+  //   !tokenInputLifi
+  //     ? _.noop
+  //     : transactionButtonPress({
+  //         toast,
+  //         chainId: Number(tokenInputLifi!.chainId),
+  //         steps: [
+  //           async () => {
+  //             const token = tokenInputLifi!
+  //             return await transactions.checkAndRaiseApproval({
+  //               token: token.address! as Hex,
+  //               spender: latestLifiQuote!.transactionRequest!.to as Hex,
+  //               chainId: Number(token.chainId),
+  //               minimum: amountInputFromLifi,
+  //               latestBlock: blocks.get(Number(token.chainId))!,
+  //             })
+  //           },
+  //         ],
+  //         after: () => {
+  //           const token = tokenInputLifi!
+  //           if (!token) return
+  //           balances.delete(
+  //             tokenBalanceLoadingKey(Number(token.chainId), token.address!, accountState.address!),
+  //           )
+  //         },
+  //       }),
+  // )
+  // const initiateLifiFromEvmBridge = $derived(
+  //   !tokenInputLifi
+  //     ? _.noop
+  //     : transactionButtonPress({
+  //         toast,
+  //         chainId: Number(tokenInputLifi!.chainId),
+  //         steps: [
+  //           async () => {
+  //             const token = tokenInputLifi!
+  //             const tx = await transactions.sendTransaction({
+  //               chainId: Number(token.chainId),
+  //               account: accountState.address as Hex,
+  //               data: latestLifiQuote!.transactionRequest!.data as Hex,
+  //               gas: BigInt(latestLifiQuote!.transactionRequest!.gasLimit ?? 0),
+  //               gasPrice: BigInt(latestLifiQuote!.transactionRequest!.gasPrice ?? 0),
+  //               to: latestLifiQuote!.transactionRequest!.to as Hex,
+  //               value: BigInt(latestLifiQuote!.transactionRequest!.value ?? 0),
+  //             })
+  //             return tx
+  //           },
+  //         ],
+  //       }),
+  // )
+  // let lifiAllowance = $state(null as bigint | null)
+  // const needsAllowanceForLifi = $derived.by(() => {
+  //   const pushValue = latestLifiQuote?.transactionRequest?.value
+  //   if ((pushValue && BigInt(pushValue) > 0n) || !lifiFromChainIsEvm) {
+  //     return false
+  //   }
+  //   return lifiAllowance === null || lifiAllowance < amountInputFromLifi
+  // })
+  // const needsApprovalForLifi = $derived.by(() => {
+  //   return needsAllowanceForLifi && (lifiAllowance === null || lifiAllowance < amountInputFromLifi)
+  // })
   // $inspect(latestLifiQuote)
-  const lifiSpender = $derived.by(() => latestLifiQuote?.transactionRequest?.to)
-  $effect(() => {
-    const token = tokenInputLifi
-    if (!token) return
-    const spender = lifiSpender
-    const tokenAddress = token.address
-    const account = accountState.address
-    const chainId = token.chainId
-    if (!tokenAddress || !needsAllowanceForLifi || !account || !spender || !chainId) {
-      return
-    }
-    const result = transactions.loadAllowance({
-      token: tokenAddress as Hex,
-      spender: spender as Hex,
-      chainId: Number(chainId),
-      account: account as Hex,
-    })
-    result.promise.then((a) => {
-      if (result.controller.signal.aborted) return
-      lifiAllowance = a
-    })
-    return result.cleanup
-  })
+  // const lifiSpender = $derived.by(() => latestLifiQuote?.transactionRequest?.to)
+  // $effect(() => {
+  //   const token = tokenInputLifi
+  //   if (!token) return
+  //   const spender = lifiSpender
+  //   const tokenAddress = token.address
+  //   const account = accountState.address
+  //   const chainId = token.chainId
+  //   if (!tokenAddress || !needsAllowanceForLifi || !account || !spender || !chainId) {
+  //     return
+  //   }
+  //   const result = transactions.loadAllowance({
+  //     token: tokenAddress as Hex,
+  //     spender: spender as Hex,
+  //     chainId: Number(chainId),
+  //     account: account as Hex,
+  //   })
+  //   result.promise.then((a) => {
+  //     if (result.controller.signal.aborted) return
+  //     lifiAllowance = a
+  //   })
+  //   return result.cleanup
+  // })
   // const crossForeignBridge = $derived.by(() => {
   //   if (needsAllowance) {
   //     if (!allowance || allowance < amountInputFromLifi) {
@@ -412,18 +419,19 @@
   //   return sendLifiTransaction
   // })
   const buttonEnabled = $derived.by(() => {
-    if (bridgingToEthereum) {
-      if (!lifiFromChainIsEvm && !destinationAddressIsValid) {
-        return false
-      }
-      return (
-        lifiQuoteMatchesLatest &&
-        !!latestLifiQuote &&
-        !!amountOutputFromLifi &&
-        !!amountInputFromLifi &&
-        !!accountState.address
-      )
-    } else if (bridgingToPulsechain) {
+    // if (bridgingToEthereum) {
+    //   if (!lifiFromChainIsEvm && !destinationAddressIsValid) {
+    //     return false
+    //   }
+    //   return (
+    //     lifiQuoteMatchesLatest &&
+    //     !!latestLifiQuote &&
+    //     !!amountOutputFromLifi &&
+    //     !!amountInputFromLifi &&
+    //     !!accountState.address
+    //   )
+    // } else
+    if (bridgingToPulsechain) {
       const minAmountIn = minBridgeAmountIn.get(minBridgeAmountKey)
       return (
         !maxCrossPulsechainBridge ||
@@ -482,9 +490,9 @@
     })
     return tokens.find((t) => t.address === zeroAddress) ?? null
   })
-  const bridgingToEthereum = $derived(activeOnboardStep.value === 1)
-  const bridgingToPulsechain = $derived(activeOnboardStep.value === 2)
-  const swappingOnPulsex = $derived(activeOnboardStep.value === 3)
+  // const bridgingToEthereum = $derived(activeOnboardStep.value === 1)
+  const bridgingToPulsechain = $derived(activeOnboardStep.value === 1)
+  const swappingOnPulsex = $derived(activeOnboardStep.value === 2)
 
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(
@@ -859,47 +867,95 @@
       ],
     }),
   )
-  $inspect(latestLifiQuote)
-  const initiateLifiFromNonEvmBridge = $derived.by(() => {
-    const quote = latestLifiQuote
-    return () =>
-      sendTransaction({
-        toast,
-        steps: [
-          async () => {
-            const receipt = await transactions.sendTransactionSolana({
-              data: quote!.transactionRequest!.data!,
-            })
-            console.log(receipt)
-            return receipt
-          },
-        ],
-        wait: async (txHash) => {
-          const status = await waitForBridge({
-            txHash,
-            fromChain: quote?.action.fromChainId,
-            toChain: quote?.action.toChainId,
-            bridge: quote?.tool,
-            timeout: new AbortController(),
-          })
-          console.log('status', status)
-          if (_.isEqual(quote?.action, latestLifiQuote?.action)) {
-            // move the system forward
-            activeOnboardStep.value = 2
-            return
-          }
-        },
-      })
-  })
-  const bridgeTokensToEthereumStep = $derived.by(() => {
-    if (needsApprovalForLifi) {
-      return incrementLifiAllowance
-    }
-    if (lifiFromChainIsEvm) {
-      return initiateLifiFromEvmBridge
-    }
-    return initiateLifiFromNonEvmBridge
-  })
+  // const bitcoinMemo = $derived.by(() => {
+  //   const psbtHex = latestLifiQuote?.transactionRequest?.data
+  //   if (!psbtHex || lifiFromChain?.key !== 'btc') return null
+
+  //   // Create PSBT object from hex data
+  //   const psbt = Psbt.fromHex(psbtHex, { network: bitcoinJsNetworks.bitcoin })
+
+  //   // Find OP_RETURN output in the transaction outputs
+  //   const opReturnOutput = psbt.txOutputs.find((output) => {
+  //     if (output?.script) {
+  //       // Convert the output script to hex string for checking
+  //       const scriptHex = Array.from(output.script)
+  //         .map((b) => b.toString(16).padStart(2, '0'))
+  //         .join('')
+
+  //       // Check if script starts with OP_RETURN opcode (0x6a)
+  //       return scriptHex.startsWith('6a')
+  //     }
+  //     return false
+  //   })
+
+  //   // If an OP_RETURN output exists, decode its script data as UTF-8 text (memo)
+  //   const memo = opReturnOutput?.script
+  //     ? new TextDecoder().decode(new Uint8Array(Object.values(opReturnOutput.script)))
+  //     : undefined
+  //   return memo
+  // })
+  // $inspect(bitcoinMemo)
+  // const initiateLifiFromBitcoin = $derived.by(() => {
+  //   // we set the value inside of the derived function
+  //   // in order to keep the quote around even if a new quote is provided
+  //   const quote = latestLifiQuote
+  //   if (!quote) return () => {}
+  //   return () =>
+  //     sendTransaction({
+  //       toast,
+  //       steps: [
+  //         async () => {
+  //           const txRequest = quote.transactionRequest! as transactions.UTXOTransactionRequest
+  //           const tx = await transactions.sendTransactionBitcoin(txRequest)
+  //           return tx
+  //         },
+  //       ],
+  //       wait: async () => {},
+  //     })
+  // })
+  // const initiateLifiFromSolana = $derived.by(() => {
+  //   const quote = latestLifiQuote
+  //   return () =>
+  //     sendTransaction({
+  //       toast,
+  //       steps: [
+  //         async () => {
+  //           const receipt = await transactions.sendTransactionSolana({
+  //             data: quote!.transactionRequest!.data!,
+  //           })
+  //           console.log(receipt)
+  //           return receipt
+  //         },
+  //       ],
+  //       wait: async (txHash) => {
+  //         const status = await waitForBridge({
+  //           txHash,
+  //           fromChain: quote?.action.fromChainId,
+  //           toChain: quote?.action.toChainId,
+  //           bridge: quote?.tool,
+  //           timeout: new AbortController(),
+  //         })
+  //         console.log('status', status)
+  //         if (_.isEqual(quote?.action, latestLifiQuote?.action)) {
+  //           // move the system forward
+  //           activeOnboardStep.value = 2
+  //           return
+  //         }
+  //       },
+  //     })
+  // })
+  // const bridgeTokensToEthereumStep = $derived.by(() => {
+  //   if (needsApprovalForLifi) {
+  //     return incrementLifiAllowance
+  //   }
+  //   if (lifiFromChainIsEvm) {
+  //     return initiateLifiFromEvmBridge
+  //   }
+  //   if (lifiFromChain?.key === 'sol') {
+  //     return initiateLifiFromSolana
+  //   }
+  //   return initiateLifiFromBitcoin
+  // })
   const bridgeTokensToPulsechainStep = $derived.by(() => {
     if (pulsechainBridgeNeedsApproval) {
       return incrementApprovalToPulsechain
@@ -916,9 +972,10 @@
     if (!accountState.address) {
       return connect
     }
-    if (bridgingToEthereum) {
-      return bridgeTokensToEthereumStep
-    } else if (bridgingToPulsechain) {
+    // if (bridgingToEthereum) {
+    //   return bridgeTokensToEthereumStep
+    // } else
+    if (bridgingToPulsechain) {
       return bridgeTokensToPulsechainStep
     }
     return swapPulsexStep
@@ -950,18 +1007,18 @@
     }
   })
   const buttonText = $derived.by(() => {
-    if (activeOnboardStep.value === 1) {
-      if (needsApprovalForLifi) {
-        return 'Approve'
-      }
-      // console.log('lifiFromChainIsEvm', lifiFromChainIsEvm, destinationAddressIsValid)
-      if (!lifiFromChainIsEvm) {
-        if (!destinationAddressIsValid) {
-          return 'Enter recipient address'
-        }
-      }
-      return 'Exchange'
-    }
+    // if (activeOnboardStep.value === 1) {
+    //   if (needsApprovalForLifi) {
+    //     return 'Approve'
+    //   }
+    //   // console.log('lifiFromChainIsEvm', lifiFromChainIsEvm, destinationAddressIsValid)
+    //   if (!lifiFromChainIsEvm) {
+    //     if (!destinationAddressIsValid) {
+    //       return 'Enter recipient address'
+    //     }
+    //   }
+    //   return 'Exchange'
+    // }
     if (activeOnboardStep.value === 2) {
       if (needsAllowanceForPulsechainBridge) {
         return 'Approve'
@@ -981,10 +1038,68 @@
     }
     return pulsexQuoteResult ? 'pulsex-quote' : ''
   })
+  let onrampsOpen = $state(false)
+  const toggleOnramps = () => {
+    onrampsOpen = !onrampsOpen
+  }
 </script>
 
-<div class="flex flex-col gap-2">
-  <SectionInput
+<Section id="onramp-section" focused>
+  <div class="flex flex-col w-full justify-start">
+    <div class="flex flex-row gap-2 items-center">
+      <span class="text-gray-500 text-sm w-full text-left">Onramps</span>
+      <Button
+        class="flex flex-row gap-2 items-center text-surface-contrast-50 justify-between"
+        onclick={toggleOnramps}
+        id="onramp-section">
+        <!-- <Icon
+          icon="rivet-icons:chevron-right"
+          mode="svg"
+          height="1em"
+          width="1em"
+          class="rotate-90" /> -->
+        <Icon
+          icon="mdi:bank-circle"
+          mode="svg"
+          class="size-7 text-white [&>path]:text-black rounded-full flex transition-all duration-200 {onrampsOpen
+            ? 'rotate-180'
+            : ''}" />
+      </Button>
+    </div>
+    <ul
+      class="flex flex-row gap-2 items-center overflow-hidden"
+      class:h-0={!onrampsOpen}
+      class:mt-2={onrampsOpen}>
+      <li class="hover:bg-surface-900-100 border rounded-2xl overflow-hidden">
+        <a
+          href="https://zkp2p.xyz/swap?toToken=ETH{accountState.address
+            ? `&recipientAddress=${accountState.address}`
+            : ''}"
+          target="_blank"
+          class="flex flex-row gap-1 items-center text-surface-contrast-50 px-3 py-1 justify-between w-full">
+          <span class="h-full leading-8 text-base">ZKP2P</span>
+          <span class="size-8 items-center flex justify-center">
+            <Image src="https://zkp2p.xyz/logo512.png" sizeClasses="size-6" />
+          </span>
+        </a>
+      </li>
+      <li class="hover:bg-surface-900-100 border rounded-2xl overflow-hidden">
+        <ModalWrapper
+          contentWidthClass="w-full max-w-[440px]"
+          triggerClasses="flex flex-row gap-2 items-center text-surface-contrast-50 px-4 py-1 justify-between w-full [&>svg]:w-16"
+          contentBorderClass="">
+          {#snippet button()}
+            {@html lifiLogo}
+          {/snippet}
+          {#snippet contents()}
+            <LifiWidget />
+          {/snippet}
+        </ModalWrapper>
+      </li>
+    </ul>
+  </div>
+</Section>
+<!-- <SectionInput
     showRadio
     label={bridgingToEthereum ? 'Bridge to Eth' : 'Input'}
     focused={bridgingToEthereum}
@@ -1048,128 +1163,133 @@
           toAddress: str,
         })
       }} />
-  {/if}
-  <SectionInput
-    label={bridgingToEthereum ? 'Output' : 'Bridge to Pulsechain'}
-    focused={bridgingToPulsechain}
-    token={crossingTokenInput}
-    value={bridgingToEthereum ? amountOutputFromLifi : amountIn.value}
-    compressed={!bridgingToEthereum && !bridgingToPulsechain}
-    dashWhenCompressed={swappingOnPulsex}
-    readonlyInput={!bridgingToPulsechain}
-    overrideAccount={lifiFromChainIsEvm ? null : destinationAddress}
-    readonlyTokenSelect={!bridgingToPulsechain}
-    valueLoadingKey={bridgingToEthereum ? 'lifi-cross-chain-swap' : null}
-    onclick={() => {
-      if (bridgingToEthereum || swappingOnPulsex) {
-        activeOnboardStep.value = 2
+  {/if} -->
+<SectionInput
+  label={/*bridgingToEthereum ? 'Output' : */ 'Bridge to Pulsechain'}
+  focused={bridgingToPulsechain}
+  token={crossingTokenInput}
+  value={amountIn.value}
+  compressed={/*!bridgingToEthereum && */ !bridgingToPulsechain}
+  dashWhenCompressed={swappingOnPulsex}
+  readonlyInput={!bridgingToPulsechain}
+  overrideAccount={lifiFromChainIsEvm ? null : destinationAddress}
+  readonlyTokenSelect={!bridgingToPulsechain}
+  valueLoadingKey={/*bridgingToEthereum ? 'lifi-cross-chain-swap' : */ null}
+  onclick={() => {
+    if (/*bridgingToEthereum || */ swappingOnPulsex) {
+      activeOnboardStep.value = 1
+    }
+  }}
+  oninput={({ int }) => {
+    if (int !== null) {
+      amountIn.value = int
+      return int
+    }
+  }}
+  onbalanceupdate={() => {
+    // set ethereum balance
+  }}
+  onmax={/*bridgingToEthereum
+    ? undefined
+    : */ (balance) => {
+    // set ethereum balance
+    amountIn.value = balance
+  }}>
+  <!-- {#snippet radio()}
+    {#if bridgingToEthereum}
+      <span class="text-xs text-gray-500 flex flex-row items-center gap-1"
+        >powered by<span class="[&>svg]:w-9 [&>svg]:h-5 translate-y-0.25">{@html lifiLogo}</span
+        ></span>
+    {/if}
+  {/snippet} -->
+</SectionInput>
+{#if bridgingToPulsechain}
+  <BridgeProgress
+    oncomplete={() => {
+      if (!bridgingToPulsechain) {
+        return
       }
-    }}
-    oninput={({ int }) => {
-      if (int !== null) {
-        amountIn.value = int
-        return int
+      // activeOnboardStep.value = 3
+      activeOnboardStep.value = 2
+      const chain = getNetwork({
+        chainId: Number(Chains.PLS),
+        name: '',
+      })
+      if (!chain) {
+        return
       }
-    }}
-    onbalanceupdate={() => {
-      // set ethereum balance
-    }}
-    onmax={bridgingToEthereum
-      ? undefined
-      : (balance) => {
-          // set ethereum balance
-          amountIn.value = balance
-        }}>
-    {#snippet radio()}
-      {#if bridgingToEthereum}
-        <span class="text-xs text-gray-500 flex flex-row items-center gap-1"
-          >powered by<span class="[&>svg]:w-9 [&>svg]:h-5 translate-y-0.25">{@html lifiLogo}</span
-          ></span>
-      {/if}
-    {/snippet}
-  </SectionInput>
-  {#if bridgingToPulsechain}
-    <BridgeProgress
-      oncomplete={() => {
-        if (!bridgingToPulsechain) {
-          return
-        }
-        activeOnboardStep.value = 3
-        const chain = getNetwork({
-          chainId: Number(Chains.PLS),
-          name: '',
-        })
-        if (!chain) {
-          return
-        }
-        switchNetwork(chain)
-      }} />
-  {/if}
-  <SectionInput
-    label="Swap on PulseX"
-    focused={activeOnboardStep.value >= 2}
-    token={crossingTokenOutput}
-    value={bridgingToEthereum || bridgingToPulsechain
-      ? amountOutputFromBridge
-      : amountInputToPulsex}
-    compressed={!swappingOnPulsex}
-    dashWhenCompressed={bridgingToEthereum}
-    readonlyInput={!swappingOnPulsex}
-    readonlyTokenSelect
-    onbalanceupdate={() => {}}
-    onclick={() => {
-      if (bridgingToPulsechain || bridgingToEthereum) {
-        activeOnboardStep.value = 3
-      }
-    }}
-    onmax={(balance) => {
-      amountInputToPulsex = balance
-    }}
-    oninput={({ int }) => {
-      if (int !== null) {
-        amountInputToPulsex = int
-        return int
-      }
+      switchNetwork(chain)
     }} />
-  <SectionInput
-    label="Output"
-    token={finalTokenOutput}
-    value={amountOutputFromPulsex}
-    focused={swappingOnPulsex}
-    compressed={!swappingOnPulsex}
-    dashWhenCompressed
-    readonlyInput
-    readonlyTokenSelect
-    onbalanceupdate={() => {}}
-    overrideAccount={destinationAddress}
-    onclick={() => {
-      if (!swappingOnPulsex) {
-        activeOnboardStep.value = 3
-      }
-    }} />
-  <OnboardButton
-    disabled={!buttonEnabled}
-    {requiredChain}
-    onclick={onButtonClick}
-    text={buttonText}
-    {loadingKey} />
-</div>
+{/if}
+<SectionInput
+  label="Swap on PulseX"
+  focused={activeOnboardStep.value >= 1}
+  token={crossingTokenOutput}
+  value={/*bridgingToEthereum || */ bridgingToPulsechain
+    ? amountOutputFromBridge
+    : amountInputToPulsex}
+  compressed={!swappingOnPulsex}
+  dashWhenCompressed
+  readonlyInput={!swappingOnPulsex}
+  readonlyTokenSelect
+  onbalanceupdate={() => {}}
+  onclick={() => {
+    if (bridgingToPulsechain /* || bridgingToEthereum*/) {
+      // activeOnboardStep.value = 3
+      activeOnboardStep.value = 2
+    }
+  }}
+  onmax={(balance) => {
+    amountInputToPulsex = balance
+  }}
+  oninput={({ int }) => {
+    if (int !== null) {
+      amountInputToPulsex = int
+      return int
+    }
+  }} />
+<SectionInput
+  label="Output"
+  token={finalTokenOutput}
+  value={amountOutputFromPulsex}
+  focused={swappingOnPulsex}
+  compressed={!swappingOnPulsex}
+  dashWhenCompressed
+  readonlyInput
+  readonlyTokenSelect
+  onbalanceupdate={() => {}}
+  overrideAccount={destinationAddress}
+  onclick={() => {
+    if (!swappingOnPulsex) {
+      activeOnboardStep.value = 2
+      // activeOnboardStep.value = 3
+    }
+  }} />
+<OnboardButton
+  disabled={!buttonEnabled}
+  {requiredChain}
+  onclick={onButtonClick}
+  text={buttonText}
+  {loadingKey} />
 
 {#if showTooltips.value}
   <div class="absolute top-0 left-0 w-full h-full">
     <GuideShield show={true} />
-    {#if bridgingToEthereum}
+    <!-- {#if bridgingToEthereum}
       <GuideStep step={1} triggerClass="absolute right-24 top-4">
         <p>Select the token and network you want to move from.</p>
       </GuideStep>
       <GuideStep step={2} triggerClass="absolute right-24 bottom-4">
         <p>Send the token through li.fi to get to Ethereum.</p>
+      </GuideStep> -->
+    {#if bridgingToPulsechain}
+      <GuideStep step={1} triggerClass="absolute left-24 top-4">
+        <p>Onramp funds</p>
       </GuideStep>
-    {:else if bridgingToPulsechain}
-      <GuideStep step={1} triggerClass="absolute right-24 top-20">
+      <GuideStep step={2} triggerClass="absolute right-24 top-20">
         <p>Select the token you wish to bridge to PulseChain.</p>
       </GuideStep>
-      <GuideStep step={2} triggerClass="absolute right-24 bottom-4">
+      <GuideStep step={3} triggerClass="absolute right-24 bottom-4">
         <p>Trigger the bridge to PulseChain.</p>
       </GuideStep>
     {:else}

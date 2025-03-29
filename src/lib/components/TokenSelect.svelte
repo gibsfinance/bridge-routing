@@ -194,29 +194,37 @@
             <Icon icon="mynaui:chevron-down" class="size-6 ml-0.5" />
           {/snippet}
           {#snippet content()}
+            {@const sortedChains = _(chains)
+              .slice(0)
+              .map((chain) => {
+                return (
+                  availableChains.get(chain) ?? {
+                    id: chain,
+                    logoURI: imageLinks.network(chain),
+                    name: chainsMetadata[toChain(chain)].name,
+                  }
+                )
+              })
+              .sortBy((chain) => chain.name.toLowerCase())
+              .value()}
             <span class="text-sm text-gray-500 px-4 pt-2">Select Network</span>
             <ul class="flex flex-col">
-              {#each chains as chain}
-                {@const network = availableChains.get(chain) ?? {
-                  id: chain,
-                  logoURI: imageLinks.network(chain),
-                  name: chainsMetadata[toChain(chain)].name,
-                }}
+              {#each sortedChains as chain}
                 <li class="flex flex-row grow">
                   <Button
-                    class="flex flex-row items-center pl-[14px] py-1 hover:bg-surface-100 grow border-l-2 {chain ===
+                    class="flex flex-row items-center pl-[14px] py-1 hover:bg-surface-100 grow border-l-2 {chain.id ===
                     selectedChain
                       ? 'border-primary-500'
                       : 'border-transparent'}"
                     onclick={() => {
                       chainSelectOpen = false
-                      onnetworkchange?.(chain)
+                      onnetworkchange?.(chain.id)
                     }}>
                     <StaticNetworkImage
-                      network={network.id}
+                      network={chain.id}
                       sizeClasses="size-8 rounded-lg"
-                      icon={network.logoURI} />
-                    <span class="ml-2">{network.name}</span>
+                      icon={chain.logoURI} />
+                    <span class="ml-2">{chain.name}</span>
                   </Button>
                 </li>
               {/each}

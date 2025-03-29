@@ -10,6 +10,7 @@
   const targetChain = $derived.by(() => {
     const id = accountState.chainId
     if (!id) return null
+    console.log(accountState.prefix)
     const chainId = Number(id)
     const chain = availableChains.get(chainId)
     if (chain) {
@@ -18,8 +19,7 @@
         logoURI: chain.logoURI,
       }
     }
-    const prefix = accountState.prefix
-    const networkByPrefix = availableChainsByName.get(prefix!)
+    const networkByPrefix = availableChainsByName.get(accountState.prefix!)
     if (networkByPrefix) {
       return {
         name: networkByPrefix.name,
@@ -37,7 +37,7 @@
     if (network) {
       return {
         name: network.name,
-        logoURI: imageLinks.network(chainId),
+        logoURI: network.logoURI || imageLinks.network(chainId),
       }
     }
     return null

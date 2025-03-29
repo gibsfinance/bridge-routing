@@ -14,8 +14,11 @@
   import { bridgableTokens, loadFeeFor, recipient, bridgeKey } from '$lib/stores/input.svelte'
   import { activeOnboardStep, showTooltips } from '$lib/stores/storage.svelte'
   import Image from './Image.svelte'
+  import LifiWidget from './bridges/LifiWidget.svelte'
   import coinbase from '$lib/images/providers/coinbase.svg?raw'
   import meldio from '$lib/images/providers/meld-io.svg?raw'
+  import lifi from '$lib/images/providers/lifi.svg?raw'
+  import ModalWrapper from './ModalWrapper.svelte'
   const openOnRamp = () => {
     modal.open({
       view: 'OnRampProviders',
@@ -78,6 +81,7 @@
     recipient.value = (accountState.address ?? zeroAddress) as `0x${string}`
   })
   let onrampOpen = $state(false)
+  let showLifi = $state(false)
 </script>
 
 <header class="flex flex-col items-center justify-between gap-2">
@@ -92,7 +96,15 @@
         <span class="text-sm pr-1 leading-6" class:invisible={!showTooltips.value}>Dismiss</span>
       </Button>
     </div>
-    <div class="flex flex-row gap-1 grow items-center justify-end">
+    <!-- <div class="flex flex-row gap-1 grow items-center justify-end">
+      <ModalWrapper contentWidthClass="w-full max-w-[440px]">
+        {#snippet button()}
+          {@html lifi}
+        {/snippet}
+        {#snippet contents()}
+          <LifiWidget />
+        {/snippet}
+      </ModalWrapper>
       <Popover
         open={onrampOpen}
         onOpenChange={() => (onrampOpen = !onrampOpen)}
@@ -150,7 +162,7 @@
           </div>
         {/snippet}
       </Popover>
-    </div>
+    </div> -->
     <div class="absolute left-1/2 -translate-x-1/2 top-0 h-12 items-center justify-center flex">
       {#each [1, 2, 3] as step}
         <Button

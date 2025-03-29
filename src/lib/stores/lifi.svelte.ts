@@ -1,11 +1,12 @@
 import type {
-  Chain,
+  ExtendedChain,
+  ChainKey,
   GetStatusRequest,
   LiFiStep,
   QuoteRequest,
-  RelayerQuoteResponseData,
   Token,
-} from '@lifi/types'
+} from '@lifi/sdk'
+import type { RelayerQuoteResponseData } from '@lifi/types'
 import { SvelteMap } from 'svelte/reactivity'
 import { loading } from './loading.svelte'
 import _ from 'lodash'
@@ -20,25 +21,33 @@ import {
   createConfig,
   Solana,
   getStatus,
+  UTXO,
+  EVM,
 } from '@lifi/sdk'
-import { solanaAdapter } from './auth/AuthProvider.svelte'
+import { bitcoinAdapter, solanaAdapter, wagmiAdapter } from './auth/AuthProvider.svelte'
 
 const integrator = 'gibs.finance'
 createConfig({
   integrator,
   debug: true,
   providers: [
+    EVM({
+      // getWalletClient: async () => wagmiAdapter,
+    }),
     Solana({
-      getWalletAdapter: async () => solanaAdapter,
+      // getWalletAdapter: async () => solanaAdapter,
+    }),
+    UTXO({
+      // getWalletAdapter: async () => bitcoinAdapter,
     }),
   ],
 })
 
-export const availableChains = new SvelteMap<number | string, Chain>()
-export const availableChainsByName = new SvelteMap<string, Chain>()
+export const availableChains = new SvelteMap<number | string, ExtendedChain>()
+export const availableChainsByName = new SvelteMap<string, ExtendedChain>()
 export const availableTokensPerOriginChain = new SvelteMap<number, Token[]>()
-export const targetedOriginChain = new NullableProxyStore<Chain>()
-export const targetedDestinationChain = new NullableProxyStore<Chain>()
+export const targetedOriginChain = new NullableProxyStore<ExtendedChain>()
+export const targetedDestinationChain = new NullableProxyStore<ExtendedChain>()
 export const amountIn = new NullableProxyStore<bigint>()
 export const amountOut = new NullableProxyStore<bigint>()
 export const tokenIn = new NullableProxyStore<Token>()
@@ -58,8 +67,14 @@ export const loadData = _.memoize(async () => {
   chains.forEach((chain) => {
     if (availableChains.has(chain.id)) return
     availableChains.set(chain.id, chain)
-    availableChainsByName.set(chain.name.toLowerCase(), chain)
+    if (chain.chainType === ChainType.UTXO) {
+      availableChainsByName.set('bip122', chain)
+    }
+    if (chain.chainType === ChainType.SVM) {
+      availableChainsByName.set(chain.name.toLowerCase(), chain)
+    }
   })
+  // console.log(availableChainsByName.get('bitcoin'))
   const ethereum = [...availableChains.values()].find((chain) => chain.key === 'eth')!
   targetedDestinationChain.set(ethereum)
   await loadTokensForChains(ethereum)
@@ -68,20 +83,23 @@ export const loadData = _.memoize(async () => {
 })
 
 const getTokensAndCache = _.memoize(
-  loading.loadsAfterTick<Token[], number>('lifi-tokens', async (id: number) => {
+  loading.loadsAfterTick<Token[], ChainKey>('lifi-tokens', async (key: ChainKey) => {
     const tokens = await getTokens({
-      chains: [id],
+      chains: [key],
     })
-    availableTokensPerOriginChain.set(id, tokens.tokens[id])
-    return tokens.tokens[id]
+    const chain = [...availableChains.values()].find((chain) => chain.key === key)!
+    const id = chain.id
+    const tkns = tokens.tokens[id] ?? (chain.nativeToken ? [chain.nativeToken] : [])
+    availableTokensPerOriginChain.set(id, tkns)
+    return tkns
   }),
 )
 
-export const loadTokensForChains = async (chain: Chain) => {
+export const loadTokensForChains = async (chain: ExtendedChain) => {
   if (availableTokensPerOriginChain.has(chain.id)) {
     return availableTokensPerOriginChain.get(chain.id)!
   }
-  const getter = getTokensAndCache(chain.id)
+  const getter = getTokensAndCache(chain.key)
   return getter.promise
 }
 
@@ -101,7 +119,7 @@ export const lifiQuotes = new SvelteMap<
   string,
   {
     updatedAt: number
-    quote: Promise<RelayerQuoteResponseData['quote']>
+    quote: Promise<LiFiStep>
   }
 >()
 
@@ -113,20 +131,15 @@ export const getLifiQuoteKey = (quote: QuoteRequest) => {
 }
 
 export const getQuoteStep = loading.loadsAfterTick<
-  RelayerQuoteResponseData['quote'],
+  LiFiStep,
   QuoteRequest & { blockNumber: bigint }
 >(
   'lifi-quote',
   maxMemoize(
-    async ({
-      fromChain,
-      toChain,
-      fromToken,
-      toToken,
-      fromAmount,
-      fromAddress,
-      toAddress,
-    }: QuoteRequest) => {
+    async (
+      { fromChain, toChain, fromToken, toToken, fromAmount, fromAddress, toAddress }: QuoteRequest,
+      controller: AbortController,
+    ) => {
       const lifiQuoteKey = getLifiQuoteKey({
         fromChain,
         toChain,
@@ -141,16 +154,21 @@ export const getQuoteStep = loading.loadsAfterTick<
       if (existingQuote && existingQuote.updatedAt > Date.now() - 1000 * 30) {
         return existingQuote.quote
       }
-      const quote = getQuote({
-        fromChain,
-        toChain,
-        fromToken,
-        toToken,
-        fromAmount,
-        fromAddress,
-        toAddress,
-        integrator,
-      })
+      const quote = getQuote(
+        {
+          fromChain,
+          toChain,
+          fromToken,
+          toToken,
+          fromAmount,
+          fromAddress,
+          toAddress,
+          integrator,
+        },
+        {
+          signal: controller.signal,
+        },
+      )
       lifiQuotes.set(lifiQuoteKey, {
         updatedAt: Date.now(),
         quote,
@@ -211,7 +229,7 @@ export const waitForBridge = async ({
     if (status === 'DONE') {
       return result
     }
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 3_000))
     if (timeout.signal.aborted) {
       break
     }

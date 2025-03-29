@@ -26,14 +26,14 @@
     // contentWidthClass = 'max-w-(--container-lg) w-full',
     contentWidthClass = 'max-w-[548px] w-full',
     contentHeightClass = 'h-full max-h-[512px]',
-    contentBorderClass,
+    contentBorderClass = 'border border-surface-200',
   }: Props = $props()
   let open = $state(false)
   const classes = $derived(classNames(wrapperClasses))
   const triggerBase = $derived(classNames(triggerClasses))
   const contentWidth = $derived(classNames(contentWidthClass))
   const contentHeight = $derived(classNames(contentHeightClass))
-  const contentBorder = $derived(classNames('border border-surface-200', contentBorderClass))
+  const contentBorder = $derived(classNames(contentBorderClass))
   const contentBase = $derived(
     classNames(
       'card bg-white space-y-2 text-surface-contrast-50',

@@ -15,11 +15,13 @@ import type { GetBalanceReturnType } from '@wagmi/core'
 import { SvelteMap } from 'svelte/reactivity'
 import { SolflareWalletAdapter, PhantomWalletAdapter } from '@solana/wallet-adapter-wallets'
 import type { BaseWalletAdapter, SignerWalletAdapter } from '@solana/wallet-adapter-base'
+import { BitcoinAdapter } from '@reown/appkit-adapter-bitcoin'
 
 export const appkitNetworkList = [
   networks.mainnet,
   networks.pulsechain,
   networks.solana,
+  networks.bitcoin,
   networks.sepolia,
   networks.pulsechainV4,
   networks.bsc,
@@ -80,6 +82,10 @@ export const solanaAdapter = new SolanaAdapter({
   ],
 }) as unknown as SignerWalletAdapter
 
+export const bitcoinAdapter = new BitcoinAdapter({
+  projectId,
+})
+
 // 3. Configure the metadata
 const metadata = {
   name: 'Gibs',
@@ -90,7 +96,7 @@ const metadata = {
 
 // 3. Create the modal
 export const modal = createAppKit({
-  adapters: [wagmiAdapter, solanaAdapter as unknown as ChainAdapter],
+  adapters: [wagmiAdapter, solanaAdapter as unknown as ChainAdapter, bitcoinAdapter],
   networks: appkitNetworkList,
   metadata,
   projectId,

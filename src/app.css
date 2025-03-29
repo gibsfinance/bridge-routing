@@ -44,7 +44,7 @@ body {
   font-family: Ariel, sans-serif;
 }
 .MuiBox-root {
-  @apply w-full! max-w-none!;
+  @apply max-w-none!;
 }
 /* .link {
   color: inherit;

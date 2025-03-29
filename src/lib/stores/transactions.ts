@@ -3,18 +3,14 @@ import {
   waitForTransactionReceipt,
   type SendTransactionParameters,
 } from '@wagmi/core'
-import {
-  accountState,
-  wagmiAdapter,
-  connect,
-  modal,
-} from './auth/AuthProvider.svelte'
+import { accountState, wagmiAdapter, connect, modal } from './auth/AuthProvider.svelte'
 import { encodeFunctionData, erc20Abi, maxUint256, zeroAddress, type Block, type Hex } from 'viem'
 import { type ApprovalParameters, checkAllowance } from './chain-read.svelte'
 import { loading } from './loading.svelte'
 import { Connection, VersionedTransaction } from '@solana/web3.js'
 import { PUBLIC_SOLANA_RPC_URL } from '$env/static/public'
 import type { SolanaProvider } from '@lifi/sdk'
+import Provider from '@walletconnect/universal-provider'
 
 export * from './chain-read.svelte'
 
@@ -133,4 +129,22 @@ export const sendTransactionSolana = async (encodedTx: { data: string }) => {
     ...opts,
   })
   return tx
+}
+
+export type UTXOTransactionRequest = {
+  to: string
+  data: string
+  value: string
+}
+
+export const sendTransactionBitcoin = async (txRequest: UTXOTransactionRequest) => {
+  const walletProvider = (await modal.getWalletProvider()) as Provider
+  console.log(walletProvider, txRequest)
+  // const tx = await walletProvider.sendTransaction(txRequest)
+  // const tx =
+  // await sendTransactionCore(wagmiAdapter.wagmiConfig, {
+  // ...opts,
+  // account: accountState.address,
+  // to: tx.to,
+  // })
 }

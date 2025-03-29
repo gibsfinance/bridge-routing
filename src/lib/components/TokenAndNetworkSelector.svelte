@@ -8,6 +8,7 @@
     loadTokensForChains,
   } from '$lib/stores/lifi.svelte'
   import type { Token } from '$lib/types.svelte'
+  import { ChainType, type UTXOChain } from '@lifi/types'
 
   type Props = {
     onsubmit: (token: Token | null, chainId: number | null) => void
@@ -22,13 +23,26 @@
     selectedChainIndex = chains.indexOf(chainId)
   })
   const selectedChainId = $derived(chains[selectedChainIndex])
-  const tokens = $derived(tokensProp ?? availableTokensPerOriginChain.get(selectedChainId) ?? [])
+  const selectedChain = $derived(availableChains.get(selectedChainId))
+  const tokens = $derived(
+    tokensProp ??
+      availableTokensPerOriginChain.get(selectedChainId) ??
+      (selectedChain && selectedChain.chainType === ChainType.UTXO
+        ? [(selectedChain as UTXOChain).nativeToken]
+        : []),
+  )
   const tokensUnder = $derived(tokens.filter((t) => t.chainId === selectedChainId))
   $effect(() => {
     if (tokensUnder.length === 0) {
       const chain = availableChains.get(selectedChainId)
       if (chain) {
-        loadTokensForChains(chain)
+        if (chain.key === 'btc') {
+          // loadTokensForChains(chain).then((tokens) => {
+          //   console.log('loading tokens for chain', chain, tokens)
+          // })
+        } else {
+          loadTokensForChains(chain)
+        }
       }
     }
   })

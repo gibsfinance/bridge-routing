@@ -11,6 +11,7 @@ import {
   isHex,
   erc20Abi_bytes32,
   isAddress,
+  bytesToHex,
 } from 'viem'
 import type { Block, Hex, TransactionReceipt, BlockTag } from 'viem'
 import { loading, resolved, type Cleanup } from './loading.svelte'
@@ -27,7 +28,13 @@ import { gql, GraphQLClient } from 'graphql-request'
 import { Cache } from './cache'
 import { getTokenBalance as getTokenBalanceLifi, availableChains } from './lifi.svelte'
 import { evmChainsById, getNetwork } from './auth/AuthProvider.svelte'
-import { walletConnectProjectId } from '$lib/config'
+import { Block as BitcoinBlock } from 'bitcoinjs-lib'
+import { PUBLIC_BITCOIN_RPC, PUBLIC_SOLANA_RPC_URL } from '$env/static/public'
+
+type ExtendedBitcoinBlock = {
+  block: BitcoinBlock
+  number: number
+}
 
 export const watchFinalizedBlocksForSingleChain = (
   chainId: number,
@@ -71,7 +78,56 @@ export const latestBaseFeePerGas = (chain: number) => {
   return blocks.get(chain)?.baseFeePerGas ?? 3_000_000_000n
 }
 
-export const toEvmStyleBlock = (b: solanaWeb3.ParsedAccountsModeBlockResponse) => {
+export const bitcoinBlockToEvmBlock = (b: ExtendedBitcoinBlock) => {
+  return {
+    number: BigInt(b.number),
+    timestamp: BigInt(b.block.timestamp),
+    hash: bytesToHex(b.block.getHash()!),
+    parentHash: bytesToHex(b.block.prevHash!),
+    baseFeePerGas: 7n,
+    blobGasUsed: 0n,
+    difficulty: 0n,
+    excessBlobGas: 0n,
+    extraData: '0x',
+    gasLimit: 0n,
+    gasUsed: 0n,
+    logsBloom: '0x',
+    miner: '0x',
+    mixHash: '0x',
+    nonce: '0x',
+    receiptsRoot: '0x',
+    sealFields: [],
+    sha3Uncles: '0x',
+    size: BigInt(b.block.bits),
+    transactions: [],
+    transactionsRoot: '0x',
+    uncles: [],
+    stateRoot: '0x',
+    totalDifficulty: 0n,
+  } as Block
+}
+
+// const url = 'https://bitcoin-rpc.publicnode.com'
+export const requestBitcoinRpc = async <T>(method: string, params: unknown[] = []) => {
+  const res = await fetch(PUBLIC_BITCOIN_RPC, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: '0',
+      method,
+      params,
+    }),
+  })
+  const json = (await res.json()) as { result: T; error: null | string; id: string }
+  if (json.error) {
+    throw new Error(json.error)
+  }
+  return json
+}
+export const solanaToEvmStyleBlock = (b: solanaWeb3.ParsedAccountsModeBlockResponse) => {
   return {
     number: BigInt(b.blockHeight!),
     timestamp: BigInt(b.blockTime!),
@@ -123,10 +179,7 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
         name: availableNetwork!.name,
       })
       if (network!.name === 'Solana') {
-        const id = `solana:${network!.id}`
-        const url = `${network!.rpcUrls.default.http[0]!}?chainId=${id}&projectId=${walletConnectProjectId}`
-        // console.log('url', url)
-        const connection = new solanaWeb3.Connection(url)
+        const connection = new solanaWeb3.Connection(PUBLIC_SOLANA_RPC_URL)
         const updateBlock = () => {
           connection
             .getBlockHeight({
@@ -139,7 +192,7 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
             .then((v) => {
               if (!v || cancelled) return
               decrement()
-              untrack(() => blocks.set(chain, toEvmStyleBlock(v)))
+              untrack(() => blocks.set(chain, solanaToEvmStyleBlock(v)))
             })
             .catch(() => {
               decrement()
@@ -147,7 +200,7 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
               untrack(() =>
                 blocks.set(
                   chain,
-                  toEvmStyleBlock({
+                  solanaToEvmStyleBlock({
                     blockHeight: now,
                     blockTime: now,
                     blockhash: `0x${now.toString(16)}`,
@@ -165,8 +218,47 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
           clearInterval(interval)
         }
       } else {
-        // reserved space for bitcoin
-        watcher = () => {}
+        type BlockchainInfo = {
+          bestblockhash: string
+          blocks: number
+        }
+        const parseBlock = (hex: string) => {
+          return BitcoinBlock.fromHex(hex)
+        }
+        const getBlock = async () => {
+          return requestBitcoinRpc<BlockchainInfo>('getblockchaininfo').then(async ({ result }) => {
+            const blockHex = await requestBitcoinRpc<string>('getblock', [result.bestblockhash, 0])
+            const b = parseBlock(blockHex.result)
+            return {
+              block: b,
+              number: result.blocks,
+            } as ExtendedBitcoinBlock
+          })
+        }
+        let cancelled = false
+        const fetchBlock = async () => {
+          // const block = bitcoinAdapter.getBlock()
+          // const block = await fetch(url, {
+          //   method: 'GET',
+          //   headers: {
+          //     'Content-Type': 'application/json',
+          //   },
+          // }).then((res) => res.json())
+          // fetch(url, {})
+          const block = await getBlock()
+          if (cancelled) return
+          decrement()
+          console.log(block)
+          const evmStyleBlock = bitcoinBlockToEvmBlock(block)
+          console.log(block)
+          untrack(() => blocks.set(chain, evmStyleBlock))
+        }
+        fetchBlock()
+        const interval = setInterval(fetchBlock, 60_000)
+        watcher = () => {
+          cancelled = true
+          clearInterval(interval)
+        }
       }
     } else {
       watcher = input.clientFromChain(chain).watchBlocks({
@@ -300,6 +392,7 @@ export class TokenBalanceWatcher {
     this.chainId = chainId
     this.token = token
     this.walletAccount = account
+    // console.log(token, account, ticker)
     // call this function whenever a new block is ticked over
     if (!ticker || !token || !account) return () => {}
     const network = availableChains.get(chainId)
