@@ -10,7 +10,11 @@ export default defineConfig({
     ssp(),
     enhancedImages(),
     sveltekit(),
-    nodePolyfills(),
+    nodePolyfills({
+      globals: {
+        Buffer: true,
+      },
+    }),
     // paraglide({
     //   project: './project.inlang',
     //   outdir: './src/lib/paraglide',

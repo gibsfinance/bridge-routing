@@ -4,9 +4,9 @@
   import { accountState, modal } from '$lib/stores/auth/AuthProvider.svelte'
   import LifiWidget from './bridges/LifiWidget.svelte'
   import lifiLogo from '$lib/images/providers/lifi.svg?raw'
-    import Section from './Section.svelte'
-    import Icon from '@iconify/svelte'
-    import Image from './Image.svelte'
+  import Section from './Section.svelte'
+  import Icon from '@iconify/svelte'
+  import Image from './Image.svelte'
 
   let onrampsOpen = $state(false)
   const toggleOnramps = () => {
@@ -17,6 +17,7 @@
       view: 'OnRampProviders',
     })
   }
+  let lifiOpen = $state(false)
 </script>
 
 <Section id="onramp-section" focused>
@@ -28,9 +29,9 @@
         onclick={toggleOnramps}
         id="onramp-section">
         <Icon
-          icon="mdi:bank-circle"
+          icon="mdi:bank"
           mode="svg"
-          class="size-7 text-white [&>path]:text-black rounded-full flex transition-all duration-100 {onrampsOpen
+          class="size-7 p-1 text-white [&>path]:text-black flex transition-all duration-100 {onrampsOpen
             ? 'rotate-180'
             : ''}" />
       </Button>
@@ -54,17 +55,24 @@
         </a>
       </li>
       <li class="hover:bg-surface-900-100 border rounded-2xl overflow-hidden h-8">
-        <ModalWrapper
+        <Button
+          onclick={() => (lifiOpen = !lifiOpen)}
+          class="flex flex-row gap-2 items-center text-surface-contrast-50 px-3 justify-between w-full [&>svg]:w-12">
+          {@html lifiLogo}
+        </Button>
+        <!-- <ModalWrapper
           contentWidthClass="w-full max-w-[440px]"
           triggerClasses="flex flex-row gap-2 items-center text-surface-contrast-50 px-3 justify-between w-full [&>svg]:w-12"
           contentBorderClass="">
           {#snippet button()}
             {@html lifiLogo}
           {/snippet}
-          {#snippet contents()}
-            <LifiWidget />
-          {/snippet}
-        </ModalWrapper>
+          {#snippet contents()}{/snippet}
+        </ModalWrapper> -->
+        {#if lifiOpen}
+          <LifiWidget close={() => (lifiOpen = false)} />
+          <!-- <Icon icon="mdi:bank" mode="svg" class="size-7 p-1 text-white [&>path]:text-black flex" /> -->
+        {/if}
       </li>
       <li
         class="hover:bg-surface-900-100 border rounded-2xl overflow-hidden h-8 ml-auto text-base text-gray-500">
