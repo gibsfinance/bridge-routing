@@ -1,50 +1,68 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import { bridgeKey, router } from '$lib/stores/input'
+  import { bridgeKey } from '$lib/stores/input.svelte'
   import { Chains } from '$lib/stores/auth/types'
-  import { type as modalType } from '$lib/stores/modal'
-  const openModal = () => {
-    modalType.set('info')
+  import InfoExplain from './InfoExplain.svelte'
+  import ModalWrapper from './ModalWrapper.svelte'
+  import Button from './Button.svelte'
+  const chainToDomain = {
+    [Chains.ETH]: 'etherscan.io',
+    [Chains.BNB]: 'bscscan.com',
+    [Chains.PLS]: 'scan.pulsechain.com',
+    [Chains.V4PLS]: 'scan.v4.testnet.pulsechain.com',
+    [Chains.SEP]: 'sepolia.etherscan.io',
   }
-  $: isEth = $bridgeKey === Chains.ETH
-  $: domain = isEth ? 'etherscan' : 'bscscan'
-  $: icon = isEth ? 'token:ethereum' : 'token:binance-smart-chain'
+  const toChain = $derived(bridgeKey.toChain)
+  const domain = $derived(chainToDomain[toChain])
+  const icon = 'token:ethereum'
+  const destinationRouterHash = $derived(bridgeKey.destinationRouter)
 </script>
 
 <div class="flex flex-row">
-  <button
-    type="button"
-    class="border-2 rounded-full h-8 w-8 mr-2 flex justify-center items-center hover:text-slate-500"
-    on:click={openModal}>
-    <Icon icon="entypo:info" />
-  </button>
+  <ModalWrapper
+    triggerClasses="border-2 rounded-full h-8 w-8 mr-2 flex justify-center items-center hover:text-slate-500">
+    {#snippet button()}
+      <Icon icon="entypo:info" />
+    {/snippet}
+    {#snippet contents()}
+      <InfoExplain />
+    {/snippet}
+  </ModalWrapper>
 
   <a
     aria-label="github repository"
     href="https://github.com/orgs/gibsfinance/repositories"
     target="_blank"
     class="mr-2">
-    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
+    <Button
+      class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="fe:github-alt" height="1.5em" width="1.5em" />
-    </button>
+    </Button>
   </a>
   <a
     aria-label="router code on block explorer"
-    href="https://{domain}.io/address/{$router}#code"
+    href={`https://${domain}/address/${destinationRouterHash}#code`}
     target="_blank"
     class="mr-2">
-    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
+    <Button
+      class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon {icon} height="1.5em" width="1.5em" />
-    </button>
+    </Button>
   </a>
   <a aria-label="x.com profile" href="https://x.com/gibsfinance" target="_blank" class="mr-2">
-    <button class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
-      <Icon icon="ri:twitter-fill" height="1.25em" width="1.25em" />
-    </button>
+    <Button
+      class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
+      <Icon icon="mingcute:social-x-line" height="1.25em" width="1.25em" />
+    </Button>
   </a>
-  <a href="https://t.me/+6ejcIlIAbL5lYzFh" target="_blank" class="mr-2" aria-label="a link to the telegram channel">
-    <button class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500">
+  <a
+    href="https://t.me/+6ejcIlIAbL5lYzFh"
+    target="_blank"
+    class="mr-2"
+    aria-label="a link to the telegram channel">
+    <Button
+      class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="line-md:telegram" height="1.25em" width="1.25em" />
-    </button>
+    </Button>
   </a>
 </div>

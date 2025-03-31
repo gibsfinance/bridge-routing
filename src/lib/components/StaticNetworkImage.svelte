@@ -1,22 +1,42 @@
 <script lang="ts">
-  import { type VisualChain } from '$lib/stores/auth/types'
+  import { toChain, type VisualChain } from '$lib/stores/auth/types'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
   import ProviderIcon from './ProviderIcon.svelte'
+  import Image from './Image.svelte'
+  import classNames from 'classnames'
+  import * as imageLinks from '$lib/stores/image-links'
 
-  export let network!: VisualChain
-  export let size = 32
-  export let provider: string | null = null
+  type Props = {
+    network: number | string
+    icon?: string
+    sizeClasses?: string
+    provider?: string | null
+    providerSizeClasses?: string
+  }
+  const {
+    network,
+    sizeClasses = 'size-8',
+    providerSizeClasses = 'size-4',
+    provider = null,
+    icon,
+  }: Props = $props()
+  const visualChain = $derived((chainsMetadata[toChain(network)] || null) as VisualChain | null)
+  const classes = $derived(`${sizeClasses} network-icon`)
+  const providerWrapperClasses = $derived(
+    `${providerSizeClasses} absolute -bottom-1 -left-1 rounded-full`,
+  )
+  const wrapperClasses = $derived(classNames('relative', sizeClasses))
 </script>
 
-<div class="relative">
-  <img
-    class="network-icon min-w-8"
-    style:height={`${size}px`}
-    style:width={`${size}px`}
-    src={network.icon}
-    alt={network.alt} />
+<div class={wrapperClasses}>
+  <Image
+    class={classes}
+    {sizeClasses}
+    src={icon ?? visualChain?.logoURI ?? imageLinks.network(Number(network))}
+    alt={visualChain?.alt || null} />
   {#if provider}
-    <div class="absolute -bottom-1 -left-1 rounded-full">
-      <ProviderIcon {provider} size="16" />
+    <div class={providerWrapperClasses}>
+      <ProviderIcon {provider} sizeClasses={providerSizeClasses} />
     </div>
   {/if}
 </div>

@@ -1,23 +1,29 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
-  const dispatch = createEventDispatcher()
   type Option = {
     key: string
     text: string
   }
-  export let options: Option[] = []
-  export let active = options[0]?.key
+  // export let options: Option[] = []
+  // export let active = options[0]?.key
+  // export let onchange?: (option: Option) => void
+  type Props = {
+    options: Option[]
+    active?: string
+    onchange?: (option: Option) => void
+  }
+  let { options, active = options[0]?.key, onchange }: Props = $props()
 </script>
 
-<div class="join">
-  {#each options as option}
+<div class="isolate inline-flex text-surface-contrast-50">
+  {#each options as option, i}
     <button
-      class="leading-6 uppercase text-xs px-2 mr-[3px] text-white join-item hover:bg-purple-600"
-      on:click={() => {
+      class="leading-5 min-w-5 uppercase text-xs px-1 border-2 rounded-full hover:border-surface-500 flex items-center justify-center"
+      class:ml-0.5={i > 0}
+      onclick={() => {
         active = option.key
-        dispatch('change', option)
+        onchange?.(option)
       }}
-      class:bg-purple-400={active !== option.key}
-      class:bg-purple-600={active === option.key}>{option.text}</button>
+      class:border-surface-400={active !== option.key}
+      class:border-surface-600={active === option.key}>{option.text}</button>
   {/each}
 </div>

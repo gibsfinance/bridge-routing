@@ -2,17 +2,9 @@ import { get, type Writable } from 'svelte/store'
 import { normalize } from 'viem/ens'
 
 import { writable } from 'svelte/store'
-import { getAddress, isAddress, zeroAddress, type Hex, type PublicClient } from 'viem'
-import { Chains } from './auth/types'
-import { clientFromChain } from './input'
-
-type ChainKey = keyof typeof Chains
-
-export const ensToAddress = async (publicClient: PublicClient, ens: string) => {
-  return publicClient.getEnsAddress({
-    name: normalize(ens),
-  })
-}
+import { getAddress, isAddress, zeroAddress, type Hex } from 'viem'
+import { Chains, type ChainKey } from './auth/types'
+import { clientFromChain } from '$lib/stores/input.svelte'
 
 export const isEns = (val: string) => {
   return val.toLowerCase().match(/\w+\.(pls|eth|bnb)/gi)
@@ -40,7 +32,7 @@ export const ens = (target: ChainKey): Writable<Entry> => {
     const { address, ens } = get(input)
     if (ens) {
       const tld = ensTld(ens)
-      const addr = await clientFromChain(Chains[tld]).getEnsAddress({
+      const addr = await clientFromChain(Number(Chains[tld])).getEnsAddress({
         name: ens,
       })
       const latest = get(input)
@@ -54,7 +46,7 @@ export const ens = (target: ChainKey): Writable<Entry> => {
       })
     } else {
       const addr = address as Hex
-      const ens = await clientFromChain(Chains[target]).getEnsName({
+      const ens = await clientFromChain(Number(Chains[target])).getEnsName({
         address: addr,
       })
       const latest = get(input)

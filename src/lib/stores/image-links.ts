@@ -1,18 +1,25 @@
-import { type Hex, getAddress } from 'viem'
+import { getAddress } from 'viem'
 import { imageRoot } from '$lib/config'
+
+interface MinimalTokenInfo {
+  chainId: number
+  address: string
+  logoURI?: string | null
+}
 
 export const list = (path: string) => {
   return `${imageRoot}/list${path}`
 }
 
-interface MinimalTokenInfo {
-  chainId: number
-  address: Hex
-  logoURI?: string
+export const network = (chainId: number) => {
+  if (!chainId) {
+    console.trace('network image')
+  }
+  return `${imageRoot}/image/${Number(chainId)}`
 }
 
-export const network = (chainId: number) => `${imageRoot}/image/${Number(chainId)}`
+export const image = (t: MinimalTokenInfo) =>
+  t.logoURI || `${network(t.chainId)}/${getAddress(t.address)}`
 
-export const image = (t: MinimalTokenInfo) => t.logoURI || `${network(t.chainId)}/${getAddress(t.address)}`
-
-export const images = (sources: string[]) => `${imageRoot}/image/?${sources.map((s) => `i=${s}`).join('&')}`
+export const images = (sources: string[]) =>
+  `${imageRoot}/image/?${sources.map((s) => `i=${s}`).join('&')}`

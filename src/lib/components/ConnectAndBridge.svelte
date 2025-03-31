@@ -1,69 +1,36 @@
 <script lang="ts">
-  import { humanReadableNumber } from '$lib/stores/utils'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { useAuth } from '$lib/stores/auth/methods'
-  import { walletAccount } from '$lib/stores/auth/store'
-  import { Chains } from '$lib/stores/auth/types'
+  import * as transactions from '$lib/stores/transactions'
   import {
-    amountToBridge,
-    foreignDataParam,
-    foreignCalldata,
-    // assetOut,
-    // amountAfterBridgeFee,
-  } from '$lib/stores/bridge-settings'
-  import * as abis from '$lib/stores/abis'
-  import { type Hex, getContract, erc20Abi, maxUint256 } from 'viem'
-  import Loading from './Loading.svelte'
-  import * as input from '$lib/stores/input'
-  import { tokenBalance, tokenBridgeInfo, assetLink, approval } from '$lib/stores/chain-events'
-  import { loading } from '$lib/stores/loading'
-  import { get } from 'svelte/store'
+    accountState,
+    appkitNetworkById,
+    switchNetwork,
+  } from '$lib/stores/auth/AuthProvider.svelte'
+  import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
+  import { formatUnits, type Hex, zeroAddress } from 'viem'
+  import * as input from '$lib/stores/input.svelte'
+  import {
+    assetLink,
+    blocks,
+    fromTokenBalance,
+    minBridgeAmountIn,
+    minBridgeAmountInKey,
+  } from '$lib/stores/chain-events.svelte'
+  import { transactionButtonPress } from '$lib/stores/transaction'
+  import { connect } from '$lib/stores/auth/AuthProvider.svelte'
+  import { getContext } from 'svelte'
+  import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
+  import Button from './Button.svelte'
 
-  const {
-    walletClient,
-    assetIn,
-    clientFromChain,
-    bridgeKey,
-    router,
-    bridgeAddress,
-    // foreignBridgeAddress,
-  } = input
+  const toast: ToastContext = getContext('toast')
+  const { shouldDeliver } = input
 
-  let disabledByClick = false
-  $: disabled =
-    disabledByClick || BigInt($walletAccount || 0n) === 0n || $amountToBridge === 0n || $amountToBridge > $tokenBalance
-
-  const { connect } = useAuth()
-  const hashes: Hex[] = []
-
-  const transactionButtonPress = (fn: () => Promise<Hex | undefined>) => async () => {
-    disabledByClick = true
-    try {
-      loading.increment('user')
-      const amountInBefore = get(input.amountIn)
-      const txHash = await fn()
-      if (!txHash) {
-        return
-      }
-      const receipt = await clientFromChain(Chains.PLS).waitForTransactionReceipt({
-        hash: txHash,
-      })
-      wipeTxHash(txHash)
-      if (fn === initiateBridge && amountInBefore === get(input.amountIn)) {
-        input.amountIn.set('')
-      }
-      input.incrementForcedRefresh()
-      console.log(receipt)
-    } finally {
-      loading.decrement('user')
-      disabledByClick = false
-    }
-  }
-
+  const tokenBalance = $derived(fromTokenBalance.value ?? 0n)
   const initiateBridge = async () => {
-    if (!$foreignCalldata || !$foreignDataParam) {
+    if (!bridgeSettings.foreignDataParam) {
       return
     }
+    // TODO: add tracing call on foreign network to show that the bridge will be successful
     // const foreignClient = clientFromChain(Chains.ETH).extend((client) => ({
     //   async traceCall(args: CallParameters) {
     //     return client.request({
@@ -145,142 +112,135 @@
     //   console.error(err)
     //   throw err
     // }
-    // const to = assets[$bridgeKey].input.address
-    const tokenInfo = await tokenBridgeInfo([$bridgeKey, $assetIn])
-    if (!tokenInfo || !$assetIn) {
+    if (!bridgeSettings.bridgePathway) {
       return
     }
-    const account = $walletAccount as Hex
-    const options = {
-      account,
-      type: 'eip1559',
-      chain: chainsMetadata[Chains.PLS],
-    } as const
-    if ($bridgeKey === Chains.BNB) {
-      if (tokenInfo.toForeign) {
-        // token is native to pulsechain
-        const bridgeContract = getContract({
-          abi: abis.inputBridgeBNB,
-          address: $bridgeAddress,
-          client: $walletClient!,
-        })
-        return await bridgeContract.write.relayTokensAndCall(
-          [$assetIn.address, $router, $amountToBridge, $foreignDataParam, account],
-          options,
-        )
-      } else {
-        // extra arg in transfer+call
-        const contract = getContract({
-          abi: abis.erc677BNB,
-          address: $assetIn.address,
-          client: $walletClient!,
-        })
-        return await contract.write.transferAndCall(
-          [$bridgeAddress, $amountToBridge, $foreignDataParam, account],
-          options,
-        )
-      }
-    } else if ($bridgeKey === Chains.ETH) {
-      if (tokenInfo.toForeign) {
-        // native to pulsechain
-        const bridgeContract = getContract({
-          abi: abis.inputBridgeETH,
-          address: $bridgeAddress,
-          client: $walletClient!,
-        })
-        return await bridgeContract.write.relayTokensAndCall(
-          [$assetIn.address, $router, $amountToBridge, $foreignDataParam],
-          options,
-        )
-      } else {
-        const contract = getContract({
-          abi: abis.erc677ETH,
-          address: $assetIn.address,
-          client: $walletClient!,
-        })
-        return await contract.write.transferAndCall([$bridgeAddress, $amountToBridge, $foreignDataParam], options)
-      }
-    } else {
-      throw new Error('unrecognized chain')
-    }
-  }
-  const wipeTxHash = (hash: Hex) => {
-    setTimeout(() => {
-      const index = hashes.indexOf(hash)
-      if (index >= 0) {
-        hashes.splice(index, 1)
-      }
-    }, 20_000)
-  }
-  const increaseApproval = async () => {
-    if (!$assetIn) {
+    if (!assetLink || !bridgeSettings.assetIn.value || !bridgeSettings.transactionInputs) {
       return
     }
-    const contract = getContract({
-      abi: erc20Abi,
-      address: $assetIn.address,
-      client: $walletClient!,
+    const chainId = Number(input.bridgeKey.fromChain)
+    const latestBlock = blocks.get(chainId)!
+    return await transactions.sendTransaction({
+      ...bridgeSettings.transactionInputs,
+      ...transactions.options(chainId, latestBlock),
+      account: accountState.address as Hex,
     })
-    const account = $walletAccount as Hex
-    const options = {
-      account,
-      type: 'eip1559',
-      chain: chainsMetadata[Chains.PLS],
-    } as const
-    return await contract.write.approve([$bridgeAddress, maxUint256], options)
   }
-  const sendInitiateBridge = transactionButtonPress(initiateBridge)
-  const sendIncreaseApproval = transactionButtonPress(increaseApproval)
+  let amountInBefore = ''
+  const sendIncreaseApproval = $derived(
+    transactionButtonPress({
+      toast,
+      chainId: Number(input.bridgeKey.fromChain),
+      steps: [
+        async () => {
+          return transactions.checkAndRaiseApproval({
+            token: bridgeSettings.assetIn.value!.address as Hex,
+            spender: bridgeSettings.bridgePathway!.from!,
+            chainId: Number(input.bridgeKey.fromChain),
+            minimum: bridgeSettings.amountToBridge,
+            latestBlock: blocks.get(Number(input.bridgeKey.fromChain))!,
+          })
+        },
+      ],
+    }),
+  )
+  const decimals = $derived(bridgeSettings.assetIn.value!.decimals)
+  const sendInitiateBridge = $derived(
+    transactionButtonPress({
+      toast,
+      chainId: Number(input.bridgeKey.fromChain),
+      steps: [
+        () => {
+          amountInBefore = formatUnits(bridgeSettings.amountToBridge, decimals)
+          return initiateBridge()
+        },
+      ],
+      after: () => {
+        const previousAmount = formatUnits(bridgeSettings.amountToBridge!, decimals)
+        if (amountInBefore === previousAmount) {
+          input.amountIn.value = null
+        }
+      },
+    }),
+  )
+  // const testId = 'progression-button'
+  const inputIsNative = $derived(bridgeSettings.assetIn.value?.address === zeroAddress)
+  const isBridgeToken = $derived(assetLink.value?.originationChainId !== input.bridgeKey.fromChain)
+  // const canDeliver = $derived.by(() => {
+  //   return isBridgeToken || hasSufficientApproval || inputIsNative
+  // })
+  const isRequiredChain = $derived(
+    Number(accountState.chainId) === Number(input.bridgeKey.fromChain),
+  )
+  const hasSufficientApproval = $derived(
+    !!bridgeSettings.approval.value &&
+      bridgeSettings.approval.value >= bridgeSettings.amountToBridge,
+  )
+  const skipApproval = $derived.by(() => {
+    return isBridgeToken || hasSufficientApproval || inputIsNative
+  })
+  const minAmount = $derived(
+    minBridgeAmountIn.get(
+      minBridgeAmountInKey(input.bridgeKey.value, bridgeSettings.assetIn.value),
+    ),
+  )
+  const disabled = $derived.by(() => {
+    if (!accountState?.address) {
+      return false
+    }
+    if (!isRequiredChain) {
+      return false
+    }
+    if (minAmount && input.amountIn.value && input.amountIn.value < minAmount) {
+      return true
+    }
+    if (input.recipient.value === zeroAddress) {
+      return true
+    }
+    if (!skipApproval) {
+      if (bridgeSettings.amountToBridge === null || bridgeSettings.amountToBridge === 0n) {
+        return true
+      }
+      return hasSufficientApproval
+    }
+    return !input.amountIn.value || input.amountIn.value > tokenBalance
+  })
+  const text = $derived.by(() => {
+    if (!accountState?.address) {
+      return 'Connect'
+    }
+    if (!isRequiredChain) {
+      return 'Switch Network'
+    }
+    if (!skipApproval) {
+      return 'Approve'
+    }
+    const requiresDelivery = bridgeSettings.bridgePathway?.requiresDelivery
+    if ((!shouldDeliver.value && requiresDelivery) || !requiresDelivery) {
+      return 'Bridge'
+    }
+    return 'Bridge and Deliver'
+  })
+  const switchToChain = $derived(() =>
+    switchNetwork(appkitNetworkById.get(Number(input.bridgeKey.fromChain))),
+  )
+  const onclick = $derived.by(() => {
+    if (!accountState?.address) {
+      return connect
+    }
+    if (!isRequiredChain) {
+      return switchToChain
+    }
+    if (!skipApproval) {
+      return sendIncreaseApproval
+    }
+    return sendInitiateBridge
+  })
 </script>
 
-<div>
-  {#if $walletAccount}
-    {#if $assetLink && ($assetLink.toHome || ($assetLink.toForeign && $approval >= $amountToBridge))}
-      <button
-        class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-center"
-        class:hover:bg-purple-500={!disabled}
-        class:bg-purple-600={!disabled}
-        class:bg-purple-400={disabled}
-        class:cursor-not-allowed={disabled}
-        class:shadow-md={!disabled}
-        {disabled}
-        on:click={sendInitiateBridge}>
-        <div class="size-5"></div>&nbsp;Bridge&nbsp;<Loading key="user" keepSpace class="my-[10px]" />
-      </button>
-    {:else}
-      <button
-        class="px-2 text-white w-full rounded-lg active:bg-purple-500 leading-10 flex items-center justify-center"
-        class:hover:bg-purple-500={!disabled}
-        class:bg-purple-600={!disabled}
-        class:bg-purple-400={disabled}
-        class:cursor-not-allowed={disabled}
-        class:shadow-md={!disabled}
-        {disabled}
-        on:click={sendIncreaseApproval}>
-        <div class="size-5"></div>&nbsp;Approve {!$assetIn
-          ? ''
-          : humanReadableNumber($amountToBridge, $assetIn.decimals)}
-        {$assetIn?.symbol}&nbsp;<Loading key="user" keepSpace class="my-[10px]" />
-      </button>
-    {/if}
-  {:else}
-    <button
-      class="p-2 bg-purple-600 text-white w-full rounded-lg hover:bg-purple-500 active:bg-purple-500"
-      on:click={() => connect()}>
-      Connect
-    </button>
-  {/if}
+<div class="flex w-full">
+  <Button
+    class="bg-tertiary-600 w-full text-surface-contrast-950 leading-10 p-2 rounded-2xl"
+    {onclick}
+    {disabled}>{text}</Button>
 </div>
-{#each hashes as txHash}
-  <div class="toast mb-16">
-    <div class="alert alert-info bg-purple-400 text-slate-100">
-      <a
-        href="{chainsMetadata[Chains.PLS].blockExplorers?.default.url}/tx/{txHash}"
-        class="underline"
-        aria-label="transaction details"
-        target="_blank">
-        Submitted: {txHash.slice(0, 6)}...{txHash.slice(-4)}
-      </a>
-    </div>
-  </div>
-{/each}

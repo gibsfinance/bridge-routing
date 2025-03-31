@@ -1,55 +1,56 @@
 <script lang="ts">
-  import * as customTokens from '$lib/stores/custom-tokens'
-  import type { Token } from '$lib/types'
+  import * as customTokens from '$lib/stores/custom-tokens.svelte'
+  import type { Token } from '$lib/types.svelte'
   import type { Hex } from 'viem'
-  import { createEventDispatcher, onMount } from 'svelte'
-  export let openOnMount: boolean = false
-  import TokenIcon from '$lib/components/TokenIcon.svelte'
-  import * as modalStore from '$lib/stores/modal'
-  import Lazy from '$lib/components/Lazy.svelte'
-  import { getAddress, isAddress } from 'viem'
+  import { getAddress, isAddress, isHex } from 'viem'
   import Icon from '@iconify/svelte'
-  import { assetSources } from '$lib/stores/bridge-settings'
-  import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { Chains } from '$lib/stores/auth/types'
-  import { multicallErc20 } from '$lib/utils'
-  import * as input from '$lib/stores/input'
+  import { multicallErc20 } from '$lib/utils.svelte'
+  import { clientFromChain } from '$lib/stores/input.svelte'
   import _ from 'lodash'
+  import TokenInfo from './TokenInfo.svelte'
+  import Infinite from './Infinite.svelte'
+  import { InfiniteStore } from '$lib/stores/infinite.svelte'
+  import TokenSelectInput from './TokenSelectInput.svelte'
+  import Button from './Button.svelte'
+  import StaticNetworkImage from './StaticNetworkImage.svelte'
+  import { Popover } from '@skeletonlabs/skeleton-svelte'
+  import { availableChains } from '$lib/stores/lifi.svelte'
+  import Loading from './Loading.svelte'
+  import { loading } from '$lib/stores/loading.svelte'
+  import * as imageLinks from '$lib/stores/image-links'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
+  import { toChain } from '$lib/stores/auth/types'
+  import { evmChainsById } from '$lib/stores/auth/AuthProvider.svelte'
 
-  const { bridgeKey, bridgableTokens, publicClient } = input
-
-  const dispatch = createEventDispatcher()
-  const submit = (token: Token) => {
-    dispatch('submit', token)
+  type Props = {
+    onsubmit?: (token: Token | null) => void
+    onnetworkchange?: (chain: number) => void
+    chains: [number, ...number[]]
+    tokens: Token[]
+    showCustomTokens?: boolean
+    selectedChain?: number
+    selectedToken?: Token | null
   }
-  let modal: HTMLDialogElement | null = null
+  let {
+    onsubmit = () => {},
+    onnetworkchange = () => {},
+    chains,
+    tokens,
+    showCustomTokens = false,
+    selectedChain = 0,
+    selectedToken,
+  }: Props = $props()
   let custom!: Token
-  const doClose = (e: Event) => {
-    modalStore.type.set(null)
-  }
-  onMount(() => {
-    modal?.addEventListener('close', doClose)
-    if (openOnMount) {
-      modal?.showModal()
-    }
-    return () => {
-      modal?.removeEventListener('close', doClose)
-      modal = null
-    }
-  })
   const addCustom = (newToken: Token) => {
-    customTokens.tokens.update((tkns) => tkns.concat(newToken))
-    searchValue = ''
-    // use token as focus in bridge settings stores
+    customTokens.tokens.value = _.uniqBy(customTokens.tokens.value.concat(newToken), 'address')
   }
   const selectToken = (token: Token) => {
-    submit(token)
-    modal?.close()
+    onsubmit(token)
   }
-  let searchValue = ''
+  let searchValue = $state('')
   // if you add a whitelist
-  let showAllTokens = false
-  let showAllChains = false
+  let showAllTokens = $state(false)
+  let showAllChains = $state(false)
 
   const getSubset = ($tokens: Token[], val: string, allTokens: boolean, allChains: boolean) => {
     let tkns = $tokens
@@ -75,103 +76,225 @@
       tkns = tkns.filter(filter)
     }
     if (allChains) return tkns
-    const [inside, outside] = _.partition(tkns, onlyFromCurrentNetwork)
+    const inside = _.filter(tkns, (tkn) => {
+      return selectedChain === tkn.chainId
+      // return chains.includes(tkn.chainId)
+    })
     return inside
   }
 
-  const onlyFromCurrentNetwork = (tkn: Token) =>
-    tkn.chainId === 369 && !!tkn.extensions?.bridgeInfo?.[Number($bridgeKey)]?.tokenAddress
-
   const loadViaMulticall = async (target: Hex | null) => {
+    if (chains.length !== 1) {
+      return null
+    }
+    const chainId = chains[0]
     if (!target) {
       throw new Error('no target')
     }
-    const $chain = chainsMetadata[Chains.PLS]
+    const chain = evmChainsById.get(chainId)
+    if (!chain) {
+      return null
+    }
     const [name, symbol, decimals] = await multicallErc20({
-      chain: $chain,
-      client: $publicClient,
+      chain,
+      client: clientFromChain(chainId),
       target,
     })
     custom = {
       name,
       symbol,
       decimals,
-      chainId: Number(Chains.PLS),
+      chainId,
       address: target,
       logoURI: '',
     }
     return custom
   }
-  const tokens = customTokens.tokens
-  $: subset = getSubset($tokens.concat($bridgableTokens), searchValue, showAllTokens, showAllChains)
-  $: inputIsAddress = isAddress(searchValue)
-  $: addButtonDisabled = !inputIsAddress || !!subset.length
-  $: searchValueHex = inputIsAddress ? (searchValue as Hex) : null
+  const fullTokenSet = $derived.by(() => {
+    const [selected, notSelected] = selectedToken
+      ? _.partition(tokens, (t) => {
+          return (
+            t.address.toLowerCase() === selectedToken?.address?.toLowerCase() &&
+            t.chainId === selectedChain
+          )
+        })
+      : [[], tokens]
+    const rearranged = [...selected, ...notSelected]
+    if (!showCustomTokens) {
+      return rearranged
+    }
+    const custom = customTokens.tokens.value
+    return custom.concat(rearranged)
+  })
+  const filteredSubset = $derived(
+    getSubset(fullTokenSet, searchValue, showAllTokens, showAllChains),
+  )
+  $effect(() => {
+    if (fullTokenSet.length) {
+      limit.set(50)
+    }
+  })
+  const limit = $derived(new InfiniteStore(50, fullTokenSet.length))
+  const subset = $derived(filteredSubset.slice(0, limit.count))
+  const inputIsAddress = $derived(isAddress(searchValue))
+  const addButtonDisabled = $derived(!inputIsAddress || !!subset.length)
+  const searchValueHex = $derived(inputIsAddress ? (searchValue as Hex) : null)
+  const loadMore = () => {
+    if (limit.count > subset.length) return
+    limit.increment(50)
+  }
+  let chainSelectOpen = $state(false)
+  const network = $derived(
+    availableChains.get(selectedChain) ?? {
+      id: selectedChain,
+      logoURI: imageLinks.network(selectedChain),
+    },
+  )
+  $inspect(selectedChain, network)
 </script>
 
-<label class="input input-bordered flex flex-row items-center m-6 py-2 h-fit">
-  <input
-    type="text"
-    class="grow flex leading-6"
-    placeholder="0x... or name/symbol"
+<div class="flex flex-col h-full max-h-[512px] rounded-2xl overflow-hidden">
+  <div class="flex flex-row grow justify-between px-6 pt-4 pb-2">
+    <span class="flex flex-row grow">Select a Token</span>
+    <Button
+      class="flex flex-row"
+      onclick={() => {
+        onsubmit(null)
+      }}>
+      <Icon icon="ic:baseline-close" height="1.5em" width="1.5em" />
+    </Button>
+  </div>
+  <TokenSelectInput
+    borderClasses="ring-0 focus:ring-0"
     value={searchValue}
-    on:input={(e) => {
-      searchValue = e.currentTarget.value
-    }}
-    autocomplete="off"
-    autocorrect="off"
-    autocapitalize="off"
-    spellcheck="false" />
-  <Icon icon="ic:baseline-search" height="1.5em" width="1.5em" />
-</label>
-<ul class="overflow-y-scroll px-6 flex flex-col grow">
-  {#each subset as token}
-    <li class="flex tooltip tooltip-bottom my-2" data-tip={token.address}>
-      <button class="flex flex-row grow cursor-pointer" on:click={() => selectToken(token)}>
-        <Lazy let:load>
-          <!-- might be a good idea to simply keep it loaded after first -->
-          <TokenIcon visible={load} src={assetSources(token)} />
-        </Lazy>
-        <span class="pl-2 leading-8">{token.name}</span>
-      </button>
-    </li>
-  {/each}
-  <li class="flex">
-    <button
-      class="flex flex-row grow py-2 items-center leading-8"
-      class:cursor-pointer={!addButtonDisabled}
-      disabled={addButtonDisabled}
-      class:opacity-70={addButtonDisabled}
-      class:cursor-not-allowed={addButtonDisabled}
-      on:click={() => addCustom(custom)}>
-      <Icon icon="ic:baseline-add" height="1.5em" width="1.5em" />
-      <Icon class="ml-2" icon="ph:question" height={32} width={32} />
-      {#if !addButtonDisabled}
-        {#await loadViaMulticall(searchValueHex)}
-          <span class="flex flex-row items-center pl-2 leading-8"
-            ><Icon icon="svg-spinners:3-dots-scale" height="1.5em" width="1.5em" />&nbsp;</span>
-        {:then data}
-          <span class="pl-2 leading-8">{data.name} ({data.symbol})</span>
-        {:catch}
-          <span class="pl-2 leading-8">Unknown</span>
-        {/await}
+    short={chains.length === 1}
+    oninput={(val) => {
+      searchValue = val
+    }}>
+    {#snippet icon()}
+      {#if chains.length > 1}
+        <!-- for some reason, the modal property is required here -->
+        <Popover
+          open={chainSelectOpen}
+          triggerBase="flex flex-row items-center py-1 px-2 justify-center h-full"
+          zIndex="50"
+          contentClasses="flex flex-col max-h-64 border rounded-2xl bg-white text-surface-contrast-50 overflow-y-scroll relative"
+          positionerClasses="pointer-events-auto"
+          modal
+          positioning={{
+            placement: 'bottom-start',
+            gutter: 2,
+            strategy: 'fixed',
+          }}
+          onOpenChange={() => {
+            chainSelectOpen = !chainSelectOpen
+          }}>
+          {#snippet trigger()}
+            {@const network = availableChains.get(selectedChain) ?? {
+              id: selectedChain,
+              logoURI: imageLinks.network(selectedChain),
+            }}
+            <StaticNetworkImage
+              network={network.id}
+              sizeClasses="size-9 rounded-l-full overflow-hidden"
+              icon={network.logoURI} />
+            <Icon icon="mynaui:chevron-down" class="size-6 ml-0.5" />
+          {/snippet}
+          {#snippet content()}
+            {@const sortedChains = _(chains)
+              .slice(0)
+              .map((chain) => {
+                return (
+                  availableChains.get(chain) ?? {
+                    id: chain,
+                    logoURI: imageLinks.network(chain),
+                    name: chainsMetadata[toChain(chain)].name,
+                  }
+                )
+              })
+              .sortBy((chain) => chain.name.toLowerCase())
+              .value()}
+            <span class="text-sm text-gray-500 px-4 pt-2">Select Network</span>
+            <ul class="flex flex-col">
+              {#each sortedChains as chain}
+                <li class="flex flex-row grow">
+                  <Button
+                    class="flex flex-row items-center pl-[14px] py-1 hover:bg-surface-100 grow border-l-2 pr-4 {chain.id ===
+                    selectedChain
+                      ? 'border-primary-500'
+                      : 'border-transparent'}"
+                    onclick={() => {
+                      chainSelectOpen = false
+                      onnetworkchange?.(chain.id)
+                    }}>
+                    <StaticNetworkImage
+                      network={chain.id}
+                      sizeClasses="size-8 rounded-lg"
+                      icon={chain.logoURI} />
+                    <span class="ml-2">{chain.name}</span>
+                  </Button>
+                </li>
+              {/each}
+            </ul>
+          {/snippet}
+        </Popover>
+      {:else}
+        <div class="flex flex-row items-center py-1 px-2 justify-center h-full">
+          <StaticNetworkImage
+            network={network.id}
+            sizeClasses="size-9 rounded-l-full overflow-hidden"
+            icon={network.logoURI} />
+        </div>
       {/if}
-      <span class="pl-2 leading-8">&nbsp;</span>
-    </button>
-  </li>
-</ul>
-<div class="flex flex-row">
-  <!-- if a whitelist is deemed necessary, then use this checkbox to add it -->
-  <!-- <label class="flex py-2 pl-6 pr-2 text-slate-400 items-center">
-        <span class="mr-3 text-sm">
-          <span class="font-medium text-slate-400">Show all tokens</span>
-        </span>
-        <input type="checkbox" class="toggle" bind:checked={showAllTokens} />
-      </label> -->
-  <label class="flex py-2 pr-6 pl-6 text-slate-400 items-center">
-    <span class="mr-3 text-sm">
-      <span class="font-medium text-slate-400">Show All Tokens</span>
-    </span>
-    <input type="checkbox" class="toggle" bind:checked={showAllChains} />
-  </label>
+    {/snippet}
+  </TokenSelectInput>
+  <div class="overflow-y-scroll h-full">
+    <div
+      class="h-10 w-full flex items-center justify-center"
+      class:hidden={loading.isResolved('lifi-tokens')}>
+      <Loading class="size-6" />
+    </div>
+    <ul class="flex grow flex-col overflow-y-scroll h-full">
+      {#each subset as token}
+        <li class="flex hover:bg-surface-900-100 relative">
+          <Button
+            class="relative flex grow cursor-pointer flex-row py-2 pr-2"
+            onclick={() => selectToken(token)}>
+            <TokenInfo {token} truncate={6} />
+          </Button>
+        </li>
+      {/each}
+      <Infinite tag="li" class="flex" onloadmore={loadMore}>
+        {#if showCustomTokens}
+          <Button
+            class="flex grow flex-row items-center py-2 leading-8 {addButtonDisabled
+              ? 'cursor-not-allowed opacity-75'
+              : 'cursor-pointer'}"
+            disabled={addButtonDisabled}
+            onclick={() => addCustom(custom)}>
+            <Icon icon="ic:baseline-add" height="1.5em" width="1.5em" />
+            <Icon class="ml-2" icon="ph:question" height={32} width={32} />
+            {#if !addButtonDisabled && isHex(searchValueHex)}
+              {#await loadViaMulticall(searchValueHex)}
+                <span class="flex flex-row items-center pl-2 leading-8"
+                  ><Icon
+                    icon="svg-spinners:3-dots-scale"
+                    height="1.5em"
+                    width="1.5em" />&nbsp;</span>
+              {:then data}
+                {#if data}
+                  <span class="pl-2 leading-8">{data.name} ({data.symbol})</span>
+                {:else}
+                  <span class="pl-2 leading-8">Unknown</span>
+                {/if}
+              {:catch}
+                <span class="pl-2 leading-8">Unknown</span>
+              {/await}
+            {/if}
+            <span class="pl-2 leading-8">&nbsp;</span>
+          </Button>
+        {/if}
+      </Infinite>
+    </ul>
+  </div>
 </div>

@@ -1,79 +1,131 @@
 <script lang="ts">
-  import SmallInput from './SmallInput.svelte'
-  import { ensToAddress, walletAccount } from '$lib/stores/auth/store'
-  import { isAddress, zeroAddress } from 'viem'
-  import { unwrap, calldata } from '$lib/stores/bridge-settings'
-  import * as input from '$lib/stores/input'
+  import { isAddress, zeroAddress, getAddress, type Hex } from 'viem'
+  import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
+  import * as input from '$lib/stores/input.svelte'
   import { Chains } from '$lib/stores/auth/types'
   import Warning from './Warning.svelte'
   import { ensTld, isEns } from '$lib/stores/ens'
   import { normalize } from 'viem/ens'
-  import { loading } from '$lib/stores/loading'
-  const { recipient, canChangeUnwrap, bridgeAddress, router } = input
-  const updateDestination = async (e: CustomEvent) => {
-    let addr = e.detail.value
-    if (addr === 'me' && $walletAccount) {
-      recipient.set($walletAccount)
+  import { type Cleanup } from '$lib/stores/loading.svelte'
+  import LockIcon from './LockIcon.svelte'
+  import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
+  import { ensToAddress } from '$lib/stores/auth/store.svelte'
+  import Button from './Button.svelte'
+  import ButtonToggle from './ButtonToggle.svelte'
+  import Input from './Input.svelte'
+  const { recipient, bridgeKey, recipientLockedToAccount } = input
+  let currentRecipient = $state((accountState.address ?? zeroAddress) as string)
+  const isValidRecipient = $derived(
+    isAddress(currentRecipient || '') &&
+      currentRecipient?.length === 42 &&
+      currentRecipient !== zeroAddress,
+  )
+  $effect.pre(() => {
+    currentRecipient = accountState.address ?? zeroAddress
+  })
+  $effect.pre(() => {
+    const r = currentRecipient
+    if (isValidRecipient) {
+      recipient.value = r as Hex
     }
-    if (isAddress(addr)) {
-      recipient.set(addr)
+  })
+  let ensToAddressLoader: {
+    promise: Promise<Hex | null>
+    controller: AbortController
+    cleanup: Cleanup
+  } | null = null
+  const updateDestination = (value: string) => {
+    currentRecipient = value
+    if (currentRecipient === 'me') {
+      if (accountState.address) {
+        currentRecipient = accountState.address
+      }
       return
     }
-    if (isEns(addr)) {
-      const tld = ensTld(addr)
-      const normalized = normalize(addr)
-      const publicClient = input.clientFromChain(Chains[tld])
-      loading.increment('ens')
-      const resolved = await ensToAddress(publicClient, normalized).catch((err) => {
-        console.error(err)
-        return null
+    if (isAddress(currentRecipient)) {
+      currentRecipient = getAddress(currentRecipient)
+      recipientLockedToAccount.value = false
+      return
+    }
+    if (isEns(currentRecipient)) {
+      const tld = ensTld(currentRecipient)
+      const ens = normalize(currentRecipient)
+      const client = input.clientFromChain(Number(Chains[tld]))
+      ensToAddressLoader?.controller?.abort()
+      ensToAddressLoader?.cleanup()
+      ensToAddressLoader = ensToAddress({ client, ens })
+      ensToAddressLoader.promise.then((resolved) => {
+        if (ensToAddressLoader?.controller.signal.aborted || !resolved) {
+          return null
+        }
+        currentRecipient = resolved
+        recipientLockedToAccount.value = false
       })
-      if (resolved) {
-        recipient.set(resolved)
-      }
-      loading.decrement('ens')
     }
   }
+  const nonZeroXCalldata = $derived(bridgeSettings.transactionInputs?.data?.slice(2) || '')
+  const lockRecipient = () => {
+    const current = recipientLockedToAccount.value
+    recipientLockedToAccount.value = !current
+    if (!current && accountState.address) {
+      currentRecipient = accountState.address
+    }
+  }
+  const canUnwrap = $derived(input.canChangeUnwrap(bridgeKey.value, bridgeSettings.assetIn.value))
 </script>
 
-<div class="my-2 text-sm shadow-sm rounded-lg">
-  <div class="bg-slate-100 rounded-t-lg py-2 px-3 justify-between flex flex-col md:flex-row relative">
-    <span>Recipient</span>
-    <SmallInput
-      editOnLeft
-      value={recipient}
-      on:input={updateDestination}
-      class="font-mono text-xs md:text-sm mr-auto md:mr-0" />
+<div class="flex flex-col gap-2">
+  <div
+    class="leading-6 sm:justify-between flex flex-col sm:flex-row relative sm:items-center text-left items-start">
+    <Button
+      class="flex flex-row items-center grow flex-nowrap"
+      type="button"
+      onclick={lockRecipient}
+      >Recipient&nbsp;<LockIcon locked={recipientLockedToAccount.value} /></Button>
+    <Input
+      value={currentRecipient}
+      oninput={updateDestination}
+      class="border-none font-mono mr-auto sm:mr-0 p-0 text-xs sm:text-right ring-0" />
     <Warning
-      show={!(isAddress($recipient || '') && $recipient?.length === 42 && $recipient !== zeroAddress)}
-      tooltip="address is not valid" />
+      show={!isValidRecipient}
+      wrapperPositionClass="top-0 -left-6"
+      tooltip="Address is not valid. Casing influences the checksum of the address." />
   </div>
-  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed">
-    <span>Router</span>
-    <span class="font-mono text-xs md:text-sm">{$router}</span>
-  </div>
-  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-row">
-    <span>Unwrap</span>
-    <input
-      type="checkbox"
-      class="toggle toggle-sm [--tglbg:white] border-purple-600 bg-purple-600 hover:bg-purple-400 disabled:bg-purple-600 disabled:opacity-100"
-      disabled={!$canChangeUnwrap}
-      checked={$unwrap}
-      on:change={(e) => {
-        input.unwrap.set(e.currentTarget.checked)
-      }} />
-  </div>
-  <div class="bg-slate-100 mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row disabled cursor-not-allowed">
+  {#if bridgeKey.destinationRouter}
+    <div
+      class="leading-6 justify-between flex flex-col sm:flex-row sm:items-center disabled cursor-not-allowed relative">
+      <span>Router</span>
+      <span class="font-mono text-xs">{bridgeKey.destinationRouter}</span>
+    </div>
+  {/if}
+  {#if canUnwrap}
+    <div class="leading-6 justify-between flex flex-row items-center">
+      <ButtonToggle
+        title="Unwrap"
+        contentClass="leading-6 text-xs sm:text-sm"
+        checked={input.unwrap.value}
+        onclick={() => {
+          input.unwrap.value = !input.unwrap.value
+        }}>Unwrap</ButtonToggle>
+    </div>
+  {/if}
+  <div
+    class="leading-6 justify-between flex flex-col sm:flex-row sm:items-center disabled cursor-not-allowed text-xs sm:text-sm"
+    class:rounded-b-lg={!nonZeroXCalldata}>
     <span>To (Bridge)</span>
-    <span class="font-mono text-xs md:text-sm">{$bridgeAddress}</span>
+    <span class="font-mono text-xs">{bridgeKey.pathway?.to || zeroAddress}</span>
   </div>
-  <div class="bg-slate-100 rounded-b-lg mt-[1px] py-2 px-3 justify-between flex flex-col md:flex-row">
-    <span class="whitespace-pre">Data&nbsp;&nbsp;<span class="font-mono">0x</span></span>
-    <textarea
-      name="calldata"
-      id="calldata"
-      disabled
-      class="bg-transparent outline-none resize-none flex flex-grow cursor-not-allowed font-mono text-xs md:text-sm -mr-3 pr-3"
-      rows="5">{$calldata?.slice(2)}</textarea>
-  </div>
+  {#if nonZeroXCalldata}
+    <div
+      class="rounded-b-lg leading-4 justify-between flex flex-col sm:flex-row cursor-not-allowed">
+      <span class="flex flex-row items-start justify-between whitespace-pre"
+        >Data &nbsp;&nbsp;<span class="font-mono text-xs">0x</span></span>
+      <textarea
+        name="calldata"
+        id="calldata"
+        disabled
+        class="bg-transparent !opacity-100 text-surface-contrast-50 border-none outline-hidden resize-none flex grow cursor-not-allowed font-mono text-xs -mr-3 pr-2 p-0 max-h-24"
+        rows={4}>{nonZeroXCalldata}</textarea>
+    </div>
+  {/if}
 </div>

@@ -1,79 +1,105 @@
 <script lang="ts">
-  import NetworkSummary from './NetworkSummary.svelte'
-  import { formatUnits } from 'viem'
-  import type { VisualChain } from '$lib/stores/auth/types'
-  import { get, writable, type Writable } from 'svelte/store'
-  import { amountToBridge } from '$lib/stores/bridge-settings'
-  import AssetWithNetwork from './AssetWithNetwork.svelte'
-  import Warning from './Warning.svelte'
-  import Icon from '@iconify/svelte'
-  import * as modalStore from '$lib/stores/modal'
-  import type { Token } from '$lib/types'
-  import type { FormEventHandler } from 'svelte/elements'
-  import { tokenBalance, minAmount } from '$lib/stores/chain-events'
-  import { stripNonNumber } from '$lib/stores/utils'
+  import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
+  import * as input from '$lib/stores/input.svelte'
+  import * as nav from '$lib/stores/nav.svelte'
+  import { bridgeKey } from '$lib/stores/input.svelte'
+  import type { InputValue, Token } from '$lib/types.svelte'
+  import SectionInput from './SectionInput.svelte'
+  import TokenAndNetworkSelector from './TokenAndNetworkSelector.svelte'
+  import { chainsMetadata } from '$lib/stores/auth/constants'
+  import BridgeProviderToggle from './BridgeProviderToggle.svelte'
+  import { isProd, pathways, validBridgeKeys } from '$lib/stores/config.svelte'
+  import { Chains, toChain } from '$lib/stores/auth/types'
+  import _ from 'lodash'
+  import {
+    fromTokenBalance,
+    minBridgeAmountIn,
+    minBridgeAmountInKey,
+  } from '$lib/stores/chain-events.svelte'
 
-  export let network!: VisualChain
-  export let asset!: Token
-  export let value!: Writable<string>
-  // when asset changs, reset to zero
-  $: if (asset) {
-    value.set('')
+  const chooseTokenSubmit = async (token: Token) => {
+    const bridgeKey = input.bridgeKey.value
+    const native = input.isNative(token, bridgeKey)
+    input.unwrap.value = native
+    input.amountIn.value = null
+    input.resetFeeInputs()
+    nav.delivery.shallow(bridgeKey, token.address)
   }
-  let val = ''
-  const focused = writable(false)
-  const openModal = () => {
-    modalStore.type.set('choosetoken')
+  const chooseTokenAndNetworkSubmit = async (token: Token, chainId: number) => {
+    const availablePaths = _.get(pathways, [bridgeKey.provider, toChain(chainId!)]) ?? {}
+    const keys = Object.keys(availablePaths)
+    const destinationChain = keys[0]
+    if (!destinationChain) {
+      throw new Error('no to chain found')
+    }
+    const options = [
+      bridgeKey.provider,
+      toChain(chainId!),
+      destinationChain as Chains,
+    ] as input.BridgeKey
+    nav.delivery.shallow(options, token.address)
   }
-  const handleInput: FormEventHandler<HTMLInputElement> = (e) => {
-    value.set(e.currentTarget.value)
+  const keepBalance = (bal: bigint | null) => {
+    fromTokenBalance.value = bal
   }
+  const handleInput = ({ int }: InputValue) => {
+    if (int !== null) {
+      input.amountIn.value = int
+    }
+  }
+  const handleMaxBalance = (bal: bigint) => {
+    input.amountIn.value = bal
+  }
+  const chains = $derived.by(() => {
+    const chains = Object.keys(chainsMetadata).map(Number) as [number, ...number[]]
+    const validChains = validBridgeKeys(isProd.value)
+      .filter(([provider]) => provider === bridgeKey.provider)
+      .map(([, chain]) => chain)
+    return chains.filter((key) => {
+      return validChains.includes(toChain(key))
+    }) as [number, ...number[]]
+  })
+  const tokens = $derived.by(() => {
+    const sorted = input.bridgableTokens.value
+    const [withImage, withoutImage] = _.partition(sorted, (t) => !!t.logoURI)
+    return [...withImage, ...withoutImage]
+  })
+  const invalidValue = $derived.by(() => {
+    const minAmount = minBridgeAmountIn.get(
+      minBridgeAmountInKey(bridgeKey.value, bridgeSettings.assetIn.value),
+    )
+    if (!minAmount) return true
+    return !!input.amountIn.value && input.amountIn.value < minAmount
+  })
 </script>
 
-<div class="shadow-md rounded-lg">
-  <div class="bg-slate-100 py-2 px-3 rounded-t-lg">
-    <NetworkSummary
-      {network}
-      {asset}
-      balance={$tokenBalance}
-      showMax
-      on:max-balance={() => {
-        const updated = formatUnits($tokenBalance, asset.decimals)
-        value.set(updated)
+<SectionInput
+  label="Input"
+  focused
+  token={bridgeSettings.assetIn.value}
+  onbalanceupdate={keepBalance}
+  value={bridgeSettings.amountToBridge ?? 0n}
+  onmax={handleMaxBalance}
+  oninput={handleInput}
+  {invalidValue}>
+  {#snippet radio()}
+    <BridgeProviderToggle />
+  {/snippet}
+  {#snippet modal({ close })}
+    <TokenAndNetworkSelector
+      {chains}
+      {tokens}
+      selectedToken={bridgeSettings.assetIn.value}
+      chainId={Number(bridgeKey.fromChain)}
+      onsubmit={(tkn, chainId) => {
+        if (tkn) {
+          if (chainId && chainId !== Number(bridgeKey.fromChain)) {
+            chooseTokenAndNetworkSubmit(tkn, chainId)
+          } else {
+            chooseTokenSubmit(tkn)
+          }
+        }
+        close()
       }} />
-  </div>
-  <div class="flex flex-row mt-[1px] bg-slate-100 rounded-b-lg text-xl justify-between">
-    <span class="flex flex-grow relative max-w-[70%]">
-      <input
-        class="bg-transparent leading-8 outline-none px-3 py-2 placeholder-current hover:appearance-none focus:shadow-inner flex-grow text-xl sm:text-2xl w-full"
-        placeholder="0.0"
-        value={$focused ? val : $value}
-        on:focus={() => {
-          val = stripNonNumber(get(value))
-          focused.set(true)
-        }}
-        on:blur={() => focused.set(false)}
-        on:input={handleInput} />
-      <Warning
-        show={$amountToBridge < $minAmount && $amountToBridge > 0n}
-        disabled={$focused}
-        position="left"
-        tooltip="Input is too low, must be at least {formatUnits($minAmount, asset?.decimals || 18)}" />
-    </span>
-
-    <button
-      class="tooltip tooltip-left leading-8 py-2 px-3 flex flex-row space-x-2 items-center open-modal-container"
-      data-tip={asset?.name || ''}
-      on:click={openModal}>
-      <AssetWithNetwork {asset} tokenSize={8} networkSize={4} />
-      <span class="ml-2">{asset?.symbol || ''}</span>
-      <Icon icon="mingcute:right-fill" height="1em" width="1em" class="flex icon transition-all" />
-    </button>
-  </div>
-</div>
-
-<style lang="postcss">
-  :global(.open-modal-container:hover .icon) {
-    @apply translate-x-1;
-  }
-</style>
+  {/snippet}
+</SectionInput>

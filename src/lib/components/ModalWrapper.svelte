@@ -1,45 +1,61 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import * as modalStore from '$lib/stores/modal'
-  import _ from 'lodash'
-  export let openOnMount: boolean = false
-  export let id = 'dynamic'
-  export let height = 'fixed'
+  import type { ClassParam } from '$lib/types.svelte'
+  import { Modal } from '@skeletonlabs/skeleton-svelte'
+  import classNames from 'classnames'
+  import type { Snippet } from 'svelte'
 
-  let modal: HTMLDialogElement | null = null
-  const doClose = (e: Event) => {
-    modalStore.type.set(null)
+  function modalClose() {
+    open = false
   }
-  onMount(() => {
-    modal?.addEventListener('close', doClose)
-    if (openOnMount) {
-      modal?.showModal()
-    }
-    return () => {
-      modal?.removeEventListener('close', doClose)
-      modal = null
-    }
-  })
+  type Props = {
+    contents?: Snippet<[{ close: () => void }]>
+    button?: Snippet
+    triggerClasses?: ClassParam
+    wrapperClasses?: ClassParam
+    contentClasses?: ClassParam
+    contentWidthClass?: ClassParam
+    contentHeightClass?: ClassParam
+    contentBorderClass?: ClassParam
+  }
+  const {
+    contents,
+    button,
+    triggerClasses = '',
+    wrapperClasses,
+    contentClasses,
+    // contentWidthClass = 'max-w-(--container-lg) w-full',
+    contentWidthClass = 'max-w-[548px] w-full',
+    contentHeightClass = 'h-full max-h-[512px]',
+    contentBorderClass = 'border border-surface-200',
+  }: Props = $props()
+  let open = $state(false)
+  const classes = $derived(classNames(wrapperClasses))
+  const triggerBase = $derived(classNames(triggerClasses))
+  const contentWidth = $derived(classNames(contentWidthClass))
+  const contentHeight = $derived(classNames(contentHeightClass))
+  const contentBorder = $derived(classNames(contentBorderClass))
+  const contentBase = $derived(
+    classNames(
+      'card bg-white space-y-2 text-surface-contrast-50',
+      contentClasses,
+      contentWidth,
+      contentHeight,
+      contentBorder,
+    ),
+  )
 </script>
 
-<dialog id="{id}-modal" class="modal" bind:this={modal}>
-  <div
-    class="modal-box text-neutral-900 dark:text-slate-50 max-h-full p-0 overflow-hidden flex flex-col"
-    class:h-96={height === 'fixed'}>
-    <slot close={doClose} />
-  </div>
-  <form method="dialog" class="modal-backdrop">
-    <button
-      type="button"
-      on:click={() => {
-        modalStore.type.set(null)
-      }}>close</button>
-  </form>
-</dialog>
-
-<style lang="postcss">
-  .modal-box {
-    width: 100%;
-    @apply max-w-[36rem] shadow-lg shadow-black;
-  }
-</style>
+<Modal
+  {open}
+  {classes}
+  {triggerBase}
+  {contentBase}
+  backdropClasses="backdrop-blur-xs"
+  zIndex="50"
+  positionerClasses="h-full z-40"
+  onOpenChange={(e) => {
+    open = e.open
+  }}>
+  {#snippet trigger()}{@render button?.()}{/snippet}
+  {#snippet content()}{@render contents?.({ close: modalClose })}{/snippet}
+</Modal>

@@ -1,21 +1,23 @@
-import { getContext } from 'svelte'
-import type { Chains } from './types'
-// import type { Hex } from 'viem'
-// import type { PreflightNotificationsOptions } from '@web3-onboard/core'
+// import { getContext } from 'svelte'
+// import type { AppKitNetwork } from '@reown/appkit/networks'
+// import type { ConnectedWalletInfo } from '@reown/appkit'
+// import type { NullableProxy } from '$lib/types.svelte'
+// import type { UseAppKitAccountReturn } from '@reown/appkit'
 
-export const CONTEXT_KEY = 'AUTH_CONTEXT'
+// export const CONTEXT_KEY = 'AUTH_CONTEXT'
 
-export interface AuthMethods {
-  connect: () => Promise<void>
-  disconnect: () => Promise<void>
-  switchChain: (chain: Chains) => Promise<void>
-  // sendTransaction: (args: PreflightNotificationsOptions) => Promise<Hex>
-}
+// export interface AuthMethods {
+//   connect: () => Promise<void>
+//   disconnect: () => Promise<void>
+//   switchNetwork: (chain: AppKitNetwork | null | undefined) => Promise<void>
+//   walletInfoState: NullableProxy<ConnectedWalletInfo>
+//   accountState: NullableProxy<UseAppKitAccountReturn>
+// }
 
-export function useAuth() {
-  const context = getContext<AuthMethods>(CONTEXT_KEY)
+// export function useAuth() {
+//   const context = getContext<AuthMethods>(CONTEXT_KEY)
 
-  if (!context) throw new Error("AuthProvider isn't valid!")
+//   if (!context) throw new Error("AuthProvider isn't valid!")
 
-  return context
-}
+//   return context
+// }

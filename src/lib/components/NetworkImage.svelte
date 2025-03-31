@@ -1,59 +1,84 @@
-<script lang="ts">
-  import { Chains, type DestinationChains, type VisualChain } from '$lib/stores/auth/types'
+<!-- <script lang="ts">
+  import { Chains, toChain } from '$lib/stores/auth/types'
   import Icon from '@iconify/svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { bridgeKey } from '$lib/stores/input'
-  import { destinationChains } from '$lib/stores/config'
+  import { accountState, switchNetwork } from '$lib/stores/auth/AuthProvider.svelte'
+  import { bridgeKey, toPath, chainIdToChain } from '$lib/stores/input.svelte'
+  import { bridgeSettings } from '$lib/stores/bridge-settings.svelte'
   import { goto } from '$app/navigation'
+  import { page } from '$app/state'
+  import _ from 'lodash'
+  import { validBridgeKeys, isProd } from '$lib/stores/config.svelte'
+  import { zeroAddress } from 'viem'
 
-  let dropdown!: HTMLDetailsElement
-  export let network!: VisualChain
-  export let size: number | undefined = undefined
-  export let networkOptions: Chains[] = []
-  $: reorderedBridgeKeys = networkOptions.slice(0).sort((a, b) => {
-    if (b === $bridgeKey) {
-      return -1
-    }
-    if (a === $bridgeKey) {
-      return 1
-    }
-    return a > b ? 1 : -1
-  })
-  const providerFromOption = (option: Chains) => destinationChains[option as DestinationChains].provider
+  const walletAccount = $derived(accountState.address)
+  const provider = $derived(page.params.provider)
+
+  let dropdown: HTMLDetailsElement | null = $state(null)
+  type Props = {
+    network: number
+    sizeClasses: string
+    inChain?: boolean
+  }
+  const { network: providedNetwork, sizeClasses, inChain }: Props = $props()
+  const network = $derived(chainIdToChain(toChain(providedNetwork)))
+  const bridgeKeyIndex = $derived((2 - Number(inChain)) as 2 | 1)
+  const availableBridgeKeys = $derived(validBridgeKeys(isProd.value))
+  const networkOptions = $derived.by(() =>
+    inChain
+      ? availableBridgeKeys
+      : availableBridgeKeys.filter(
+          (vbk) => vbk[0] === bridgeKey.value[0] && vbk[1] === bridgeKey.value[1],
+        ),
+  )
+  const reorderedBridgeKeys = $derived.by(() =>
+    [bridgeKey.partner].concat(
+      networkOptions
+        .slice(0)
+        .filter((vbk) => !_.isEqual(vbk, bridgeKey) && !_.isEqual(vbk, bridgeKey.partner))
+        .concat([bridgeKey.value]),
+    ),
+  )
 </script>
 
-{#if reorderedBridgeKeys.length}
-  <details class="dropdown static flex flex-grow justify-center" bind:this={dropdown}>
-    <summary class="flex flex-row justify-items-center items-center space-x-2 select-none">
-      <StaticNetworkImage {network} {size} provider={destinationChains[$bridgeKey].provider} />
-      <span class="leading-8 ml-1">{network.name}</span>
-      <Icon icon="mingcute:down-fill" height="1.25em" width="1.25em" class="flex" />
+{#if inChain}
+  <details class="dropdown relative flex grow justify-center" bind:this={dropdown}>
+    <summary class="flex select-none flex-row items-center justify-items-center space-x-2">
+      <StaticNetworkImage network={providedNetwork} {sizeClasses} {provider} />
+      <span class="ml-1 whitespace-pre leading-8">{network.name}</span>
+      <Icon icon="mingcute:down-fill" class="flex size-5" />
     </summary>
-    <ul class="dropdown-content absolute z-[1] p-0 shadow bg-slate-50 w-fit py-1 -mt-10 -mx-2">
-      {#each reorderedBridgeKeys as option}
-        <li class="hover:bg-slate-200 h-10 items-center flex flex-row">
+    <ul
+      class="dropdown-content absolute left-0 top-0 z-1 -mx-2 -mt-1 w-60 bg-slate-50 px-0 pb-1 pt-0 shadow-sm">
+      {#each reorderedBridgeKeys as listBridgeKey}
+        <li class="flex flex-row items-center hover:bg-slate-200">
           <button
-            class="px-2 flex flex-row flex-grow items-center"
-            on:click={async () => {
-              for (const [key, val] of Object.entries(Chains)) {
-                if (val === option) {
-                  dropdown.open = false
-                  await goto(`/delivery/${key}`, { noScroll: true })
-                  return
-                }
-              }
+            class="flex h-10 grow flex-row items-center px-2"
+            onclick={async () => {
+              if (dropdown) dropdown.open = false
+              const tokenAddressIn =
+                listBridgeKey === bridgeKey.partner
+                  ? bridgeSettings.assetOut.value?.address
+                  : zeroAddress
+              if (walletAccount) switchNetwork(chainIdToChain(bridgeKey.toChain))
+              await goto(`#/delivery/${toPath(listBridgeKey)}/${tokenAddressIn}`)
+              return
             }}>
-            <StaticNetworkImage network={chainsMetadata[option]} provider={providerFromOption(option)} {size} />
-            <span class="px-2 flex flex-grow">{chainsMetadata[option].name}</span>
+            <StaticNetworkImage
+              network={Number(listBridgeKey[bridgeKeyIndex])}
+              provider={listBridgeKey[0]}
+              {sizeClasses} />
+            <span class="flex grow px-2"
+              >{chainsMetadata[listBridgeKey[bridgeKeyIndex]].name}</span>
           </button>
         </li>
       {/each}
     </ul>
   </details>
 {:else}
-  <div class="flex flex-row justify-items-center items-center space-x-2">
-    <StaticNetworkImage {network} {size} />
+  <div class="flex flex-row items-center justify-items-center space-x-2">
+    <StaticNetworkImage network={providedNetwork} {sizeClasses} />
     <span class="leading-8">{network.name}</span>
   </div>
-{/if}
+{/if} -->

@@ -1,52 +1,44 @@
-import { sveltekit } from '@sveltejs/kit/vite'
 import { defineConfig } from 'vitest/config'
-import pkg from './package.json'
+import { sveltekit } from '@sveltejs/kit/vite'
 import { ssp } from 'sveltekit-search-params/plugin'
-
-// import nodePolyfills from 'rollup-plugin-polyfill-node'
-
-// const MODE = process.env.NODE_ENV
-// const development = MODE === 'development'
-
+import tailwindcss from '@tailwindcss/vite'
+import { enhancedImages } from '@sveltejs/enhanced-img'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     ssp(),
+    enhancedImages(),
     sveltekit(),
-    // development, &&
-    // nodePolyfills({
-    // 	include: ['node_modules/**/*.js', new RegExp('node_modules/.vite/.*js')],
+    nodePolyfills({
+      globals: {
+        Buffer: true,
+      },
+    }),
+    // paraglide({
+    //   project: './project.inlang',
+    //   outdir: './src/lib/paraglide',
     // }),
   ],
-  optimizeDeps: {
-    exclude: ['wrtc', 'http', 'viem'],
-    include: [
-      '@web3-onboard/core',
-      '@web3-onboard/gas',
-      '@web3-onboard/sequence',
-      'js-sha3',
-      '@ethersproject/bignumber',
+  preview: {
+    allowedHosts: [
+      'gibsfinance.com',
+      'bridge-routing-staging.up.railway.app',
+      'healthcheck.railway.app',
     ],
   },
-  resolve: {
-    alias: {
-      // crypto: 'crypto-browserify',
-      // stream: 'stream-browserify',
-      assert: 'assert',
-    },
-  },
-  build: {
-    rollupOptions: {
-      external: ['@web3-onboard/*'],
-      // plugins: [nodePolyfills()],
-    },
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  },
+
   test: {
     include: ['src/**/*.{test,spec}.{js,ts}'],
   },
-  define: {
-    __APP_VERSION__: JSON.stringify(pkg.version),
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // classnames: ['classnames'],
+          // viem: ['viem'],
+        },
+      },
+    },
   },
 })

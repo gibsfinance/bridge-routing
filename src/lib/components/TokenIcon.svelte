@@ -1,32 +1,37 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import _ from 'lodash'
-  export let src = ''
-  export let alt = ''
-  export let size = 32
-  export let visible = false
-  let className = ''
-  export { className as class }
-  let loaded: boolean | null = null
+  import Image from './Image.svelte'
+  import classNames from 'classnames'
+  type Props = {
+    src: string | null
+    alt?: string
+    sizeClasses?: string
+    visible?: boolean
+    class?: string
+    containerClasses?: string
+  }
+  const {
+    src,
+    alt,
+    sizeClasses = 'size-8',
+    class: className = '',
+    containerClasses,
+  }: Props = $props()
+  let loaded: boolean | null = $state(null)
   const markLoaded = (val: boolean) => () => {
     loaded = val
   }
-  const markSuccess = markLoaded(true)
-  const markFailure = markLoaded(false)
+  const onload = markLoaded(true)
+  const onerror = markLoaded(false)
+  const classes = $derived(classNames('rounded-full', className, !loaded ? 'invisible' : ''))
+  const iconClass = $derived(
+    classNames('absolute opacity-75', className, !loaded ? '' : 'invisible', sizeClasses),
+  )
 </script>
 
-<div class="grid grid-cols-1 grid-rows-1 relative" data-url={src}>
-  {#if visible || loaded !== null}
-    <img
-      on:load={markSuccess}
-      on:error={markFailure}
-      {src}
-      {alt}
-      height={size}
-      width={size}
-      class={className}
-      class:invisible={!loaded}
-      class:absolute={true} />
+<div class="flex relative rounded-full">
+  <Icon icon="nrk:media-404-notfound" class={iconClass} data-src={src ?? `${src}`} />
+  {#if src}
+    <Image {src} {alt} {onload} {onerror} class={classes} {sizeClasses} {containerClasses} />
   {/if}
-  <Icon icon="ph:question" height={size} width={size} class={`${className} ${!loaded ? '' : 'invisible'}`} />
 </div>

@@ -1,12 +1,22 @@
 <script lang="ts">
   import * as env from '$app/environment'
-  import { page } from '$app/stores'
-  const appVersion = __APP_VERSION__
-  const isLocal = $page.url.host.includes('localhost')
+  import { page } from '$app/state'
+  import Button from './Button.svelte'
+  import Tooltip from './Tooltip.svelte'
+  const isLocal = $derived(page.url.host.includes('localhost'))
+  const [semver, githash, timestamp] = env.version.split('_')
+  const openRepo = () => {
+    open(`https://github.com/gibsfinance/bridge-routing/commit/${githash}`, '_blank')
+  }
 </script>
 
-<span
-  class="flex text-center font-mono font-thin tooltip tooltip-left leading-8"
-  data-tip={new Date(+env.version || 0).toISOString()}>
-  v{appVersion}@{isLocal ? 'local' : env.version}
-</span>
+<Button class="relative flex text-center font-mono font-thin leading-8" onclick={openRepo}>
+  <Tooltip placement="top">
+    {#snippet trigger()}
+      v{semver}@{isLocal ? 'local' : githash.slice(0, 10)}
+    {/snippet}
+    {#snippet content()}
+      {timestamp}
+    {/snippet}
+  </Tooltip>
+</Button>
