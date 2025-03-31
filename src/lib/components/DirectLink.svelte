@@ -22,7 +22,7 @@
     if (explorer) addDomain(explorer)
   })
   const classes = $derived(classNames('inline mx-1', className))
-  const linkClassNames = $derived(classNames(linkClasses))
+  const linkClassNames = $derived(classNames('flex', linkClasses))
 </script>
 
 <a

@@ -187,7 +187,7 @@
     <Progress
       height="h-6"
       meterBg={gasIsHigh ? 'bg-warning-400' : 'bg-success-500'}
-      trackClasses="flex rounded-full overflow-hidden inset-shadow-sm border {gasIsHigh
+      trackClasses="flex rounded-full overflow-hidden inset-shadow-sm border -mt-[1px] {gasIsHigh
         ? 'border-warning-400'
         : 'border-success-500'}"
       value={percentProgress ?? 30}

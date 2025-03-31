@@ -679,17 +679,17 @@
   <div class="absolute top-0 left-0 w-full h-full">
     <GuideShield show={true} />
     {#if bridgingToPulsechain}
-      <GuideStep step={1} triggerClass="absolute left-24 top-4">
+      <GuideStep step={1} triggerClass="absolute left-24 top-12">
         <p>Onramp funds</p>
       </GuideStep>
-      <GuideStep step={2} triggerClass="absolute right-24 top-20">
+      <GuideStep step={2} triggerClass="absolute right-24 top-28">
         <p>Select the token you wish to bridge to PulseChain.</p>
       </GuideStep>
       <GuideStep step={3} triggerClass="absolute right-24 bottom-4">
         <p>Trigger the bridge to PulseChain.</p>
       </GuideStep>
     {:else}
-      <GuideStep step={1} triggerClass="absolute right-24 top-36">
+      <GuideStep step={1} triggerClass="absolute right-24 top-44">
         <p>Select the token you wish to swap from.</p>
       </GuideStep>
       <GuideStep step={2} triggerClass="absolute right-24 bottom-4">

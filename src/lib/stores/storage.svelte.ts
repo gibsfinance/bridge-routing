@@ -49,7 +49,13 @@ export type PulsexTokens = {
   pulsexTokenOut: Hex
 }
 
-export const defaultOnboardTokens = new LocalProxyProp(storage, ['defaultOnboardTokens'], null as PulsexTokens | null)
+export const defaultOnboardTokens = new LocalProxyProp(
+  storage,
+  ['defaultOnboardTokens'],
+  null as PulsexTokens | null,
+)
+
+export const onboardShowOnramps = new LocalProxyProp(storage, ['onboardShowOnramps'], true)
 
 export type BridgeTx = {
   hash?: Hex | null

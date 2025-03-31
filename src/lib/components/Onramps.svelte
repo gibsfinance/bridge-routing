@@ -7,11 +7,12 @@
   import Section from './Section.svelte'
   import Icon from '@iconify/svelte'
   import Image from './Image.svelte'
+  import { onboardShowOnramps } from '$lib/stores/storage.svelte'
 
-  let onrampsOpen = $state(false)
   const toggleOnramps = () => {
-    onrampsOpen = !onrampsOpen
+    onboardShowOnramps.value = !onboardShowOnramps.value
   }
+  const onrampsOpen = $derived.by(() => onboardShowOnramps.value)
   const openOnRamp = () => {
     modal.open({
       view: 'OnRampProviders',
@@ -23,7 +24,7 @@
 <Section id="onramp-section" focused>
   <div class="flex flex-col w-full justify-start">
     <div class="flex flex-row gap-2 items-center">
-      <span class="text-gray-500 text-sm w-full text-left">Onramps</span>
+      <span class="text-gray-500 text-sm w-full text-left">Onramps to Ethereum</span>
       <Button
         class="flex flex-row gap-2 items-center text-surface-contrast-50 justify-between"
         onclick={toggleOnramps}
