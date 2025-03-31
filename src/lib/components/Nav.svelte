@@ -129,9 +129,11 @@
               </Button>
             </li>
           {/if}
-          <li class="flex flex-row items-center">
-            <ConnectButton />
-          </li>
+          {#if isOnboardRoute || isDeliveryRoute}
+            <li class="flex flex-row items-center">
+              <ConnectButton />
+            </li>
+          {/if}
         </ul>
       </div>
     </div>
