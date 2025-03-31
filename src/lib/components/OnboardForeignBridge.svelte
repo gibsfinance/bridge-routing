@@ -175,6 +175,14 @@
       null
     )
   })
+  $effect(() => {
+    if (possibleBridgeTokenInputs.length === 0 || !bridgeTokenIn) {
+      return
+    }
+    untrack(() => {
+      bridgeSettings.assetIn.value = bridgeTokenIn
+    })
+  })
   const bridgeTokenOut = $derived.by(() => {
     return (
       possiblePulsexTokens.find((t) => t.address === defaultTokenAddresses.bridgeTokenOut) ?? null

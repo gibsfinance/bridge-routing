@@ -1033,7 +1033,12 @@ export const liveBridgeStatus = loading.loadsAfterTick<
         },
       }) as Promise<SingleUserRequest>,
     ])
-    if (!finalizedBlock || !foreignStatus.userRequests[0].messageId) return null // no finalized block found
+    if (!foreignStatus.userRequests) {
+      return params
+    }
+    if (!finalizedBlock || !foreignStatus.userRequests[0].messageId) {
+      return params
+    }
     const blockNumber = finalizedBlock.number
     params.finalizedBlock = finalizedBlock
     if (blockNumber < receipt!.blockNumber) {
