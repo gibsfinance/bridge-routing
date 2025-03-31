@@ -22,7 +22,7 @@ export default defineConfig({
   ],
   preview: {
     allowedHosts: [
-      'gibsfinance.com',
+      'gibs.finance',
       'bridge-routing-staging.up.railway.app',
       'healthcheck.railway.app',
     ],
