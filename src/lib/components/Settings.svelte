@@ -88,6 +88,7 @@
       class="border-none font-mono mr-auto sm:mr-0 p-0 text-xs sm:text-right ring-0" />
     <Warning
       show={!isValidRecipient}
+      wrapperPositionClass="top-0 -left-6"
       tooltip="Address is not valid. Casing influences the checksum of the address." />
   </div>
   {#if bridgeKey.destinationRouter}
