@@ -4,6 +4,7 @@
   import Footer from '$lib/components/Footer.svelte'
   import { ToastProvider } from '@skeletonlabs/skeleton-svelte'
   const { children } = $props()
+  console.log('children', children)
 </script>
 
 <svelte:head>

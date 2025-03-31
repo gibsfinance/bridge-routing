@@ -198,6 +198,9 @@
       return true
     }
     if (!skipApproval) {
+      if (bridgeSettings.amountToBridge === null || bridgeSettings.amountToBridge === 0n) {
+        return true
+      }
       return hasSufficientApproval
     }
     return !input.amountIn.value || input.amountIn.value > tokenBalance

@@ -164,14 +164,14 @@
       </Popover>
     </div> -->
     <div class="absolute left-1/2 -translate-x-1/2 top-0 h-12 items-center justify-center flex">
-      {#each [1, 2, 3] as step}
+      {#each [1, 2] as step}
         <Button
           class="flex w-8 items-center flex-row"
           onclick={() => (activeOnboardStep.value = step)}>
           <Icon
             icon="mingcute:run-fill"
             mode="svg"
-            class="size-8 -mr-1.5 {activeOnboardStep.value < step
+            class="size-8 -mr-1.5 {activeOnboardStep.value !== step
               ? 'text-gray-300 opacity-75'
               : ''}" />
         </Button>

@@ -20,14 +20,17 @@
     verticalSizeClasses = 'w-full',
     positionClasses = 'relative flex',
     iconWrapperSizeClasses = 'size-12',
+    iconWrapperColorClasses = 'bg-white',
     zClasses = '',
     onclick: onClick,
     icon,
+    class: className,
   }: Props = $props()
-  const classes = $derived(classNames(verticalSizeClasses, positionClasses, zClasses))
+  const classes = $derived(classNames(verticalSizeClasses, positionClasses, zClasses, className))
   const iconWrapperClasses = $derived(
     classNames(
       iconWrapperSizeClasses,
+      iconWrapperColorClasses,
       'border-current text-white',
       onClick ? 'cursor-pointer' : 'cursor-auto',
     ),

@@ -110,7 +110,6 @@
     }
     return custom
   }
-  const isEvm = $derived(isHex(tokens[0].address))
   const fullTokenSet = $derived.by(() => {
     const [selected, notSelected] = selectedToken
       ? _.partition(tokens, (t) => {
@@ -145,6 +144,13 @@
     limit.increment(50)
   }
   let chainSelectOpen = $state(false)
+  const network = $derived(
+    availableChains.get(selectedChain) ?? {
+      id: selectedChain,
+      logoURI: imageLinks.network(selectedChain),
+    },
+  )
+  $inspect(selectedChain, network)
 </script>
 
 <div class="flex flex-col h-full max-h-[512px] rounded-2xl overflow-hidden">
@@ -161,6 +167,7 @@
   <TokenSelectInput
     borderClasses="ring-0 focus:ring-0"
     value={searchValue}
+    short={chains.length === 1}
     oninput={(val) => {
       searchValue = val
     }}>
@@ -212,7 +219,7 @@
               {#each sortedChains as chain}
                 <li class="flex flex-row grow">
                   <Button
-                    class="flex flex-row items-center pl-[14px] py-1 hover:bg-surface-100 grow border-l-2 {chain.id ===
+                    class="flex flex-row items-center pl-[14px] py-1 hover:bg-surface-100 grow border-l-2 pr-4 {chain.id ===
                     selectedChain
                       ? 'border-primary-500'
                       : 'border-transparent'}"
@@ -231,6 +238,13 @@
             </ul>
           {/snippet}
         </Popover>
+      {:else}
+        <div class="flex flex-row items-center py-1 px-2 justify-center h-full">
+          <StaticNetworkImage
+            network={network.id}
+            sizeClasses="size-9 rounded-l-full overflow-hidden"
+            icon={network.logoURI} />
+        </div>
       {/if}
     {/snippet}
   </TokenSelectInput>
@@ -244,7 +258,7 @@
       {#each subset as token}
         <li class="flex hover:bg-surface-900-100 relative">
           <Button
-            class="relative flex grow cursor-pointer flex-row py-2"
+            class="relative flex grow cursor-pointer flex-row py-2 pr-2"
             onclick={() => selectToken(token)}>
             <TokenInfo {token} truncate={6} />
           </Button>

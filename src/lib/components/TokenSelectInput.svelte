@@ -12,13 +12,15 @@
     paddingClasses?: ClassParam
     oninput: (val: string) => void
     icon?: Snippet
+    short?: boolean
   }
   const {
     value,
     roundedClasses = 'rounded-full',
     borderClasses = 'border border-gray-50 focus:border-gray-50',
     backgroundClasses = 'bg-white',
-    paddingClasses = 'leading-8 pr-4 pl-18',
+    short = false,
+    paddingClasses = `leading-8 pr-4 ${short ? 'pl-12' : 'pl-18'}`,
     oninput,
     icon,
   }: Props = $props()

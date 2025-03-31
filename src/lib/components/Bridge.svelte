@@ -26,13 +26,14 @@
     minBridgeAmountIn,
     minBridgeAmountInKey,
   } from '$lib/stores/chain-events.svelte'
-  import { getAddress, zeroAddress, type Hex } from 'viem'
+  import { getAddress, isAddress, zeroAddress, type Hex } from 'viem'
   import { untrack } from 'svelte'
   import InputOutputForm from './InputOutputForm.svelte'
   import { nativeAssetOut } from '$lib/stores/config.svelte'
   import BridgeHeader from './BridgeHeader.svelte'
   import { advancedMode } from '$lib/stores/storage.svelte'
   import BridgeProgress from './BridgeProgress.svelte'
+  import ExchangeInputDivider from './ExchangeInputDivider.svelte'
 
   // watch for finalized blocks to update balances
   $effect(() => {
@@ -135,6 +136,7 @@
     const bridgePath = bridgeKey.pathway?.from
     if (
       !account ||
+      !isAddress(account) ||
       !bridgePath ||
       !token ||
       !bridgeKey.fromChain ||
@@ -175,7 +177,7 @@
     }
     return assetOutAddress
   })
-  const dividerDisabled = $derived(!assetOutAddress)
+  const dividerDisabled = $derived(!assetOutAddress || !futureAssetOutAddress)
   const ondividerclick = () => {
     input.amountIn.value = null
     nav.delivery.shallow(bridgeKey.partner, futureAssetOutAddress as string)
@@ -200,6 +202,14 @@
         {#if advancedMode.value}
           <BridgeAdvancedMode asset={bridgeSettings.assetOut} />
         {/if}
+      {/snippet}
+      {#snippet divider()}
+        <ExchangeInputDivider
+          class="flex order-2"
+          verticalSizeClasses="h-0"
+          iconWrapperColorClasses="-translate-y-1/2 -translate-x-1/2 left-1/2 absolute"
+          onclick={ondividerclick}
+          icon="mdi:swap-horizontal" />
       {/snippet}
       {#snippet button()}
         <ConnectAndBridge />

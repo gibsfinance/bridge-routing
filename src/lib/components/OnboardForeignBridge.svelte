@@ -1,4 +1,5 @@
 <script lang="ts">
+  import TokenSelect from './TokenSelect.svelte'
   import * as transactions from '$lib/stores/transactions'
   import { formatUnits, getAddress, maxUint256, zeroAddress, type Hex } from 'viem'
   import type { Token } from '$lib/types.svelte'
@@ -22,7 +23,7 @@
     foreignBridgeInputs,
     bridgeTx,
     showTooltips,
-    plsxTokens,
+    defaultOnboardTokens,
   } from '$lib/stores/storage.svelte'
   import { untrack } from 'svelte'
   import {
@@ -54,7 +55,6 @@
     oneEther,
     recipient,
   } from '$lib/stores/input.svelte'
-  import Section from './Section.svelte'
   import { getPulseXQuote } from '$lib/stores/pulsex/quote.svelte'
   import type { SerializedTrade } from '$lib/stores/pulsex/transformers'
   import { getTransactionDataFromTrade } from '$lib/stores/pulsex/serialize'
@@ -63,6 +63,31 @@
 
   const toast = getContext('toast') as ToastContext
 
+  const defaultPulsexTokens = {
+    bridgeTokenIn: zeroAddress,
+    bridgeTokenOut: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
+    pulsexTokenIn: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
+    pulsexTokenOut: zeroAddress,
+  } as const
+  const defaultTokenAddresses = $derived({
+    ...defaultPulsexTokens,
+    ...(defaultOnboardTokens.value ?? {}),
+  })
+  const bridgeableTokensSettings = {
+    provider: Provider.PULSECHAIN,
+    chain: Number(Chains.ETH),
+    partnerChain: Number(Chains.PLS),
+  }
+  const possibleBridgeTokenInputs = $derived(
+    bridgableTokens.bridgeableTokensUnder(bridgeableTokensSettings),
+  )
+  const possiblePulsexTokens = $derived(
+    bridgableTokens.bridgeableTokensUnder({
+      provider: Provider.PULSECHAIN,
+      chain: Number(Chains.PLS),
+      partnerChain: null,
+    }),
+  )
   let tokenInputLifi = $state<Token | null>(null)
   let tokenOutputLifi = $state<Token | null>(null)
   let amountInputFromLifi = $state(0n)
@@ -126,44 +151,39 @@
     }
     return !swapDisabled && pulsexQuoteMatchesLatest
   })
-  const bridgeableTokensSettings = {
-    provider: Provider.PULSECHAIN,
-    chain: Number(Chains.ETH),
-    partnerChain: Number(Chains.PLS),
-  }
-  const crossingTokenInput = $derived.by(() => {
-    const tokens = bridgableTokens.bridgeableTokensUnder(bridgeableTokensSettings)
-    return tokens.find((t) => t.address === zeroAddress) ?? null
-  })
-  const crossingTokenOutputAddress = $derived.by(() => {
-    return crossingTokenInput?.extensions?.bridgeInfo?.[Number(Chains.PLS)]?.tokenAddress
-  })
+  // let crossingTokenInput: Token | null = $state(null)
+  // const bridgeTokenOutAddress = $derived.by(() => {
+  //   return crossingTokenInput?.extensions?.bridgeInfo?.[Number(Chains.PLS)]?.tokenAddress
+  // })
+  // const crossingTokenInput = $derived.by(() => {
+  //   return defaultTokenAddresses.bridgeTokenIn ?? null
+  // })
   $effect(() => {
-    if (!crossingTokenInput) return
+    if (!defaultTokenAddresses.bridgeTokenIn) return
     const settingsMatch =
       bridgeKey.provider === Provider.PULSECHAIN &&
       bridgeKey.fromChain === Chains.ETH &&
       bridgeKey.toChain === Chains.PLS
     if (!settingsMatch) {
       bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
-      bridgeKey.assetInAddress = crossingTokenInput.address as Hex
     }
+    bridgeKey.assetInAddress = defaultTokenAddresses.bridgeTokenIn
   })
-  const crossingTokenOutput = $derived.by(() => {
-    const tokens = bridgableTokens.bridgeableTokensUnder({
-      provider: Provider.PULSECHAIN,
-      chain: Number(Chains.PLS),
-      partnerChain: Number(Chains.ETH),
-    })
-    return tokens.find((t) => t.address === crossingTokenOutputAddress) ?? null
+  const bridgeTokenIn = $derived.by(() => {
+    return (
+      possibleBridgeTokenInputs.find((t) => t.address === defaultTokenAddresses.bridgeTokenIn) ??
+      null
+    )
+  })
+  const bridgeTokenOut = $derived.by(() => {
+    return (
+      possiblePulsexTokens.find((t) => t.address === defaultTokenAddresses.bridgeTokenOut) ?? null
+    )
   })
   const finalTokenOutput = $derived.by(() => {
-    const tokens = bridgableTokens.bridgeableTokensUnder({
-      provider: Provider.PULSECHAIN,
-      chain: Number(Chains.PLS),
-      partnerChain: Number(Chains.ETH),
-    })
-    return tokens.find((t) => t.address === zeroAddress) ?? null
+    return (
+      possiblePulsexTokens.find((t) => t.address === defaultTokenAddresses.pulsexTokenOut) ?? null
+    )
   })
   // const bridgingToEthereum = $derived(activeOnboardStep.value === 1)
   const bridgingToPulsechain = $derived(activeOnboardStep.value === 1)
@@ -177,12 +197,13 @@
   const amountOutputFromBridge = $derived(bridgeAmount - bridgeFeeAmount)
   let amountInputToPulsex = $state(0n)
   $effect(() => {
+    if (!bridgeTokenIn || !bridgeTokenIn.address) return
     const assetOutputKey = assetOutKey({
       bridgeKeyPath: bridgeKey.path,
-      assetInAddress: crossingTokenInput?.address as Hex,
+      assetInAddress: bridgeTokenIn.address as Hex,
       unwrap: false,
     })
-    if (!crossingTokenInput || !assetOutputKey) return
+    if (!assetOutputKey) return
     const tokensUnderBridgeKey = bridgableTokens.bridgeableTokensUnder({
       provider: Provider.PULSECHAIN,
       chain: Number(bridgeKey.toChain),
@@ -190,12 +211,12 @@
     })
     const link = loadAssetLink({
       bridgeKey: bridgeKey.value,
-      assetIn: crossingTokenInput,
+      assetIn: bridgeTokenIn,
     })
     link.promise.then((l) => {
       if (link.controller.signal.aborted || !l?.assetOutAddress) return
       // reverse the chains here because we are looking for the destination
-      let assetOut = searchKnownAddresses({
+      const assetOut = searchKnownAddresses({
         tokensUnderBridgeKey,
         address: l?.assetOutAddress,
         customTokens: [],
@@ -205,6 +226,10 @@
       bridgeSettings.setAssetOut(assetOutputKey, {
         ...assetOut,
         logoURI: bridgeSettings.assetIn.value?.logoURI,
+      })
+      defaultOnboardTokens.extend({
+        bridgeTokenOut: assetOut.address as Hex,
+        pulsexTokenIn: assetOut.address as Hex,
       })
     })
     return link.cleanup
@@ -265,13 +290,13 @@
   const needsAllowanceForPulsechainBridge = $derived(
     bridgeApproval !== null && bridgeApproval < bridgeSettings.amountToBridge,
   )
-  bridgeSettings.assetIn.value = {
-    address: zeroAddress,
-    chainId: Number(bridgeKey.fromChain),
-    decimals: 18,
-    symbol: 'ETH',
-    name: 'Ether',
-  }
+  // bridgeSettings.assetIn.value = defaultTokenAddresses.bridgeTokenIn ?? {
+  //   address: zeroAddress,
+  //   chainId: Number(bridgeKey.fromChain),
+  //   decimals: 18,
+  //   symbol: 'ETH',
+  //   name: 'Ether',
+  // }
   $effect(() => {
     const account = accountState.address
     const token = bridgeSettings.assetIn.value?.address
@@ -321,36 +346,18 @@
   const minBridgeAmountKey = $derived(
     minBridgeAmountInKey(bridgeKey.value, bridgeSettings.assetIn.value),
   )
-  const defaultPulsexTokens = {
-    tokenIn: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
-    tokenOut: zeroAddress,
-  } as const
-  const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = $derived({
-    ...defaultPulsexTokens,
-    ...(plsxTokens.value ?? {}),
-  })
-  // $inspect(tokenInAddress, tokenOutAddress)
-  const tokens = $derived(
-    bridgableTokens.bridgeableTokensUnder({
-      provider: Provider.PULSECHAIN,
-      chain: Number(Chains.PLS),
-      partnerChain: null,
-    }),
-  )
   const findToken = (address: Hex) => {
-    return tokens.find((t) => getAddress(t.address) === getAddress(address))
+    return possiblePulsexTokens.find((t) => getAddress(t.address) === getAddress(address))
   }
   const tokenInPulsex = $derived.by(() => {
-    return findToken(tokenInAddress) ?? findToken(defaultPulsexTokens.tokenIn) ?? null
+    return findToken(defaultTokenAddresses.pulsexTokenIn) ?? null
   })
   const tokenOutPulsex = $derived.by(() => {
-    return findToken(tokenOutAddress) ?? findToken(defaultPulsexTokens.tokenOut) ?? null
+    return findToken(defaultTokenAddresses.pulsexTokenOut) ?? null
   })
   const tokenOut = $derived.by(() => {
-    return findToken(tokenOutAddress) ?? findToken(defaultPulsexTokens.tokenOut) ?? null
+    return findToken(defaultTokenAddresses.bridgeTokenOut) ?? null
   })
-  // let amountToSwapIn = $state<bigint | null>(0n)
-  // let amountOutputFromPulsex = $state<bigint | null>(null)
   let pulsexQuoteResult = $state<SerializedTrade | null>(null)
   const latestPulseBlock = $derived(blocks.get(Number(Chains.PLS)))
   $effect(() => {
@@ -544,12 +551,12 @@
 <SectionInput
   label="Bridge to Pulsechain"
   focused={bridgingToPulsechain}
-  token={crossingTokenInput}
+  token={bridgeTokenIn}
   value={amountIn.value}
   compressed={!bridgingToPulsechain}
   dashWhenCompressed={swappingOnPulsex}
   readonlyInput={!bridgingToPulsechain}
-  readonlyTokenSelect
+  readonlyTokenSelect={!bridgingToPulsechain}
   valueLoadingKey={null}
   onclick={() => {
     if (swappingOnPulsex) {
@@ -567,7 +574,24 @@
   }}
   onmax={(balance) => {
     amountIn.value = balance
-  }} />
+  }}>
+  {#snippet modal({ close })}
+    <TokenSelect
+      chains={[Number(Chains.ETH)]}
+      selectedChain={Number(Chains.ETH)}
+      tokens={possibleBridgeTokenInputs}
+      selectedToken={bridgeTokenIn}
+      onsubmit={(token) => {
+        // bridgeTokenIn = token
+        if (token) {
+          defaultOnboardTokens.extend({
+            bridgeTokenIn: token.address as Hex,
+          })
+        }
+        close()
+      }}></TokenSelect>
+  {/snippet}
+</SectionInput>
 {#if bridgingToPulsechain}
   <BridgeProgress
     oncomplete={() => {
@@ -588,7 +612,7 @@
 <SectionInput
   label="Swap on PulseX"
   focused={activeOnboardStep.value >= 1}
-  token={crossingTokenOutput}
+  token={bridgeTokenOut}
   value={bridgingToPulsechain ? amountOutputFromBridge : amountInputToPulsex}
   compressed={!swappingOnPulsex}
   readonlyInput={!swappingOnPulsex}
@@ -607,7 +631,19 @@
       amountInputToPulsex = int
       return int
     }
-  }} />
+  }}>
+  {#snippet modal({ close })}
+    <TokenSelect
+      chains={[Number(Chains.PLS)]}
+      selectedChain={Number(Chains.PLS)}
+      tokens={possiblePulsexTokens}
+      onsubmit={(token) => {
+        // set pulsechain token input
+        // bridgeTokenOut = token
+        close()
+      }} />
+  {/snippet}
+</SectionInput>
 <SectionInput
   label="Output"
   token={finalTokenOutput}
@@ -616,7 +652,7 @@
   compressed={!swappingOnPulsex}
   dashWhenCompressed
   readonlyInput
-  readonlyTokenSelect
+  readonlyTokenSelect={!swappingOnPulsex}
   onbalanceupdate={() => {}}
   overrideAccount={destinationAddress}
   onclick={() => {

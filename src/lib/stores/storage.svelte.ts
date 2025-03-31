@@ -43,11 +43,13 @@ if (foreignBridgeInputs.value && foreignBridgeInputs.value.fromAmount > 0n) {
 export const activeOnboardStep = new LocalProxyProp(storage, ['activeOnboardStep'], 1)
 
 export type PulsexTokens = {
-  tokenIn: Hex
-  tokenOut: Hex
+  bridgeTokenIn: Hex
+  bridgeTokenOut: Hex
+  pulsexTokenIn: Hex
+  pulsexTokenOut: Hex
 }
 
-export const plsxTokens = new LocalProxyProp(storage, ['plsxTokens'], null as PulsexTokens | null)
+export const defaultOnboardTokens = new LocalProxyProp(storage, ['defaultOnboardTokens'], null as PulsexTokens | null)
 
 export type BridgeTx = {
   hash?: Hex | null
