@@ -23,4 +23,4 @@
   const { close } = $$props
 </script>
 
-<ReactAdapter element={LiFiWidget} {config} {close} />
+<ReactAdapter element={LiFiWidget} {config} {close} integrator={config.integrator} />
