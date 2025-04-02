@@ -45,8 +45,19 @@
     }
   })
   $effect.pre(() => {
-    if (feeType === input.FeeType.GAS_TIP && !costLimitLocked) {
-      input.limit.value = bridgeSettings.reasonablePercentOnGasLimit
+    if (!costLimitLocked) {
+      if (feeType === input.FeeType.GAS_TIP) {
+        input.limit.value = bridgeSettings.reasonablePercentOnGasLimit
+      } else if (
+        feeType === input.FeeType.PERCENT &&
+        bridgeSettings.reasonablePercentFee &&
+        bridgeSettings.amountAfterBridgeFee
+      ) {
+        input.limit.value =
+          (bridgeSettings.amountAfterBridgeFee * bridgeSettings.reasonablePercentFee) / oneEther
+      } else if (feeType === input.FeeType.FIXED) {
+        input.limit.value = bridgeSettings.reasonableFixedFee
+      }
     }
   })
   const feeTypeOptions = [
