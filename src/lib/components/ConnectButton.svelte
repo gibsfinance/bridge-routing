@@ -4,35 +4,12 @@
   import Image from './Image.svelte'
   import Icon from '@iconify/svelte'
   import { toChain } from '$lib/stores/auth/types'
-  // import { availableChains, availableChainsByName, loadData } from '$lib/stores/lifi.svelte'
   import * as imageLinks from '$lib/stores/image-links'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  // loadData()
   const targetChain = $derived.by(() => {
     const id = accountState.chainId
     if (!id) return null
     const chainId = Number(id)
-    // const chain = availableChains.get(chainId)
-    // if (chain) {
-    //   return {
-    //     name: chain.name,
-    //     logoURI: chain.logoURI,
-    //   }
-    // }
-    // const networkByPrefix = availableChainsByName.get(accountState.prefix!)
-    // if (networkByPrefix) {
-    //   return {
-    //     name: networkByPrefix.name,
-    //     logoURI: networkByPrefix.logoURI,
-    //   }
-    // }
-    // const appkitNetwork = appkitNetworkById.get(id!)
-    // if (appkitNetwork) {
-    //   return {
-    //     name: appkitNetwork.name,
-    //     logoURI: appkitNetwork.assets?.imageUrl,
-    //   }
-    // }
     const network = chainsMetadata[toChain(chainId)]
     if (network) {
       return {

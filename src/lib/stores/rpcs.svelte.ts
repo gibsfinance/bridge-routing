@@ -1,6 +1,5 @@
 import { Chains, toChain } from '$lib/stores/auth/types'
 import { chainsMetadata } from './auth/constants'
-// import { get, writable } from 'svelte/store'
 import { isProd } from '$lib/stores/config.svelte'
 import _ from 'lodash'
 import { SvelteMap } from 'svelte/reactivity'

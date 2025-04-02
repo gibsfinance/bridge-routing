@@ -1,7 +1,6 @@
 import * as input from './input.svelte'
 import { multicallRead } from '$lib/utils.svelte'
 import * as abis from './abis'
-import * as solanaWeb3 from '@solana/web3.js'
 import {
   getContract,
   erc20Abi,
@@ -11,7 +10,7 @@ import {
   isHex,
   erc20Abi_bytes32,
   isAddress,
-  bytesToHex,
+  // bytesToHex,
 } from 'viem'
 import type { Block, Hex, TransactionReceipt, BlockTag } from 'viem'
 import { loading, resolved, type Cleanup } from './loading.svelte'
@@ -28,13 +27,13 @@ import { gql, GraphQLClient } from 'graphql-request'
 import { Cache } from './cache'
 // import { getTokenBalance as getTokenBalanceLifi, availableChains } from './lifi.svelte'
 // import { evmChainsById, getNetwork } from './auth/AuthProvider.svelte'
-import { Block as BitcoinBlock } from 'bitcoinjs-lib'
+// import { Block as BitcoinBlock } from 'bitcoinjs-lib'
 // import { PUBLIC_BITCOIN_RPC, PUBLIC_SOLANA_RPC_URL } from '$env/static/public'
 
-type ExtendedBitcoinBlock = {
-  block: BitcoinBlock
-  number: number
-}
+// type ExtendedBitcoinBlock = {
+//   block: BitcoinBlock
+//   number: number
+// }
 
 export const watchFinalizedBlocksForSingleChain = (
   chainId: number,
@@ -78,34 +77,34 @@ export const latestBaseFeePerGas = (chain: number) => {
   return blocks.get(chain)?.baseFeePerGas ?? 3_000_000_000n
 }
 
-export const bitcoinBlockToEvmBlock = (b: ExtendedBitcoinBlock) => {
-  return {
-    number: BigInt(b.number),
-    timestamp: BigInt(b.block.timestamp),
-    hash: bytesToHex(b.block.getHash()!),
-    parentHash: bytesToHex(b.block.prevHash!),
-    baseFeePerGas: 7n,
-    blobGasUsed: 0n,
-    difficulty: 0n,
-    excessBlobGas: 0n,
-    extraData: '0x',
-    gasLimit: 0n,
-    gasUsed: 0n,
-    logsBloom: '0x',
-    miner: '0x',
-    mixHash: '0x',
-    nonce: '0x',
-    receiptsRoot: '0x',
-    sealFields: [],
-    sha3Uncles: '0x',
-    size: BigInt(b.block.bits),
-    transactions: [],
-    transactionsRoot: '0x',
-    uncles: [],
-    stateRoot: '0x',
-    totalDifficulty: 0n,
-  } as Block
-}
+// export const bitcoinBlockToEvmBlock = (b: ExtendedBitcoinBlock) => {
+//   return {
+//     number: BigInt(b.number),
+//     timestamp: BigInt(b.block.timestamp),
+//     hash: bytesToHex(b.block.getHash()!),
+//     parentHash: bytesToHex(b.block.prevHash!),
+//     baseFeePerGas: 7n,
+//     blobGasUsed: 0n,
+//     difficulty: 0n,
+//     excessBlobGas: 0n,
+//     extraData: '0x',
+//     gasLimit: 0n,
+//     gasUsed: 0n,
+//     logsBloom: '0x',
+//     miner: '0x',
+//     mixHash: '0x',
+//     nonce: '0x',
+//     receiptsRoot: '0x',
+//     sealFields: [],
+//     sha3Uncles: '0x',
+//     size: BigInt(b.block.bits),
+//     transactions: [],
+//     transactionsRoot: '0x',
+//     uncles: [],
+//     stateRoot: '0x',
+//     totalDifficulty: 0n,
+//   } as Block
+// }
 
 // const url = 'https://bitcoin-rpc.publicnode.com'
 // export const requestBitcoinRpc = async <T>(method: string, params: unknown[] = []) => {

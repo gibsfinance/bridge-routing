@@ -30,88 +30,6 @@
     if (!bridgeSettings.foreignDataParam) {
       return
     }
-    // TODO: add tracing call on foreign network to show that the bridge will be successful
-    // const foreignClient = clientFromChain(Chains.ETH).extend((client) => ({
-    //   async traceCall(args: CallParameters) {
-    //     return client.request({
-    //       method: 'debug_traceCall' as unknown as any,
-    //       params: [
-    //         {
-    //           ...formatTransactionRequest(args),
-    //           from: $foreignBridgeAddress,
-    //         },
-    //         'latest',
-    //         {
-    //           tracer: 'callTracer',
-    //         },
-    //       ],
-    //     })
-    //   },
-    // }))
-    // try {
-    // const trace = await foreignClient.traceCall({
-    //   // abi: outputRouterAbi,
-    //   to: $router,
-    //   data: $foreignCalldata,
-    //   // functionName: 'onTokenBridged',
-    //   // args: [assets.ETH.output.address, $amountAfterBridgeFee, $foreignDataParam],
-    //   // from: $foreignBridgeAddress,
-    //   stateOverride: [
-    //     {
-    //       address: $foreignBridgeAddress,
-    //       balance: 100n * 10n ** 18n,
-    //     },
-    //     {
-    //       address: $assetOut.address,
-    //       stateDiff: [
-    //         {
-    //           slot: keccak256(
-    //             encodeAbiParameters(
-    //               parseAbiParameters('address, uint256'),
-    //               [$router, 3n], // balance of is at 3rd storage slot on weth canonical
-    //             ),
-    //           ),
-    //           value: numberToHex($amountAfterBridgeFee),
-    //         },
-    //       ],
-    //     },
-    //   ],
-    // })
-    // console.info(trace)
-    //   await foreignClient.simulateContract({
-    //     abi: abis.outputRouter,
-    //     address: $router,
-    //     functionName: 'onTokenBridged',
-    //     args: [$assetOut.address, $amountAfterBridgeFee, $foreignDataParam],
-    //     account: $foreignBridgeAddress,
-    //     stateOverride: [
-    //       {
-    //         address: $foreignBridgeAddress,
-    //         balance: 100n * 10n ** 18n,
-    //       },
-    //       {
-    //         address: $assetOut.address,
-    //         stateDiff: [
-    //           {
-    //             slot: keccak256(
-    //               encodeAbiParameters(
-    //                 parseAbiParameters('address, uint256'),
-    //                 [$router, 3n], // balance of is at 3rd storage slot on weth canonical
-    //               ),
-    //             ),
-    //             value: numberToHex(maxUint256),
-    //             // numberToHex($amountAfterBridgeFee, {
-    //             //   size: 32,
-    //             // }),
-    //           },
-    //         ],
-    //       },
-    //     ],
-    //   })
-    // } catch (err) {
-    //   console.error(err)
-    //   throw err
-    // }
     if (!bridgeSettings.bridgePathway) {
       return
     }
@@ -163,12 +81,8 @@
       },
     }),
   )
-  // const testId = 'progression-button'
   const inputIsNative = $derived(bridgeSettings.assetIn.value?.address === zeroAddress)
   const isBridgeToken = $derived(assetLink.value?.originationChainId !== input.bridgeKey.fromChain)
-  // const canDeliver = $derived.by(() => {
-  //   return isBridgeToken || hasSufficientApproval || inputIsNative
-  // })
   const isRequiredChain = $derived(
     Number(accountState.chainId) === Number(input.bridgeKey.fromChain),
   )

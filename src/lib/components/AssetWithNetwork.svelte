@@ -5,11 +5,9 @@
   import { loading } from '$lib/stores/loading.svelte'
   import Image from './Image.svelte'
   import classNames from 'classnames'
-  // import { availableChains } from '$lib/stores/lifi.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import { toChain } from '$lib/stores/auth/types'
   import { zeroAddress } from 'viem'
-  // import type { ExtendedChain } from '@lifi/sdk'
 
   type Props = {
     class?: ClassParam
@@ -32,10 +30,6 @@
     classNames('flex basis-auto relative text-surface-contrast-50', tokenSizeClasses, className),
   )
   const finishedLoading = $derived(chain && loading.isResolved('token'))
-  // const nativeTokenOnChain = $derived(
-  //   // (chain as ExtendedChain)?.nativeToken ??
-  //   (chain as VisualChain)?.nativeCurrency,
-  // )
   const nativeToken = $derived(zeroAddress === asset?.address)
 </script>
 

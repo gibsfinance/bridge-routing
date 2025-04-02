@@ -13,6 +13,5 @@
     <div class="flex hover:text-slate-400 text-xs items-center sm:text-sm leading-8">
       <Version />
     </div>
-    <!-- <div class="flex w-full"></div> -->
   </div>
 </div>

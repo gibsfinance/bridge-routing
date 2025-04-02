@@ -2,13 +2,6 @@
   import TokenSelect from './TokenSelect.svelte'
   import * as transactions from '$lib/stores/transactions'
   import { formatUnits, getAddress, maxUint256, zeroAddress, type Hex } from 'viem'
-  import type { Token } from '$lib/types.svelte'
-  // import {
-  //   availableChains,
-  //   availableTokensPerOriginChain,
-  //   loadData,
-  //   loadTokensForChains,
-  // } from '$lib/stores/lifi.svelte'
   import { settings as bridgeAdminSettings, settingKey } from '$lib/stores/fee-manager.svelte'
   import {
     accountState,
@@ -16,7 +9,6 @@
     getNetwork,
     switchNetwork,
   } from '$lib/stores/auth/AuthProvider.svelte'
-  import { ChainType } from '@lifi/types'
   import _ from 'lodash'
   import {
     activeOnboardStep,
@@ -92,8 +84,6 @@
       partnerChain: null,
     }),
   )
-  // let tokenInputLifi = $state<Token | null>(null)
-  // let tokenOutputLifi = $state<Token | null>(null)
   let amountInputFromLifi = $state(0n)
   let maxCrossToEthereumBridge = $state(0n as bigint | null)
   const destinationAddress = $derived.by(() => foreignBridgeInputs.value?.toAddress ?? null)
@@ -103,45 +93,6 @@
     }
   })
 
-  // let everLoaded = $state(false)
-  // $effect(() => {
-  //   let cancelled = false
-  //   if (everLoaded) return
-  //   loadData().then(async () => {
-  //     if (cancelled) return
-  //     const previousSettings = untrack(() => foreignBridgeInputs.value)
-  //     const loadedFromChain = untrack(() => availableChains.get(previousSettings?.fromChain ?? 1)!)
-  //     await Promise.all([
-  //       loadTokensForChains(loadedFromChain),
-  //       loadTokensForChains(availableChains.get(1)!),
-  //     ])
-  //     amountInputFromLifi = previousSettings?.fromAmount ? BigInt(previousSettings.fromAmount) : 0n
-  //     const tokensDestination = untrack(() => availableTokensPerOriginChain.get(1)!)
-  //     const tokensOrigin = untrack(
-  //       () => availableTokensPerOriginChain.get(previousSettings?.fromChain ?? 1)!,
-  //     )
-  //     const tokenOrigin = !previousSettings?.fromToken
-  //       ? tokensOrigin[0]
-  //       : tokensOrigin.find(
-  //           (tkn) => tkn.address.toLowerCase() === previousSettings.fromToken.toLowerCase(),
-  //         )
-  //     if (tokenOrigin) {
-  //       tokenInputLifi = tokenOrigin
-  //     }
-  //     const tokenDestination = !previousSettings?.toToken
-  //       ? tokensDestination[0]
-  //       : tokensDestination.find(
-  //           (tkn) => tkn.address.toLowerCase() === previousSettings.toToken.toLowerCase(),
-  //         )
-  //     if (tokenDestination) {
-  //       tokenOutputLifi = tokenDestination
-  //     }
-  //     everLoaded = true
-  //   })
-  //   return () => {
-  //     cancelled = true
-  //   }
-  // })
   const amountLessThanMin = $derived.by(() => {
     const minAmountIn = minBridgeAmountIn.get(minBridgeAmountKey)
     if (_.isNil(minAmountIn) || _.isNil(amountIn.value) || amountIn.value === 0n) {
@@ -160,13 +111,6 @@
     }
     return swapDisabled || !pulsexQuoteMatchesLatest
   })
-  // let crossingTokenInput: Token | null = $state(null)
-  // const bridgeTokenOutAddress = $derived.by(() => {
-  //   return crossingTokenInput?.extensions?.bridgeInfo?.[Number(Chains.PLS)]?.tokenAddress
-  // })
-  // const crossingTokenInput = $derived.by(() => {
-  //   return defaultTokenAddresses.bridgeTokenIn ?? null
-  // })
   $effect(() => {
     if (!defaultTokenAddresses.bridgeTokenIn) return
     const settingsMatch =
@@ -207,7 +151,6 @@
       possiblePulsexTokens.find((t) => t.address === defaultTokenAddresses.pulsexTokenOut) ?? null
     )
   })
-  // const bridgingToEthereum = $derived(activeOnboardStep.value === 1)
   const bridgingToPulsechain = $derived(activeOnboardStep.value === 1)
   const swappingOnPulsex = $derived(activeOnboardStep.value === 2)
 
@@ -313,13 +256,6 @@
   const needsAllowanceForPulsechainBridge = $derived(
     bridgeApproval !== null && bridgeApproval < bridgeSettings.amountToBridge,
   )
-  // bridgeSettings.assetIn.value = defaultTokenAddresses.bridgeTokenIn ?? {
-  //   address: zeroAddress,
-  //   chainId: Number(bridgeKey.fromChain),
-  //   decimals: 18,
-  //   symbol: 'ETH',
-  //   name: 'Ether',
-  // }
   $effect(() => {
     const account = accountState.address
     const token = bridgeSettings.assetIn.value?.address
@@ -391,17 +327,8 @@
       !latestPulseBlock ||
       !swappingOnPulsex
     ) {
-      // console.log(
-      //   'swapping on pulsex',
-      //   !tokenInPulsex,
-      //   !tokenOut,
-      //   !amountInputToPulsex,
-      //   !latestPulseBlock,
-      //   !swappingOnPulsex,
-      // )
       return
     }
-    // console.log('getting pulsex quote', tokenInPulsex, tokenOutPulsex)
     const quote = getPulseXQuote({
       tokenIn: tokenInPulsex,
       tokenOut: tokenOutPulsex,
@@ -410,7 +337,6 @@
     })
     quote.promise.then((result) => {
       if (quote.controller.signal.aborted || !result) return
-      // console.log('pulsex quote result', result)
       pulsexQuoteResult = result
     })
     return quote.cleanup
@@ -433,7 +359,6 @@
     if (!pulsexQuoteResult || !tokenOut) return null
     return truncateValue(pulsexQuoteResult.outputAmount.value, tokenOut.decimals)
   })
-  // $inspect(pulsexQuoteResult?.outputAmount, amountOutputFromPulsex)
   const pulsexQuoteMatchesLatest = $derived.by(() => {
     if (!pulsexQuoteResult || !amountInputToPulsex) return false
     return pulsexQuoteResult.inputAmount.value === amountInputToPulsex.toString()
@@ -530,25 +455,9 @@
   const requiredChain = $derived.by(() => {
     const chainId = activeOnboardStep.value === 1 ? Chains.ETH : Chains.PLS
     const chain = chainsMetadata[chainId]
-    // const chain = availableChains.get(Number(chainId))!
-    // if (!chain) {
-    //   const chain = getNetwork({
-    //     chainId: Number(chainId),
-    //     name: '',
-    //   })
-    //   if (chain) {
-    //     return {
-    //       id: chain.id,
-    //       name: chain.name,
-    //       chainType: ChainType.EVM,
-    //     }
-    //   }
-    //   return null
-    // }
     return {
       id: chain.id,
       name: chain.name,
-      // chainType: ChainType.EVM,
     }
   })
   const buttonText = $derived.by(() => {
@@ -611,7 +520,6 @@
       tokens={possibleBridgeTokenInputs}
       selectedToken={bridgeTokenIn}
       onsubmit={(token) => {
-        // bridgeTokenIn = token
         if (token) {
           defaultOnboardTokens.extend({
             bridgeTokenIn: token.address as Hex,
@@ -685,8 +593,6 @@
             pulsexTokenIn: token.address,
           })
         }
-        // set pulsechain token input
-        // bridgeTokenOut = token
         close()
       }} />
   {/snippet}

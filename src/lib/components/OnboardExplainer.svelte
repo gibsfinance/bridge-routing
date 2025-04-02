@@ -1,8 +1,7 @@
 <script lang="ts">
   import BlurryImage from './BlurryImage.svelte'
-  const dashAfterCrypto = new URL('/images/dash-after-crypto.jpg', import.meta.url).href
-  // import lifi from '$lib/images/providers/lifi.svg?raw'
   import LifiLink from './LifiLink.svelte'
+  const dashAfterCrypto = new URL('/images/dash-after-crypto.jpg', import.meta.url).href
 </script>
 
 <div class="bg-slate-100">

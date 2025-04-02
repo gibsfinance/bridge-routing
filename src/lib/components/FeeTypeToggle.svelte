@@ -3,9 +3,7 @@
     key: string
     text: string
   }
-  // export let options: Option[] = []
-  // export let active = options[0]?.key
-  // export let onchange?: (option: Option) => void
+  
   type Props = {
     options: Option[]
     active?: string

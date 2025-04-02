@@ -1,13 +1,13 @@
 import { defineConfig } from 'vitest/config'
 import { sveltekit } from '@sveltejs/kit/vite'
-import { ssp } from 'sveltekit-search-params/plugin'
+// import { ssp } from 'sveltekit-search-params/plugin'
 import tailwindcss from '@tailwindcss/vite'
 import { enhancedImages } from '@sveltejs/enhanced-img'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 export default defineConfig({
   plugins: [
     tailwindcss(),
-    ssp(),
+    // ssp(),
     enhancedImages(),
     sveltekit(),
     nodePolyfills({

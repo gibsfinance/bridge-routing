@@ -84,7 +84,6 @@
         if (!hash) return
         txInputValue = hash
       }
-      console.log(liveResult)
       bridgeStatus = liveResult ?? null
     })
     return result.cleanup

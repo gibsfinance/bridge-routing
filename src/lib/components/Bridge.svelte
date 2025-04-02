@@ -217,13 +217,13 @@
         input.limit.value = reasonableFixedFee
       }
     }
-    console.log(
-      amountAfterBridgeFee,
-      costLimitLocked,
-      feeType,
-      reasonablePercentFee,
-      input.limit.value,
-    )
+    // console.log(
+    //   amountAfterBridgeFee,
+    //   costLimitLocked,
+    //   feeType,
+    //   reasonablePercentFee,
+    //   input.limit.value,
+    // )
   })
 </script>
 

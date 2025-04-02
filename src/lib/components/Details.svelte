@@ -26,7 +26,6 @@
   const minimumDelivered = $derived(
     shouldDeliver ? afterBridge - bridgeSettings.limit : afterBridge,
   )
-  // const fromChainId = $derived(bridgeKey.fromChain)
   type Props = {
     asset: TokenMetadata | null
   }

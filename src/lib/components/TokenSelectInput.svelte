@@ -20,7 +20,7 @@
     borderClasses = 'border border-gray-50 focus:border-gray-50',
     backgroundClasses = 'bg-white',
     short = false,
-    paddingClasses = `leading-8 pr-4 ${short ? 'pl-12' : 'pl-18'}`,
+    paddingClasses = `leading-8 px-4`,
     oninput,
     icon,
   }: Props = $props()

@@ -48,7 +48,6 @@
   })
   const block = $derived(blocks.get(chainId))
   $effect.pre(() => {
-    // console.log('fetching balance', { chainId, token, account, block })
     return tokenBalance.fetch({
       chainId,
       token: token,
@@ -81,13 +80,6 @@
       maxDecimals: 18 - Math.floor(Number(balance / oneEther / 3n)).toString().length,
     }),
   )
-  // $inspect(
-  //   tokenBalance?.value,
-  //   token?.chainId ?? 0,
-  //   token?.address,
-  //   account as Hex,
-  //   humanReadableText,
-  // )
 </script>
 
 <div class={wrapperClasses}>
