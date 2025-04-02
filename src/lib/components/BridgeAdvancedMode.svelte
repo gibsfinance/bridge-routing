@@ -18,6 +18,7 @@
   import { bridgeSettings as storageBridgeSettings } from '$lib/stores/storage.svelte'
   import Settings from './Settings.svelte'
   import ButtonToggle from './ButtonToggle.svelte'
+  import { bridgeStatuses } from '$lib/stores/chain-events.svelte'
   type Props = {
     asset: Token | null
   }
@@ -45,20 +46,21 @@
     }
   })
   $effect.pre(() => {
+    const amountAfterBridgeFee = bridgeSettings.amountAfterBridgeFee
     if (!costLimitLocked) {
       if (feeType === input.FeeType.GAS_TIP) {
         input.limit.value = bridgeSettings.reasonablePercentOnGasLimit
       } else if (
         feeType === input.FeeType.PERCENT &&
-        bridgeSettings.reasonablePercentFee &&
-        bridgeSettings.amountAfterBridgeFee
+        reasonablePercentFee &&
+        amountAfterBridgeFee
       ) {
-        input.limit.value =
-          (bridgeSettings.amountAfterBridgeFee * bridgeSettings.reasonablePercentFee) / oneEther
+        input.limit.value = (amountAfterBridgeFee * reasonablePercentFee) / oneEther
       } else if (feeType === input.FeeType.FIXED) {
-        input.limit.value = bridgeSettings.reasonableFixedFee
+        input.limit.value = reasonableFixedFee
       }
     }
+    console.log(amountAfterBridgeFee, costLimitLocked, feeType, reasonablePercentFee, input.limit.value)
   })
   const feeTypeOptions = [
     { key: input.FeeType.FIXED, text: 'Fixed' },

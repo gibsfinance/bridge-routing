@@ -13,7 +13,7 @@
     latestBlock,
     blocks,
   } from '$lib/stores/chain-events.svelte'
-  import { bridgeKey } from '$lib/stores/input.svelte'
+  import { bridgeKey, type BridgeKey } from '$lib/stores/input.svelte'
   import Tooltip from './Tooltip.svelte'
   import { untrack } from 'svelte'
   import Loader from './Loader.svelte'
@@ -43,8 +43,8 @@
       case bridgeStatuses.FINALIZED:
         return 75
       // add this in to show partial signing
-      // case bridgeStatuses.VALIDATING:
-      //   return 90
+      case bridgeStatuses.VALIDATING:
+        return 90
       case bridgeStatuses.AFFIRMED:
         return 100
     }
@@ -55,6 +55,7 @@
     if (txInputValue === localTx) {
       bridgeTx.extend({
         hash: null,
+        chainId: null,
       })
       txInputValue = null
     }
@@ -68,11 +69,12 @@
   )
   $effect(() => {
     const hash = bridgeTxHash
-    if (!hash || !destinationBlock) {
+    const bridgeKey = bridgeTx.value?.bridgeKey as BridgeKey
+    if (!hash || !destinationBlock || !bridgeKey) {
       return
     }
     const result = liveBridgeStatus({
-      bridgeKey: bridgeKey.value,
+      bridgeKey,
       hash,
       ticker: destinationBlock,
     })
@@ -147,6 +149,7 @@
     if (txHashIsValid(v)) {
       bridgeTx.extend({
         hash: v as Hex,
+        bridgeKey: bridgeKey.value.slice(0) as BridgeKey,
         ...extension,
       })
     }

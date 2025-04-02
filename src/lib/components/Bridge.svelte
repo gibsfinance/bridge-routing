@@ -23,15 +23,13 @@
     watchFinalizedBlocksForOneChain,
     blocks,
     fetchMinBridgeAmountIn,
-    minBridgeAmountIn,
-    minBridgeAmountInKey,
   } from '$lib/stores/chain-events.svelte'
   import { getAddress, isAddress, zeroAddress, type Hex } from 'viem'
   import { untrack } from 'svelte'
   import InputOutputForm from './InputOutputForm.svelte'
   import { nativeAssetOut } from '$lib/stores/config.svelte'
   import BridgeHeader from './BridgeHeader.svelte'
-  import { advancedMode } from '$lib/stores/storage.svelte'
+  import { advancedMode, bridgeSettings as storageBridgeSettings } from '$lib/stores/storage.svelte'
   import BridgeProgress from './BridgeProgress.svelte'
   import ExchangeInputDivider from './ExchangeInputDivider.svelte'
 
@@ -74,7 +72,10 @@
     return updatingAssetIn.cleanup
   })
   $effect(() => {
-    if (!bridgeSettings.assetIn.value) return
+    if (!bridgeSettings.assetIn.value || !bridgeKey.value) {
+      console.log('missing asset in or bridge key')
+      return
+    }
     const loadingAssetLink = loadAssetLink({
       bridgeKey: bridgeKey.value,
       assetIn: bridgeSettings.assetIn.value,
@@ -182,7 +183,48 @@
     input.amountIn.value = null
     nav.delivery.shallow(bridgeKey.partner, futureAssetOutAddress as string)
   }
-  // $inspect(bridgeSettings.assetOut)
+  const deliveryFeeLocked = $derived(storageBridgeSettings.value?.deliveryFeeLocked ?? false)
+  const costLimitLocked = $derived(storageBridgeSettings.value?.costLimitLocked ?? false)
+  const feeType = $derived(storageBridgeSettings.value?.feeType ?? input.FeeType.PERCENT)
+  storageBridgeSettings.extend({
+    deliveryFeeLocked: false,
+    costLimitLocked: false,
+  })
+  const reasonableFixedFee = $derived(bridgeSettings.reasonableFixedFee)
+  const reasonablePercentOnTopOfGasFee = $derived(bridgeSettings.reasonablePercentOnTopOfGasFee)
+  const reasonablePercentFee = $derived(bridgeSettings.reasonablePercentFee)
+  $effect.pre(() => {
+    if (feeType === input.FeeType.GAS_TIP && !deliveryFeeLocked) {
+      input.gasTipFee.value = reasonablePercentOnTopOfGasFee
+    } else if (feeType === input.FeeType.FIXED && !deliveryFeeLocked) {
+      input.fixedFee.value = reasonableFixedFee
+    } else if (feeType === input.FeeType.PERCENT && !deliveryFeeLocked) {
+      input.percentFee.value = reasonablePercentFee
+    }
+  })
+  $effect.pre(() => {
+    const amountAfterBridgeFee = bridgeSettings.amountAfterBridgeFee
+    if (!costLimitLocked) {
+      if (feeType === input.FeeType.GAS_TIP) {
+        input.limit.value = bridgeSettings.reasonablePercentOnGasLimit
+      } else if (
+        feeType === input.FeeType.PERCENT &&
+        reasonablePercentFee &&
+        amountAfterBridgeFee
+      ) {
+        input.limit.value = (amountAfterBridgeFee * reasonablePercentFee) / input.oneEther
+      } else if (feeType === input.FeeType.FIXED) {
+        input.limit.value = reasonableFixedFee
+      }
+    }
+    console.log(
+      amountAfterBridgeFee,
+      costLimitLocked,
+      feeType,
+      reasonablePercentFee,
+      input.limit.value,
+    )
+  })
 </script>
 
 <div class="flex flex-col max-w-lg">

@@ -54,6 +54,7 @@
     loadFeeFor,
     oneEther,
     recipient,
+    type BridgeKey,
   } from '$lib/stores/input.svelte'
   import { getPulseXQuote } from '$lib/stores/pulsex/quote.svelte'
   import type { SerializedTrade } from '$lib/stores/pulsex/transformers'
@@ -138,18 +139,23 @@
       cancelled = true
     }
   })
-  const buttonEnabled = $derived.by(() => {
+  const amountLessThanMin = $derived.by(() => {
+    const minAmountIn = minBridgeAmountIn.get(minBridgeAmountKey)
+    if (_.isNil(minAmountIn) || _.isNil(amountIn.value) || amountIn.value === 0n) {
+      return null
+    }
+    return amountIn.value < minAmountIn
+  })
+  const buttonDisabled = $derived.by(() => {
     if (bridgingToPulsechain) {
-      const minAmountIn = minBridgeAmountIn.get(minBridgeAmountKey)
       return (
         !maxCrossPulsechainBridge ||
         !amountIn.value ||
-        !minAmountIn ||
-        amountIn.value < minAmountIn ||
+        amountLessThanMin !== false ||
         amountIn.value > maxCrossPulsechainBridge
       )
     }
-    return !swapDisabled && pulsexQuoteMatchesLatest
+    return swapDisabled || !pulsexQuoteMatchesLatest
   })
   // let crossingTokenInput: Token | null = $state(null)
   // const bridgeTokenOutAddress = $derived.by(() => {
@@ -287,6 +293,7 @@
           })
           bridgeTx.extend({
             hash: tx,
+            bridgeKey: bridgeKey.value.slice(0) as BridgeKey,
           })
           return tx
         },
@@ -566,6 +573,7 @@
   readonlyInput={!bridgingToPulsechain}
   readonlyTokenSelect={!bridgingToPulsechain}
   valueLoadingKey={null}
+  invalidValue={amountLessThanMin ?? false}
   onclick={() => {
     if (swappingOnPulsex) {
       activeOnboardStep.value = 1
@@ -577,8 +585,9 @@
       return int
     }
   }}
-  onbalanceupdate={() => {
+  onbalanceupdate={(bal) => {
     // set ethereum balance
+    maxCrossPulsechainBridge = bal
   }}
   onmax={(balance) => {
     amountIn.value = balance
@@ -669,7 +678,7 @@
     }
   }} />
 <OnboardButton
-  disabled={!buttonEnabled}
+  disabled={buttonDisabled}
   {requiredChain}
   onclick={onButtonClick}
   text={buttonText}
