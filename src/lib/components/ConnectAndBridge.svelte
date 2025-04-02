@@ -115,7 +115,7 @@
     if (!bridgeSettings.bridgePathway) {
       return
     }
-    if (!assetLink || !bridgeSettings.assetIn.value || !bridgeSettings.transactionInputs) {
+    if (!assetLink.value || !bridgeSettings.assetIn.value || !bridgeSettings.transactionInputs) {
       return
     }
     const chainId = Number(input.bridgeKey.fromChain)

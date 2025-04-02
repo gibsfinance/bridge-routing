@@ -1,6 +1,6 @@
 import { zeroAddress, type Hex } from 'viem'
 import { LocalProxy, LocalProxyProp } from './localstorage.svelte'
-import { FeeType } from './input.svelte'
+import { FeeType, type BridgeKey } from './input.svelte'
 
 export type DefaultSettings = {
   showTooltips: boolean
@@ -59,7 +59,8 @@ export const onboardShowOnramps = new LocalProxyProp(storage, ['onboardShowOnram
 
 export type BridgeTx = {
   hash?: Hex | null
-  showEdit?: boolean
+  bridgeKey?: BridgeKey | null
+  showEdit?: boolean | null
 }
 export const bridgeTx = new LocalProxyProp(storage, ['bridgeTx'], null as BridgeTx | null)
 

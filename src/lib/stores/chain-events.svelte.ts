@@ -516,6 +516,7 @@ export const tokenBridgeInfo = async (
 ): Promise<null | TokenBridgeInfo> => {
   const bridgePathway = pathway(bridgeKey)
   if (!assetIn || !bridgePathway) {
+    console.log('missing asset in or bridge pathway')
     return null
   }
   const [, fromChain, toChain] = bridgeKey
@@ -913,9 +914,9 @@ export const bridgeStatuses = {
 
 export type BridgeStatus = keyof typeof bridgeStatuses
 export type LiveBridgeStatusParams = {
-  bridgeKey: input.BridgeKey
   hash: Hex
   ticker: Block
+  bridgeKey: input.BridgeKey
 }
 export type ContinuedLiveBridgeStatusParams = LiveBridgeStatusParams & {
   status: BridgeStatus
@@ -924,6 +925,7 @@ export type ContinuedLiveBridgeStatusParams = LiveBridgeStatusParams & {
   finalizedBlock?: Block
   messageId?: Hex
   deliveredHash?: Hex
+  count?: number
 }
 const statusList = Object.values(bridgeStatuses)
 const statusToIndex = (status: BridgeStatus) => {
@@ -937,12 +939,19 @@ const graphqlClient = _.memoize((url: string) => {
 type SingleUserRequest = {
   userRequests: {
     messageId: Hex
+    message: {
+      signatures: Hex[]
+    }
   }[]
 }
+// assumes 1 bridge per transaction
 const singleUserRequest = gql`
   query SingleUserRequest($hash: String!) {
     userRequests(where: { txHash: $hash }) {
       messageId
+      message {
+        signatures
+      }
     }
   }
 `
@@ -985,8 +994,7 @@ export const liveBridgeStatus = loading.loadsAfterTick<
 >(
   'live-bridge-status',
   async (params: LiveBridgeStatusParams) => {
-    const { bridgeKey, hash } = params
-    // if (!chain || !chainPartner || !hash) return null
+    const { hash, bridgeKey } = params
     const [, fromChain] = bridgeKey
     const client = input.clientFromChain(Number(fromChain))
     const receipt = await client
@@ -1016,27 +1024,31 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     if (statusIndex < statusToIndex(bridgeStatuses.MINED)) {
       return params
     }
-    const [, fromChain] = bridgeKey
     const urls = _.get(bridgeGraphqlUrl, bridgeKey)
     if (!urls) return null
     // where the signing happens
-    const client = input.clientFromChain(Number(fromChain))
-    const [finalizedBlock, foreignStatus] = await Promise.all([
+    const fromMainnetForeign = bridgeKey[1] === Chains.ETH
+    const fromMainnetHome = bridgeKey[1] === Chains.PLS
+    const home = fromMainnetForeign || fromMainnetHome ? 369 : 943
+    const client = input.clientFromChain(home)
+    const [finalizedBlock, originationStatus] = await Promise.all([
       client.getBlock({
         blockTag: 'finalized',
       }),
       gqlRequest({
-        url: urls.foreign,
+        url: fromMainnetForeign ? urls.foreign : urls.home,
         query: singleUserRequest,
         params: {
           hash: receipt!.transactionHash,
         },
       }) as Promise<SingleUserRequest>,
     ])
-    if (!foreignStatus.userRequests) {
+    console.log(originationStatus)
+    if (!originationStatus.userRequests) {
       return params
     }
-    if (!finalizedBlock || !foreignStatus.userRequests[0].messageId) {
+    const userRequest = originationStatus.userRequests?.[0]
+    if (!finalizedBlock || !userRequest?.messageId) {
       return params
     }
     const blockNumber = finalizedBlock.number
@@ -1045,11 +1057,13 @@ export const liveBridgeStatus = loading.loadsAfterTick<
       // console.log('tx has been mined', receipt?.transactionHash)
       return params
     }
+    const count = !userRequest ? 0 : userRequest.message?.signatures?.length
     return {
       ...params,
-      messageId: foreignStatus.userRequests[0].messageId,
+      messageId: userRequest.messageId,
       status: bridgeStatuses.FINALIZED,
       statusIndex: statusToIndex(bridgeStatuses.FINALIZED),
+      count,
     }
   },
   async (params: ContinuedLiveBridgeStatusParams) => {
@@ -1063,15 +1077,25 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     // where the signing happens
     // const client = graphqlClient(urls.home)
     // should put this behind a ttl cache
-    const { executions } = await (gqlRequest({
-      url: urls.home,
-      query: singleExecution,
-      params: {
-        messageId,
-      },
-    }) as Promise<SingleExecution>)
+    const fromMainnetForeign = bridgeKey[1] === Chains.ETH
+    console.log('searching for execution', fromMainnetForeign, messageId)
+    const result = await (
+      gqlRequest({
+        url: fromMainnetForeign ? urls.home : urls.foreign,
+        query: singleExecution,
+        params: {
+          messageId,
+        },
+      }) as Promise<SingleExecution>
+    ).catch((err) => {
+      console.log(err)
+      return {
+        executions: [],
+      }
+    })
+    console.log('executions', result)
+    const { executions } = result
     if (executions[0]?.txHash) {
-      // console.log('affirmed', executions[0].txHash)
       return {
         ...params,
         status: bridgeStatuses.AFFIRMED,
@@ -1079,6 +1103,19 @@ export const liveBridgeStatus = loading.loadsAfterTick<
         deliveredHash: executions[0].txHash,
       }
     } else {
+      if (params.count === 5) {
+        return {
+          ...params,
+          status: bridgeStatuses.AFFIRMED,
+          statusIndex: statusToIndex(bridgeStatuses.AFFIRMED),
+        }
+      } else if ((params.count ?? 0) > 0) {
+        return {
+          ...params,
+          status: bridgeStatuses.VALIDATING,
+          statusIndex: statusToIndex(bridgeStatuses.VALIDATING),
+        }
+      }
       return params
       // console.log('validating', messageId)
       // return {
