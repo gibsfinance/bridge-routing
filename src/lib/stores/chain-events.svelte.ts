@@ -26,10 +26,10 @@ import { Chains, toChain } from '$lib/stores/auth/types'
 import { tokenToPair } from './utils'
 import { gql, GraphQLClient } from 'graphql-request'
 import { Cache } from './cache'
-import { getTokenBalance as getTokenBalanceLifi, availableChains } from './lifi.svelte'
-import { evmChainsById, getNetwork } from './auth/AuthProvider.svelte'
+// import { getTokenBalance as getTokenBalanceLifi, availableChains } from './lifi.svelte'
+// import { evmChainsById, getNetwork } from './auth/AuthProvider.svelte'
 import { Block as BitcoinBlock } from 'bitcoinjs-lib'
-import { PUBLIC_BITCOIN_RPC, PUBLIC_SOLANA_RPC_URL } from '$env/static/public'
+// import { PUBLIC_BITCOIN_RPC, PUBLIC_SOLANA_RPC_URL } from '$env/static/public'
 
 type ExtendedBitcoinBlock = {
   block: BitcoinBlock
@@ -108,53 +108,53 @@ export const bitcoinBlockToEvmBlock = (b: ExtendedBitcoinBlock) => {
 }
 
 // const url = 'https://bitcoin-rpc.publicnode.com'
-export const requestBitcoinRpc = async <T>(method: string, params: unknown[] = []) => {
-  const res = await fetch(PUBLIC_BITCOIN_RPC, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: '0',
-      method,
-      params,
-    }),
-  })
-  const json = (await res.json()) as { result: T; error: null | string; id: string }
-  if (json.error) {
-    throw new Error(json.error)
-  }
-  return json
-}
-export const solanaToEvmStyleBlock = (b: solanaWeb3.ParsedAccountsModeBlockResponse) => {
-  return {
-    number: BigInt(b.blockHeight!),
-    timestamp: BigInt(b.blockTime!),
-    hash: b.blockhash,
-    parentHash: b.previousBlockhash as `0x${string}`,
-    baseFeePerGas: 7n,
-    blobGasUsed: 0n,
-    difficulty: 0n,
-    excessBlobGas: 0n,
-    extraData: '0x',
-    gasLimit: 0n,
-    gasUsed: 0n,
-    logsBloom: '0x',
-    miner: '0x',
-    mixHash: '0x',
-    nonce: '0x',
-    receiptsRoot: '0x',
-    sealFields: [],
-    sha3Uncles: '0x',
-    size: 0n,
-    transactions: [],
-    transactionsRoot: '0x',
-    uncles: [],
-    stateRoot: '0x',
-    totalDifficulty: 0n,
-  } as Block
-}
+// export const requestBitcoinRpc = async <T>(method: string, params: unknown[] = []) => {
+//   const res = await fetch(PUBLIC_BITCOIN_RPC, {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify({
+//       jsonrpc: '2.0',
+//       id: '0',
+//       method,
+//       params,
+//     }),
+//   })
+//   const json = (await res.json()) as { result: T; error: null | string; id: string }
+//   if (json.error) {
+//     throw new Error(json.error)
+//   }
+//   return json
+// }
+// export const solanaToEvmStyleBlock = (b: solanaWeb3.ParsedAccountsModeBlockResponse) => {
+//   return {
+//     number: BigInt(b.blockHeight!),
+//     timestamp: BigInt(b.blockTime!),
+//     hash: b.blockhash,
+//     parentHash: b.previousBlockhash as `0x${string}`,
+//     baseFeePerGas: 7n,
+//     blobGasUsed: 0n,
+//     difficulty: 0n,
+//     excessBlobGas: 0n,
+//     extraData: '0x',
+//     gasLimit: 0n,
+//     gasUsed: 0n,
+//     logsBloom: '0x',
+//     miner: '0x',
+//     mixHash: '0x',
+//     nonce: '0x',
+//     receiptsRoot: '0x',
+//     sealFields: [],
+//     sha3Uncles: '0x',
+//     size: 0n,
+//     transactions: [],
+//     transactionsRoot: '0x',
+//     uncles: [],
+//     stateRoot: '0x',
+//     totalDifficulty: 0n,
+//   } as Block
+// }
 export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
   if (!untrack(() => blocks.has(chain))) {
     // signals a "pending" state
@@ -170,107 +170,109 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
       // console.log('gas decrement', chain)
       untrack(() => loading.decrement('gas'))
     })
-    const evmChain = evmChainsById.get(chain)
+    // const evmChain = evmChainsById.get(chain)
     let watcher: Cleanup | null = null
-    if (!evmChain) {
-      const availableNetwork = availableChains.get(chain)
-      const network = getNetwork({
-        chainId: chain,
-        name: availableNetwork!.name,
-      })
-      if (network!.name === 'Solana') {
-        const connection = new solanaWeb3.Connection(PUBLIC_SOLANA_RPC_URL)
-        const updateBlock = () => {
-          connection
-            .getBlockHeight({
-              commitment: 'confirmed',
-            })
-            .then((v) => {
-              if (!v || cancelled) return
-              return connection.getParsedBlock(v, { commitment: 'confirmed' })
-            })
-            .then((v) => {
-              if (!v || cancelled) return
-              decrement()
-              untrack(() => blocks.set(chain, solanaToEvmStyleBlock(v)))
-            })
-            .catch(() => {
-              decrement()
-              const now = Date.now()
-              untrack(() =>
-                blocks.set(
-                  chain,
-                  solanaToEvmStyleBlock({
-                    blockHeight: now,
-                    blockTime: now,
-                    blockhash: `0x${now.toString(16)}`,
-                    previousBlockhash: `0x${now.toString(16)}`,
-                    parentSlot: now - 1,
-                    transactions: [],
-                  }),
-                ),
-              )
-            })
-        }
-        updateBlock()
-        const interval = setInterval(updateBlock, 60_000)
-        watcher = () => {
-          clearInterval(interval)
-        }
-      } else {
-        type BlockchainInfo = {
-          bestblockhash: string
-          blocks: number
-        }
-        const parseBlock = (hex: string) => {
-          return BitcoinBlock.fromHex(hex)
-        }
-        const getBlock = async () => {
-          return requestBitcoinRpc<BlockchainInfo>('getblockchaininfo').then(async ({ result }) => {
-            const blockHex = await requestBitcoinRpc<string>('getblock', [result.bestblockhash, 0])
-            const b = parseBlock(blockHex.result)
-            return {
-              block: b,
-              number: result.blocks,
-            } as ExtendedBitcoinBlock
-          })
-        }
-        let cancelled = false
-        const fetchBlock = async () => {
-          // const block = bitcoinAdapter.getBlock()
-          // const block = await fetch(url, {
-          //   method: 'GET',
-          //   headers: {
-          //     'Content-Type': 'application/json',
-          //   },
-          // }).then((res) => res.json())
-          // fetch(url, {})
-          const block = await getBlock()
-          if (cancelled) return
-          decrement()
-          console.log(block)
-          const evmStyleBlock = bitcoinBlockToEvmBlock(block)
-          console.log(block)
-          untrack(() => blocks.set(chain, evmStyleBlock))
-        }
-        fetchBlock()
-        const interval = setInterval(fetchBlock, 60_000)
-        watcher = () => {
-          cancelled = true
-          clearInterval(interval)
-        }
-      }
-    } else {
-      watcher = input.clientFromChain(chain).watchBlocks({
-        emitOnBegin: true,
-        emitMissed: true,
-        blockTag,
-        onBlock: (block) => {
-          decrement()
-          untrack(() => blocks.set(chain, block))
-        },
-      })
-    }
+    // if (!evmChain) {
+    //   const availableNetwork = availableChains.get(chain)
+    //   const network = getNetwork({
+    //     chainId: chain,
+    //     name: availableNetwork!.name,
+    //   })
+    //   if (network!.name === 'Solana') {
+    //     console.log(network)
+    //     const connection = new solanaWeb3.Connection(PUBLIC_SOLANA_RPC_URL)
+    //     const updateBlock = () => {
+    //       connection
+    //         .getBlockHeight({
+    //           commitment: 'confirmed',
+    //         })
+    //         .then((v) => {
+    //           if (!v || cancelled) return
+    //           return connection.getParsedBlock(v, { commitment: 'confirmed' })
+    //         })
+    //         .then((v) => {
+    //           if (!v || cancelled) return
+    //           decrement()
+    //           untrack(() => blocks.set(chain, solanaToEvmStyleBlock(v)))
+    //         })
+    //         .catch(() => {
+    //           decrement()
+    //           const now = Date.now()
+    //           untrack(() =>
+    //             blocks.set(
+    //               chain,
+    //               solanaToEvmStyleBlock({
+    //                 blockHeight: now,
+    //                 blockTime: now,
+    //                 blockhash: `0x${now.toString(16)}`,
+    //                 previousBlockhash: `0x${now.toString(16)}`,
+    //                 parentSlot: now - 1,
+    //                 transactions: [],
+    //               }),
+    //             ),
+    //           )
+    //         })
+    //     }
+    //     updateBlock()
+    //     const interval = setInterval(updateBlock, 60_000)
+    //     watcher = () => {
+    //       clearInterval(interval)
+    //     }
+    //   } else {
+    //     type BlockchainInfo = {
+    //       bestblockhash: string
+    //       blocks: number
+    //     }
+    //     const parseBlock = (hex: string) => {
+    //       return BitcoinBlock.fromHex(hex)
+    //     }
+    //     const getBlock = async () => {
+    //       return requestBitcoinRpc<BlockchainInfo>('getblockchaininfo').then(async ({ result }) => {
+    //         const blockHex = await requestBitcoinRpc<string>('getblock', [result.bestblockhash, 0])
+    //         const b = parseBlock(blockHex.result)
+    //         return {
+    //           block: b,
+    //           number: result.blocks,
+    //         } as ExtendedBitcoinBlock
+    //       })
+    //     }
+    //     let cancelled = false
+    //     const fetchBlock = async () => {
+    //       // const block = bitcoinAdapter.getBlock()
+    //       // const block = await fetch(url, {
+    //       //   method: 'GET',
+    //       //   headers: {
+    //       //     'Content-Type': 'application/json',
+    //       //   },
+    //       // }).then((res) => res.json())
+    //       // fetch(url, {})
+    //       const block = await getBlock()
+    //       if (cancelled) return
+    //       decrement()
+    //       console.log(block)
+    //       const evmStyleBlock = bitcoinBlockToEvmBlock(block)
+    //       console.log(block)
+    //       untrack(() => blocks.set(chain, evmStyleBlock))
+    //     }
+    //     fetchBlock()
+    //     const interval = setInterval(fetchBlock, 60_000)
+    //     watcher = () => {
+    //       cancelled = true
+    //       clearInterval(interval)
+    //     }
+    //   }
+    // } else {
+    watcher = input.clientFromChain(chain).watchBlocks({
+      emitOnBegin: true,
+      emitMissed: true,
+      blockTag,
+      onBlock: (block) => {
+        decrement()
+        if (cancelled) return
+        untrack(() => blocks.set(chain, block))
+      },
+    })
+    // }
     watchers.set(chain, watcher)
   }
   chainCounts.set(chain, current + 1)
@@ -324,18 +326,18 @@ export const getTokenBalance = ({ chainId, address, account }: TokenBalanceInput
                 }).read.balanceOf([account])
               })
               .catch(() => null)
-  } else {
-    // if the wallet account is not a hex address,
-    // it is a solana, btc or other network address
-    getBalance = () =>
-      getTokenBalanceLifi({
-        chainId,
-        address: address,
-        account: account,
-      }).then((v) => {
-        // console.log('v', v)
-        return v?.amount ?? null
-      })
+    // } else {
+    //   // if the wallet account is not a hex address,
+    //   // it is a solana, btc or other network address
+    //   getBalance = () =>
+    //     getTokenBalanceLifi({
+    //       chainId,
+    //       address: address,
+    //       account: account,
+    //     }).then((v) => {
+    //       // console.log('v', v)
+    //       return v?.amount ?? null
+    //     })
   }
   return loading.loadsAfterTick<bigint | null>(key, getBalance)()
 }
@@ -395,16 +397,16 @@ export class TokenBalanceWatcher {
     // console.log(token, account, ticker)
     // call this function whenever a new block is ticked over
     if (!ticker || !token || !account) return () => {}
-    const network = availableChains.get(chainId)
-    if (network) {
-      const accountIsHex = isHex(account)
-      const tokenIsHex = isHex(token?.address)
-      if (network.chainType === 'EVM' && (!accountIsHex || !tokenIsHex)) {
-        return () => {}
-      } else if (network.chainType !== 'EVM' && (accountIsHex || tokenIsHex)) {
-        return () => {}
-      }
+    // const network = availableChains.get(chainId)
+    // if (network) {
+    const accountIsHex = isHex(account)
+    const tokenIsHex = isHex(token?.address)
+    if (/*network.chainType === 'EVM' && */ !accountIsHex || !tokenIsHex) {
+      return () => {}
+      // } else if (network.chainType !== 'EVM' && (accountIsHex || tokenIsHex)) {
+      //   return () => {}
     }
+    // }
     const requestResult = getTokenBalance({
       chainId,
       address: token?.address,

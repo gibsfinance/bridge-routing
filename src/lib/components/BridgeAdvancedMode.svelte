@@ -18,7 +18,7 @@
   import { bridgeSettings as storageBridgeSettings } from '$lib/stores/storage.svelte'
   import Settings from './Settings.svelte'
   import ButtonToggle from './ButtonToggle.svelte'
-  import { bridgeStatuses } from '$lib/stores/chain-events.svelte'
+
   type Props = {
     asset: Token | null
   }
@@ -60,7 +60,7 @@
         input.limit.value = reasonableFixedFee
       }
     }
-    console.log(amountAfterBridgeFee, costLimitLocked, feeType, reasonablePercentFee, input.limit.value)
+    // console.log(amountAfterBridgeFee, costLimitLocked, feeType, reasonablePercentFee, input.limit.value)
   })
   const feeTypeOptions = [
     { key: input.FeeType.FIXED, text: 'Fixed' },

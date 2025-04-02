@@ -1,38 +1,39 @@
 <script lang="ts">
-  import { accountState, appkitNetworkById, connect } from '$lib/stores/auth/AuthProvider.svelte'
+  import { accountState, connect } from '$lib/stores/auth/AuthProvider.svelte'
   import Button from '$lib/components/Button.svelte'
   import Image from './Image.svelte'
   import Icon from '@iconify/svelte'
-  import { idToChain } from '$lib/stores/auth/types'
-  import { availableChains, availableChainsByName, loadData } from '$lib/stores/lifi.svelte'
+  import { toChain } from '$lib/stores/auth/types'
+  // import { availableChains, availableChainsByName, loadData } from '$lib/stores/lifi.svelte'
   import * as imageLinks from '$lib/stores/image-links'
-  loadData()
+  import { chainsMetadata } from '$lib/stores/auth/constants'
+  // loadData()
   const targetChain = $derived.by(() => {
     const id = accountState.chainId
     if (!id) return null
     const chainId = Number(id)
-    const chain = availableChains.get(chainId)
-    if (chain) {
-      return {
-        name: chain.name,
-        logoURI: chain.logoURI,
-      }
-    }
-    const networkByPrefix = availableChainsByName.get(accountState.prefix!)
-    if (networkByPrefix) {
-      return {
-        name: networkByPrefix.name,
-        logoURI: networkByPrefix.logoURI,
-      }
-    }
-    const appkitNetwork = appkitNetworkById.get(id!)
-    if (appkitNetwork) {
-      return {
-        name: appkitNetwork.name,
-        logoURI: appkitNetwork.assets?.imageUrl,
-      }
-    }
-    const network = idToChain.get(chainId)
+    // const chain = availableChains.get(chainId)
+    // if (chain) {
+    //   return {
+    //     name: chain.name,
+    //     logoURI: chain.logoURI,
+    //   }
+    // }
+    // const networkByPrefix = availableChainsByName.get(accountState.prefix!)
+    // if (networkByPrefix) {
+    //   return {
+    //     name: networkByPrefix.name,
+    //     logoURI: networkByPrefix.logoURI,
+    //   }
+    // }
+    // const appkitNetwork = appkitNetworkById.get(id!)
+    // if (appkitNetwork) {
+    //   return {
+    //     name: appkitNetwork.name,
+    //     logoURI: appkitNetwork.assets?.imageUrl,
+    //   }
+    // }
+    const network = chainsMetadata[toChain(chainId)]
     if (network) {
       return {
         name: network.name,

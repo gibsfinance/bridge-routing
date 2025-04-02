@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { chainsMetadata } from '$lib/stores/auth/constants'
+  // import { chainsMetadata } from '$lib/stores/auth/constants'
   import * as transactions from '$lib/stores/transactions'
   import {
     accountState,

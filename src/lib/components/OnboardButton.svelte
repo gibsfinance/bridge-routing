@@ -1,8 +1,8 @@
 <script lang="ts">
-  import Icon from '@iconify/svelte'
+  // import Icon from '@iconify/svelte'
   import Button from './Button.svelte'
   import Loading from './Loading.svelte'
-  import { activeOnboardStep } from '$lib/stores/storage.svelte'
+  // import { activeOnboardStep } from '$lib/stores/storage.svelte'
   import {
     accountState,
     connect,
@@ -10,8 +10,8 @@
     switchNetwork,
   } from '$lib/stores/auth/AuthProvider.svelte'
   import { loading } from '$lib/stores/loading.svelte'
-  import _ from 'lodash'
-  import type { ChainType } from '@lifi/sdk'
+  // import _ from 'lodash'
+  // import type { ChainType } from '@lifi/sdk'
 
   type Props = {
     disabled: boolean
@@ -21,7 +21,7 @@
     requiredChain?: {
       id: number | string
       name: string
-      chainType: ChainType
+      // chainType: ChainType
     } | null
   }
   const {

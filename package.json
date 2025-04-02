@@ -55,9 +55,8 @@
   },
   "dependencies": {
     "@iconify/svelte": "^4.2.0",
-    "@lifi/sdk": "^3.6.2",
     "@lifi/types": "^17.5.0",
-    "@lifi/widget": "^3.17.1",
+    "@lifi/widget": "^3.18.2",
     "@pulsex/chains": "^1.0.2",
     "@pulsex/sdk": "^1.7.3",
     "@pulsex/swap-sdk-core": "^2.0.4",

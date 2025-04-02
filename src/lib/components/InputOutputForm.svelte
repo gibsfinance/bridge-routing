@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import ExchangeInputDivider from './ExchangeInputDivider.svelte'
+  // import ExchangeInputDivider from './ExchangeInputDivider.svelte'
 
   type Props = {
     icon: string

@@ -37,7 +37,7 @@
   )
   const onclick = $derived.by(() => onClick ?? (() => {}))
   const iconClasses = `rounded-full w-full h-full ring-4 text-surface-contrast-100 ring-inset ring-white p-2 bg-white border ${
-    !!onClick ? 'shadow hover:shadow-md transition-all duration-100' : ''
+    onClick ? 'shadow hover:shadow-md transition-all duration-100' : ''
   }`
 </script>
 
