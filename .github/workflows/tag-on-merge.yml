@@ -20,8 +20,6 @@ jobs:
         id: get_version
         run: echo "VERSION=$(node -p 'require(`./package.json`).version')" >> $GITHUB_ENV
       - name: Create tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
