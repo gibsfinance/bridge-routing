@@ -4,7 +4,7 @@
   import Onboard from '$lib/components/Onboard.svelte'
   import OnboardSettings from '$lib/components/OnboardSettings.svelte'
   import Headline from '$lib/components/Headline.svelte'
-  import { activeOnboardStep } from '$lib/stores/storage.svelte'
+
   const onboardImageFuzzy = new URL('/images/runners.jpg', import.meta.url).href
 </script>
 

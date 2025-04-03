@@ -3,9 +3,7 @@
     key: string
     text: string
   }
-  // export let options: Option[] = []
-  // export let active = options[0]?.key
-  // export let onchange?: (option: Option) => void
+  
   type Props = {
     options: Option[]
     active?: string
@@ -15,7 +13,7 @@
 </script>
 
 <div class="isolate inline-flex text-surface-contrast-50">
-  {#each options as option, i}
+  {#each options as option, i (option.key)}
     <button
       class="leading-5 min-w-5 uppercase text-xs px-1 border-2 rounded-full hover:border-surface-500 flex items-center justify-center"
       class:ml-0.5={i > 0}

@@ -5,7 +5,7 @@
   import { bridgeKey } from '$lib/stores/input.svelte'
   import type { InputValue, Token } from '$lib/types.svelte'
   import SectionInput from './SectionInput.svelte'
-  import TokenAndNetworkSelector from './TokenAndNetworkSelector.svelte'
+  import TokenSelect from './TokenSelect.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
   import BridgeProviderToggle from './BridgeProviderToggle.svelte'
   import { isProd, pathways, validBridgeKeys } from '$lib/stores/config.svelte'
@@ -86,7 +86,7 @@
     <BridgeProviderToggle />
   {/snippet}
   {#snippet modal({ close })}
-    <TokenAndNetworkSelector
+    <TokenSelect
       {chains}
       {tokens}
       selectedToken={bridgeSettings.assetIn.value}

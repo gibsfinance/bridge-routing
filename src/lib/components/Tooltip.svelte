@@ -43,9 +43,6 @@
   let open = $state(false)
   const classes = $derived(classNames('flex', className))
   const positionerClasses = $derived(classNames('pointer-events-none', positionerClassName))
-  // const onOpenChange = (details: { open: boolean }) => {
-  //   open = details.open
-  // }
   const triggerClasses = $derived(classNames('flex', triggerClassNames))
   const contentBase = $derived(
     classNames(

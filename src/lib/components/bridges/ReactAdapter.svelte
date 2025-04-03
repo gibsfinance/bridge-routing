@@ -35,7 +35,6 @@
   })
 </script>
 
-<!-- <div bind:this={container} class={$$props.class}></div> -->
 <style lang="postcss">
   :global(.MuiScopedCssBaseline-root) {
     @apply !max-h-none;

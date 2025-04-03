@@ -5,10 +5,7 @@
   import { loadPrice, priceInt, latestBlock, blocks } from '$lib/stores/chain-events.svelte'
   import { bridgeKey } from '$lib/stores/input.svelte'
   import { SvelteMap } from 'svelte/reactivity'
-  import OnboardBridge from './OnboardBridge.svelte'
-  import OnboardPulseX from './OnboardPulseX.svelte'
   import OnboardForeignBridge from './OnboardForeignBridge.svelte'
-  import { activeOnboardStep } from '$lib/stores/storage.svelte'
 
   const bridgedToken = $derived(bridgeSettings.assetOut as Token | null)
   $effect.pre(() => {

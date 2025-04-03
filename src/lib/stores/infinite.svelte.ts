@@ -1,10 +1,10 @@
 export class InfiniteStore {
   count = $state(0)
   constructor(
-    count?: number,
+    c?: number,
     protected max?: number,
   ) {
-    if (count) this.count = count
+    if (c) this.count = c
   }
   increment(amount = 1) {
     this.count += amount

@@ -12,19 +12,12 @@
   import { InfiniteStore } from '$lib/stores/infinite.svelte'
   import TokenSelectInput from './TokenSelectInput.svelte'
   import Button from './Button.svelte'
-  import StaticNetworkImage from './StaticNetworkImage.svelte'
-  import { Popover } from '@skeletonlabs/skeleton-svelte'
-  import { availableChains } from '$lib/stores/lifi.svelte'
   import Loading from './Loading.svelte'
   import { loading } from '$lib/stores/loading.svelte'
-  import * as imageLinks from '$lib/stores/image-links'
-  import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { toChain } from '$lib/stores/auth/types'
   import { evmChainsById } from '$lib/stores/auth/AuthProvider.svelte'
 
   type Props = {
     onsubmit?: (token: Token | null) => void
-    onnetworkchange?: (chain: number) => void
     chains: [number, ...number[]]
     tokens: Token[]
     showCustomTokens?: boolean
@@ -33,7 +26,6 @@
   }
   let {
     onsubmit = () => {},
-    onnetworkchange = () => {},
     chains,
     tokens,
     showCustomTokens = false,
@@ -143,14 +135,6 @@
     if (limit.count > subset.length) return
     limit.increment(50)
   }
-  let chainSelectOpen = $state(false)
-  const network = $derived(
-    availableChains.get(selectedChain) ?? {
-      id: selectedChain,
-      logoURI: imageLinks.network(selectedChain),
-    },
-  )
-  $inspect(selectedChain, network)
 </script>
 
 <div class="flex flex-col h-full max-h-[512px] rounded-2xl overflow-hidden">
@@ -171,9 +155,8 @@
     oninput={(val) => {
       searchValue = val
     }}>
-    {#snippet icon()}
+    <!-- {#snippet icon()}
       {#if chains.length > 1}
-        <!-- for some reason, the modal property is required here -->
         <Popover
           open={chainSelectOpen}
           triggerBase="flex flex-row items-center py-1 px-2 justify-center h-full"
@@ -246,7 +229,7 @@
             icon={network.logoURI} />
         </div>
       {/if}
-    {/snippet}
+    {/snippet} -->
   </TokenSelectInput>
   <div class="overflow-y-scroll h-full">
     <div

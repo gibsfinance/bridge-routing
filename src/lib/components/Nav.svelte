@@ -7,7 +7,7 @@
   import { page } from '$app/state'
   import { bridgeKey, incrementForcedRefresh } from '$lib/stores/input.svelte'
   import { Chains } from '$lib/stores/auth/types'
-  import { addDomain } from '$lib/stores/window.svelte'
+  import { addDomain, domains } from '$lib/stores/window.svelte'
   import { innerWidth } from 'svelte/reactivity/window'
   import Image from './Image.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
@@ -17,9 +17,12 @@
   import ConnectButton from './ConnectButton.svelte'
   const gibs = new URL('/images/1FAF0.svg', import.meta.url).href
 
+  const bridgeDomain = 'bridge.pulsechain.com'
   onMount(() => {
-    addDomain('bridge.pulsechain.com')
+    addDomain(bridgeDomain)
   })
+
+  const directTxsLink = $derived(domains.get(bridgeDomain) + '/#/transactions')
 
   const gotoHome = async () => {
     await goto('#/')
@@ -30,15 +33,13 @@
   const gotoOnboard = async () => {
     await goto('#/onboard')
   }
-  // const txnText = $derived(innerWidth.current && innerWidth.current < 512 ? 'Txns' : 'Transactions')
   const destinationBridgeKey = $derived(bridgeKey.toChain)
   const isDeliveryRoute = $derived(page.route.id?.includes('/delivery'))
   const isOnboardRoute = $derived(page.route.id?.includes('/onboard'))
-  // const alwaysSmall = true
   const isSmall = $derived(innerWidth.current && innerWidth.current < 768)
 </script>
 
-<div class="fixed z-10 -mb-10 flex h-10">
+<div class="fixed z-10 -mb-14 flex h-14">
   <nav
     class="fixed right-0 left-0 flex h-14 flex-row bg-white p-2 leading-8 shadow-inner text-surface-contrast-50">
     <div class="m-auto flex w-full max-w-5xl justify-between">
@@ -58,16 +59,12 @@
         <ul
           class="flex grow flex-row items-center justify-end text-surface-contrast-50"
           class:gap-2={!isSmall}>
-          <li class="flex flex-row">
-            {#if destinationBridgeKey === Chains.ETH}
-              <VersionedLink
-                domain="bridge.pulsechain.com"
-                path="/#/transactions"
-                let:direct
-                let:path>
+          {#if isDeliveryRoute}
+            <li class="flex flex-row">
+              {#if destinationBridgeKey === Chains.ETH}
                 <a
                   aria-label="to recent bridge transactions on ethereum"
-                  href="{direct}{path}"
+                  href={directTxsLink}
                   target="_blank"
                   class="link">
                   <button
@@ -77,19 +74,22 @@
                     <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
                   </button>
                 </a>
-              </VersionedLink>
-            {:else if destinationBridgeKey === Chains.BNB}
-              <a
-                aria-label="to recent bridge transactions on bsc"
-                href="https://tokensex.link/explorer"
-                target="_blank"
-                class="link">
-                <button type="button" name="transactions" class="flex items-center justify-center">
-                  <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
-                </button>
-              </a>
-            {/if}
-          </li>
+              {:else if destinationBridgeKey === Chains.BNB}
+                <a
+                  aria-label="to recent bridge transactions on bsc"
+                  href="https://tokensex.link/explorer"
+                  target="_blank"
+                  class="link">
+                  <button
+                    type="button"
+                    name="transactions"
+                    class="flex items-center justify-center">
+                    <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
+                  </button>
+                </a>
+              {/if}
+            </li>
+          {/if}
           <li class="flex flex-row">
             <ModalWrapper
               triggerClasses="flex flex-row items-center px-2 py-1"

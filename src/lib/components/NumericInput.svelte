@@ -102,12 +102,10 @@
       return
     }
     let bestGuess = untrack(() => startingValue)
-    let failed = false
     try {
       const stripped = stripNonNumber(currentTextValue)
       bestGuess = parseUnits(stripped, decimals)
     } catch {
-      failed = true
       return
     }
     // if the parsed value fails, then we use the previous value or the best guess

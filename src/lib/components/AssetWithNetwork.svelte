@@ -5,10 +5,9 @@
   import { loading } from '$lib/stores/loading.svelte'
   import Image from './Image.svelte'
   import classNames from 'classnames'
-  import { availableChains } from '$lib/stores/lifi.svelte'
   import { chainsMetadata } from '$lib/stores/auth/constants'
-  import { toChain, type VisualChain } from '$lib/stores/auth/types'
-  import type { ExtendedChain } from '@lifi/sdk'
+  import { toChain } from '$lib/stores/auth/types'
+  import { zeroAddress } from 'viem'
 
   type Props = {
     class?: ClassParam
@@ -24,17 +23,14 @@
     class: className = '',
   }: Props = $props()
   const chainId = $derived(asset?.chainId ? Number(asset.chainId) : 0)
-  const chain = $derived(availableChains.get(chainId) ?? chainsMetadata[toChain(chainId)])
+  const chain = $derived(chainsMetadata[toChain(chainId)])
   const src = $derived(asset?.logoURI || assetSources(asset))
   const tokenClasses = $derived(`overflow-hidden absolute`)
   const classes = $derived(
     classNames('flex basis-auto relative text-surface-contrast-50', tokenSizeClasses, className),
   )
   const finishedLoading = $derived(chain && loading.isResolved('token'))
-  const nativeTokenOnChain = $derived(
-    (chain as ExtendedChain)?.nativeToken ?? (chain as VisualChain)?.nativeCurrency,
-  )
-  const nativeToken = $derived(nativeTokenOnChain.address === asset?.address)
+  const nativeToken = $derived(zeroAddress === asset?.address)
 </script>
 
 <span class={classes} title={asset?.symbol ?? ''}>

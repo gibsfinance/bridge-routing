@@ -16,6 +16,7 @@
 </script>
 
 <a href="https://li.fi/" target="_blank" class="inline-flex items-center gap-2">
+  <!-- eslint-disable-next-line -->
   <span class={classes}>{@html lifi}</span>
   <Icon icon="gis:direct" class="size-6 {position}" />
 </a>

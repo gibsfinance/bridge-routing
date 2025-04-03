@@ -30,10 +30,10 @@
   class:shadow={focused}
   class:hover:shadow-md={focused}
   class:bg-white={focused}
-  class:bg-surface-950-50={!focused}
+  class:bg-surface-50={!focused}
   class:cursor-not-allowed={disabled}
-  {onclick}
-  onkeypress={() => {}}>
+  role="button"
+  {onclick}>
   <div class="flex relative items-center flex-col w-full gap-1">
     {@render children()}
   </div>

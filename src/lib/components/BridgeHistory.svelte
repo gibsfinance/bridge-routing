@@ -4,7 +4,6 @@
   import Loader from './Loader.svelte'
   import { bridges } from '$lib/stores/history'
   import { accountState } from '$lib/stores/auth/AuthProvider.svelte'
-  // import BridgeHistoryTable from '../../backup/BridgeHistoryTable.svelte'
   const walletAccount = $derived(accountState.address)
 </script>
 
@@ -21,13 +20,8 @@ map out the progress of each bridge and display it to the user
     </div>
   </div>
 {:else if bridges.length}
-  <!-- bridges found -->
-  <!-- <div class="flex w-full justify-center">
-    <BridgeHistoryTable {bridges} />
-  </div> -->
 {:else}
   <div class="flex w-full items-center justify-center">
     <h5 class="text-center">No bridges found. Try to bridge now or check a different address.</h5>
   </div>
-  <!-- no bridges found -->
 {/if}

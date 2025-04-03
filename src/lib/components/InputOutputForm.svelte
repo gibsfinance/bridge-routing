@@ -1,7 +1,5 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import ExchangeInputDivider from './ExchangeInputDivider.svelte'
-
   type Props = {
     icon: string
     input: Snippet
@@ -13,12 +11,8 @@
     ondividerclick?: null | (() => void)
   }
   const { input, output, info, button, progress, divider }: Props = $props()
-  const classes = 'flex grow w-full card rounded-2xl preset-outline-surface-500 bg-surface-950-50'
+  const classes = 'flex grow w-full card rounded-2xl preset-outline-surface-500 bg-surface-50'
 </script>
-
-<!-- {#snippet divider()}
-  <ExchangeInputDivider onclick={ondividerclick} {icon} />
-{/snippet} -->
 
 <div class="flex relative">
   <div class="w-full relative flex flex-col gap-2">

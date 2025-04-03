@@ -7,15 +7,10 @@ import {
   accountState,
   wagmiAdapter,
   connect,
-  // modal,
 } from './auth/AuthProvider.svelte'
 import { encodeFunctionData, erc20Abi, maxUint256, zeroAddress, type Block, type Hex } from 'viem'
 import { type ApprovalParameters, checkAllowance } from './chain-read.svelte'
 import { loading } from './loading.svelte'
-// import { Connection, VersionedTransaction } from '@solana/web3.js'
-// import { PUBLIC_SOLANA_RPC_URL } from '$env/static/public'
-// import type { SolanaProvider } from '@lifi/sdk'
-// import Provider from '@walletconnect/universal-provider'
 
 export * from './chain-read.svelte'
 
