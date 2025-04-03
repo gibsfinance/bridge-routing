@@ -7,7 +7,7 @@
   import { page } from '$app/state'
   import { bridgeKey, incrementForcedRefresh } from '$lib/stores/input.svelte'
   import { Chains } from '$lib/stores/auth/types'
-  import { addDomain } from '$lib/stores/window.svelte'
+  import { addDomain, domains } from '$lib/stores/window.svelte'
   import { innerWidth } from 'svelte/reactivity/window'
   import Image from './Image.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
@@ -17,9 +17,12 @@
   import ConnectButton from './ConnectButton.svelte'
   const gibs = new URL('/images/1FAF0.svg', import.meta.url).href
 
+  const bridgeDomain = 'bridge.pulsechain.com'
   onMount(() => {
-    addDomain('bridge.pulsechain.com')
+    addDomain(bridgeDomain)
   })
+
+  const directTxsLink = $derived(domains.get(bridgeDomain) + '/#/transactions')
 
   const gotoHome = async () => {
     await goto('#/')
@@ -58,24 +61,21 @@
           class:gap-2={!isSmall}>
           <li class="flex flex-row">
             {#if destinationBridgeKey === Chains.ETH}
-              <VersionedLink
+              <!-- <VersionedLink
                 domain="bridge.pulsechain.com"
                 path="/#/transactions"
                 let:direct
-                let:path>
-                <a
-                  aria-label="to recent bridge transactions on ethereum"
-                  href="{direct}{path}"
-                  target="_blank"
-                  class="link">
-                  <button
-                    type="button"
-                    name="transactions"
-                    class="flex items-center justify-center">
-                    <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
-                  </button>
-                </a>
-              </VersionedLink>
+                let:path> -->
+              <a
+                aria-label="to recent bridge transactions on ethereum"
+                href={directTxsLink}
+                target="_blank"
+                class="link">
+                <button type="button" name="transactions" class="flex items-center justify-center">
+                  <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
+                </button>
+              </a>
+              <!-- </VersionedLink> -->
             {:else if destinationBridgeKey === Chains.BNB}
               <a
                 aria-label="to recent bridge transactions on bsc"

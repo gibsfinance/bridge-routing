@@ -23,10 +23,12 @@
   })
   const classes = $derived(classNames('inline mx-1', className))
   const linkClassNames = $derived(classNames('flex', linkClasses))
+  const href = $derived(`${d || explorer}${d ? '#' : ''}${path}`)
+  // $inspect(href)
 </script>
 
 <a
-  href="{d || explorer}{d ? '#' : ''}{path}"
+  {href}
   aria-label="direct{d ? ' to ipfs' : ''} page for {explorer}"
   target="_blank"
   class={linkClassNames}>
