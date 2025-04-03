@@ -30,7 +30,7 @@
   class:shadow={focused}
   class:hover:shadow-md={focused}
   class:bg-white={focused}
-  class:bg-surface-950-50={!focused}
+  class:bg-surface-50={!focused}
   class:cursor-not-allowed={disabled}
   role="button"
   {onclick}>

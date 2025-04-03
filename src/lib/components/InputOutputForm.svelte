@@ -11,7 +11,7 @@
     ondividerclick?: null | (() => void)
   }
   const { input, output, info, button, progress, divider }: Props = $props()
-  const classes = 'flex grow w-full card rounded-2xl preset-outline-surface-500 bg-surface-950-50'
+  const classes = 'flex grow w-full card rounded-2xl preset-outline-surface-500 bg-surface-50'
 </script>
 
 <div class="flex relative">
