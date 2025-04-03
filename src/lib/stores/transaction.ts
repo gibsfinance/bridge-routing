@@ -42,7 +42,8 @@ export const transactionButtonPress =
       steps,
       after,
       wait: async (hash) => {
-        await transactions.wait(hash as Hex, chainId)
+        const receipt = await transactions.wait(hash as Hex, chainId)
+        console.log(receipt)
       },
     })
   }
@@ -72,11 +73,10 @@ export const send = async ({
       console.log('txHash', txHash)
       toasts.submitted(toast, id)
       console.log('waiting for tx', txHash)
-      const receipt = await wait(txHash)
+      await wait(txHash)
       console.log('confirmed', txHash)
       toasts.confirmed(toast, id)
       incrementForcedRefresh()
-      console.log(receipt)
     }
   } finally {
     decrement()

@@ -746,7 +746,7 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     params.finalizedBlock = finalizedBlock
     if (blockNumber < receipt!.blockNumber) {
       console.log(
-        'tx has been mined, not yet finalized hash=%o current_block=%o finalized_block=%o receipt_block=%o',
+        'tx has been mined, not yet finalized hash=%o current=%o finalized=%o receipt=%o',
         receipt?.transactionHash,
         params.ticker.number,
         blockNumber,
