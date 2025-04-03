@@ -59,35 +59,37 @@
         <ul
           class="flex grow flex-row items-center justify-end text-surface-contrast-50"
           class:gap-2={!isSmall}>
-          <li class="flex flex-row">
-            {#if destinationBridgeKey === Chains.ETH}
-              <!-- <VersionedLink
-                domain="bridge.pulsechain.com"
-                path="/#/transactions"
-                let:direct
-                let:path> -->
-              <a
-                aria-label="to recent bridge transactions on ethereum"
-                href={directTxsLink}
-                target="_blank"
-                class="link">
-                <button type="button" name="transactions" class="flex items-center justify-center">
-                  <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
-                </button>
-              </a>
-              <!-- </VersionedLink> -->
-            {:else if destinationBridgeKey === Chains.BNB}
-              <a
-                aria-label="to recent bridge transactions on bsc"
-                href="https://tokensex.link/explorer"
-                target="_blank"
-                class="link">
-                <button type="button" name="transactions" class="flex items-center justify-center">
-                  <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
-                </button>
-              </a>
-            {/if}
-          </li>
+          {#if isDeliveryRoute}
+            <li class="flex flex-row">
+              {#if destinationBridgeKey === Chains.ETH}
+                <a
+                  aria-label="to recent bridge transactions on ethereum"
+                  href={directTxsLink}
+                  target="_blank"
+                  class="link">
+                  <button
+                    type="button"
+                    name="transactions"
+                    class="flex items-center justify-center">
+                    <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
+                  </button>
+                </a>
+              {:else if destinationBridgeKey === Chains.BNB}
+                <a
+                  aria-label="to recent bridge transactions on bsc"
+                  href="https://tokensex.link/explorer"
+                  target="_blank"
+                  class="link">
+                  <button
+                    type="button"
+                    name="transactions"
+                    class="flex items-center justify-center">
+                    <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
+                  </button>
+                </a>
+              {/if}
+            </li>
+          {/if}
           <li class="flex flex-row">
             <ModalWrapper
               triggerClasses="flex flex-row items-center px-2 py-1"
