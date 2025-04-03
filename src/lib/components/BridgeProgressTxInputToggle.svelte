@@ -9,6 +9,6 @@
 
 <Button
   onclick={showTxInputEdit}
-  class="opacity-0 hover:opacity-100 transition-opacity duration-100 text-surface-contrast-50 absolute top-full left-0">
+  class="opacity-0 hover:opacity-100 transition-opacity duration-100 text-surface-contrast-50 absolute left-0 translate-y-1/2 -translate-x-1/2">
   <Icon icon="mdi:pencil" class="size-4 flex" />
 </Button>

@@ -25,7 +25,7 @@
 
   const { oncomplete }: BridgeProgressProps = $props()
 
-  const destinationBlock = $derived(blocks.get(Number(bridgeKey.toChain)))
+  const originationChain = $derived(blocks.get(Number(bridgeKey.fromChain)))
   let txInputValue = $state<Hex | null>(null)
   $effect(() => {
     if (bridgeTx.value?.hash) {
@@ -70,13 +70,13 @@
   $effect(() => {
     const hash = bridgeTxHash
     const bridgeKey = bridgeTx.value?.bridgeKey as BridgeKey
-    if (!hash || !destinationBlock || !bridgeKey) {
+    if (!hash || !originationChain || !bridgeKey) {
       return
     }
     const result = liveBridgeStatus({
       bridgeKey,
       hash,
-      ticker: destinationBlock,
+      ticker: originationChain,
     })
     result.promise.then((liveResult) => {
       if (result.controller.signal.aborted) return
@@ -179,7 +179,8 @@
       }}
       class="border pl-6 pr-2 py-1 rounded-full text-xs h-full text-ellipsis text-surface-contrast-50 text-right focus:ring-0 {isValidTxHash
         ? 'border-success-500'
-        : 'border-error-200'}" />
+        : 'border-error-200'}"
+      autoFocus />
   </div>
 {:else if bridgeTx.value?.hash}
   <div class="flex flex-row w-full relative grow">

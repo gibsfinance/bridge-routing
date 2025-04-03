@@ -10,7 +10,6 @@ import {
   isHex,
   erc20Abi_bytes32,
   isAddress,
-  // bytesToHex,
 } from 'viem'
 import type { Block, Hex, TransactionReceipt, BlockTag } from 'viem'
 import { loading, resolved, type Cleanup } from './loading.svelte'
@@ -25,15 +24,6 @@ import { Chains, toChain } from '$lib/stores/auth/types'
 import { tokenToPair } from './utils'
 import { gql, GraphQLClient } from 'graphql-request'
 import { Cache } from './cache'
-// import { getTokenBalance as getTokenBalanceLifi, availableChains } from './lifi.svelte'
-// import { evmChainsById, getNetwork } from './auth/AuthProvider.svelte'
-// import { Block as BitcoinBlock } from 'bitcoinjs-lib'
-// import { PUBLIC_BITCOIN_RPC, PUBLIC_SOLANA_RPC_URL } from '$env/static/public'
-
-// type ExtendedBitcoinBlock = {
-//   block: BitcoinBlock
-//   number: number
-// }
 
 export const watchFinalizedBlocksForSingleChain = (
   chainId: number,
@@ -77,83 +67,6 @@ export const latestBaseFeePerGas = (chain: number) => {
   return blocks.get(chain)?.baseFeePerGas ?? 3_000_000_000n
 }
 
-// export const bitcoinBlockToEvmBlock = (b: ExtendedBitcoinBlock) => {
-//   return {
-//     number: BigInt(b.number),
-//     timestamp: BigInt(b.block.timestamp),
-//     hash: bytesToHex(b.block.getHash()!),
-//     parentHash: bytesToHex(b.block.prevHash!),
-//     baseFeePerGas: 7n,
-//     blobGasUsed: 0n,
-//     difficulty: 0n,
-//     excessBlobGas: 0n,
-//     extraData: '0x',
-//     gasLimit: 0n,
-//     gasUsed: 0n,
-//     logsBloom: '0x',
-//     miner: '0x',
-//     mixHash: '0x',
-//     nonce: '0x',
-//     receiptsRoot: '0x',
-//     sealFields: [],
-//     sha3Uncles: '0x',
-//     size: BigInt(b.block.bits),
-//     transactions: [],
-//     transactionsRoot: '0x',
-//     uncles: [],
-//     stateRoot: '0x',
-//     totalDifficulty: 0n,
-//   } as Block
-// }
-
-// const url = 'https://bitcoin-rpc.publicnode.com'
-// export const requestBitcoinRpc = async <T>(method: string, params: unknown[] = []) => {
-//   const res = await fetch(PUBLIC_BITCOIN_RPC, {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify({
-//       jsonrpc: '2.0',
-//       id: '0',
-//       method,
-//       params,
-//     }),
-//   })
-//   const json = (await res.json()) as { result: T; error: null | string; id: string }
-//   if (json.error) {
-//     throw new Error(json.error)
-//   }
-//   return json
-// }
-// export const solanaToEvmStyleBlock = (b: solanaWeb3.ParsedAccountsModeBlockResponse) => {
-//   return {
-//     number: BigInt(b.blockHeight!),
-//     timestamp: BigInt(b.blockTime!),
-//     hash: b.blockhash,
-//     parentHash: b.previousBlockhash as `0x${string}`,
-//     baseFeePerGas: 7n,
-//     blobGasUsed: 0n,
-//     difficulty: 0n,
-//     excessBlobGas: 0n,
-//     extraData: '0x',
-//     gasLimit: 0n,
-//     gasUsed: 0n,
-//     logsBloom: '0x',
-//     miner: '0x',
-//     mixHash: '0x',
-//     nonce: '0x',
-//     receiptsRoot: '0x',
-//     sealFields: [],
-//     sha3Uncles: '0x',
-//     size: 0n,
-//     transactions: [],
-//     transactionsRoot: '0x',
-//     uncles: [],
-//     stateRoot: '0x',
-//     totalDifficulty: 0n,
-//   } as Block
-// }
 export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
   if (!untrack(() => blocks.has(chain))) {
     // signals a "pending" state
@@ -163,104 +76,11 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
   let decrement: Cleanup = () => {}
   let cancelled = false
   if (current === 0) {
-    // console.log('gas increment', chain)
     untrack(() => loading.increment('gas'))
     decrement = _.once(() => {
-      // console.log('gas decrement', chain)
       untrack(() => loading.decrement('gas'))
     })
-    // const evmChain = evmChainsById.get(chain)
     let watcher: Cleanup | null = null
-    // if (!evmChain) {
-    //   const availableNetwork = availableChains.get(chain)
-    //   const network = getNetwork({
-    //     chainId: chain,
-    //     name: availableNetwork!.name,
-    //   })
-    //   if (network!.name === 'Solana') {
-    //     console.log(network)
-    //     const connection = new solanaWeb3.Connection(PUBLIC_SOLANA_RPC_URL)
-    //     const updateBlock = () => {
-    //       connection
-    //         .getBlockHeight({
-    //           commitment: 'confirmed',
-    //         })
-    //         .then((v) => {
-    //           if (!v || cancelled) return
-    //           return connection.getParsedBlock(v, { commitment: 'confirmed' })
-    //         })
-    //         .then((v) => {
-    //           if (!v || cancelled) return
-    //           decrement()
-    //           untrack(() => blocks.set(chain, solanaToEvmStyleBlock(v)))
-    //         })
-    //         .catch(() => {
-    //           decrement()
-    //           const now = Date.now()
-    //           untrack(() =>
-    //             blocks.set(
-    //               chain,
-    //               solanaToEvmStyleBlock({
-    //                 blockHeight: now,
-    //                 blockTime: now,
-    //                 blockhash: `0x${now.toString(16)}`,
-    //                 previousBlockhash: `0x${now.toString(16)}`,
-    //                 parentSlot: now - 1,
-    //                 transactions: [],
-    //               }),
-    //             ),
-    //           )
-    //         })
-    //     }
-    //     updateBlock()
-    //     const interval = setInterval(updateBlock, 60_000)
-    //     watcher = () => {
-    //       clearInterval(interval)
-    //     }
-    //   } else {
-    //     type BlockchainInfo = {
-    //       bestblockhash: string
-    //       blocks: number
-    //     }
-    //     const parseBlock = (hex: string) => {
-    //       return BitcoinBlock.fromHex(hex)
-    //     }
-    //     const getBlock = async () => {
-    //       return requestBitcoinRpc<BlockchainInfo>('getblockchaininfo').then(async ({ result }) => {
-    //         const blockHex = await requestBitcoinRpc<string>('getblock', [result.bestblockhash, 0])
-    //         const b = parseBlock(blockHex.result)
-    //         return {
-    //           block: b,
-    //           number: result.blocks,
-    //         } as ExtendedBitcoinBlock
-    //       })
-    //     }
-    //     let cancelled = false
-    //     const fetchBlock = async () => {
-    //       // const block = bitcoinAdapter.getBlock()
-    //       // const block = await fetch(url, {
-    //       //   method: 'GET',
-    //       //   headers: {
-    //       //     'Content-Type': 'application/json',
-    //       //   },
-    //       // }).then((res) => res.json())
-    //       // fetch(url, {})
-    //       const block = await getBlock()
-    //       if (cancelled) return
-    //       decrement()
-    //       console.log(block)
-    //       const evmStyleBlock = bitcoinBlockToEvmBlock(block)
-    //       console.log(block)
-    //       untrack(() => blocks.set(chain, evmStyleBlock))
-    //     }
-    //     fetchBlock()
-    //     const interval = setInterval(fetchBlock, 60_000)
-    //     watcher = () => {
-    //       cancelled = true
-    //       clearInterval(interval)
-    //     }
-    //   }
-    // } else {
     watcher = input.clientFromChain(chain).watchBlocks({
       emitOnBegin: true,
       emitMissed: true,
@@ -271,7 +91,6 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
         untrack(() => blocks.set(chain, block))
       },
     })
-    // }
     watchers.set(chain, watcher)
   }
   chainCounts.set(chain, current + 1)
@@ -325,18 +144,6 @@ export const getTokenBalance = ({ chainId, address, account }: TokenBalanceInput
                 }).read.balanceOf([account])
               })
               .catch(() => null)
-    // } else {
-    //   // if the wallet account is not a hex address,
-    //   // it is a solana, btc or other network address
-    //   getBalance = () =>
-    //     getTokenBalanceLifi({
-    //       chainId,
-    //       address: address,
-    //       account: account,
-    //     }).then((v) => {
-    //       // console.log('v', v)
-    //       return v?.amount ?? null
-    //     })
   }
   return loading.loadsAfterTick<bigint | null>(key, getBalance)()
 }
@@ -473,8 +280,6 @@ const links = _.memoize(
       calls: [
         { functionName: 'bridgedTokenAddress', args: [address] },
         { functionName: 'nativeTokenAddress', args: [address] },
-        // { functionName: 'homeTokenAddress', args: [address] },
-        // { functionName: 'foreignTokenAddress', args: [address] },
       ],
     })
   },
@@ -523,24 +328,6 @@ export const tokenBridgeInfo = async (
   const [, fromChain, toChain] = bridgeKey
   const assetInAddress =
     assetIn.address === zeroAddress ? nativeAssetOut[fromChain] : assetIn.address
-  // const args = bridgePathway.toHome
-  //   ? {
-  //       chainId: toChain,
-  //       target: bridgePathway.to,
-  //       address: assetInAddress,
-  //     }
-  //   : {
-  //       chainId: fromChain,
-  //       target: bridgePathway.from,
-  //       address: assetInAddress,
-  //   }
-  // if (bridgePathway.toHome) {
-
-  // } else {
-
-  // }
-  // const links = await tokenLinks(args)
-  // console.log(links)
   const [toMappings, fromMappings] = await Promise.all([
     links({
       chainId: Number(toChain),
@@ -637,88 +424,9 @@ export const loadAssetLink = loading.loadsAfterTick<
 >('token', ({ bridgeKey, assetIn }: { bridgeKey: input.BridgeKey; assetIn: Token | null }) =>
   tokenBridgeInfo(bridgeKey, assetIn),
 )
-// export const assetLink = derived<Stores, null | TokenBridgeInfo>(
-//   [input.bridgeKey, input.assetIn],
-//   ([bridgeKey, assetIn], set) => {
-//     set(null)
-//     if (!assetIn) {
-//       return noop
-//     }
-//     return loading.loadsAfterTick('token', () => tokenBridgeInfo([bridgeKey, assetIn]), set)
-//   },
-// )
-
 export const tokenOriginationChainId = (assetLink: TokenBridgeInfo | null) => {
   return assetLink?.originationChainId
 }
-//   derived<Stores, Chains | undefined>(
-//   [assetLink],
-//   ([$assetLink]) => {
-//     return $assetLink?.originationChainId
-//   },
-// )
-
-// export const checkApproval = async ([walletAccount, $bridgeAddress, address, publicClient]: {
-//   account: Hex | undefined,
-//   spender: Hex,
-//   Hex,
-//   PublicClient,
-// }) => {
-//   if (!walletAccount) {
-//     return 0n
-//   }
-//   const token = getContract({
-//     abi: erc20Abi,
-//     address,
-//     client: publicClient,
-//   })
-//   const allowance = await token.read.allowance([walletAccount, $bridgeAddress])
-//   return allowance
-// }
-
-// export const loadApproval = loading.loadsAfterTick<bigint>(
-//   'approval',
-//   ({
-//     walletAccount,
-//     bridgeKey,
-//     assetLink,
-//     publicClient,
-//   }: {
-//     walletAccount: Hex | undefined
-//     bridgeKey: input.BridgeKey
-//     assetLink: TokenBridgeInfo | null
-//     publicClient: PublicClient
-//   }) => {
-//     if (!bridgeKey || !assetLink || !walletAccount) {
-//       return 0n
-//     }
-//     const bridgeAddress = pathway(bridgeKey)!.from
-//     return checkApproval([walletAccount, bridgeAddress, assetLink.assetInAddress, publicClient])
-//   },
-// )
-// export const approval = derived(
-//   [
-//     walletAccount,
-//     input.bridgeKey,
-//     assetLink,
-//     input.fromPublicClient,
-//     input.forcedRefresh,
-//     origination.block,
-//   ],
-//   ([$walletAccount, bridgeKey, $assetLink, publicClient], set) => {
-//     if (!bridgeKey || !$assetLink || !$walletAccount) {
-//       return
-//     }
-//     const $bridgeAddress = pathway(bridgeKey)!.from
-//     return loading.loadsAfterTick(
-//       'approval',
-//       async () =>
-//         checkApproval([$walletAccount, $bridgeAddress, $assetLink.assetInAddress, publicClient]),
-//       set,
-//     )
-//   },
-//   0n,
-// )
 
 const pairAbi = parseAbi([
   'function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
@@ -929,7 +637,7 @@ export type ContinuedLiveBridgeStatusParams = LiveBridgeStatusParams & {
   count?: number
 }
 const statusList = Object.values(bridgeStatuses)
-const statusToIndex = (status: BridgeStatus) => {
+export const statusToIndex = (status: BridgeStatus) => {
   return statusList.indexOf(status)
 }
 const graphqlClient = _.memoize((url: string) => {
@@ -1009,19 +717,18 @@ export const liveBridgeStatus = loading.loadsAfterTick<
       return {
         ...params,
         status: bridgeStatuses.SUBMITTED,
-        statusIndex: statusToIndex(bridgeStatuses.SUBMITTED),
       }
     }
     return {
       ...params,
       status: bridgeStatuses.MINED,
-      statusIndex: statusToIndex(bridgeStatuses.MINED),
       receipt,
     }
   },
   async (params: ContinuedLiveBridgeStatusParams) => {
     if (!params) return null
-    const { statusIndex, receipt, bridgeKey } = params
+    const { status, receipt, bridgeKey } = params
+    const statusIndex = statusToIndex(status)
     if (statusIndex < statusToIndex(bridgeStatuses.MINED)) {
       return params
     }
@@ -1029,21 +736,31 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     if (!urls) return null
     // where the signing happens
     const fromMainnetForeign = bridgeKey[1] === Chains.ETH
-    const fromMainnetHome = bridgeKey[1] === Chains.PLS
-    const home = fromMainnetForeign || fromMainnetHome ? 369 : 943
-    const client = input.clientFromChain(home)
-    const [finalizedBlock, originationStatus] = await Promise.all([
+    const client = input.clientFromChain(Number(bridgeKey[1]))
+    const [finalizedBlock] = await Promise.all([
       client.getBlock({
         blockTag: 'finalized',
       }),
-      gqlRequest({
-        url: fromMainnetForeign ? urls.foreign : urls.home,
-        query: singleUserRequest,
-        params: {
-          hash: receipt!.transactionHash,
-        },
-      }) as Promise<SingleUserRequest>,
     ])
+    const blockNumber = finalizedBlock.number
+    params.finalizedBlock = finalizedBlock
+    if (blockNumber < receipt!.blockNumber) {
+      console.log(
+        'tx has been mined, not yet finalized hash=%o current_block=%o finalized_block=%o receipt_block=%o',
+        receipt?.transactionHash,
+        params.ticker.number,
+        blockNumber,
+        receipt!.blockNumber,
+      )
+      return params
+    }
+    const originationStatus = (await gqlRequest({
+      url: fromMainnetForeign ? urls.foreign : urls.home,
+      query: singleUserRequest,
+      params: {
+        hash: receipt!.transactionHash,
+      },
+    })) as SingleUserRequest
     console.log(originationStatus)
     if (!originationStatus.userRequests) {
       return params
@@ -1052,18 +769,11 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     if (!finalizedBlock || !userRequest?.messageId) {
       return params
     }
-    const blockNumber = finalizedBlock.number
-    params.finalizedBlock = finalizedBlock
-    if (blockNumber < receipt!.blockNumber) {
-      // console.log('tx has been mined', receipt?.transactionHash)
-      return params
-    }
     const count = !userRequest ? 0 : userRequest.message?.signatures?.length
     return {
       ...params,
       messageId: userRequest.messageId,
       status: bridgeStatuses.FINALIZED,
-      statusIndex: statusToIndex(bridgeStatuses.FINALIZED),
       count,
     }
   },
@@ -1100,7 +810,6 @@ export const liveBridgeStatus = loading.loadsAfterTick<
       return {
         ...params,
         status: bridgeStatuses.AFFIRMED,
-        statusIndex: statusToIndex(bridgeStatuses.AFFIRMED),
         deliveredHash: executions[0].txHash,
       }
     } else {
@@ -1108,13 +817,11 @@ export const liveBridgeStatus = loading.loadsAfterTick<
         return {
           ...params,
           status: bridgeStatuses.AFFIRMED,
-          statusIndex: statusToIndex(bridgeStatuses.AFFIRMED),
         }
       } else if ((params.count ?? 0) > 0) {
         return {
           ...params,
           status: bridgeStatuses.VALIDATING,
-          statusIndex: statusToIndex(bridgeStatuses.VALIDATING),
         }
       }
       return params
@@ -1122,7 +829,6 @@ export const liveBridgeStatus = loading.loadsAfterTick<
       // return {
       //   ...params,
       //   status: bridgeStatuses.VALIDATING,
-      //   statusIndex: statusToIndex(bridgeStatuses.VALIDATING),
       // }
     }
   },

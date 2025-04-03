@@ -249,9 +249,10 @@
         <ExchangeInputDivider
           class="flex order-2"
           verticalSizeClasses="h-0"
+          iconWrapperSizeClasses="size-10"
           iconWrapperColorClasses="-translate-y-1/2 -translate-x-1/2 left-1/2 absolute"
           onclick={ondividerclick}
-          icon="mdi:swap-horizontal" />
+          icon="ic:sharp-swap-calls" />
       {/snippet}
       {#snippet button()}
         <ConnectAndBridge />
