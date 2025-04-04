@@ -239,7 +239,7 @@
     </div>
     <ul class="flex grow flex-col overflow-y-scroll h-full">
       {#each subset as token}
-        <li class="flex hover:bg-surface-900-100 relative">
+        <li class="flex hover:bg-surface-50 relative">
           <Button
             class="relative flex grow cursor-pointer flex-row py-2 pr-2"
             onclick={() => selectToken(token)}>
