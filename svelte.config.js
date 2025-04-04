@@ -33,6 +33,12 @@ const config = {
     version: {
       name: [pkg.version, githash, new Date().toISOString()].join('_'),
     },
+    output:
+      process.env.NODE_ENV === 'production'
+        ? {
+            bundleStrategy: 'inline',
+          }
+        : undefined,
   },
 
   extensions: ['.svelte', '.svx'],
