@@ -35,4 +35,4 @@ jobs:
       - name: Upload build to Pinata
         env:
           PINATA_API_KEY: '${{ secrets.PINATA_API_KEY }}'
-        run: pinata-cli -a $PINATA_API_KEY && pinata-cli upload build/
+        run: pinata-cli -a $PINATA_API_KEY && pinata-cli -u build/
