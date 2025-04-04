@@ -22,6 +22,10 @@ jobs:
           run_install: true
       - name: Build project
         run: pnpm run build
+        env:
+          PUBLIC_NODE_ENV: {{ env.PUBLIC_NODE_ENV }}
+          PUBLIC_IMAGE_ROOT: {{ env.PUBLIC_IMAGE_ROOT }}
+          PUBLIC_WALLET_CONNECT_ID: {{ env.PUBLIC_WALLET_CONNECT_ID }}
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
