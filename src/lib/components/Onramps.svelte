@@ -42,7 +42,7 @@
       class:h-0={!onrampsOpen}
       class:h-8={onrampsOpen}
       class:mt-2={onrampsOpen}>
-      <li class="hover:bg-surface-900-100 border rounded-2xl overflow-hidden h-8">
+      <li class="hover:bg-surface-50-950 border rounded-2xl overflow-hidden h-8">
         <a
           href="https://zkp2p.xyz/swap?toToken=ETH{accountState.address
             ? `&recipientAddress=${accountState.address}`
@@ -55,7 +55,7 @@
           </span>
         </a>
       </li>
-      <li class="hover:bg-surface-900-100 border rounded-2xl overflow-hidden h-8">
+      <li class="hover:bg-surface-50-950 border rounded-2xl overflow-hidden h-8">
         <Button
           onclick={() => (lifiOpen = !lifiOpen)}
           class="flex flex-row gap-2 items-center text-surface-contrast-50 px-3 justify-between w-full [&>svg]:w-12">
@@ -76,7 +76,7 @@
         {/if}
       </li>
       <li
-        class="hover:bg-surface-900-100 border rounded-2xl overflow-hidden h-8 ml-auto text-base text-gray-500">
+        class="hover:bg-surface-50-950 border rounded-2xl overflow-hidden h-8 ml-auto text-base text-gray-500">
         <Button onclick={openOnRamp} class="px-2 leading-8">Others</Button>
       </li>
     </ul>

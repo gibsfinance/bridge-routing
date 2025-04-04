@@ -27,7 +27,7 @@
 
 <div
   class={classes}
-  class:hover:bg-surface-900-100={!disableHover}
+  class:hover:bg-surface-50={!disableHover}
   class:border={!hideChevron}
   class:shadow-sm={!hideChevron}
   title={token?.address}>

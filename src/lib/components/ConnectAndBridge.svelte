@@ -21,6 +21,7 @@
   import { getContext } from 'svelte'
   import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
   import Button from './Button.svelte'
+    import { bridgeTx } from '$lib/stores/storage.svelte'
 
   const toast: ToastContext = getContext('toast')
   const { shouldDeliver } = input
@@ -68,9 +69,14 @@
       toast,
       chainId: Number(input.bridgeKey.fromChain),
       steps: [
-        () => {
+        async () => {
           amountInBefore = formatUnits(bridgeSettings.amountToBridge, decimals)
-          return initiateBridge()
+          const hash = await initiateBridge()
+          bridgeTx.extend({
+            hash,
+            bridgeKey: input.bridgeKey.value,
+          })
+          return hash
         },
       ],
       after: () => {
