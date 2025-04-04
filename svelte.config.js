@@ -27,6 +27,9 @@ const config = {
     router: {
       type: 'hash',
     },
+    paths: {
+      relative: true,
+    },
     version: {
       name: [pkg.version, githash, new Date().toISOString()].join('_'),
     },
