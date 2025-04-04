@@ -1,0 +1,25 @@
+name: Release Latest
+
+on:
+  push:
+    branches:
+      - refs/heads/master
+      - refs/heads/staging
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build project
+        run: |
+          pnpm install
+          pnpm run build
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'build'
+          tag: 'latest'
+          allowUpdates: true
+          skipIfReleaseExists: false
