@@ -22,17 +22,27 @@ jobs:
         with:
           version: 10
           run_install: true
+      - name: Install Pinata CLI
+        run: pnpm i -g pinata-upload-cli
       - name: Build project
         run: pnpm run build
         env:
           PUBLIC_NODE_ENV: '{{ env.PUBLIC_NODE_ENV }}'
           PUBLIC_IMAGE_ROOT: '{{ env.PUBLIC_IMAGE_ROOT }}'
           PUBLIC_WALLET_CONNECT_ID: '{{ env.PUBLIC_WALLET_CONNECT_ID }}'
-      - name: Create release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: 'build/**/*'
-          tag: 'latest-${{ github.ref_name }}'
-          allowUpdates: true
-          skipIfReleaseExists: false
-          makeLatest: 'latest'
+      - name: Copy info
+        run: cp package.json build/version.json
+      - name: Upload build to Pinata
+        env:
+          PINATA_API_KEY: '${{ secrets.PINATA_API_KEY }}'
+        run: |
+          pinata-cli -as $PINATA_API_KEY
+          pinata-cli upload build/
+      # - name: Create release
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     artifacts: 'build/**/*'
+      #     tag: 'latest-${{ github.ref_name }}'
+      #     allowUpdates: true
+      #     skipIfReleaseExists: false
+      #     makeLatest: 'latest'
