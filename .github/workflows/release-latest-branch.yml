@@ -38,11 +38,3 @@ jobs:
         run: |
           pinata-cli -as $PINATA_API_KEY
           pinata-cli upload build/
-      # - name: Create release
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     artifacts: 'build/**/*'
-      #     tag: 'latest-${{ github.ref_name }}'
-      #     allowUpdates: true
-      #     skipIfReleaseExists: false
-      #     makeLatest: 'latest'
