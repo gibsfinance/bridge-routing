@@ -8,6 +8,8 @@ on:
 
 jobs:
   release:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -29,7 +31,8 @@ jobs:
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: 'build'
-          tag: 'latest'
+          artifacts: 'build/**/*'
+          tag: 'latest-${{ github.ref_name }}'
           allowUpdates: true
           skipIfReleaseExists: false
+          makeLatest: 'latest'
