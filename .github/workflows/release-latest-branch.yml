@@ -3,8 +3,8 @@ name: Release Latest
 on:
   push:
     branches:
-      - refs/heads/master
-      - refs/heads/staging
+      - master
+      - staging
 
 jobs:
   release:
