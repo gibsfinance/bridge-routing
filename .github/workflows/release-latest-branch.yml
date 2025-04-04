@@ -36,5 +36,5 @@ jobs:
         env:
           PINATA_API_KEY: '${{ secrets.PINATA_API_KEY }}'
         run: |
-          pinata-cli -as $PINATA_API_KEY
+          pinata-cli -a $PINATA_API_KEY
           pinata-cli upload build/
