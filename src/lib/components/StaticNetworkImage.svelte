@@ -5,6 +5,7 @@
   import Image from './Image.svelte'
   import * as imageLinks from '../stores/image-links'
   import type { ClassValue } from 'svelte/elements'
+  import clsx from 'clsx'
 
   type Props = {
     network: number | string
@@ -21,9 +22,11 @@
     icon,
   }: Props = $props()
   const visualChain = $derived((chainsMetadata[toChain(network)] || null) as VisualChain | null)
-  const classes = $derived([sizeClasses, 'network-icon'])
-  const providerWrapperClasses = $derived([providerSizeClasses, 'absolute -bottom-1 -left-1 rounded-full'])
-  const wrapperClasses = $derived(['relative', sizeClasses])
+  const classes = $derived(clsx([sizeClasses, 'network-icon']))
+  const providerWrapperClasses = $derived(
+    clsx([providerSizeClasses, 'absolute -bottom-1 -left-1 rounded-full']),
+  )
+  const wrapperClasses = $derived(clsx(['relative', sizeClasses]))
 </script>
 
 <div class={wrapperClasses}>

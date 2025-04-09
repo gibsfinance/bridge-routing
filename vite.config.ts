@@ -41,4 +41,14 @@ export default defineConfig({
     }),
   ],
   base: './',
+  // build: {
+  //   assetsDir: 'images',
+  //   assetsInlineLimit: Infinity,
+  // },
+  resolve: {
+    alias: {
+      $public: './public',
+      $lib: './src/lib',
+    },
+  },
 })

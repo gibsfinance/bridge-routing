@@ -113,7 +113,6 @@
   )
   const askForAllowance = $derived(
     transactionButtonPress({
-      toast,
       chainId: Number(Chains.PLS),
       steps: [
         async () => {
@@ -131,7 +130,6 @@
   )
   const swapOnPulseX = $derived(
     transactionButtonPress({
-      toast,
       chainId: Number(Chains.PLS),
       steps: [
         async () => {

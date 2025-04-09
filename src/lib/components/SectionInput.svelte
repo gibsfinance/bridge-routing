@@ -131,7 +131,7 @@
           {token}
           account={overrideAccount ?? accountState.address}
           showLoader
-          roundedClasses={null}
+          roundedClasses=""
           hideSymbol
           decimalLimit={9}
           {onbalanceupdate}

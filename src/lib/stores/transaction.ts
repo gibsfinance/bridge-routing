@@ -3,19 +3,19 @@ import type { Hex } from 'viem'
 import { loading } from './loading.svelte'
 import { incrementForcedRefresh } from './input.svelte'
 import { noop } from 'lodash'
-import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
+import { toaster } from './toast'
 
 export const toasts = {
-  submitted: (toast: ToastContext, id: string) => {
-    toast.create({
+  submitted: (id: string) => {
+    toaster.create({
       id,
       description: `Transaction submitted`,
       type: 'info',
       duration: 20_000,
     })
   },
-  confirmed: (toast: ToastContext, id: string) => {
-    toast.create({
+  confirmed: (id: string) => {
+    toaster.create({
       id,
       description: `Transaction confirmed`,
       type: 'success',
@@ -26,19 +26,16 @@ export const toasts = {
 
 export const transactionButtonPress =
   ({
-    toast,
     steps,
     chainId,
     after = noop,
   }: {
-    toast: ToastContext
     steps: (() => Promise<Hex | undefined | null>)[]
     chainId: number
     after?: () => void
   }) =>
   async () => {
     send({
-      toast,
       steps,
       after,
       wait: async (hash) => {
@@ -49,12 +46,10 @@ export const transactionButtonPress =
   }
 
 export const send = async ({
-  toast,
   steps,
   after = noop,
   wait,
 }: {
-  toast: ToastContext
   steps: (() => Promise<string | undefined | null>)[]
   after?: () => void
   wait: (txHash: string) => Promise<void>
@@ -71,11 +66,11 @@ export const send = async ({
       }
       const id = `tx-${txHash}`
       console.log('txHash', txHash)
-      toasts.submitted(toast, id)
+      toasts.submitted(id)
       console.log('waiting for tx', txHash)
       await wait(txHash)
       console.log('confirmed', txHash)
-      toasts.confirmed(toast, id)
+      toasts.confirmed(id)
       incrementForcedRefresh()
     }
   } finally {

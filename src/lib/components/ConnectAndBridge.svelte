@@ -1,5 +1,6 @@
 <script lang="ts">
   // import { chainsMetadata } from '../stores/auth/constants'
+  import { formatUnits, type Hex, zeroAddress } from 'viem'
   import * as transactions from '../stores/transactions'
   import {
     accountState,
@@ -7,7 +8,6 @@
     switchNetwork,
   } from '../stores/auth/AuthProvider.svelte'
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
-  import { formatUnits, type Hex, zeroAddress } from 'viem'
   import * as input from '../stores/input.svelte'
   import {
     assetLink,
@@ -18,12 +18,9 @@
   } from '../stores/chain-events.svelte'
   import { transactionButtonPress } from '../stores/transaction'
   import { connect } from '../stores/auth/AuthProvider.svelte'
-  import { getContext } from 'svelte'
-  import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
-  import Button from './Button.svelte'
   import { bridgeTx } from '../stores/storage.svelte'
+  import Button from './Button.svelte'
 
-  const toast: ToastContext = getContext('toast')
   const { shouldDeliver } = input
 
   const tokenBalance = $derived(fromTokenBalance.value ?? 0n)
@@ -48,7 +45,6 @@
   let amountInBefore = ''
   const sendIncreaseApproval = $derived(
     transactionButtonPress({
-      toast,
       chainId: Number(input.bridgeKey.fromChain),
       steps: [
         async () => {
@@ -66,7 +62,6 @@
   const decimals = $derived(bridgeSettings.assetIn.value!.decimals)
   const sendInitiateBridge = $derived(
     transactionButtonPress({
-      toast,
       chainId: Number(input.bridgeKey.fromChain),
       steps: [
         async () => {

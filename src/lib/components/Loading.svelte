@@ -1,7 +1,10 @@
 <script lang="ts">
-  import Loader from '../components/Loader.svelte'
-  import { loading as l } from '../stores/loading.svelte'
   import type { Snippet } from 'svelte'
+
+  import { loading as l } from '../stores/loading.svelte'
+
+  import Loader from './Loader.svelte'
+
   type Props = {
     class?: string
     key?: string | string[] | null

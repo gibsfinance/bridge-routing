@@ -2,10 +2,9 @@
   import './app.css'
   import Nav from './lib/components/Nav.svelte'
   import Footer from './lib/components/Footer.svelte'
-  // import { ToastProvider } from '@skeletonlabs/skeleton-svelte'
-  import { Toaster, createToaster } from '@skeletonlabs/skeleton-svelte';
+  import { Toaster } from '@skeletonlabs/skeleton-svelte'
+  import { toaster } from './lib/stores/toast'
 
-  const toaster = createToaster();
   const { children } = $props()
 </script>
 

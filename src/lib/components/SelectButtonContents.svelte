@@ -1,8 +1,10 @@
 <script lang="ts">
-  import AssetWithNetwork from './AssetWithNetwork.svelte'
-  import type { Token } from '../types.svelte'
   import Icon from '@iconify/svelte'
   import type { ClassValue } from 'svelte/elements'
+
+  import type { Token } from '../types.svelte'
+
+  import AssetWithNetwork from './AssetWithNetwork.svelte'
 
   type Props = {
     token: Token | null

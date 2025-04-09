@@ -28,11 +28,11 @@
     contentBorderClass = 'border border-surface-200',
   }: Props = $props()
   let open = $state(false)
-  const classes = $derived([wrapperClasses])
-  const triggerBase = $derived([triggerClasses])
-  const contentWidth = $derived([contentWidthClass])
-  const contentHeight = $derived([contentHeightClass])
-  const contentBorder = $derived([contentBorderClass])
+  const classes = $derived(clsx([wrapperClasses]))
+  const triggerBase = $derived(clsx([triggerClasses]))
+  const contentWidth = $derived(clsx([contentWidthClass]))
+  const contentHeight = $derived(clsx([contentHeightClass]))
+  const contentBorder = $derived(clsx([contentBorderClass]))
   const contentBase = $derived(
     clsx([
       'card bg-white space-y-2 text-surface-contrast-50',

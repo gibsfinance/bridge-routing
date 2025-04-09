@@ -1,15 +1,18 @@
 <script lang="ts">
   import { formatEther } from 'viem'
-  import UndercompensatedWarning from '../components/warnings/Undercompensated.svelte'
-  import Warning from './Warning.svelte'
+
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
-  import { humanReadableNumber } from '../stores/utils'
   import * as utils from '../utils.svelte'
-  import Loading from './Loading.svelte'
   import type { TokenMetadata } from '../types.svelte'
   import * as input from '../stores/input.svelte'
-  import Tooltip from './Tooltip.svelte'
   import { Chains } from '../stores/auth/types'
+  import { humanReadableNumber } from '../stores/utils'
+
+  import UndercompensatedWarning from './warnings/Undercompensated.svelte'
+  import Warning from './Warning.svelte'
+  import Loading from './Loading.svelte'
+  import Tooltip from './Tooltip.svelte'
+
   const { bridgeKey, shouldDeliver } = input
   const feeType = $derived(bridgeSettings.feeType)
   const oneEther = 10n ** 18n

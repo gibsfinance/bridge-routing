@@ -1,12 +1,15 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import GreenBadge from '../components/Badge.svelte'
+  import { SvelteMap } from 'svelte/reactivity'
+  import _ from 'lodash'
+
   import { chainsMetadata } from '../stores/auth/constants'
+  import { toChain } from '../stores/auth/types'
+
+  import GreenBadge from './Badge.svelte'
   import Input from './Input.svelte'
   import Button from './Button.svelte'
-  import { SvelteMap } from 'svelte/reactivity'
-  import { toChain } from '../stores/auth/types'
-  import _ from 'lodash'
+
   type Data = [number, string[]][]
   type Props = {
     data: Data

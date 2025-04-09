@@ -90,14 +90,13 @@
       {chains}
       {tokens}
       selectedToken={bridgeSettings.assetIn.value}
-      chainId={Number(bridgeKey.fromChain)}
-      onsubmit={(tkn, chainId) => {
+      onsubmit={(tkn) => {
         if (tkn) {
-          if (chainId && chainId !== Number(bridgeKey.fromChain)) {
-            chooseTokenAndNetworkSubmit(tkn, chainId)
-          } else {
-            chooseTokenSubmit(tkn)
-          }
+          // if (chainId && chainId !== Number(bridgeKey.fromChain)) {
+          //   chooseTokenAndNetworkSubmit(tkn, chainId)
+          // } else {
+          // }
+          chooseTokenSubmit(tkn)
         }
         close()
       }} />

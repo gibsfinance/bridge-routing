@@ -31,7 +31,6 @@
   import OnboardButton from './OnboardButton.svelte'
   import { transactionButtonPress } from '../stores/transaction'
   import { getContext } from 'svelte'
-  import type { ToastContext } from '@skeletonlabs/skeleton-svelte'
   import GuideStep from './GuideStep.svelte'
   import GuideShield from './GuideShield.svelte'
   import {
@@ -56,8 +55,6 @@
   import { chainsMetadata } from '../stores/auth/constants'
   import Icon from '@iconify/svelte'
   import Button from './Button.svelte'
-
-  const toast = getContext('toast') as ToastContext
 
   const defaultPulsexTokens = {
     bridgeTokenIn: zeroAddress,
@@ -215,7 +212,6 @@
   })
   const incrementApprovalToPulsechain = $derived(
     transactionButtonPress({
-      toast,
       chainId: Number(bridgeKey.fromChain),
       steps: [
         async () => {
@@ -233,7 +229,6 @@
   )
   const initiateBridgeToPulsechain = $derived(
     transactionButtonPress({
-      toast,
       chainId: Number(bridgeKey.fromChain),
       steps: [
         async () => {
@@ -391,7 +386,6 @@
   })
   const incrementPulsexAllowance = $derived(
     transactionButtonPress({
-      toast,
       chainId: Number(Chains.PLS),
       steps: [
         async () => {
@@ -409,7 +403,6 @@
   )
   const swapTokensOnPulsex = $derived(
     transactionButtonPress({
-      toast,
       chainId: Number(Chains.PLS),
       steps: [
         async () => {

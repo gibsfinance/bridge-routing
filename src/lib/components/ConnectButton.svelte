@@ -1,11 +1,14 @@
 <script lang="ts">
-  import { accountState, connect } from '../stores/auth/AuthProvider.svelte'
-  import Button from '../components/Button.svelte'
-  import Image from './Image.svelte'
   import Icon from '@iconify/svelte'
+
+  import { accountState, connect } from '../stores/auth/AuthProvider.svelte'
   import { toChain } from '../stores/auth/types'
   import * as imageLinks from '../stores/image-links'
   import { chainsMetadata } from '../stores/auth/constants'
+
+  import Button from './Button.svelte'
+  import Image from './Image.svelte'
+
   const targetChain = $derived.by(() => {
     const id = accountState.chainId
     if (!id) return null

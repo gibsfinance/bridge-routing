@@ -1,11 +1,11 @@
 <script lang="ts">
   import { chainsMetadata } from '../stores/auth/constants'
   import Image from './Image.svelte'
-  const tokensexProvider = new URL('/images/providers/tokensex.svg', import.meta.url).href
-
+  import tokensexProvider from '$public/images/providers/tokensex.svg'
+  import type { ClassValue } from 'svelte/elements'
   type Props = {
     provider?: string
-    sizeClasses?: string
+    sizeClasses?: ClassValue
   }
   const { provider = 'pulsechain', sizeClasses = 'size-4' }: Props = $props()
 

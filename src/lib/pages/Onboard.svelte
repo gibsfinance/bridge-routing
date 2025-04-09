@@ -4,8 +4,7 @@
   import Onboard from '../components/Onboard.svelte'
   import OnboardSettings from '../components/OnboardSettings.svelte'
   import Headline from '../components/Headline.svelte'
-
-  const onboardImageFuzzy = 'images/runners.jpg'
+  import onboardImageFuzzy from '$public/images/runners.jpg'
 </script>
 
 <div class="flex flex-col w-full">

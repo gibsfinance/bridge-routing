@@ -3,6 +3,7 @@
   import type { Snippet } from 'svelte'
   import type { ClassValue } from 'svelte/elements'
   import { clsx } from 'clsx'
+
   type Props = {
     placement?: 'top' | 'bottom' | 'left' | 'right'
     positioning?: {
@@ -40,7 +41,7 @@
   }: Props = $props()
   let open = $state(false)
   const classes = $derived(clsx(['flex', className]))
-  const positionerClasses = $derived(['pointer-events-none', positionerClassName])
+  const positionerClasses = $derived(clsx(['pointer-events-none', positionerClassName]))
   const triggerClasses = $derived(clsx(['flex', triggerClassNames]))
   const contentBase = $derived(
     clsx([

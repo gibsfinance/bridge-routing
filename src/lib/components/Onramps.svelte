@@ -1,12 +1,15 @@
 <script lang="ts">
-  import Button from '../components/Button.svelte'
-  import { accountState, modal } from '../stores/auth/AuthProvider.svelte'
-  import LifiWidget from './bridges/LifiWidget.svelte'
-  import lifiLogo from '../images/providers/lifi.svg?raw'
-  import Section from './Section.svelte'
   import Icon from '@iconify/svelte'
-  import Image from './Image.svelte'
+
+  import lifiLogo from '$public/images/providers/lifi.svg?raw'
+
+  import { accountState, modal } from '../stores/auth/AuthProvider.svelte'
   import { onboardShowOnramps } from '../stores/storage.svelte'
+
+  import Button from './Button.svelte'
+  import LifiWidget from './bridges/LifiWidget.svelte'
+  import Section from './Section.svelte'
+  import Image from './Image.svelte'
 
   const toggleOnramps = () => {
     onboardShowOnramps.value = !onboardShowOnramps.value

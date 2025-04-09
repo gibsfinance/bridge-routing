@@ -13,7 +13,8 @@
   import RPC from './RPC.svelte'
   import Button from './Button.svelte'
   import ConnectButton from './ConnectButton.svelte'
-  const gibs = new URL('/images/1FAF0.svg', import.meta.url).href
+  // import in order to link appropriately
+  import gibs from '$public/images/1FAF0.svg'
 
   const bridgeDomain = 'bridge.pulsechain.com'
   onMount(() => {

@@ -1,8 +1,8 @@
 import { mainnet, pulsechain, bsc, sepolia, pulsechainV4 } from '@reown/appkit/networks'
 import { type ChainsMetadata, Chains, Provider } from './types'
 import * as imageLinks from '../../stores/image-links'
-const bnbNetworkUrl = 'images/networks/0x38.png'
-const plsV4NetworkUrl = 'images/networks/0x3af.png'
+import bnbNetworkUrl from '$public/images/networks/0x38.png'
+import plsV4NetworkUrl from '$public/images/networks/0x3af.png'
 
 /**
  * all of the chains that are enabled in this dapp
