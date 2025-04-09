@@ -25,9 +25,9 @@ jobs:
       - name: Build project
         run: npm run build
         env:
-          PUBLIC_NODE_ENV: ${{ env.PUBLIC_NODE_ENV }}
-          PUBLIC_IMAGE_ROOT: ${{ env.PUBLIC_IMAGE_ROOT }}
-          PUBLIC_WALLET_CONNECT_ID: ${{ env.PUBLIC_WALLET_CONNECT_ID }}
+          PUBLIC_NODE_ENV: '${{ env.PUBLIC_NODE_ENV }}'
+          PUBLIC_IMAGE_ROOT: '${{ env.PUBLIC_IMAGE_ROOT }}'
+          PUBLIC_WALLET_CONNECT_ID: '${{ env.PUBLIC_WALLET_CONNECT_ID }}'
           NODE_ENV: 'production'
       - name: Copy info
         run: cp package.json dist/version.json
