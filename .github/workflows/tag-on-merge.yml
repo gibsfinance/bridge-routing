@@ -19,9 +19,10 @@ jobs:
       - name: Build project
         run: npm run build
         env:
-          PUBLIC_NODE_ENV: ${{ env.PUBLIC_NODE_ENV }}
-          PUBLIC_IMAGE_ROOT: ${{ env.PUBLIC_IMAGE_ROOT }}
-          PUBLIC_WALLET_CONNECT_ID: ${{ env.PUBLIC_WALLET_CONNECT_ID }}
+          PUBLIC_NODE_ENV: 'production'
+          PUBLIC_IMAGE_ROOT: 'https://gib.show'
+          PUBLIC_WALLET_CONNECT_ID: '1f8a963aa1809cada8560d560360107d'
+          NODE_ENV: 'production'
       - name: Read version from package.json
         id: get_version
         run: echo "VERSION=$(node -p 'require(`./package.json`).version')" >> $GITHUB_ENV
