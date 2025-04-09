@@ -41,10 +41,13 @@ export default defineConfig({
     }),
   ],
   base: './',
-  // build: {
-  //   assetsDir: 'images',
-  //   assetsInlineLimit: Infinity,
-  // },
+  preview: {
+    allowedHosts: [
+      'gibs.finance',
+      'bridge-routing-staging.up.railway.app',
+      'healthcheck.railway.app',
+    ],
+  },
   resolve: {
     alias: {
       $public: './public',
