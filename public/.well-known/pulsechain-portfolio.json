@@ -1,0 +1,14 @@
+{
+  "name": "Gibs Finance dApps",
+  "dapps": [
+    {
+      "name": "Gibs",
+      "icon": "https://raw.githubusercontent.com/gibsfinance/bridge-routing/refs/heads/master/static/favicon.png",
+      "folder": "gibs",
+      "repoUrl": "https://github.com/gibsfinance/bridge-routing",
+      "webUrl": "https://gibs.finance/#/onboard",
+      "tags": ["Bridge", "Onramp", "Onboard", "Swap"],
+      "description": "Gibs is the easiest way to onboard users to PulseChain and move funds between chains."
+    }
+  ]
+}
