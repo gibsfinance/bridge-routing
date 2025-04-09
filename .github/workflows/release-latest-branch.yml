@@ -30,9 +30,9 @@ jobs:
           PUBLIC_WALLET_CONNECT_ID: '{{ env.PUBLIC_WALLET_CONNECT_ID }}'
           NODE_ENV: 'production'
       - name: Copy info
-        run: cp package.json build/version.json
+        run: cp package.json dist/version.json
       - name: Upload build to Pinata
         env:
           NODE_ENV: 'production'
           PINATA_API_KEY: '${{ secrets.PINATA_API_KEY }}'
-        run: pinata-cli -a $PINATA_API_KEY && pinata-cli -u build/
+        run: pinata-cli -a $PINATA_API_KEY && pinata-cli -u dist/
