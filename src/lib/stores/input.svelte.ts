@@ -222,13 +222,17 @@ const nativeAssets = Object.entries(chainsMetadata).map(([chain, metadata]) => {
 export const loadLists = loading.loadsAfterTick<Token[] | null>(
   'loadLists',
   async (_input: undefined, c: AbortController) => {
-    const opts = { signal: c.signal, mode: 'no-cors' } as const
-    return await Promise.all(imageLists.map((l) => fetch(l, opts).then((r) => {
-      if (!r.ok) {
-        return fetch(l, opts)
-      }
-      return r
-    })))
+    const opts = { signal: c.signal } as const
+    return await Promise.all(
+      imageLists.map((l) =>
+        fetch(l, opts).then((r) => {
+          if (!r.ok) {
+            return fetch(l, opts)
+          }
+          return r
+        }),
+      ),
+    )
   },
   (lists: Response[]) => {
     return Promise.all(

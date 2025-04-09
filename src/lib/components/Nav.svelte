@@ -14,7 +14,7 @@
   import Button from './Button.svelte'
   import ConnectButton from './ConnectButton.svelte'
   // import in order to link appropriately
-  import gibs from '$public/images/1FAF0.svg'
+  const gibs = 'images/1FAF0.svg'
 
   const bridgeDomain = 'bridge.pulsechain.com'
   onMount(() => {

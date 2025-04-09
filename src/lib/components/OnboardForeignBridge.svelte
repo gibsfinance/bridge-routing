@@ -121,8 +121,9 @@
   })
   const bridgeTokenIn = $derived.by(() => {
     return (
-      possibleBridgeTokenInputs.find((t) => t.address === defaultTokenAddresses.bridgeTokenIn) ??
-      null
+      possibleBridgeTokenInputs.find(
+        (t) => getAddress(t.address) === getAddress(defaultTokenAddresses.bridgeTokenIn),
+      ) ?? null
     )
   })
   $effect(() => {
@@ -135,17 +136,23 @@
   })
   const bridgeTokenOut = $derived.by(() => {
     return (
-      possiblePulsexTokens.find((t) => t.address === defaultTokenAddresses.bridgeTokenOut) ?? null
+      possiblePulsexTokens.find(
+        (t) => getAddress(t.address) === getAddress(defaultTokenAddresses.bridgeTokenOut),
+      ) ?? null
     )
   })
   const pulsexTokenIn = $derived.by(() => {
     return (
-      possiblePulsexTokens.find((t) => t.address === defaultTokenAddresses.pulsexTokenIn) ?? null
+      possiblePulsexTokens.find(
+        (t) => getAddress(t.address) === getAddress(defaultTokenAddresses.pulsexTokenIn),
+      ) ?? null
     )
   })
   const finalTokenOutput = $derived.by(() => {
     return (
-      possiblePulsexTokens.find((t) => t.address === defaultTokenAddresses.pulsexTokenOut) ?? null
+      possiblePulsexTokens.find(
+        (t) => getAddress(t.address) === getAddress(defaultTokenAddresses.pulsexTokenOut),
+      ) ?? null
     )
   })
   const bridgingToPulsechain = $derived(activeOnboardStep.value === 1)

@@ -51,6 +51,7 @@ export default defineConfig({
   resolve: {
     alias: {
       $public: './public',
+      $images: './src/images',
       $lib: './src/lib',
     },
   },

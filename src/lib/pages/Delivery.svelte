@@ -9,7 +9,7 @@
   import Loading from '../components/Loading.svelte'
   import { Chains, type Provider, type ChainKey } from '../stores/auth/types'
   import { getAddress, isAddress, type Hex, zeroAddress } from 'viem'
-  import bridgeImageFuzzyWebP from '$public/images/bridge-fuzzy.webp'
+  const bridgeImageFuzzyWebP = 'images/bridge-fuzzy.webp'
   const provider = page.params.provider as Provider
   const fromChain = page.params.fromChain as ChainKey
   const toChain = page.params.toChain as ChainKey

@@ -1,8 +1,12 @@
 <script lang="ts">
-  import { chainsMetadata } from '../stores/auth/constants'
-  import Image from './Image.svelte'
-  import tokensexProvider from '$public/images/providers/tokensex.svg'
   import type { ClassValue } from 'svelte/elements'
+
+  import { chainsMetadata } from '../stores/auth/constants'
+
+  import Image from './Image.svelte'
+
+  const tokensexProvider = 'images/providers/tokensex.svg'
+
   type Props = {
     provider?: string
     sizeClasses?: ClassValue

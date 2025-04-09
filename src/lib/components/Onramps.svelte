@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
 
-  import lifiLogo from '$public/images/providers/lifi.svg?raw'
+  import lifiLogo from '../../images/providers/lifi.svg?raw'
 
   import { accountState, modal } from '../stores/auth/AuthProvider.svelte'
   import { onboardShowOnramps } from '../stores/storage.svelte'

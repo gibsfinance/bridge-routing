@@ -1,5 +1,5 @@
 <script lang="ts">
-  import lifi from '$public/images/providers/lifi.svg?raw'
+  import lifi from '../../images/providers/lifi.svg?raw'
   import Icon from '@iconify/svelte'
   import type { ClassValue } from 'svelte/elements'
   type Props = {

@@ -1,7 +1,7 @@
 <script lang="ts">
   import BlurryImage from './BlurryImage.svelte'
   import VersionedLink from './VersionedLink.svelte'
-  import futureBridge from '../../../public/images/future-bridge.webp'
+  const futureBridge = 'images/future-bridge.webp'
 </script>
 
 <div class="bg-slate-100">
