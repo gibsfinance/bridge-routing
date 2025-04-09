@@ -5,7 +5,7 @@
   import OnboardSettings from '../components/OnboardSettings.svelte'
   import Headline from '../components/Headline.svelte'
 
-  const onboardImageFuzzy = new URL('/images/runners.jpg', import.meta.url).href
+  const onboardImageFuzzy = 'images/runners.jpg'
 </script>
 
 <div class="flex flex-col w-full">
