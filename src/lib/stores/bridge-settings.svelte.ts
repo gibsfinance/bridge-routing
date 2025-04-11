@@ -1567,7 +1567,10 @@ export const assetSources = (
       }),
     ]),
   )
-  const sorted = _.sortBy(inputs, [(a: MinTokenInfo) => a.chainId]) as MinTokenInfo[]
+  const sorted = _.sortBy(inputs, [
+    (a: MinTokenInfo) => a.chainId,
+    (a: MinTokenInfo) => a.address.toLowerCase(),
+  ]) as MinTokenInfo[]
   const sources = sorted.map((a: MinTokenInfo) => `${a.chainId}/${a.address}`.toLowerCase())
   return imageLinks.images(sources.concat(extraSources))
 }
