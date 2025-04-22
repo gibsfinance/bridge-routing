@@ -3,7 +3,7 @@
   import Home from './lib/pages/Home.svelte'
   import Delivery from './lib/pages/Delivery.svelte'
   import Onboard from './lib/pages/Onboard.svelte'
-  import { page } from './lib/stores/page.svelte.ts'
+  import { page } from './lib/stores/page.svelte'
 </script>
 
 <Layout>
