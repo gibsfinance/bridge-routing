@@ -20,8 +20,18 @@
       <div class="flex flex-col text-lg w-full gap-4">
         <div class="my-16 max-w-lg mx-auto w-full">
           <Headline
-            ><span class:opacity-70={!onboardActive}>Onboard</span>/<span
-              class:opacity-70={!swapActive}>Swap</span
+            ><button
+              type="button"
+              onclick={() => {
+                activeOnboardStep.value = 1
+              }}
+              class:opacity-70={!onboardActive}>Onboard</button
+            >/<button
+              type="button"
+              onclick={() => {
+                activeOnboardStep.value = 2
+              }}
+              class:opacity-70={!swapActive}>Swap</button
             ></Headline>
           <OnboardSettings />
           <Onboard />
