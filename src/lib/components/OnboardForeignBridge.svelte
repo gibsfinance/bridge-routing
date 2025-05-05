@@ -463,14 +463,14 @@
   const buttonText = $derived.by(() => {
     if (activeOnboardStep.value === 1) {
       if (needsAllowanceForPulsechainBridge) {
-        return 'Approve'
+        return `Approve ${bridgeTokenIn?.symbol} to Pulsechain`
       }
-      return 'Bridge'
+      return `Bridge ${bridgeTokenIn?.symbol} to Pulsechain`
     }
     if (needsAllowanceForPulsex) {
-      return 'Approve'
+      return `Approve ${tokenInPulsex?.symbol} for PulseX`
     }
-    return 'Swap'
+    return `Swap ${tokenInPulsex?.symbol} for ${tokenOutPulsex?.symbol}`
   })
   const loadingKey = $derived.by(() => {
     if (activeOnboardStep.value === 1) {
