@@ -94,10 +94,9 @@
   const skipApproval = $derived.by(() => {
     return isBridgeToken || hasSufficientApproval || inputIsNative
   })
+  const assetIn = $derived(bridgeSettings.assetIn.value)
   const minAmount = $derived(
-    minBridgeAmountIn.get(
-      minBridgeAmountInKey(input.bridgeKey.value, bridgeSettings.assetIn.value),
-    ),
+    minBridgeAmountIn.get(minBridgeAmountInKey(input.bridgeKey.value, assetIn)),
   )
   const disabled = $derived.by(() => {
     if (!accountState?.address) {
@@ -120,21 +119,23 @@
     }
     return !input.amountIn.value || input.amountIn.value > tokenBalance
   })
+  const fromNetwork = $derived(appkitNetworkById.get(Number(input.bridgeKey.fromChain)))
+  const toNetwork = $derived(appkitNetworkById.get(Number(input.bridgeKey.toChain)))
   const text = $derived.by(() => {
     if (!accountState?.address) {
       return 'Connect'
     }
     if (!isRequiredChain) {
-      return 'Switch Network'
+      return `Switch Wallet to ${fromNetwork?.name}`
     }
     if (!skipApproval) {
-      return 'Approve'
+      return `Approve ${assetIn?.symbol}`
     }
     const requiresDelivery = bridgeSettings.bridgePathway?.requiresDelivery
     if ((!shouldDeliver.value && requiresDelivery) || !requiresDelivery) {
-      return 'Bridge'
+      return `Bridge ${assetIn?.symbol} to ${toNetwork?.name}`
     }
-    return 'Bridge and Deliver'
+    return `Bridge+Deliver ${assetIn?.symbol} to ${toNetwork?.name}`
   })
   const switchToChain = $derived(() =>
     switchNetwork(appkitNetworkById.get(Number(input.bridgeKey.fromChain))),

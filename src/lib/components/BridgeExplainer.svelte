@@ -1,13 +1,18 @@
 <script lang="ts">
+  import Icon from '@iconify/svelte'
   import BlurryImage from './BlurryImage.svelte'
   import VersionedLink from './VersionedLink.svelte'
+  import { scrollToTop } from '../utils.svelte'
   const futureBridge = 'images/future-bridge.webp'
 </script>
 
 <div class="bg-slate-100">
   <div class="container px-2 py-10 text-center m-auto text-slate-950">
-    <h3 class="text-5xl font-italiana font-bold">Token Delivery</h3>
-    <h4 class="text-2xl mt-4">Trustless, decentralised token delivery</h4>
+    <a href="#/onboard" onclick={scrollToTop}>
+      <h3 class="text-5xl font-italiana font-bold flex flex-row items-center gap-2 justify-center"
+        >Token Delivery<Icon icon="hugeicons:bridge" /></h3>
+    </a>
+    <h4 class="text-2xl mt-4">Trustless, decentralised, delivery</h4>
   </div>
 </div>
 
@@ -28,7 +33,7 @@
         preferred off-ramp provider.
       </p>
       <p class="mt-4 sm:mt-8 text-left">
-        At Gibs.finance, user security is paramount. The contracts keep users in control of their
+        At gibs.finance, user security is paramount. The contracts keep users in control of their
         funds at all times. Even if the delivery service's signing capabilities are disabled, users
         can always get their tokens out by completing the bridge as they normally would via the <VersionedLink
           domain="bridge.pulsechain.com" /> ui, meaning there is no extra risk of losing your tokens.

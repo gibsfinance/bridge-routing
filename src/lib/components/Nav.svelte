@@ -46,7 +46,7 @@
         type="button"
         onkeypress={gotoHome}
         onclick={gotoHome}
-        class="link font-italiana flex flex-row pr-2 leading-8 uppercase">
+        class="cursor-pointer items-center font-italiana flex flex-row pr-2 pl-0 leading-8 uppercase">
         <Image
           src={gibs}
           alt="a yellow hand with index finger and thub rubbing together"
@@ -70,6 +70,7 @@
                     type="button"
                     name="transactions"
                     class="flex items-center justify-center">
+                    {#if !isSmall}Txs{/if}
                     <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
                   </button>
                 </a>
@@ -91,9 +92,10 @@
           {/if}
           <li class="flex flex-row">
             <ModalWrapper
-              triggerClasses="flex flex-row items-center px-2 py-1"
+              triggerClasses="flex flex-row items-center px-2 py-1 gap-1"
               contentHeightClass="max-h-[460px] h-full">
               {#snippet button()}
+                {#if !isSmall}RPC{/if}
                 <Icon icon="gravity-ui:plug-connection" height="1.2em" width="1.2em" />
               {/snippet}
               {#snippet contents({ close })}
@@ -115,15 +117,17 @@
               <button
                 type="button"
                 name="bridge"
-                class="link"
+                class="link gap-1"
                 onkeypress={gotoNativeDelivery}
                 onclick={gotoNativeDelivery}>
-                <Icon icon="icon-park-solid:bridge-one" height="1.6em" width="1.6em" /></button>
+                {#if !isSmall}Delivery{/if}
+                <Icon icon="hugeicons:bridge" height="1.6em" width="1.6em" /></button>
             </li>
           {/if}
           {#if !isOnboardRoute}
             <li class="flex flex-row items-center">
-              <Button class="flex flex-row items-center px-2 py-1" onclick={gotoOnboard}>
+              <Button class="flex flex-row items-center px-2 py-1 gap-1" onclick={gotoOnboard}>
+                {#if !isSmall}Onboard{/if}
                 <Icon icon="mingcute:run-fill" stroke-width="1.5" height="1.6em" width="1.6em" />
               </Button>
             </li>

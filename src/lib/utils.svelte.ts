@@ -189,3 +189,10 @@ export const jsonAnyParse = (_key: string, value: unknown) => {
   }
   return value
 }
+
+export const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  })
+}

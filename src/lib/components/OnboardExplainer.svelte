@@ -1,12 +1,17 @@
 <script lang="ts">
+  import Icon from '@iconify/svelte'
   import BlurryImage from './BlurryImage.svelte'
   import LifiLink from './LifiLink.svelte'
+  import { scrollToTop } from '../utils.svelte'
   const dashAfterCrypto = 'images/dash-after-crypto.jpg'
 </script>
 
 <div class="bg-slate-100">
   <div class="container px-2 py-10 text-center m-auto text-slate-950">
-    <h3 class="text-5xl font-italiana font-bold">Onboard</h3>
+    <a href="#/onboard" onclick={scrollToTop}>
+      <h3 class="text-5xl font-italiana font-bold flex flex-row items-center gap-2 justify-center"
+        >Onboard<Icon icon="mingcute:run-fill" /></h3>
+    </a>
     <h4 class="text-2xl mt-4">move tokens from any chain to PulseChain</h4>
   </div>
 </div>
@@ -18,8 +23,8 @@
         >The latest updates to gibs.finance include onramping pathways for users to onboard to
         PulseChain with just a few clicks of a button. In order to move from anywhere in the crypto
         ecosystem, solutions like <LifiLink /> and other onramping tools are utilized to ensure minimal
-        risk and optimal price. We can provide users with a seamless and efficient way to transfer assets
-        to PulseChain.</p>
+        risk and optimal price. Users will find a seamless and efficient way to transfer assets to PulseChain,
+        currently with zero fee.</p>
       <p class="items-center"
         >Because of <LifiLink /> support for multiple types of chains, such as Bitcoin and Solana, the
         process for bridging to PulseChain has never been easier.</p>
