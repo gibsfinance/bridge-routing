@@ -31,7 +31,7 @@
 
   <a
     aria-label="github repository"
-    href="https://github.com/orgs/gibsfinance/repositories"
+    href="https://github.com/gibsfinance/bridge-routing/issues"
     target="_blank"
     class="mr-2">
     <Button
