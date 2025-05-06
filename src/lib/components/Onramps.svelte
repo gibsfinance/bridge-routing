@@ -2,6 +2,7 @@
   import Icon from '@iconify/svelte'
 
   import lifiLogo from '../../images/providers/lifi.svg?raw'
+  import coinbaseLogo from '../../images/providers/coinbase.svg?raw'
 
   import { accountState, modal } from '../stores/auth/AuthProvider.svelte'
   import { onboardShowOnramps } from '../stores/storage.svelte'
@@ -19,6 +20,21 @@
     modal.open({
       view: 'OnRampProviders',
     })
+  }
+  const openCoinbase = () => {
+    const url = new URL('https://pay.coinbase.com/buy/select-asset')
+    url.searchParams.set('appId', 'bf18c88d-495a-463b-b249-0b9d3656cf5e')
+    url.searchParams.set(
+      'addresses',
+      JSON.stringify({
+        [accountState.address!]: ['ethereum'],
+      }),
+    )
+    url.searchParams.set('assets', JSON.stringify(['ETH', 'WBTC', 'USDC', 'USDT', 'DAI']))
+    url.searchParams.set('partnerUserId', '0xAF2ce0189f46f5663715b0b9ED2a10eA924AB9B0')
+    url.searchParams.set('defaultNetwork', 'ethereum')
+    url.searchParams.set('defaultExperience', 'buy')
+    window.open(url, 'coinbase-onramp', 'width=400,height=600')
   }
   let lifiOpen = $state(false)
 </script>
@@ -44,20 +60,32 @@
       class:h-0={!onrampsOpen}
       class:h-8={onrampsOpen}
       class:mt-2={onrampsOpen}>
-      <li class="hover:bg-surface-50 border rounded-2xl overflow-hidden h-8">
+      <li class="hover:bg-surface-50 border rounded-2xl overflow-hidden h-8 flex">
+        <Button
+          onclick={accountState.address ? openCoinbase : () => modal.open({ view: 'Connect' })}
+          class="flex flex-row items-center text-surface-contrast-50 pl-3 justify-between w-full">
+          <span class="h-full flex leading-8 text-base">Coinbase</span>
+          <span
+            class="size-8 items-center flex justify-center overflow-hidden rounded-full scale-90 [&>svg]:w-8 translate-x-[1px]">
+            <!-- <Image src="https://zkp2p.xyz/logo512.png" sizeClasses="size-6" /> -->
+            {@html coinbaseLogo}
+          </span>
+        </Button>
+      </li>
+      <li class="hover:bg-surface-50 border rounded-2xl overflow-hidden h-8 flex">
         <a
           href="https://zkp2p.xyz/swap?toToken=ETH{accountState.address
             ? `&recipientAddress=${accountState.address}`
             : ''}"
           target="_blank"
-          class="flex flex-row gap-1 items-center text-surface-contrast-50 px-3 justify-between w-full h-8">
+          class="flex flex-row gap-1 items-center text-surface-contrast-50 pl-3 justify-between w-full h-8">
           <span class="h-full leading-8 text-base">ZKP2P</span>
           <span class="size-8 items-center flex justify-center">
             <Image src="https://zkp2p.xyz/logo512.png" sizeClasses="size-6" />
           </span>
         </a>
       </li>
-      <li class="hover:bg-surface-50 border rounded-2xl overflow-hidden h-8">
+      <li class="hover:bg-surface-50 border rounded-2xl overflow-hidden h-8 flex">
         <Button
           onclick={() => (lifiOpen = !lifiOpen)}
           class="flex flex-row gap-2 items-center text-surface-contrast-50 px-3 justify-between w-full [&>svg]:w-12">
