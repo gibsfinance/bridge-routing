@@ -31,7 +31,6 @@
       }),
     )
     url.searchParams.set('assets', JSON.stringify(['ETH', 'WBTC', 'USDC', 'USDT', 'DAI']))
-    url.searchParams.set('partnerUserId', '0xAF2ce0189f46f5663715b0b9ED2a10eA924AB9B0')
     url.searchParams.set('defaultNetwork', 'ethereum')
     url.searchParams.set('defaultExperience', 'buy')
     window.open(url, 'coinbase-onramp', 'width=400,height=600')
