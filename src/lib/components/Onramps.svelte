@@ -67,7 +67,6 @@
           <span class="h-full flex leading-8 text-base">Coinbase</span>
           <span
             class="size-8 items-center flex justify-center overflow-hidden rounded-full scale-90 [&>svg]:w-8 translate-x-[1px]">
-            <!-- <Image src="https://zkp2p.xyz/logo512.png" sizeClasses="size-6" /> -->
             {@html coinbaseLogo}
           </span>
         </Button>
