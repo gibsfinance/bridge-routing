@@ -23,7 +23,7 @@
   }
   const openCoinbase = () => {
     const url = new URL('https://pay.coinbase.com/buy/select-asset')
-    url.searchParams.set('appId', 'bf18c88d-495a-463b-b249-0b9d3656cf5e')
+    url.searchParams.set('appId', '00e61e2f-b25d-4dd0-8d6e-9b3bb91c9764')
     url.searchParams.set(
       'addresses',
       JSON.stringify({
