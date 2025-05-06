@@ -33,6 +33,7 @@
     url.searchParams.set('assets', JSON.stringify(['ETH', 'WBTC', 'USDC', 'USDT', 'DAI']))
     url.searchParams.set('defaultNetwork', 'ethereum')
     url.searchParams.set('defaultExperience', 'buy')
+    url.searchParams.set('partnerUserId', accountState.address!)
     window.open(url, 'coinbase-onramp', 'width=400,height=600')
   }
   let lifiOpen = $state(false)
