@@ -8,7 +8,7 @@
 
 <div class="bg-slate-100">
   <div class="container px-2 py-10 text-center m-auto text-slate-950">
-    <a href="#/onboard" onclick={scrollToTop}>
+    <a href="#/delivery" onclick={scrollToTop}>
       <h3 class="text-5xl font-italiana font-bold flex flex-row items-center gap-2 justify-center"
         >Token Delivery<Icon icon="hugeicons:bridge" /></h3>
     </a>
