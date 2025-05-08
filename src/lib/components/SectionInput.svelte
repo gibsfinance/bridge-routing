@@ -29,7 +29,7 @@
     dashWhenCompressed?: boolean
     overrideAccount?: string | null
     oninput?: (values: InputValue) => bigint | undefined | void
-    value: string | bigint | null
+    value: bigint | null
     modal?: Snippet<[{ close: () => void }]>
     radio?: Snippet
     underinput?: Snippet
@@ -48,7 +48,7 @@
     disabled = false,
     focused = false,
     overrideAccount,
-    value,
+    value: val,
     valueLoadingKey,
     inputWarning,
     compressed = false,
@@ -61,6 +61,22 @@
     onclick,
   }: Props = $props()
   const sectionDisabled = $derived(readonlyInput && readonlyTokenSelect)
+  let value = $state(val)
+  $effect(() => {
+    value = val
+  })
+  const humanReadable = $derived.by(() => {
+    if (!readonlyInput) {
+      return null
+    }
+    return typeof value === 'bigint' && value !== 0n
+      ? humanReadableNumber(value as bigint, {
+          decimals: token?.decimals ?? 0,
+        })
+      : _.isString(value)
+        ? value
+        : '-'
+  })
 </script>
 
 <Section {id} {focused} disabled={sectionDisabled} {compressed} {onclick}>
@@ -80,15 +96,6 @@
     {#if compressed && dashWhenCompressed}
       <span class="h-10 leading-10 font-inter text-[36px] tracking-tight">-</span>
     {:else if readonlyInput}
-      {@const valIsNumber = typeof value === 'bigint'}
-      {@const humanReadable =
-        valIsNumber && value !== 0n
-          ? humanReadableNumber(value, {
-              decimals: token?.decimals ?? 0,
-            })
-          : _.isString(value)
-            ? value
-            : '-'}
       <span
         class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-surface-contrast-50 h-10 leading-10 font-inter tracking-tight"
         style:font-size={`${largeInputFontScaler(humanReadable?.length ?? 0)}px`}
