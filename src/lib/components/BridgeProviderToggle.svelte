@@ -27,8 +27,10 @@
   <Button class="flex flex-row items-center gap-0 justify-center" onclick={toggleProvider}>
     <StaticNetworkImage network={input.bridgeKey.fromChain} sizeClasses="size-4" />
     <Icon icon="jam:chevron-right" />
-    <ProviderIcon provider={input.bridgeKey.provider} />
-    <Icon icon="jam:chevron-right" />
+    {#if input.bridgeKey.provider !== Provider.PULSECHAIN}
+      <ProviderIcon provider={input.bridgeKey.provider} />
+      <Icon icon="jam:chevron-right" />
+    {/if}
     <StaticNetworkImage network={input.bridgeKey.toChain} sizeClasses="size-4" />
   </Button>
 </div>

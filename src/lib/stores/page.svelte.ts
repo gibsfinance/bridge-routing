@@ -16,17 +16,18 @@ export class Page {
     this.val.changing = false
   }
   set value(raw: string) {
-    history.pushState(null, '', `#${raw}`)
+    const current = new URL(document.location.href)
+    history.pushState(null, '', `${current.pathname}#${raw}`)
     this.val = {
       raw,
       changing: true,
     }
   }
   url = $derived.by(() => {
-    return new URL(`${window.location.origin}${window.location.pathname}#${this.val}`)
+    return new URL(`${window.location.origin}${window.location.pathname}#${this.val.raw}`)
   })
   params = $derived.by(() => {
-    const [provider, fromChain, toChain, assetInAddress] = this.url.pathname.split('/').slice(1)
+    const [provider, fromChain, toChain, assetInAddress] = this.url.hash.split('/').slice(2)
     if (provider && fromChain && toChain && assetInAddress) {
       return {
         provider,
