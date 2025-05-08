@@ -6,6 +6,8 @@
   import * as nav from '../stores/nav.svelte'
   import { inferBridgeKey } from '../stores/bridge-settings.svelte'
   import { zeroAddress } from 'viem'
+  import StaticNetworkImage from './StaticNetworkImage.svelte'
+  import Icon from '@iconify/svelte'
   const toggleProvider = () => {
     const nextProvider =
       input.bridgeKey.provider === Provider.PULSECHAIN ? Provider.TOKENSEX : Provider.PULSECHAIN
@@ -21,8 +23,14 @@
   }
 </script>
 
-<div class="flex flex-row bg-surface-50 p-0.5 rounded-full size-5">
-  <Button class="flex flex-row items-center gap-2 justify-center" onclick={toggleProvider}>
-    <ProviderIcon provider={input.bridgeKey.provider} />
+<div class="flex flex-row bg-surface-50 p-0.5 rounded-full h-5 border">
+  <Button class="flex flex-row items-center gap-0 justify-center" onclick={toggleProvider}>
+    <StaticNetworkImage network={input.bridgeKey.fromChain} sizeClasses="size-4" />
+    <Icon icon="jam:chevron-right" />
+    {#if input.bridgeKey.provider !== Provider.PULSECHAIN}
+      <ProviderIcon provider={input.bridgeKey.provider} />
+      <Icon icon="jam:chevron-right" />
+    {/if}
+    <StaticNetworkImage network={input.bridgeKey.toChain} sizeClasses="size-4" />
   </Button>
 </div>

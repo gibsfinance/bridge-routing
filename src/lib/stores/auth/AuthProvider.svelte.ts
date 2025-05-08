@@ -58,6 +58,8 @@ export const appkitNetworkList = [
   networks.berachain,
 ] as unknown as [CaipNetwork, ...CaipNetwork[]]
 
+(networks.bsc as any).name = 'BSC'
+
 export const appkitNetworkIds = new Set(appkitNetworkList.map((n) => n.id))
 export const appkitNetworkById = new Map<string | number, CaipNetwork>(
   appkitNetworkList.map((n) => [n.id, n] as [string | number, CaipNetwork]),

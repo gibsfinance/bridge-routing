@@ -428,6 +428,7 @@ export const clientFromChain = (chainId: number) => {
   // if (chainId === 56) {
   //   console.trace()
   // }
+  console.log(chainId, urls)
   const transport = !urls?.length
     ? http()
     : fallback(

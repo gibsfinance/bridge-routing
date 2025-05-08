@@ -9,26 +9,29 @@
   import Loading from '../components/Loading.svelte'
   import { Chains, type Provider, type ChainKey } from '../stores/auth/types'
   import { getAddress, isAddress, type Hex, zeroAddress } from 'viem'
+  import { onMount } from 'svelte'
   const bridgeImageFuzzyWebP = 'images/bridge-fuzzy.webp'
-  const provider = page.params.provider as Provider
-  const fromChain = page.params.fromChain as ChainKey
-  const toChain = page.params.toChain as ChainKey
-  const bridgeKey = [provider, Chains[fromChain], Chains[toChain]] as input.BridgeKey
+  const provider = $derived(page.params.provider as Provider)
+  const fromChain = $derived(page.params.fromChain as ChainKey)
+  const toChain = $derived(page.params.toChain as ChainKey)
+  const bridgeKey = $derived([provider, Chains[fromChain], Chains[toChain]] as input.BridgeKey)
 
-  if (!pathway(bridgeKey)) {
-    const bridgeKeyPath = input.toPath(input.defaultBridgeKey)
-    const assetInAddress = page.params.assetInAddress ?? zeroAddress
-    goto(`#/delivery/${bridgeKeyPath}/${assetInAddress}`)
-  } else {
-    input.bridgeKey.value = bridgeKey
-    let assetInAddress = page.params.assetInAddress as Hex | null
-    if (assetInAddress && isAddress(assetInAddress)) {
-      assetInAddress = getAddress(assetInAddress)
+  onMount(() => {
+    if (!pathway(bridgeKey)) {
+      const bridgeKeyPath = input.toPath(input.defaultBridgeKey)
+      const assetInAddress = page.params.assetInAddress ?? zeroAddress
+      goto(`#/delivery/${bridgeKeyPath}/${assetInAddress}`)
     } else {
-      assetInAddress = null
+      input.bridgeKey.value = bridgeKey
+      let assetInAddress = page.params.assetInAddress as Hex | null
+      if (assetInAddress && isAddress(assetInAddress)) {
+        assetInAddress = getAddress(assetInAddress)
+      } else {
+        assetInAddress = null
+      }
+      input.bridgeKey.assetInAddress = assetInAddress
     }
-    input.bridgeKey.assetInAddress = assetInAddress
-  }
+  })
 </script>
 
 <div class="flex w-full bg-slate-950">

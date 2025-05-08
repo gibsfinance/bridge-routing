@@ -55,9 +55,7 @@
         <Loading />
       </button>
       <div class="flex grow content-end items-center">
-        <ul
-          class="flex grow flex-row items-center justify-end text-surface-contrast-50"
-          class:gap-2={!isSmall}>
+        <ul class="flex grow flex-row items-center justify-end text-surface-contrast-50">
           {#if isDeliveryRoute}
             <li class="flex flex-row">
               {#if destinationBridgeKey === Chains.ETH}
@@ -83,7 +81,8 @@
                   <button
                     type="button"
                     name="transactions"
-                    class="flex items-center justify-center">
+                    class="flex gap-1 items-center justify-center">
+                    {#if !isSmall}Txs{/if}
                     <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
                   </button>
                 </a>

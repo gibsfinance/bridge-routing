@@ -413,6 +413,7 @@
       chainId: Number(Chains.PLS),
       steps: [
         async () => {
+          console.log(pulsexQuoteResult)
           const transactionInfo = getTransactionDataFromTrade(
             Number(Chains.PLS),
             pulsexQuoteResult!,
@@ -587,14 +588,16 @@
       chains={[Number(Chains.PLS)]}
       selectedChain={Number(Chains.PLS)}
       tokens={possiblePulsexTokens}
+      selectedToken={tokenInPulsex}
       onsubmit={(token) => {
         if (token) {
           defaultOnboardTokens.extend({
             pulsexTokenIn: token.address,
           })
+          pulsexQuoteResult = null
         }
         close()
-      }} />
+      }}></TokenSelect>
   {/snippet}
 </SectionInput>
 <SectionInput
@@ -612,7 +615,24 @@
     if (!swappingOnPulsex) {
       activeOnboardStep.value = 2
     }
-  }} />
+  }}>
+  {#snippet modal({ close })}
+    <TokenSelect
+      chains={[Number(Chains.PLS)]}
+      selectedChain={Number(Chains.PLS)}
+      tokens={possiblePulsexTokens}
+      selectedToken={finalTokenOutput}
+      onsubmit={(token) => {
+        if (token) {
+          defaultOnboardTokens.extend({
+            pulsexTokenOut: token.address,
+          })
+          pulsexQuoteResult = null
+        }
+        close()
+      }}></TokenSelect>
+  {/snippet}
+</SectionInput>
 <OnboardButton
   disabled={buttonDisabled}
   {requiredChain}
