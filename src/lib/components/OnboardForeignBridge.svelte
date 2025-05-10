@@ -106,6 +106,12 @@
         amountIn.value > maxCrossPulsechainBridge
       )
     }
+    // console.log('needsAllowanceForPulsex', needsAllowanceForPulsex)
+    if (needsAllowanceForPulsex) {
+      // console.log('needs allowance cannot disable button')
+      return !pulsexTokenIn?.address
+    }
+    // console.log(swapDisabled, !pulsexQuoteMatchesLatest)
     return swapDisabled || !pulsexQuoteMatchesLatest
   })
   $effect(() => {
@@ -240,8 +246,11 @@
       steps: [
         async () => {
           const tx = await transactions.sendTransaction({
+            ...transactions.options(
+              Number(bridgeKey.fromChain),
+              blocks.get(Number(bridgeKey.fromChain))!,
+            ),
             account: accountState.address as Hex,
-            chainId: Number(bridgeKey.fromChain),
             ...bridgeSettings.transactionInputs,
           })
           bridgeTx.extend({
@@ -396,7 +405,6 @@
       chainId: Number(Chains.PLS),
       steps: [
         async () => {
-          if (swapDisabled) return
           return await transactions.checkAndRaiseApproval({
             token: tokenInPulsex!.address! as Hex,
             spender: swapRouterAddress,
@@ -413,19 +421,17 @@
       chainId: Number(Chains.PLS),
       steps: [
         async () => {
-          console.log(pulsexQuoteResult)
           const transactionInfo = getTransactionDataFromTrade(
             Number(Chains.PLS),
             pulsexQuoteResult!,
           )
           const tx = await transactions.sendTransaction({
+            ...transactions.options(Number(Chains.PLS), latestPulseBlock!),
             data: transactionInfo.calldata as Hex,
             to: swapRouterAddress,
             gas: BigInt(pulsexQuoteResult!.gasEstimate!),
             value: BigInt(transactionInfo.value),
-            chainId: Number(Chains.PLS),
-            maxFeePerGas: latestPulseBlock!.baseFeePerGas! * 2n,
-            maxPriorityFeePerGas: latestPulseBlock!.baseFeePerGas! / 5n,
+            account: accountState.address as Hex,
           })
           return tx
         },
@@ -440,17 +446,22 @@
   })
   const swapPulsexStep = $derived.by(() => {
     if (needsAllowanceForPulsex) {
+      console.log('incrementPulsexAllowance')
       return incrementPulsexAllowance
     }
+    console.log('swapTokensOnPulsex')
     return swapTokensOnPulsex
   })
   const onButtonClick = $derived.by(() => {
     if (!accountState.address) {
+      console.log('connect')
       return connect
     }
     if (bridgingToPulsechain) {
+      console.log('bridge')
       return bridgeTokensToPulsechainStep
     }
+    console.log('swap')
     return swapPulsexStep
   })
   const requiredChain = $derived.by(() => {
@@ -600,6 +611,7 @@
       }}></TokenSelect>
   {/snippet}
 </SectionInput>
+<BridgeProgress />
 <SectionInput
   label="Output"
   token={finalTokenOutput}

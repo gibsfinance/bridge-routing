@@ -31,9 +31,10 @@
     return requiredChain.id === Number(accountState.chainId)
   })
   const disabled = $derived.by(() => {
-    if (!loading.isResolved('user')) {
-      return true
-    }
+    // if (!loading.isResolved('user')) {
+    //   return true
+    // }
+    // console.log(accountState.connected, isRequiredChain, disabledMain)
     if (!accountState.connected) {
       return false
     }
@@ -59,7 +60,6 @@
       if (!accountState.connected) {
         return connect()
       }
-      console.log('isRequiredChain', isRequiredChain, requiredChain)
       if (!isRequiredChain) {
         const chain = getNetwork({
           chainId: requiredChain!.id,
