@@ -106,12 +106,9 @@
         amountIn.value > maxCrossPulsechainBridge
       )
     }
-    // console.log('needsAllowanceForPulsex', needsAllowanceForPulsex)
     if (needsAllowanceForPulsex) {
-      // console.log('needs allowance cannot disable button')
       return !pulsexTokenIn?.address
     }
-    // console.log(swapDisabled, !pulsexQuoteMatchesLatest)
     return swapDisabled || !pulsexQuoteMatchesLatest
   })
   $effect(() => {
@@ -446,22 +443,17 @@
   })
   const swapPulsexStep = $derived.by(() => {
     if (needsAllowanceForPulsex) {
-      console.log('incrementPulsexAllowance')
       return incrementPulsexAllowance
     }
-    console.log('swapTokensOnPulsex')
     return swapTokensOnPulsex
   })
   const onButtonClick = $derived.by(() => {
     if (!accountState.address) {
-      console.log('connect')
       return connect
     }
     if (bridgingToPulsechain) {
-      console.log('bridge')
       return bridgeTokensToPulsechainStep
     }
-    console.log('swap')
     return swapPulsexStep
   })
   const requiredChain = $derived.by(() => {
