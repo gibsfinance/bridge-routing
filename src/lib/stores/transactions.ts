@@ -18,7 +18,7 @@ export const sendApproval = ({
   latestBlock,
 }: ApprovalParameters & { amount?: bigint; latestBlock: Block }) => {
   const opts = options(chainId, latestBlock)
-  return sendTransactionCore(wagmiAdapter.wagmiConfig, {
+  const inputs = {
     ...opts,
     account: accountState.address as `0x${string}`,
     to: token,
@@ -27,7 +27,8 @@ export const sendApproval = ({
       functionName: 'approve',
       args: [spender, amount],
     }),
-  })
+  }
+  return sendTransactionCore(wagmiAdapter.wagmiConfig, inputs)
 }
 
 export const loadAllowance = loading.loadsAfterTick<bigint, ApprovalParameters>(
@@ -66,7 +67,10 @@ export const checkAndRaiseApproval = async ({
     latestBlock,
   }
   const approval = await checkAllowance(approvalParams)
-  if (approval < minimum) {
+  if (approval < minimum || approval === 0n) {
+    if (approval === 0n) {
+      raiseTo = maxUint256
+    }
     return await sendApproval({ ...approvalParams, amount: raiseTo })
   }
   return null

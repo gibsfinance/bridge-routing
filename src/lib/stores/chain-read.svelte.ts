@@ -9,6 +9,7 @@ export type ApprovalParameters = {
 }
 
 export const checkAllowance = async ({ token, spender, chainId, account }: ApprovalParameters) => {
+  console.log('checkAllowance', token, spender, chainId, account)
   if (token === zeroAddress) {
     return maxUint256
   }

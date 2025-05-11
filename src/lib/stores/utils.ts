@@ -1,5 +1,5 @@
 import { concatHex, formatUnits, getAddress, keccak256, parseUnits, type Hex } from 'viem'
-import _, { padEnd } from 'lodash'
+import _ from 'lodash'
 
 export const ellipsis = (v: string, { length = 8, prefixLength = 0 } = {}) =>
   length === (v.length - prefixLength) / 2
@@ -39,7 +39,7 @@ export const humanReadableNumber = (
     if (d) {
       let dec = d
       if (dec.length < decimalCount) {
-        dec = padEnd(dec, decimalCount, '0')
+        dec = _.padEnd(dec, decimalCount, '0')
       }
       n = `${i}.${dec}`
     } else {
