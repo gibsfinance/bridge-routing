@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { page } from '../stores/page.svelte'
   import { version } from '../config'
   import Button from './Button.svelte'
   import Tooltip from './Tooltip.svelte'
-  const isLocal = $derived(page.url.host.includes('localhost'))
+  const isLocal = $derived(window.location.hostname.includes('localhost'))
   const [semver, githash, timestamp] = version.split('_')
   const openRepo = () => {
     open(`https://github.com/gibsfinance/bridge-routing/commit/${githash}`, '_blank')

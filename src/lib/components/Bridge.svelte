@@ -7,6 +7,7 @@
   import * as customTokens from '../stores/custom-tokens.svelte'
   import * as transactions from '../stores/transactions'
   import BridgeAdvancedMode from './BridgeAdvancedMode.svelte'
+  import { page } from '../stores/page.svelte'
   import {
     bridgeSettings,
     updateAssetIn,
@@ -228,7 +229,9 @@
 </script>
 
 <div class="flex flex-col max-w-lg">
-  <BridgeHeader />
+  {#if !page.embed || page.mode === 'simple'}
+    <BridgeHeader />
+  {/if}
   <div
     class="flex flex-col max-w-lg mx-auto w-full p-2 bg-white card rounded-3xl relative overflow-hidden">
     <InputOutputForm

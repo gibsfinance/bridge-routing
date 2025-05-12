@@ -41,12 +41,14 @@
     <div class="flex flex-col w-full">
       <div class="flex w-full">
         <BlurryImage
-          min_height={windowStore.large ? 'calc(100vh - 56px)' : 'auto'}
+          min_height={page.embed ? '100vh' : windowStore.large ? 'calc(100vh - 56px)' : 'auto'}
           image_url="url({bridgeImageFuzzyWebP})"
           blur="9px"
           brightness="100%">
-          <div class="max-w-lg flex flex-col text-lg w-full my-16">
-            <Headline>Delivery</Headline>
+          <div class="max-w-lg flex flex-col text-lg w-full" class:my-4={page.embed} class:my-16={!page.embed} class:justify-center={page.embed}>
+            {#if !page.embed || page.mode === 'simple'}
+              <Headline>Delivery</Headline>
+            {/if}
             <Bridge />
           </div>
         </BlurryImage>
