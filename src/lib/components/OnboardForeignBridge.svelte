@@ -30,7 +30,7 @@
   import { Chains, Provider } from '../stores/auth/types'
   import OnboardButton from './OnboardButton.svelte'
   import { transactionButtonPress } from '../stores/transaction'
-  import { getContext } from 'svelte'
+  import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
   import GuideStep from './GuideStep.svelte'
   import GuideShield from './GuideShield.svelte'
   import {
@@ -532,6 +532,9 @@
         close()
       }}></TokenSelect>
   {/snippet}
+  {#snippet underinput()}
+    <BridgeProgressTxInputToggle />
+  {/snippet}
 </SectionInput>
 {#if bridgingToPulsechain}
   <BridgeProgress
@@ -603,7 +606,6 @@
       }}></TokenSelect>
   {/snippet}
 </SectionInput>
-<BridgeProgress />
 <SectionInput
   label="Output"
   token={finalTokenOutput}
