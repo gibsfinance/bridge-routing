@@ -30,7 +30,7 @@
         [accountState.address!]: ['ethereum'],
       }),
     )
-    url.searchParams.set('assets', JSON.stringify(['ETH', 'WBTC', 'USDC', 'USDT', 'DAI']))
+    url.searchParams.set('assets', JSON.stringify(['ETH', 'USDC', 'USDT', 'DAI']))
     url.searchParams.set('defaultNetwork', 'ethereum')
     url.searchParams.set('defaultExperience', 'buy')
     url.searchParams.set('partnerUserId', accountState.address!)

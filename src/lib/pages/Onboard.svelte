@@ -5,6 +5,9 @@
   import OnboardSettings from '../components/OnboardSettings.svelte'
   import Headline from '../components/Headline.svelte'
   import { activeOnboardStep } from '../stores/storage.svelte'
+  import { page } from '../stores/page.svelte'
+  import SizeNotifier from '../components/SizeNotifier.svelte'
+
   const onboardImageFuzzy = 'images/runners.jpg'
   const onboardActive = $derived(activeOnboardStep.value === 1)
   const swapActive = $derived(activeOnboardStep.value === 2)
@@ -13,12 +16,13 @@
 <div class="flex flex-col w-full">
   <div class="flex w-full">
     <BlurryImage
-      min_height={windowStore.large ? 'calc(100vh - 40px)' : 'auto'}
+      min_height={page.embed ? '100vh' : windowStore.large ? 'calc(100vh - 40px)' : 'auto'}
       image_url="url({onboardImageFuzzy})"
       blur="12px"
       brightness="90%">
-      <div class="flex flex-col text-lg w-full gap-4">
-        <div class="my-16 max-w-lg mx-auto w-full">
+      <SizeNotifier class="flex flex-row text-lg w-full gap-4 mx-auto justify-center">
+        <div class="max-w-lg w-full flex flex-col" class:m-4={page.embed} class:my-16={!page.embed} class:justify-center={page.embed}>
+          {#if !page.embed || page.mode !== 'simple'}
           <Headline
             ><button
               type="button"
@@ -33,10 +37,13 @@
               }}
               class:opacity-70={!swapActive}>Swap</button
             ></Headline>
-          <OnboardSettings />
+          {/if}
+          {#if !page.embed || (page.mode !== 'simple')}
+            <OnboardSettings />
+          {/if}
           <Onboard />
         </div>
-      </div>
+      </SizeNotifier>
     </BlurryImage>
   </div>
 </div>

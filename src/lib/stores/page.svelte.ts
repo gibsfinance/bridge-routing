@@ -1,46 +1,81 @@
 import { tick } from 'svelte'
 
+type PageState = {
+  path: string
+  changing: boolean
+  params: URLSearchParams | null
+}
+
+const embedModes = new Set(['simple', 'embed'])
+
+const hash = location.hash.slice(1) || '/'
+const [firstPath, firstParams] = hash.split('?')
 export class Page {
-  private val = $state<{ raw: string; changing: boolean }>({
-    raw: '/',
+  public val = $state<PageState>({
+    path: firstPath,
     changing: false,
+    params: new URLSearchParams(firstParams),
   })
   get value() {
-    return this.val.raw
+    return `${this.val.path}${this.val.params?.size ? `?${this.val.params.toString()}` : ''}`
   }
   get changing() {
     return this.val.changing
   }
-  async finishChange() {
-    await tick()
+  get mode() {
+    return this.val.params?.get('mode') ?? null
+  }
+  get embed() {
+    return embedModes.has(this.val.params?.get('mode')??'')
+  }
+  finishChange() {
+    // await tick()
+    // await new Promise(resolve => setTimeout(resolve, 10))
     this.val.changing = false
   }
   set value(raw: string) {
-    const current = new URL(document.location.href)
-    history.pushState(null, '', `${current.pathname}#${raw}`)
-    this.val = {
-      raw,
-      changing: true,
+    const [noQuery, query] = raw.split('?')
+    const entries = [...(this.val.params ?? new Map()).entries()]
+    const parsed = (new URLSearchParams(query)).entries()
+    const joined = new Map([...parsed, ...entries]) // updates are first to show up in get method
+    const qs = new URLSearchParams([...joined.entries()])
+    const r = `${raw}${qs.size ? `?${qs.toString()}` : ''}`
+    if (r.split('?').length > 2) {
+      console.error('invalid url', r)
+      throw new Error(`invalid url: ${r}`)
+    }
+    if (r !== this.value) {
+      this.val.changing = true
+      history.pushState(null, '', `#${r}`)
+      this.val = {
+        path: noQuery,
+        changing: true,
+        params: qs,
+      }
     }
   }
   url = $derived.by(() => {
-    return new URL(`${window.location.origin}${window.location.pathname}#${this.val.raw}`)
+    const {pathname, origin} = window.location
+    return new URL(`${origin}${pathname}#${this.value}`)
   })
   params = $derived.by(() => {
-    const [provider, fromChain, toChain, assetInAddress] = this.url.hash.split('/').slice(2)
+    const [page, provider, fromChain, toChain, assetInAddress] = this.val.path.split('/').slice(2)
     if (provider && fromChain && toChain && assetInAddress) {
       return {
+        page,
         provider,
         fromChain,
         toChain,
         assetInAddress,
       }
     }
-    return {}
+    return {
+      page,
+    }
   })
   route = $derived.by(() => {
     return {
-      id: this.val.raw,
+      id: this.val.path,
     }
   })
 }
@@ -66,14 +101,17 @@ export const goto = async (path: string) => {
     return
   }
   page.value = p
-  await page.finishChange()
+  // await page.finishChange()
 }
 const handleHashChange = async () => {
+  if (page.val.changing) {
+    page.finishChange()
+    return
+  }
   const current = location.hash.slice(1) || '/'
   if (current !== page.value) {
     page.value = current
   }
-  await page.finishChange()
 }
 window.addEventListener('hashchange', handleHashChange)
 window.addEventListener('popstate', handleHashChange)
