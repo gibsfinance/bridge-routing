@@ -35,9 +35,9 @@
 </script>
 
 <div class="flex w-full bg-slate-950">
-  {#if navigating.to}
+  <!-- {#if navigating.to}
     <Loading />
-  {:else}
+  {:else} -->
     <div class="flex flex-col w-full">
       <div class="flex w-full">
         <BlurryImage
@@ -54,5 +54,5 @@
         </BlurryImage>
       </div>
     </div>
-  {/if}
+  <!-- {/if} -->
 </div>
