@@ -29,7 +29,7 @@
     dashWhenCompressed?: boolean
     overrideAccount?: string | null
     oninput?: (values: InputValue) => bigint | undefined | void
-    value: bigint | null
+    value: bigint | string | null
     modal?: Snippet<[{ close: () => void }]>
     radio?: Snippet
     underinput?: Snippet

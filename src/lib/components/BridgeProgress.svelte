@@ -194,6 +194,7 @@
         ? 'border-warning-400'
         : 'border-success-500'}"
       value={percentProgress ?? 30}
+      trackBg="bg-surface-200"
       max={100} />
     <span
       class="text-sm text-contrast-500 text-right absolute top-0 leading-6 -translate-x-full flex flex-row gap-1 items-center px-2"
