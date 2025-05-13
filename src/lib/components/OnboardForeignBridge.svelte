@@ -532,9 +532,11 @@
         close()
       }}></TokenSelect>
   {/snippet}
-  {#snippet underinput()}
-    <BridgeProgressTxInputToggle />
-  {/snippet}
+  {#if bridgingToPulsechain}
+    {#snippet underinput()}
+      <BridgeProgressTxInputToggle />
+    {/snippet}
+  {/if}
 </SectionInput>
 {#if bridgingToPulsechain}
   <BridgeProgress
