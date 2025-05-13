@@ -206,7 +206,7 @@
       <span>{bridgeStatus?.status}</span>
       {#if bridgeStatus?.status === bridgeStatuses.AFFIRMED}
         <ExplorerLink
-          path={`/tx/${bridgeStatus?.hash}`}
+          path={`/tx/${bridgeStatus?.deliveredHash}`}
           chain={Number(bridgeKey.toChain)}
           class="size-6 flex" />
       {:else}

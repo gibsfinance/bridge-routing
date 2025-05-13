@@ -52,6 +52,7 @@ export class Page {
         changing: true,
         params: qs,
       }
+      this.finishChange()
     }
   }
   url = $derived.by(() => {
@@ -105,7 +106,7 @@ export const goto = async (path: string) => {
 }
 const handleHashChange = async () => {
   if (page.val.changing) {
-    page.finishChange()
+    // page.finishChange()
     return
   }
   const current = location.hash.slice(1) || '/'

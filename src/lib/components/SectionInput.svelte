@@ -131,7 +131,7 @@
     {/if}
   </div>
 
-  {#if !compressed || underinput}
+  {#if !compressed}
     <div class="flex gap-1 flex-row-reverse justify-between grow w-full h-5">
       {#if (overrideAccount || accountState.address) && (!!onmax || !!onbalanceupdate)}
         <BalanceReadout
