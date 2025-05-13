@@ -26,7 +26,16 @@ export class Page {
     return this.val.params?.get('mode') ?? null
   }
   get embed() {
-    return embedModes.has(this.val.params?.get('mode')??'')
+    return embedModes.has(this.val.params?.get('mode') ?? '')
+  }
+  get onramps() {
+    return this.val.params?.get('onramps')
+  }
+  get stage() {
+    return this.val.params?.get('stage')
+  }
+  get queryParams() {
+    return this.val.params ?? new URLSearchParams()
   }
   finishChange() {
     // await tick()

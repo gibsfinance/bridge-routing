@@ -4,6 +4,30 @@
   import Delivery from './lib/pages/Delivery.svelte'
   import Onboard from './lib/pages/Onboard.svelte'
   import { page } from './lib/stores/page.svelte'
+  import { activeOnboardStep, defaultOnboardTokens, onboardShowOnramps } from './lib/stores/storage.svelte'
+    import { isAddress } from 'viem'
+  if (page.onramps === 'open') {
+    onboardShowOnramps.value = true
+  }
+  if (page.stage === 'onboard') {
+    activeOnboardStep.value = 1
+  } else if (page.stage === 'swap') {
+    activeOnboardStep.value = 2
+  }
+  const queryParams = page.queryParams
+  const keys = [
+    'bridgeTokenIn',
+    'bridgeTokenOut',
+    'pulsexTokenIn',
+    'pulsexTokenOut',
+  ]
+  const updates = [...queryParams.entries()].reduce((acc, [key, value]) => {
+    if (keys.includes(key) && isAddress(value)) {
+      acc[key] = value
+    }
+    return acc
+  }, {} as Record<string, string>)
+  defaultOnboardTokens.extend(updates)
 </script>
 
 <Layout>
