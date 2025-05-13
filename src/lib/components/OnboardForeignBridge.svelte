@@ -603,7 +603,6 @@
       }}></TokenSelect>
   {/snippet}
 </SectionInput>
-<BridgeProgress />
 <SectionInput
   label="Output"
   token={finalTokenOutput}
