@@ -46,7 +46,7 @@
           blur="9px"
           brightness="100%">
           <div class="max-w-lg flex flex-col text-lg w-full" class:my-4={page.embed} class:my-16={!page.embed} class:justify-center={page.embed}>
-            {#if !page.embed || page.mode === 'simple'}
+            {#if !page.embed || page.mode !== 'simple'}
               <Headline>Delivery</Headline>
             {/if}
             <Bridge />

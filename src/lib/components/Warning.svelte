@@ -6,7 +6,7 @@
   type Props = {
     show?: boolean
     disabled?: boolean
-    placement?: 'right' | 'left'
+    placement?: 'right' | 'left' | 'top'
     tooltip?: string
     wrapperPositionClass?: ClassValue
     wrapperClasses?: ClassValue
@@ -15,7 +15,7 @@
   const {
     show = false,
     disabled = false,
-    placement = 'right' as 'right' | 'left',
+    placement = 'right' as 'right' | 'left' | 'top',
     tooltip = '',
     wrapperPositionClass = 'top-0 left-0',
     wrapperClasses = 'absolute',
