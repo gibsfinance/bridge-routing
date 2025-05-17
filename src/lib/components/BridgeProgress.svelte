@@ -5,7 +5,7 @@
   import Icon from '@iconify/svelte'
   import Input from './Input.svelte'
   import { Progress } from '@skeletonlabs/skeleton-svelte'
-  import ExplorerLink from './DirectLink.svelte'
+  import DirectLink from './DirectLink.svelte'
   import {
     liveBridgeStatus,
     bridgeStatuses,
@@ -199,13 +199,13 @@
     <span
       class="text-sm text-contrast-500 text-right absolute top-0 leading-6 -translate-x-full flex flex-row gap-1 items-center px-2"
       style:left={`${percentProgress}%`}>
-      <ExplorerLink
+      <DirectLink
         path={`/tx/${bridgeStatus?.hash}`}
         chain={Number(bridgeKey.fromChain)}
         class="size-6 flex" />
       <span>{bridgeStatus?.status}</span>
       {#if bridgeStatus?.status === bridgeStatuses.AFFIRMED}
-        <ExplorerLink
+        <DirectLink
           path={`/tx/${bridgeStatus?.deliveredHash}`}
           chain={Number(bridgeKey.toChain)}
           class="size-6 flex" />

@@ -45,7 +45,7 @@ export default defineConfig({
     allowedHosts: [
       'gibs.finance',
       'www.gibs.finance',
-      'bridge-routing-staging.up.railway.app',
+      'staging.gibs.finance',
       'healthcheck.railway.app',
     ],
   },

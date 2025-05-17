@@ -7,6 +7,7 @@
   import { activeOnboardStep } from '../stores/storage.svelte'
   import { page } from '../stores/page.svelte'
   import SizeNotifier from '../components/SizeNotifier.svelte'
+  // import EmbedDocs from '../components/EmbedDocs.svelte'
 
   const onboardImageFuzzy = 'images/runners.jpg'
   const onboardActive = $derived(activeOnboardStep.value === 1)
@@ -45,5 +46,8 @@
         </div>
       </SizeNotifier>
     </BlurryImage>
+    <!-- {#if !page.embed}
+      <EmbedDocs />
+    {/if} -->
   </div>
 </div>

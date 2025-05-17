@@ -59,7 +59,7 @@
   <div class="text-surface-contrast-50 w-full text-xs sm:text-sm">
     <div class="flex flex-row items-center leading-8 justify-between w-full text-sm">
       <span>Bridge Fee</span>
-      <Tooltip placement="left">
+      <Tooltip placement="top">
         {#snippet trigger()}
           <span class="flex flex-row items-center align-baseline gap-1"
             ><Loading key="bridge-fee">

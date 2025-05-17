@@ -23,3 +23,7 @@ open `localhost:4173`
 ```sh
 npm run dev
 ```
+
+## embed
+
+to view an embed example, start a static server at the root and visit the `frame.html` on your local server

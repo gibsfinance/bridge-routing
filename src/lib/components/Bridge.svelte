@@ -229,7 +229,7 @@
 </script>
 
 <div class="flex flex-col max-w-lg">
-  {#if !page.embed || page.mode === 'simple'}
+  {#if !page.embed || page.mode !== 'simple'}
     <BridgeHeader />
   {/if}
   <div

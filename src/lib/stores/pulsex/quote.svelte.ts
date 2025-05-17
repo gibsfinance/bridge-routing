@@ -111,7 +111,6 @@ const quoteFetch = _.debounce(
       reject()
       return null
     }
-    // console.log('fetch', body)
     const quote = await fetch(quoteURL, {
       method: 'POST',
       body: JSON.stringify(body),

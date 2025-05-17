@@ -426,7 +426,7 @@
             ...transactions.options(Number(Chains.PLS), latestPulseBlock!),
             data: transactionInfo.calldata as Hex,
             to: swapRouterAddress,
-            gas: BigInt(pulsexQuoteResult!.gasEstimate!),
+            gas: BigInt(pulsexQuoteResult!.gasEstimate!) * 5n / 4n,
             value: BigInt(transactionInfo.value),
             account: accountState.address as Hex,
           })

@@ -4,8 +4,8 @@
   import Loading from './Loading.svelte'
   import { page, goto } from '../stores/page.svelte'
   import { bridgeKey, incrementForcedRefresh } from '../stores/input.svelte'
-  import { Chains } from '../stores/auth/types'
-  import { addDomain, domains } from '../stores/window.svelte'
+  import { Provider } from '../stores/auth/types'
+  import { addDomain } from '../stores/window.svelte'
   import { innerWidth } from 'svelte/reactivity/window'
   import Image from './Image.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
@@ -21,8 +21,6 @@
     addDomain(bridgeDomain)
   })
 
-  const directTxsLink = $derived(domains.get(bridgeDomain) + '/#/transactions')
-
   const gotoHome = async () => {
     await goto('#/')
   }
@@ -32,10 +30,15 @@
   const gotoOnboard = async () => {
     await goto('#/onboard')
   }
-  const destinationBridgeKey = $derived(bridgeKey.toChain)
+  const destinationBridgeKey = $derived(bridgeKey.provider)
   const isDeliveryRoute = $derived(page.route.id?.includes('/delivery'))
   const isOnboardRoute = $derived(page.route.id?.includes('/onboard'))
   const isSmall = $derived(innerWidth.current && innerWidth.current < 768)
+  const txsLink = $derived(
+    destinationBridgeKey === Provider.PULSECHAIN
+      ? 'https://ipfs.bridge.pulsechain.com/transactions'
+      : 'https://tokensex.link/explorer'
+  )
 </script>
 
 <div class="fixed z-10 -mb-14 flex h-14">
@@ -58,35 +61,19 @@
         <ul class="flex grow flex-row items-center justify-end text-surface-contrast-50">
           {#if isDeliveryRoute}
             <li class="flex flex-row">
-              {#if destinationBridgeKey === Chains.ETH}
-                <a
-                  aria-label="to recent bridge transactions on ethereum"
-                  href={directTxsLink}
-                  target="_blank"
-                  class="link">
-                  <button
-                    type="button"
-                    name="transactions"
-                    class="flex items-center justify-center">
-                    {#if !isSmall}Txs{/if}
-                    <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
-                  </button>
-                </a>
-              {:else if destinationBridgeKey === Chains.BNB}
-                <a
-                  aria-label="to recent bridge transactions on bsc"
-                  href="https://tokensex.link/explorer"
-                  target="_blank"
-                  class="link">
-                  <button
-                    type="button"
-                    name="transactions"
-                    class="flex gap-1 items-center justify-center">
-                    {#if !isSmall}Txs{/if}
-                    <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
-                  </button>
-                </a>
-              {/if}
+              <a
+                aria-label="to recent bridge transactions on ethereum"
+                href={txsLink}
+                target="_blank"
+                class="link">
+                <button
+                  type="button"
+                  name="transactions"
+                  class="flex items-center justify-center">
+                  {#if !isSmall}Txs{/if}
+                  <Icon icon="ic:baseline-list" height="1.6em" width="1.6em" />
+                </button>
+              </a>
             </li>
           {/if}
           <li class="flex flex-row">
