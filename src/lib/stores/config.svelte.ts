@@ -70,7 +70,7 @@ export const pathways = {
       [Chains.ETH]: {
         from: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
         to: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
-        destinationRouter: '0x5df881304F6D4279B46f7aB001d55f025bAF1bc5',
+        destinationRouter: '0x553569B7760d8e4afFA80aBFc9860Dc85F60397c',
         nativeRouter: '0x612Da68aA7BcA625dD2F27f252cddB573674991A',
         validator: '0x5ECfE77502317F3677f23C3b8Ab17929ACE3D74E',
         usesExtraParam: false,
@@ -97,7 +97,7 @@ export const pathways = {
       [Chains.PLS]: {
         from: '0x1715a3E4A142d8b698131108995174F37aEBA10D',
         to: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
-        nativeRouter: '0x5df881304F6D4279B46f7aB001d55f025bAF1bc5',
+        nativeRouter: '0x553569B7760d8e4afFA80aBFc9860Dc85F60397c',
         destinationRouter: '0x612Da68aA7BcA625dD2F27f252cddB573674991A',
         validator: '0x5ECfE77502317F3677f23C3b8Ab17929ACE3D74E',
         feeManager: 'to',
