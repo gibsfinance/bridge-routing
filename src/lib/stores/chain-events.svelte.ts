@@ -73,7 +73,7 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
     untrack(() => blocks.set(chain, null))
   }
   const current = chainCounts.get(chain) ?? 0
-  let decrement: Cleanup = () => {}
+  let decrement: Cleanup = () => { }
   let cancelled = false
   if (current === 0) {
     untrack(() => loading.increment('gas'))
@@ -130,20 +130,20 @@ export const getTokenBalance = ({ chainId, address, account }: TokenBalanceInput
       address === zeroAddress
         ? () => publicClient.getBalance({ address: account })
         : () =>
-            getContract({
-              address: address as Hex,
-              abi: erc20Abi,
-              client: publicClient,
+          getContract({
+            address: address as Hex,
+            abi: erc20Abi,
+            client: publicClient,
+          })
+            .read.balanceOf([account])
+            .catch(() => {
+              return getContract({
+                address: address as Hex,
+                abi: erc20Abi_bytes32,
+                client: publicClient,
+              }).read.balanceOf([account])
             })
-              .read.balanceOf([account])
-              .catch(() => {
-                return getContract({
-                  address: address as Hex,
-                  abi: erc20Abi_bytes32,
-                  client: publicClient,
-                }).read.balanceOf([account])
-              })
-              .catch(() => null)
+            .catch(() => null)
   }
   return loading.loadsAfterTick<bigint | null>(key, getBalance)()
 }
@@ -155,7 +155,7 @@ export const tokenBalanceLoadingKey = (chainId: number, address: string, account
 // this is not the optimal way to do this, but these watchers
 // should only be used for a heavily constrained set of cases
 // the cases are being cleared on a regular interval
-const balanceTTL = 1000 * 60
+const balanceTTL = 1000 * 10
 export const balances = new SvelteMap<string, { time: number; value: bigint | null }>()
 export class TokenBalanceWatcher {
   private balanceCleanup: Cleanup | null = null
@@ -202,13 +202,13 @@ export class TokenBalanceWatcher {
     this.walletAccount = account
     // console.log(token, account, ticker)
     // call this function whenever a new block is ticked over
-    if (!ticker || !token || !account) return () => {}
+    if (!ticker || !token || !account) return () => { }
     // const network = availableChains.get(chainId)
     // if (network) {
     const accountIsHex = isHex(account)
     const tokenIsHex = isHex(token?.address)
     if (/*network.chainType === 'EVM' && */ !accountIsHex || !tokenIsHex) {
-      return () => {}
+      return () => { }
       // } else if (network.chainType !== 'EVM' && (accountIsHex || tokenIsHex)) {
       //   return () => {}
     }
@@ -219,13 +219,13 @@ export class TokenBalanceWatcher {
       account,
     })
     if (!requestResult) {
-      return () => {}
+      return () => { }
     }
     this.balanceCleanup = requestResult.cleanup
     requestResult.promise.then((v) => {
       if (requestResult.controller.signal.aborted) {
         this.value = null
-        return () => {}
+        return () => { }
       }
       this.clearLongtailBalances()
       balances.set(this.key, { time: Date.now(), value: v })
@@ -248,7 +248,7 @@ export const fetchMinBridgeAmountIn = (bridgeKey: input.BridgeKey, assetIn: Toke
   // these clients should already be created, so we should not be doing any harm by accessing them
   const path = pathway(bridgeKey)
   if (!path || !assetIn) {
-    return () => {}
+    return () => { }
   }
   const key = minBridgeAmountInKey(bridgeKey, assetIn)
   // this.value = null
@@ -400,17 +400,17 @@ export const tokenBridgeInfo = async (
     assetOutAddress: null,
     ...(bridgePathway.toHome
       ? {
-          toHome: {
-            foreign: assetInAddress as Hex,
-            home: null,
-          },
-        }
+        toHome: {
+          foreign: assetInAddress as Hex,
+          home: null,
+        },
+      }
       : {
-          toForeign: {
-            foreign: null,
-            home: assetInAddress as Hex,
-          },
-        }),
+        toForeign: {
+          foreign: null,
+          home: assetInAddress as Hex,
+        },
+      }),
   }
 }
 

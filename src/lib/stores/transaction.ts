@@ -34,16 +34,16 @@ export const transactionButtonPress =
     chainId: number
     after?: () => void
   }) =>
-  async () => {
-    send({
-      steps,
-      after,
-      wait: async (hash) => {
-        const receipt = await transactions.wait(hash as Hex, chainId)
-        console.log(receipt)
-      },
-    })
-  }
+    async () => {
+      send({
+        steps,
+        after,
+        wait: async (hash) => {
+          const receipt = await transactions.wait(hash as Hex, chainId)
+          console.log(receipt)
+        },
+      })
+    }
 
 export const send = async ({
   steps,
@@ -54,7 +54,7 @@ export const send = async ({
   after?: () => void
   wait: (txHash: string) => Promise<void>
 }) => {
-  const decrement = loading.increment('user')
+  // const decrement = loading.increment('user')
   try {
     for (const step of steps) {
       const txHash = await step()
@@ -74,7 +74,7 @@ export const send = async ({
       incrementForcedRefresh()
     }
   } finally {
-    decrement()
+    // decrement()
   }
   after()
 }
