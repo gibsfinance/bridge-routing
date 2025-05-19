@@ -65,11 +65,11 @@ export class Page {
     }
   }
   url = $derived.by(() => {
-    const {pathname, origin} = window.location
+    const { pathname, origin } = window.location
     return new URL(`${origin}${pathname}#${this.value}`)
   })
   params = $derived.by(() => {
-    const [page, provider, fromChain, toChain, assetInAddress] = this.val.path.split('/').slice(2)
+    const [page, provider, fromChain, toChain, assetInAddress] = this.val.path.split('/').slice(1)
     if (provider && fromChain && toChain && assetInAddress) {
       return {
         page,
