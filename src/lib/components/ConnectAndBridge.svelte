@@ -42,7 +42,6 @@
       account: accountState.address as Hex,
     })
   }
-  let amountInBefore = ''
   const sendIncreaseApproval = $derived(
     transactionButtonPress({
       chainId: Number(input.bridgeKey.fromChain),
@@ -60,8 +59,9 @@
     }),
   )
   const decimals = $derived(bridgeSettings.assetIn.value!.decimals)
-  const sendInitiateBridge = $derived(
-    transactionButtonPress({
+  const sendInitiateBridge = $derived.by(() => {
+    let amountInBefore = ''
+    return transactionButtonPress({
       chainId: Number(input.bridgeKey.fromChain),
       steps: [
         async () => {
@@ -80,8 +80,8 @@
           input.amountIn.value = null
         }
       },
-    }),
-  )
+    })
+  })
   const inputIsNative = $derived(bridgeSettings.assetIn.value?.address === zeroAddress)
   const isBridgeToken = $derived(assetLink.value?.originationChainId !== input.bridgeKey.fromChain)
   const isRequiredChain = $derived(
