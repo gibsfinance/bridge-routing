@@ -22,6 +22,7 @@
     gutter?: number
     interactive?: boolean
     trigger: Snippet
+    onclick?: () => void
     onOpenChange?: (details: { open: boolean }) => void
   }
   let {
@@ -38,6 +39,7 @@
     onOpenChange,
     trigger: triggerSnippet,
     content: contentSnippet,
+    onclick,
   }: Props = $props()
   let open = $state(false)
   const classes = $derived(clsx(['flex', className]))
@@ -63,6 +65,7 @@
   {contentBase}
   {positionerClasses}
   {openDelay}
+  {onclick}
   onOpenChange={({ open: openProp }) => {
     open = openProp
     onOpenChange?.({ open: openProp })

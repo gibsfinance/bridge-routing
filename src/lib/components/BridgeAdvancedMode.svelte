@@ -36,9 +36,21 @@
     costLimitLocked: false,
   })
   const feeTypeOptions = [
-    { key: input.FeeType.FIXED, text: 'Fixed' },
-    { key: input.FeeType.GAS_TIP, text: '⛽+%' },
-    { key: input.FeeType.PERCENT, text: '%' },
+    {
+      key: input.FeeType.FIXED,
+      text: 'Fixed',
+      tooltip: 'Name a fixed fee to tip',
+    },
+    {
+      key: input.FeeType.GAS_TIP,
+      text: '⛽+%',
+      tooltip: 'Allow the tip to float with the destination chain\'s base fee',
+    },
+    {
+      key: input.FeeType.PERCENT,
+      text: '%',
+      tooltip: 'Name a fee in percentage terms to tip',
+    },
   ]
   const decimals = $derived(asset?.decimals || 18)
   const large = $derived(!!innerWidth.current && innerWidth.current >= 512)
@@ -73,7 +85,7 @@
     {#if fromChainId === Chains.PLS || fromChainId === Chains.V4PLS}
       <div class="relative hover:z-10 leading-8">
         <div class="flex flex-row leading-8 justify-between items-center text-sm">
-          <span class="flex items-center flex-row gap-2">
+          <span class="flex items-center flex-row gap-1">
             <ButtonToggle
               contentClass="leading-6 my-1"
               title={large ? 'Delivery' : 'Deliv.'}
