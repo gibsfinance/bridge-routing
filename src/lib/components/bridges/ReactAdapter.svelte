@@ -33,9 +33,3 @@
     }
   })
 </script>
-
-<style lang="postcss">
-  :global(.MuiScopedCssBaseline-root) {
-    @apply !max-h-none;
-  }
-</style>
