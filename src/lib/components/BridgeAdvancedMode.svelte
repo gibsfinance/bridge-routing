@@ -120,14 +120,17 @@
                 } else if (feeType === input.FeeType.FIXED) {
                   input.fixedFee.value = bridgeSettings.reasonableFixedFee
                 }
-              }} />{#if feeType === input.FeeType.PERCENT || feeType === input.FeeType.GAS_TIP}<Button
+              }} />
+            {#if feeType === input.FeeType.GAS_TIP || feeType === input.FeeType.PERCENT}
+              <Button
                 class="flex px-1 leading-6"
                 onclick={() => {
                   storageBridgeSettings.extend({
                     deliveryFeeLocked: !deliveryFeeLocked,
                   })
-                }}><LockIcon locked={deliveryFeeLocked} /></Button
-              >{/if}
+                }}><LockIcon locked={deliveryFeeLocked} />
+              </Button>
+            {/if}
           </span>
           {#if shouldDeliver.value}
             <Tooltip
@@ -208,14 +211,16 @@
           {#snippet trigger()}
             <Button
               name="toggle-cost-limit"
-              class="tooltip tooltip-top tooltip-right-toward-center relative text-sm leading-8"
+              class="tooltip tooltip-top tooltip-right-toward-center relative text-sm leading-8 flex flex-row items-center gap-1"
               onclick={() => {
                 storageBridgeSettings.extend({
                   costLimitLocked: !costLimitLocked,
                 })
               }}>
-              Cost&nbsp;{#if feeType === input.FeeType.GAS_TIP}Limit&nbsp;<LockIcon
-                  locked={costLimitLocked} />{/if}
+              <span>Cost&nbsp;{#if feeType === input.FeeType.GAS_TIP}Limit&nbsp;{/if}</span>
+              {#if feeType === input.FeeType.FIXED || feeType === input.FeeType.GAS_TIP}
+              <LockIcon locked={costLimitLocked} />
+              {/if}
             </Button>
           {/snippet}
         </Tooltip>
