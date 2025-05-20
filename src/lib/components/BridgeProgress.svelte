@@ -18,6 +18,7 @@
   import { untrack } from 'svelte'
   import Loader from './Loader.svelte'
   import { Chains } from '../stores/auth/types'
+    import { pathway } from '../stores/config.svelte'
 
   type BridgeProgressProps = {
     oncomplete?: () => void
@@ -205,9 +206,13 @@
         class="size-6 flex" />
       <span>{bridgeStatus?.status}</span>
       {#if bridgeStatus?.status === bridgeStatuses.AFFIRMED}
+        {@const path = pathway(bridgeKey.value)}
+        {@const toHome = path?.toHome}
+        <!-- affirmation complete events only show up on the home chain -->
+        {@const affirmationCompleteChain = toHome ? bridgeKey.fromChain : bridgeKey.toChain}
         <DirectLink
           path={`/tx/${bridgeStatus?.deliveredHash}`}
-          chain={Number(bridgeKey.toChain)}
+          chain={Number(affirmationCompleteChain)}
           class="size-6 flex" />
       {:else}
         <Tooltip placement="top" gutter={3}>

@@ -9,6 +9,7 @@
     tokenBalanceLoadingKey,
     TokenBalanceWatcher,
     blocks,
+    balances,
   } from '../stores/chain-events.svelte'
   import Loading from './Loading.svelte'
   import { oneEther } from '../stores/bridge-settings.svelte'
@@ -59,14 +60,15 @@
     if (!tokenBalance) return
     onbalanceupdate?.(tokenBalance.value)
   })
-  const balance = $derived(tokenBalance?.value ?? 0n)
+  // const balance = $derived(tokenBalance?.value ?? 0n)
+  const balance = $derived(balances.get(tokenBalance.key)?.value ?? null)
   const disableMax = $derived(balance === 0n)
   const loadingKey = $derived(
     token && tokenBalanceLoadingKey(token?.chainId ?? 0, token.address, (account as Hex) ?? '0x'),
   )
   const decimalClassNames = $derived(['h-full', decimalClasses])
   const maxOutBalance = (event: MouseEvent) => {
-    if (disableMax) return
+    if (disableMax || typeof balance !== 'bigint') return
     const shouldStopProp = onmax?.(balance)
     if (shouldStopProp) {
       event.stopPropagation()
@@ -74,7 +76,7 @@
   }
   const wrapperClasses = $derived([wrapperClassNames, wrapperSizeClasses])
   const humanReadableText = $derived(
-    humanReadableNumber(balance, {
+    balance === null ? '-' : humanReadableNumber(balance, {
       decimals: token?.decimals ?? 18,
       maxDecimals: 18 - Math.floor(Number(balance / oneEther / 3n)).toString().length,
     }),

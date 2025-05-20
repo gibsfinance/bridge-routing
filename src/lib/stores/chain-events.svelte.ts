@@ -202,12 +202,16 @@ export class TokenBalanceWatcher {
     this.walletAccount = account
     // console.log(token, account, ticker)
     // call this function whenever a new block is ticked over
-    if (!ticker || !token || !account) return () => { }
+    if (!ticker || !token || !account) {
+      console.log(ticker, token, account)
+      return () => { }
+    }
     // const network = availableChains.get(chainId)
     // if (network) {
     const accountIsHex = isHex(account)
     const tokenIsHex = isHex(token?.address)
     if (/*network.chainType === 'EVM' && */ !accountIsHex || !tokenIsHex) {
+      console.log(accountIsHex, tokenIsHex)
       return () => { }
       // } else if (network.chainType !== 'EVM' && (accountIsHex || tokenIsHex)) {
       //   return () => {}
@@ -219,9 +223,11 @@ export class TokenBalanceWatcher {
       account,
     })
     if (!requestResult) {
+      console.log('no request result')
       return () => { }
     }
     this.balanceCleanup = requestResult.cleanup
+    
     requestResult.promise.then((v) => {
       if (requestResult.controller.signal.aborted) {
         this.value = null

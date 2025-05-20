@@ -237,8 +237,9 @@
       ],
     }),
   )
-  const initiateBridgeToPulsechain = $derived(
-    transactionButtonPress({
+  const initiateBridgeToPulsechain = $derived.by(() => {
+    let amountInBefore = ''
+    return transactionButtonPress({
       chainId: Number(bridgeKey.fromChain),
       steps: [
         async () => {
@@ -250,6 +251,7 @@
             account: accountState.address as Hex,
             ...bridgeSettings.transactionInputs,
           })
+          amountInBefore = formatUnits(bridgeSettings.amountToBridge!, bridgeTokenIn!.decimals)
           bridgeTx.extend({
             hash: tx,
             bridgeKey: bridgeKey.value.slice(0) as BridgeKey,
@@ -257,8 +259,14 @@
           return tx
         },
       ],
-    }),
-  )
+      after: () => {
+        const previousAmount = formatUnits(bridgeSettings.amountToBridge!, bridgeTokenIn!.decimals)
+        if (amountInBefore === previousAmount) {
+          amountIn.value = null
+        }
+      },
+    })
+  })
   const originationTicker = $derived(blocks.get(Number(bridgeKey.fromChain)))
   const bridgeApproval = $derived(bridgeSettings.approval.value)
   const needsAllowanceForPulsechainBridge = $derived(
