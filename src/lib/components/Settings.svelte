@@ -74,7 +74,7 @@
   const canUnwrap = $derived(input.canChangeUnwrap(bridgeKey.value, bridgeSettings.assetIn.value))
 </script>
 
-<div class="flex flex-col gap-2">
+<div class="flex flex-col gap-2 text-sm">
   <div
     class="leading-6 sm:justify-between flex flex-col sm:flex-row relative sm:items-center text-left items-start">
     <Button
@@ -102,7 +102,7 @@
     <div class="leading-6 justify-between flex flex-row items-center">
       <ButtonToggle
         title="Unwrap"
-        contentClass="leading-6 text-xs sm:text-sm"
+        contentClass="leading-6 sm:text-sm"
         checked={input.unwrap.value}
         onclick={() => {
           input.unwrap.value = !input.unwrap.value
@@ -110,7 +110,7 @@
     </div>
   {/if}
   <div
-    class="leading-6 justify-between flex flex-col sm:flex-row sm:items-center disabled cursor-not-allowed text-xs sm:text-sm"
+    class="leading-6 justify-between flex flex-col sm:flex-row sm:items-center disabled cursor-not-allowed"
     class:rounded-b-lg={!nonZeroXCalldata}>
     <span>To (Bridge)</span>
     <span class="font-mono text-xs">{bridgeKey.pathway?.to || zeroAddress}</span>

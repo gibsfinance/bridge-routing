@@ -32,7 +32,6 @@
   class:bg-white={focused}
   class:bg-surface-50={!focused}
   class:cursor-not-allowed={disabled}
-  role="button"
   {onclick}
   onkeypress={() => {}}>
   <div class="flex relative items-center flex-col w-full gap-1">

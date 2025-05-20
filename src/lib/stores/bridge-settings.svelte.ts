@@ -52,7 +52,7 @@ export const assetOutKey = ({
 }
 
 export class BridgeSettings {
-  constructor() {}
+  constructor() { }
   // hold some basic state so that requests don't have to be re-created
   assetIn = new NullableProxyStore<Token>()
   // private output = new NullableProxyStore<Token>()
@@ -218,7 +218,7 @@ export class BridgeSettings {
         : input.isNative(assetIn, bridgeKey) || input.isNative(assetOut, bridgeKey)
           ? 1_000n
           : whitelisted.value.has(getAddress(assetIn?.address ?? '')) ||
-              whitelisted.value.has(assetOutAddress ? getAddress(assetOutAddress) : '0x')
+            whitelisted.value.has(assetOutAddress ? getAddress(assetOutAddress) : '0x')
             ? 5_000n
             : 10_000n
   })
@@ -422,20 +422,20 @@ export class BridgeSettings {
       if (!this.foreignDataParam) return null
       data = this.bridgePathway.usesExtraParam
         ? encodeFunctionData({
-            abi: abis.erc677ExtraInput,
-            functionName: 'transferAndCall',
-            args: [
-              this.bridgePathway.from,
-              this.amountToBridge,
-              this.foreignDataParam,
-              accountState.address,
-            ],
-          })
+          abi: abis.erc677ExtraInput,
+          functionName: 'transferAndCall',
+          args: [
+            this.bridgePathway.from,
+            this.amountToBridge,
+            this.foreignDataParam,
+            accountState.address,
+          ],
+        })
         : encodeFunctionData({
-            abi: abis.erc677,
-            functionName: 'transferAndCall',
-            args: [this.bridgePathway.from, this.amountToBridge, this.foreignDataParam],
-          })
+          abi: abis.erc677,
+          functionName: 'transferAndCall',
+          args: [this.bridgePathway.from, this.amountToBridge, this.foreignDataParam],
+        })
     } else if (this.assetIn.value.address === zeroAddress) {
       value = this.amountToBridge
       toAddress = this.bridgePathway.nativeRouter
@@ -445,32 +445,32 @@ export class BridgeSettings {
         if (!this.bridgePathway.destinationRouter) return null
         data = this.bridgePathway.usesExtraParam
           ? encodeFunctionData({
-              abi: abis.nativeRouterExtraInput,
-              functionName: 'relayTokensAndCall',
-              args: [
-                this.bridgePathway.destinationRouter,
-                this.feeDirectorStructEncoded,
-                accountState.address,
-              ],
-            })
+            abi: abis.nativeRouterExtraInput,
+            functionName: 'relayTokensAndCall',
+            args: [
+              this.bridgePathway.destinationRouter,
+              this.feeDirectorStructEncoded,
+              accountState.address,
+            ],
+          })
           : encodeFunctionData({
-              abi: abis.nativeRouter,
-              functionName: 'relayTokensAndCall',
-              args: [this.bridgePathway.destinationRouter, this.feeDirectorStructEncoded],
-            })
+            abi: abis.nativeRouter,
+            functionName: 'relayTokensAndCall',
+            args: [this.bridgePathway.destinationRouter, this.feeDirectorStructEncoded],
+          })
       } else {
         // delivery always occurs when moving from foreign to home
         data = this.bridgePathway.usesExtraParam
           ? encodeFunctionData({
-              abi: abis.nativeRouterExtraInput,
-              functionName: 'wrapAndRelayTokens',
-              args: [input.recipient.value, accountState.address],
-            })
+            abi: abis.nativeRouterExtraInput,
+            functionName: 'wrapAndRelayTokens',
+            args: [input.recipient.value, accountState.address],
+          })
           : encodeFunctionData({
-              abi: abis.nativeRouter,
-              functionName: 'wrapAndRelayTokens',
-              args: [input.recipient.value],
-            })
+            abi: abis.nativeRouter,
+            functionName: 'wrapAndRelayTokens',
+            args: [input.recipient.value],
+          })
       }
     } else {
       // tokens native to this side, entering the bridge
@@ -479,43 +479,43 @@ export class BridgeSettings {
         if (!this.bridgePathway.destinationRouter) return null
         data = this.bridgePathway.usesExtraParam
           ? encodeFunctionData({
-              abi: abis.inputBridgeExtraInput,
-              functionName: 'relayTokensAndCall',
-              args: [
-                this.assetIn.value.address as Hex,
-                this.bridgePathway.destinationRouter,
-                this.amountToBridge,
-                this.feeDirectorStructEncoded,
-                accountState.address,
-              ],
-            })
+            abi: abis.inputBridgeExtraInput,
+            functionName: 'relayTokensAndCall',
+            args: [
+              this.assetIn.value.address as Hex,
+              this.bridgePathway.destinationRouter,
+              this.amountToBridge,
+              this.feeDirectorStructEncoded,
+              accountState.address,
+            ],
+          })
           : encodeFunctionData({
-              abi: abis.inputBridge,
-              functionName: 'relayTokensAndCall',
-              args: [
-                this.assetIn.value.address as Hex,
-                this.bridgePathway.destinationRouter,
-                this.amountToBridge,
-                this.feeDirectorStructEncoded,
-              ],
-            })
+            abi: abis.inputBridge,
+            functionName: 'relayTokensAndCall',
+            args: [
+              this.assetIn.value.address as Hex,
+              this.bridgePathway.destinationRouter,
+              this.amountToBridge,
+              this.feeDirectorStructEncoded,
+            ],
+          })
       } else {
         data = this.bridgePathway.usesExtraParam
           ? encodeFunctionData({
-              abi: abis.inputBridgeExtraInput,
-              functionName: 'relayTokens',
-              args: [
-                this.assetIn.value.address as Hex,
-                input.recipient.value,
-                this.amountToBridge,
-                accountState.address,
-              ],
-            })
+            abi: abis.inputBridgeExtraInput,
+            functionName: 'relayTokens',
+            args: [
+              this.assetIn.value.address as Hex,
+              input.recipient.value,
+              this.amountToBridge,
+              accountState.address,
+            ],
+          })
           : encodeFunctionData({
-              abi: abis.inputBridge,
-              functionName: 'relayTokens',
-              args: [this.assetIn.value.address as Hex, input.recipient.value, this.amountToBridge],
-            })
+            abi: abis.inputBridge,
+            functionName: 'relayTokens',
+            args: [this.assetIn.value.address as Hex, input.recipient.value, this.amountToBridge],
+          })
       }
     }
     return {
@@ -696,7 +696,7 @@ export const updateAssetOut = ({
         ])
       } else {
         // assumptions
-        console.log('assetInput', assetInput)
+        // console.log('assetInput', assetInput)
         res = {
           ...assetInput,
           chainId: Number(toChainId),

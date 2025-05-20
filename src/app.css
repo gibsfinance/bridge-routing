@@ -49,3 +49,6 @@ body {
 /* .link {
   color: inherit;
 } */
+.MuiScopedCssBaseline-root {
+  @apply !max-h-none;
+}

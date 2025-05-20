@@ -41,9 +41,9 @@
   )
 </script>
 
-<div class="fixed z-10 -mb-14 flex h-14">
+<div class="fixed z-20 -mb-14 flex h-14">
   <nav
-    class="fixed right-0 left-0 flex h-14 flex-row bg-white p-2 leading-8 shadow-inner text-surface-contrast-50">
+    class="fixed right-0 left-0 flex h-14 flex-row bg-white p-2 leading-8 shadow text-surface-contrast-50">
     <div class="m-auto flex w-full max-w-5xl justify-between">
       <button
         type="button"

@@ -36,9 +36,21 @@
     costLimitLocked: false,
   })
   const feeTypeOptions = [
-    { key: input.FeeType.FIXED, text: 'Fixed' },
-    { key: input.FeeType.GAS_TIP, text: '⛽+%' },
-    { key: input.FeeType.PERCENT, text: '%' },
+    {
+      key: input.FeeType.FIXED,
+      text: 'Fixed',
+      tooltip: 'Name a fixed fee to tip',
+    },
+    {
+      key: input.FeeType.GAS_TIP,
+      text: '⛽+%',
+      tooltip: 'Allow the tip to float with the destination chain\'s base fee',
+    },
+    {
+      key: input.FeeType.PERCENT,
+      text: '%',
+      tooltip: 'Name a fee in percentage terms to tip',
+    },
   ]
   const decimals = $derived(asset?.decimals || 18)
   const large = $derived(!!innerWidth.current && innerWidth.current >= 512)
@@ -73,7 +85,7 @@
     {#if fromChainId === Chains.PLS || fromChainId === Chains.V4PLS}
       <div class="relative hover:z-10 leading-8">
         <div class="flex flex-row leading-8 justify-between items-center text-sm">
-          <span class="flex items-center flex-row gap-2">
+          <span class="flex items-center flex-row gap-1">
             <ButtonToggle
               contentClass="leading-6 my-1"
               title={large ? 'Delivery' : 'Deliv.'}
@@ -108,14 +120,17 @@
                 } else if (feeType === input.FeeType.FIXED) {
                   input.fixedFee.value = bridgeSettings.reasonableFixedFee
                 }
-              }} />{#if feeType === input.FeeType.PERCENT || feeType === input.FeeType.GAS_TIP}<Button
+              }} />
+            {#if feeType === input.FeeType.GAS_TIP || feeType === input.FeeType.PERCENT}
+              <Button
                 class="flex px-1 leading-6"
                 onclick={() => {
                   storageBridgeSettings.extend({
                     deliveryFeeLocked: !deliveryFeeLocked,
                   })
-                }}><LockIcon locked={deliveryFeeLocked} /></Button
-              >{/if}
+                }}><LockIcon locked={deliveryFeeLocked} />
+              </Button>
+            {/if}
           </span>
           {#if shouldDeliver.value}
             <Tooltip
@@ -196,14 +211,16 @@
           {#snippet trigger()}
             <Button
               name="toggle-cost-limit"
-              class="tooltip tooltip-top tooltip-right-toward-center relative text-sm leading-8"
+              class="tooltip tooltip-top tooltip-right-toward-center relative text-sm leading-8 flex flex-row items-center gap-1"
               onclick={() => {
                 storageBridgeSettings.extend({
                   costLimitLocked: !costLimitLocked,
                 })
               }}>
-              Cost&nbsp;{#if feeType === input.FeeType.GAS_TIP}Limit&nbsp;<LockIcon
-                  locked={costLimitLocked} />{/if}
+              <span>Cost&nbsp;{#if feeType === input.FeeType.GAS_TIP}Limit&nbsp;{/if}</span>
+              {#if feeType === input.FeeType.FIXED || feeType === input.FeeType.GAS_TIP}
+              <LockIcon locked={costLimitLocked} />
+              {/if}
             </Button>
           {/snippet}
         </Tooltip>
