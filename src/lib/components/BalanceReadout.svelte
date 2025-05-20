@@ -81,7 +81,6 @@
       maxDecimals: 18 - Math.floor(Number(balance / oneEther / 3n)).toString().length,
     }),
   )
-  $inspect(tokenBalance?.value, humanReadableText)
 </script>
 
 <div class={wrapperClasses}>
