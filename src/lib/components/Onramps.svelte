@@ -5,6 +5,8 @@
   import lifiLogo from '../../images/providers/lifi.svg?raw'
   import coinbaseLogo from '../../images/providers/coinbase.svg?raw'
   import relayLogo from '../../images/providers/relay.svg?raw'
+  import zkp2pLogo from '../../images/providers/zkp2p.svg?raw'
+
   import { accountState, modal } from '../stores/auth/AuthProvider.svelte'
   import { onboardShowOnramp, onboardShowOnramps, type OnrampProviderKey } from '../stores/storage.svelte'
 
@@ -62,7 +64,7 @@
     {
       key: 'zkp2p',
       name: 'ZKP2P',
-      logoHref: './images/providers/zkp2p.png',
+      logo: zkp2pLogo,
       onclick: () => {
         window.open(zkP2PUrl, 'zkp2p-onramp', '_blank')
         updateOnrampProviderStates(false, null)
@@ -141,7 +143,7 @@
           class="flex flex-row items-center text-surface-contrast-50 justify-between w-full">
           <span class="h-full flex leading-8 text-base">{provider.name}</span>
           <span
-            class="size-8 items-center flex justify-center overflow-hidden rounded-full scale-90 [&>svg]:w-8 translate-x-[1px]">
+            class="size-8 items-center flex justify-center overflow-hidden scale-90 [&>svg]:w-8 translate-x-[1px]" class:rounded-full={provider.key === 'coinbase'}>
             {#if provider.logoHref}
               <Image src={provider.logoHref} />
             {:else}
