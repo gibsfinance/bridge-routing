@@ -655,13 +655,13 @@
   {loadingKey} />
 
 {#if showTooltips.value}
-  <div class="absolute top-0 left-0 w-full h-full">
+  <div class="absolute top-0 left-0 w-full h-full z-10">
     <GuideShield show={true} />
     {#if bridgingToPulsechain}
-      <GuideStep step={1} triggerClass="absolute left-24 top-12">
+      <GuideStep step={1} triggerClass="absolute right-24 top-8">
         <p>Onramp funds</p>
       </GuideStep>
-      <GuideStep step={2} triggerClass="absolute right-24 top-28">
+      <GuideStep step={2} triggerClass="absolute left-24 top-28">
         <p>Select the token you wish to bridge to PulseChain.</p>
       </GuideStep>
       <GuideStep step={3} triggerClass="absolute right-24 bottom-4">

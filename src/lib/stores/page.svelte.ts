@@ -31,6 +31,9 @@ export class Page {
   get onramps() {
     return this.val.params?.get('onramps')
   }
+  get guide() {
+    return this.val.params?.get('guide')
+  }
   get stage() {
     return this.val.params?.get('stage')
   }

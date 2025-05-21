@@ -55,7 +55,11 @@ export const defaultOnboardTokens = new LocalProxyProp(
   null as PulsexTokens | null,
 )
 
-export const onboardShowOnramps = new LocalProxyProp(storage, ['onboardShowOnramps'], true)
+export const onboardShowOnramps = new LocalProxyProp(storage, ['onboardShowOnramps'], false)
+
+export type OnrampProviderKey = 'coinbase' | 'lifi' | 'relay' | 'zkp2p' | 'others' | null
+
+export const onboardShowOnramp = new LocalProxyProp(storage, ['onboardShowOnramp'], null as OnrampProviderKey)
 
 export type BridgeTx = {
   hash?: Hex | null
