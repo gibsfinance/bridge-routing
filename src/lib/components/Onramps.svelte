@@ -80,7 +80,7 @@
           class="flex flex-row gap-1 items-center text-surface-contrast-50 pl-3 justify-between w-full h-8">
           <span class="h-full leading-8 text-base">ZKP2P</span>
           <span class="size-8 items-center flex justify-center">
-            <Image src="https://zkp2p.xyz/logo512.png" sizeClasses="size-6" />
+            <Image src="./images/providers/zkp2p.png" sizeClasses="size-6" />
           </span>
         </a>
       </li>
