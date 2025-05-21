@@ -11,6 +11,7 @@
     name?: string
     id?: string
     disabled?: boolean
+    tabindex?: number
   }
   const {
     type = 'button',
@@ -21,9 +22,10 @@
     name,
     id,
     disabled,
+    tabindex,
   }: Props = $props()
 </script>
 
-<button {type} class={className} {onclick} {title} {disabled} {name} {id}>
+<button {type} class={className} {onclick} {title} {disabled} {name} {id} {tabindex}>
   {@render children?.()}
 </button>

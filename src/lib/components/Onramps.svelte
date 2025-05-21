@@ -1,27 +1,19 @@
 <script lang="ts">
+  import { Popover } from '@skeletonlabs/skeleton-svelte'
   import Icon from '@iconify/svelte'
 
   import lifiLogo from '../../images/providers/lifi.svg?raw'
   import coinbaseLogo from '../../images/providers/coinbase.svg?raw'
-
+  import relayLogo from '../../images/providers/relay.svg?raw'
   import { accountState, modal } from '../stores/auth/AuthProvider.svelte'
-  import { onboardShowOnramps } from '../stores/storage.svelte'
+  import { onboardShowOnramp, onboardShowOnramps, type OnrampProviderKey } from '../stores/storage.svelte'
 
   import Button from './Button.svelte'
   import LifiWidget from './bridges/LifiWidget.svelte'
-  import Section from './Section.svelte'
   import Image from './Image.svelte'
 
-  const toggleOnramps = () => {
-    onboardShowOnramps.value = !onboardShowOnramps.value
-  }
   const onrampsOpen = $derived.by(() => onboardShowOnramps.value)
-  const openOnRamp = () => {
-    modal.open({
-      view: 'OnRampProviders',
-    })
-  }
-  const openCoinbase = () => {
+  const coinbaseUrl = $derived.by(() => {
     const url = new URL('https://pay.coinbase.com/buy/select-asset')
     url.searchParams.set('appId', '00e61e2f-b25d-4dd0-8d6e-9b3bb91c9764')
     url.searchParams.set(
@@ -34,71 +26,136 @@
     url.searchParams.set('defaultNetwork', 'ethereum')
     url.searchParams.set('defaultExperience', 'buy')
     url.searchParams.set('partnerUserId', accountState.address!)
-    window.open(url, 'coinbase-onramp', 'width=400,height=600')
+    return url.toString()
+  })
+  type OnrampProvider = {
+    key: OnrampProviderKey
+    name: string
+    logo?: string
+    logoHref?: string
+    onclick?: () => void
   }
-  let lifiOpen = $state(false)
+  const zkP2PUrl = $derived(`https://zkp2p.xyz/swap?toToken=ETH${accountState.address ? `&recipientAddress=${accountState.address}` : ''}`)
+  const relayUrl = $derived(`https://relay.link/onramp/ethereum${accountState.address ? `?toAddress=${accountState.address}` : ''}`)
+  const providers = $derived([
+    {
+      key: 'others',
+      name: 'Others',
+      onclick: () => {
+        modal.open({ view: 'OnRampProviders' })
+        updateOnrampProviderStates(false, null)
+      },
+    },
+    {
+      key: 'coinbase',
+      name: 'Coinbase',
+      logo: coinbaseLogo,
+      onclick: () => {
+        if (accountState.address) {
+          window.open(coinbaseUrl, 'coinbase-onramp', 'width=400,height=600')
+          updateOnrampProviderStates(false, null)
+        } else {
+          modal.open({ view: 'Connect' })
+        }
+      },
+    },
+    {
+      key: 'zkp2p',
+      name: 'ZKP2P',
+      logoHref: './images/providers/zkp2p.png',
+      onclick: () => {
+        window.open(zkP2PUrl, 'zkp2p-onramp', '_blank')
+        updateOnrampProviderStates(false, null)
+      },
+    },
+    {
+      key: 'relay',
+      name: 'Relay',
+      logo: relayLogo,
+      onclick: () => {
+        window.open(relayUrl, 'relay-onramp', 'width=400,height=678')
+        updateOnrampProviderStates(false, null)
+      },
+    },
+    {
+      key: 'lifi',
+      name: 'Lifi',
+      logo: lifiLogo,
+    },
+  ] as OnrampProvider[])
+  const reversedProviders = $derived([...providers].reverse())
+  const updateOnrampProviderStates = (open: boolean, key?: OnrampProviderKey) => {
+    onboardShowOnramps.value = open
+    if (key !== undefined) {
+      onboardShowOnramp.value = key
+    }
+  }
+  const openProvider = $derived((key: OnrampProviderKey) => () => {
+    updateOnrampProviderStates(false, key)
+  })
 </script>
 
-<Section id="onramp-section" focused>
-  <div class="flex flex-col w-full justify-start">
-    <div class="flex flex-row gap-2 items-center">
-      <span class="text-gray-500 text-sm w-full text-left">Onramps to Ethereum</span>
-      <Button
-        class="flex flex-row gap-2 items-center text-surface-contrast-50 justify-between"
-        onclick={toggleOnramps}
-        id="onramp-section">
-        <Icon
-          icon="mdi:bank"
-          mode="svg"
-          class="size-7 p-1 text-white [&>path]:text-black flex transition-all duration-100 {onrampsOpen
-            ? 'rotate-180'
-            : ''}" />
-      </Button>
+<Popover
+  open={onrampsOpen}
+  onOpenChange={(e) => updateOnrampProviderStates(e.open)}
+  positioning={{ placement: 'bottom-end', gutter: -4, shift: 4 }}
+  triggerBase="flex flex-col items-center justify-items-end grow gap-1 rounded-2xl shadow-inset justify-between w-full text-surface-contrast-50 border transition-all duration-100 preset-outline-surface-500 relative shadow bg-white px-4 py-1 group"
+  contentBase="card bg-white space-y-4 max-w-[320px] shadow-lg border border-gray-200 py-1"
+  modal
+>
+  {#snippet trigger()}
+    <div class="text-gray-500 text-sm w-full text-left flex flex-row gap-1 items-center">
+      <span class="text-gray-500 text-sm w-full text-left flex flex-row justify-between">
+        <span>Onramps to Ethereum</span>
+        <span class="flex flex-row-reverse">
+          {#each reversedProviders as provider}
+          {#if provider.key !== 'others'}
+          <div class="size-6 -ml-3 bg-gray-50 border border-gray-200 rounded-full group-hover:-ml-1 transition-all overflow-hidden [&>*]:size-full transition-duration-100">
+            {#if provider.logoHref}
+              <Image src={provider.logoHref} />
+            {:else}
+              {@html provider.logo}
+            {/if}
+          </div>
+          {/if}
+          {/each}
+        </span>
+      </span>
+      <Icon
+        icon="mdi:bank"
+        mode="svg"
+        class="size-7 p-1 text-white [&>path]:text-black flex transition-all duration-100 {onrampsOpen
+          ? 'rotate-180'
+          : ''}" />
     </div>
+  {/snippet}
+  {#snippet content()}
+  <div class="flex flex-col gap-1 grow w-56">
     <ul
-      class="flex flex-row gap-2 items-center overflow-hidden transition-all duration-200"
-      class:h-0={!onrampsOpen}
-      class:h-8={onrampsOpen}
-      class:mt-2={onrampsOpen}>
-      <li class="hover:bg-surface-50 border rounded-2xl overflow-hidden h-8 flex">
+      class="flex flex-col items-center overflow-hidden transition-all duration-200" tabindex="-1">
+      {#each reversedProviders as provider}
+      <li class="hover:bg-surface-50 overflow-hidden flex px-2 py-0.5 w-full">
         <Button
-          onclick={accountState.address ? openCoinbase : () => modal.open({ view: 'Connect' })}
-          class="flex flex-row items-center text-surface-contrast-50 pl-3 justify-between w-full">
-          <span class="h-full flex leading-8 text-base">Coinbase</span>
+          tabindex={-1}
+          onclick={provider.onclick ?? openProvider(provider.key)}
+          class="flex flex-row items-center text-surface-contrast-50 justify-between w-full">
+          <span class="h-full flex leading-8 text-base">{provider.name}</span>
           <span
             class="size-8 items-center flex justify-center overflow-hidden rounded-full scale-90 [&>svg]:w-8 translate-x-[1px]">
-            {@html coinbaseLogo}
+            {#if provider.logoHref}
+              <Image src={provider.logoHref} />
+            {:else}
+              {@html provider.logo}
+            {/if}
           </span>
         </Button>
       </li>
-      <li class="hover:bg-surface-50 border rounded-2xl overflow-hidden h-8 flex">
-        <a
-          href="https://zkp2p.xyz/swap?toToken=ETH{accountState.address
-            ? `&recipientAddress=${accountState.address}`
-            : ''}"
-          target="_blank"
-          class="flex flex-row gap-1 items-center text-surface-contrast-50 pl-3 justify-between w-full h-8">
-          <span class="h-full leading-8 text-base">ZKP2P</span>
-          <span class="size-8 items-center flex justify-center">
-            <Image src="./images/providers/zkp2p.png" sizeClasses="size-6" />
-          </span>
-        </a>
-      </li>
-      <li class="hover:bg-surface-50 border rounded-2xl overflow-hidden h-8 flex">
-        <Button
-          onclick={() => (lifiOpen = !lifiOpen)}
-          class="flex flex-row gap-2 items-center text-surface-contrast-50 px-3 justify-between w-full [&>svg]:w-12">
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html lifiLogo}
-        </Button>
-        {#if lifiOpen}
-          <LifiWidget close={() => (lifiOpen = false)} />
-        {/if}
-      </li>
-      <li
-        class="hover:bg-surface-50 border rounded-2xl overflow-hidden h-8 ml-auto text-base text-gray-500">
-        <Button onclick={openOnRamp} class="px-2 leading-8">Others</Button>
-      </li>
+      {/each}
     </ul>
   </div>
-</Section>
+  {/snippet}
+</Popover>
+
+{#if onboardShowOnramp.value === 'lifi'}
+  <LifiWidget close={() => updateOnrampProviderStates(false, null)} />
+{/if}
