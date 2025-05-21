@@ -7,6 +7,7 @@
     sizeClasses?: ClassValue
     positionClasses?: ClassValue
     backgroundClasses?: ClassValue
+    zClasses?: ClassValue
     onclick?: () => void
   }
   const {
@@ -15,11 +16,12 @@
     sizeClasses = 'h-full w-full',
     positionClasses = 'absolute',
     backgroundClasses = 'bg-black/50',
+    zClasses = '',
     onclick = () => {
       showTooltips.value = false
     },
   }: Props = $props()
-  const classes = $derived([positionClasses, sizeClasses, backgroundClasses, className])
+  const classes = $derived([positionClasses, sizeClasses, backgroundClasses, className, zClasses])
 </script>
 
 <div class={classes} class:hidden={!show} {onclick} role="presentation"></div>
