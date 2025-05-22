@@ -9,7 +9,7 @@
   // export let brightness = '100%'
   // export let containerClassName = ''
   // export let bg_color = 'bg-slate-950'
-  const { image_url = '', min_height = 'auto', height = 'auto', blur = '9px', size = '1em', rect = 'inset(0)', opacity = '1', brightness = '100%', containerClassName = '', bg_color = 'bg-slate-950', children } = $props()
+  const { image_url = '', min_height = 'auto', height = 'auto', blur = '12px', size = '1em', rect = 'inset(0)', opacity = '1', brightness = '100%', containerClassName = '', bg_color = 'bg-slate-950', children } = $props()
 </script>
 
 <div class="h-content relative overflow-hidden w-full">
