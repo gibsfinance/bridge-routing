@@ -66,7 +66,7 @@
       name: 'ZKP2P',
       logo: zkp2pLogo,
       onclick: () => {
-        window.open(zkP2PUrl, 'zkp2p-onramp', '_blank')
+        window.open(zkP2PUrl, '_blank')
         updateOnrampProviderStates(false, null)
       },
     },
