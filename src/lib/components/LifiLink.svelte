@@ -8,15 +8,15 @@
     position?: ClassValue
   }
   const {
-    textColor = '[&>svg]:stroke-white [&>svg>path]:fill-white',
+    textColor = '[&>svg]:stroke-white [&>svg>path]:fill-white [&>svg]:h-8',
     size = 'h-full w-16',
-    position = 'inline-flex translate-y-2.5 -mt-2.5',
+    position = 'inline-flex',
   }: Props = $props()
-  const classes = $derived([position, textColor, size])
+  const classes = $derived([position, textColor, size, 'items-center'])
 </script>
 
 <a href="https://li.fi/" target="_blank" class="inline-flex items-center gap-2">
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-  <span class={classes}>{@html lifi}</span>
+  <span class={classes}>LI.FI{@html lifi}</span>
   <Icon icon="gis:direct" class="size-6 {position}" />
 </a>
