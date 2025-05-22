@@ -21,12 +21,12 @@
 <div class="bg-slate-100 min-h-[200px] flex items-center">
   <div class="container px-4 py-12 text-center m-auto text-slate-950">
     <div class="max-w-4xl mx-auto">
-      <a href="#/onboard" onclick={scrollToTop}>
-        <h3 class="text-5xl font-italiana font-bold flex flex-row items-center gap-2 justify-center">
+      <h3 class="text-5xl font-italiana font-bold flex flex-row items-center gap-2 justify-center">
+        <a href="#/onboard" onclick={scrollToTop} class="flex flex-row items-center gap-2">
           Onboard <Icon icon="mingcute:run-fill" class="text-4xl" />
-        </h3>
-      </a>
-      <h4 class="text-2xl mt-4">Move tokens from any chain to PulseChain in three simple steps</h4>
+        </a>
+      </h3>
+      <h4 class="text-2xl mt-4 text-slate-700">Bridge to PulseChain quickly and securely</h4>
     </div>
   </div>
 </div>
