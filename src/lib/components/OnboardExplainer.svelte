@@ -32,9 +32,9 @@
 </div>
 
 <BlurryImage image_url="url({dashAfterCrypto})" brightness="80%" min_height="auto">
-  <div class="text-white py-12 px-4 text-shadow-lg">
+  <div class="text-white p-8 text-shadow-lg">
     <div class="container m-auto max-w-6xl">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Step 1: Connect -->
         <div class="flex flex-col items-center text-center p-8 bg-white/10 rounded-xl">
           <Icon icon="mdi:wallet" class="text-5xl" />

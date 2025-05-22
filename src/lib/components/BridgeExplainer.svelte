@@ -6,7 +6,7 @@
 </script>
 
 <div class="bg-gradient-to-b from-slate-100 to-white">
-  <div class="container px-4 py-16 text-center m-auto text-slate-950">
+  <div class="px-4 py-16 text-center m-auto text-slate-950">
     <a href="#/delivery" onclick={scrollToTop} class="group">
       <h3 class="text-5xl font-italiana font-bold flex flex-row items-center gap-3 justify-center transition-transform duration-300 group-hover:scale-105">
         Token Delivery
@@ -16,7 +16,7 @@
     <h4 class="text-2xl mt-4 text-slate-700">Bridge-Level Security, Enhanced Convenience</h4>
 
     <!-- Feature Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12 max-w-4xl mx-auto">
       <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
         <Icon icon="mdi:shield-check" class="text-3xl text-tertiary-600 mx-auto mb-4" />
         <h5 class="text-xl font-semibold mb-2">Bridge-Level Security</h5>

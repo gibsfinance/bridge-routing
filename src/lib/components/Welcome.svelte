@@ -40,7 +40,7 @@
       class:translate-y-8={!toggle}>
       Gibs
     </h1>
-    <div class="flex gap-2 font-light text-center" class:flex-col={isSmall} class:flex-row={!isSmall}>
+    <div class="flex font-light text-center" class:gap-2={!isSmall} class:flex-col={isSmall} class:flex-row={!isSmall}>
       <span
         class="transition-all duration-300"
         class:translate-y-full={!toggle}
