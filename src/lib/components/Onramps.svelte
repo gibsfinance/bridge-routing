@@ -8,7 +8,7 @@
   import zkp2pLogo from '../../images/providers/zkp2p.svg?raw'
 
   import { accountState, modal } from '../stores/auth/AuthProvider.svelte'
-  import { onboardShowOnramp, onboardShowOnramps, type OnrampProviderKey } from '../stores/storage.svelte'
+  import { embedSettings, onboardShowOnramp, onboardShowOnramps, type OnrampProviderKey } from '../stores/storage.svelte'
 
   import Button from './Button.svelte'
   import LifiWidget from './bridges/LifiWidget.svelte'
@@ -99,11 +99,13 @@
 
 <Popover
   open={onrampsOpen}
-  onOpenChange={(e) => updateOnrampProviderStates(e.open)}
+  onOpenChange={(e) => {
+    updateOnrampProviderStates(e.open)
+  }}
+  closeOnInteractOutside={!embedSettings.value?.open}
   positioning={{ placement: 'bottom-end', gutter: -4, shift: 4 }}
   triggerBase="flex flex-col items-center justify-items-end grow gap-1 rounded-2xl shadow-inset justify-between w-full text-surface-contrast-50 border transition-all duration-100 preset-outline-surface-500 relative shadow bg-white px-4 py-1 group"
   contentBase="card bg-white space-y-4 max-w-[320px] shadow-lg border border-gray-200 py-1"
-  modal
 >
   {#snippet trigger()}
     <div class="text-gray-500 text-sm w-full text-left flex flex-row gap-1 items-center">

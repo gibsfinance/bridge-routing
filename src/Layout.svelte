@@ -5,6 +5,8 @@
   import { Toaster } from '@skeletonlabs/skeleton-svelte'
   import { toaster } from './lib/stores/toast'
   import { page } from './lib/stores/page.svelte'
+  import EmbedSettings from './lib/components/EmbedSettings.svelte'
+  import { embedEphermeralSettings } from './lib/stores/storage.svelte'
 
   const { children } = $props()
 </script>
@@ -18,19 +20,24 @@
   importing in this way allows the scripts to be loaded in parallel
   and for us to show a loader until loading is complete
 -->
-{#if !page.embed}
-  <div class="app bg-slate-950">
-    <div class="app">
-      <Nav />
-      <main class="mt-14 box-border flex min-h-screen w-full flex-col bg-slate-950 text-white">
-        {@render children()}
-        <Footer />
-      </main>
+<div class="flex flex-row">
+  {#if !embedEphermeralSettings.disabled}
+    <EmbedSettings />
+  {/if}
+  {#if !page.embed}
+    <div class="app bg-slate-950 flex grow">
+      <div class="app relative">
+        <Nav />
+        <main class="mt-14 box-border flex min-h-screen w-full flex-col bg-slate-950 text-white">
+          {@render children()}
+          <Footer />
+        </main>
+      </div>
     </div>
-  </div>
-{:else}
-{@render children()}
-{/if}
+  {:else}
+  {@render children()}
+  {/if}
+</div>
 <Toaster {toaster} placement="bottom-end" />
 
 <style lang="postcss">

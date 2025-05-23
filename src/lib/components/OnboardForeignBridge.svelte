@@ -14,7 +14,7 @@
     activeOnboardStep,
     foreignBridgeInputs,
     bridgeTx,
-    showTooltips,
+    showGuide,
     defaultOnboardTokens,
   } from '../stores/storage.svelte'
   import { untrack } from 'svelte'
@@ -31,8 +31,6 @@
   import OnboardButton from './OnboardButton.svelte'
   import { transactionButtonPress } from '../stores/transaction'
   import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
-  import GuideStep from './GuideStep.svelte'
-  import GuideShield from './GuideShield.svelte'
   import {
     assetOutKey,
     bridgeSettings,
@@ -55,7 +53,7 @@
   import { chainsMetadata } from '../stores/auth/constants'
   import Icon from '@iconify/svelte'
   import Button from './Button.svelte'
-    import OnboardGuide from './OnboardGuide.svelte'
+  import OnboardGuide from './OnboardGuide.svelte'
 
   const defaultPulsexTokens = {
     bridgeTokenIn: zeroAddress,
@@ -655,6 +653,6 @@
   text={buttonText}
   {loadingKey} />
 
-{#if showTooltips.value}
+{#if showGuide.value}
   <OnboardGuide {bridgingToPulsechain} />
 {/if}

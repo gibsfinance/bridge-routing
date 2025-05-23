@@ -1,5 +1,3 @@
-import { tick } from 'svelte'
-
 type PageState = {
   path: string
   changing: boolean
@@ -16,6 +14,7 @@ export class Page {
     changing: false,
     params: new URLSearchParams(firstParams),
   })
+  public locked = $state(false)
   get value() {
     return `${this.val.path}${this.val.params?.size ? `?${this.val.params.toString()}` : ''}`
   }
@@ -40,9 +39,16 @@ export class Page {
   get queryParams() {
     return this.val.params ?? new URLSearchParams()
   }
+  setParam(key: string, value: string | null) {
+    const params = new URLSearchParams(this.val.params ?? '')
+    if (value === null) {
+      params.delete(key)
+    } else {
+      params.set(key, value)
+    }
+    this.val.params = params
+  }
   finishChange() {
-    // await tick()
-    // await new Promise(resolve => setTimeout(resolve, 10))
     this.val.changing = false
   }
   set value(raw: string) {
@@ -58,7 +64,9 @@ export class Page {
     }
     if (r !== this.value) {
       this.val.changing = true
-      history.pushState(null, '', `#${r}`)
+      if (!this.locked) {
+        history.pushState(null, '', `#${r}`)
+      }
       this.val = {
         path: noQuery,
         changing: true,

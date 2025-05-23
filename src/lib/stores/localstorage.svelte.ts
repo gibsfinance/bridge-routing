@@ -39,6 +39,7 @@ export class LocalProxyProp<T, B extends object, O extends object> {
     protected storage: LocalProxy<B>,
     protected key: string[],
     defaultValue: T,
+    ignoredKeys: string[] = [],
   ) {
     if (!_.has(storage.value, key)) {
       this.value = defaultValue

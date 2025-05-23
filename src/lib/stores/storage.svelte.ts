@@ -3,7 +3,8 @@ import { LocalProxy, LocalProxyProp } from './localstorage.svelte'
 import { FeeType, type BridgeKey } from './input.svelte'
 
 export type DefaultSettings = {
-  showTooltips: boolean
+  showGuide: boolean
+  activeOnboardStep: number
   foreignBridgeInputs: ForeignBridgeInputs | null
 }
 export type ForeignBridgeInputs = {
@@ -15,7 +16,7 @@ export type ForeignBridgeInputs = {
   toAddress: string | null
 }
 const globalDefaultSettings: DefaultSettings = {
-  showTooltips: true,
+  showGuide: true,
   foreignBridgeInputs: {
     fromChain: 1,
     fromToken: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599' as Hex,
@@ -23,10 +24,11 @@ const globalDefaultSettings: DefaultSettings = {
     toToken: zeroAddress as Hex,
     toAddress: null,
   } as ForeignBridgeInputs | null,
+  activeOnboardStep: 1,
 }
 export const storage = new LocalProxy('gibs.finance.settings', globalDefaultSettings)
 
-export const showTooltips = new LocalProxyProp(storage, ['showTooltips'], true)
+export const showGuide = new LocalProxyProp(storage, ['showGuide'], true)
 
 export const foreignBridgeInputs = new LocalProxyProp(
   storage,
@@ -86,3 +88,29 @@ export const bridgeSettings = new LocalProxyProp(storage, ['bridgeSettings'], {
   deliveryFeeLocked: false,
   costLimitLocked: false,
 } as Partial<BridgeSettings> | null)
+
+export type EmbedSettings = {
+  focused: 'mode' | 'guide' | 'onramps' | null
+  open: boolean
+  values: {
+    mode: 'embed' | 'simple' | null
+    guide: 'show' | 'closed' | null
+    onramps: 'show' | 'closed' | null
+  }
+}
+
+export class EmbedEphermeralSettings {
+  disabled = $state(false)
+}
+
+export const embedEphermeralSettings = new EmbedEphermeralSettings()
+
+export const embedSettings = new LocalProxyProp(storage, ['embedSettings'], {
+  focused: 'mode',
+  open: false,
+  values: {
+    mode: null,
+    guide: null,
+    onramps: null,
+  },
+} as Partial<EmbedSettings> | null)

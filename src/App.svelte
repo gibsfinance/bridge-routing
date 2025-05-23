@@ -4,15 +4,19 @@
   import Delivery from './lib/pages/Delivery.svelte'
   import Onboard from './lib/pages/Onboard.svelte'
   import { page } from './lib/stores/page.svelte'
-  import { activeOnboardStep, defaultOnboardTokens, onboardShowOnramps, showTooltips } from './lib/stores/storage.svelte'
+  import { activeOnboardStep, defaultOnboardTokens, onboardShowOnramps, showGuide, embedEphermeralSettings } from './lib/stores/storage.svelte'
   import { isAddress } from 'viem'
+
+  if (page.embed || window !== window.top) {
+    embedEphermeralSettings.disabled = true
+  }
   if (page.onramps === 'open') {
     onboardShowOnramps.value = true
   }
   if (page.guide === 'open') {
-    showTooltips.value = true
+    showGuide.value = true
   } else if (page.guide === 'closed') {
-    showTooltips.value = false
+    showGuide.value = false
   }
   if (page.stage === 'onboard') {
     activeOnboardStep.value = 1
