@@ -49,7 +49,7 @@
         type="button"
         onkeypress={gotoHome}
         onclick={gotoHome}
-        class="cursor-pointer items-center font-italiana flex flex-row pr-2 pl-0 leading-8 uppercase">
+        class="cursor-pointer items-center font-italiana flex flex-row pr-2 pl-0 leading-8">
         <Image
           src={gibs}
           alt="a yellow hand with index finger and thub rubbing together"
