@@ -22,7 +22,7 @@
   const queryParams = page.queryParams
   const keys = [
     'bridgeTokenIn',
-    'bridgeTokenOut',
+    // 'bridgeTokenOut',
     'pulsexTokenIn',
     'pulsexTokenOut',
   ]

@@ -123,6 +123,7 @@ const handleHashChange = async () => {
   }
   const current = location.hash.slice(1) || '/'
   if (current !== page.value) {
+    console.log('hashchange', current, page.value)
     page.value = current
   }
 }
