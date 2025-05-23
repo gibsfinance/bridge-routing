@@ -33,6 +33,12 @@
 
 <BlurryImage image_url="url({dashAfterCrypto})" brightness="80%" min_height="auto">
   <div class="text-white p-8 text-shadow-lg">
+    <div class="text-center mb-8">
+      <p class="text-lg mt-2 font-light text-white/90 italic">
+        Follow these simple steps to start your onboarding process.
+      </p>
+    </div>
+
     <div class="container m-auto max-w-6xl">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Step 1: Connect -->

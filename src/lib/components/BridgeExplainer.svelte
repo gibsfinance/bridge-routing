@@ -8,7 +8,7 @@
 <div class="bg-gradient-to-b from-slate-100 to-white">
   <div class="px-4 py-16 text-center m-auto text-slate-950">
     <a href="#/delivery" onclick={scrollToTop} class="group">
-      <h3 class="text-5xl font-italiana font-bold flex flex-row items-center gap-3 justify-center transition-transform duration-300 group-hover:scale-105">
+      <h3 class="text-5xl font-italiana font-bold flex flex-row items-center gap-3 justify-center">
         Token Delivery
         <Icon icon="hugeicons:bridge" class="text-tertiary-600" />
       </h3>
@@ -64,18 +64,33 @@
         <div class="space-y-6">
           <ul class="space-y-4">
             <li class="flex items-start gap-3">
-              <Icon icon="mdi:check-circle" class="text-tertiary-400 mt-1 flex-shrink-0" />
+              <Icon icon="mdi:check-circle" class="mt-1 flex-shrink-0" />
               <span>Direct transfers to your preferred destination without pre-funding</span>
             </li>
             <li class="flex items-start gap-3">
-              <Icon icon="mdi:check-circle" class="text-tertiary-400 mt-1 flex-shrink-0" />
+              <Icon icon="mdi:check-circle" class="mt-1 flex-shrink-0" />
               <span>Pay delivery fees in any token, not just native tokens</span>
             </li>
             <li class="flex items-start gap-3">
-              <Icon icon="mdi:check-circle" class="text-tertiary-400 mt-1 flex-shrink-0" />
+              <Icon icon="mdi:check-circle" class="mt-1 flex-shrink-0" />
               <span>Fallback to standard bridge UI available at any time</span>
             </li>
           </ul>
+        </div>
+      </div>
+      <!-- Summary Points -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-12 max-w-4xl mx-auto">
+        <div class="flex flex-col items-center">
+          <Icon icon="mdi:ghost-off" class="text-4xl text-white mb-2" />
+          <span class="text-lg text-white">No Extra Risk</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <Icon icon="mdi:shield-check" class="text-4xl text-white mb-2" />
+          <span class="text-lg text-white">Same Security</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <Icon icon="mdi:gesture-tap" class="text-4xl text-white mb-2" />
+          <span class="text-lg text-white">Full Control</span>
         </div>
       </div>
 
