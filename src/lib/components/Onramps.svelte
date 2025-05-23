@@ -81,7 +81,7 @@
     },
     {
       key: 'lifi',
-      name: 'Lifi',
+      name: 'LI.FI',
       logo: lifiLogo,
     },
   ] as OnrampProvider[])
