@@ -308,7 +308,7 @@
   })
   const approvalIsLoading = $derived(bridgeSettings.approval.value === null)
   const approvalIsTooLow = $derived(
-    bridgeSettings.approval.value && bridgeSettings.approval.value < bridgeSettings.amountToBridge,
+    bridgeSettings.approval.value !== null && bridgeSettings.approval.value < bridgeSettings.amountToBridge,
   )
   const pulsechainBridgeNeedsApproval = $derived.by(() => {
     return (
