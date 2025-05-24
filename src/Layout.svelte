@@ -10,11 +10,6 @@
   const { children } = $props()
 </script>
 
-<svelte:head>
-  <meta name="robots" content="noindex nofollow" />
-  <meta name="description" content="Gibs Finance" />
-</svelte:head>
-
 <!--
   importing in this way allows the scripts to be loaded in parallel
   and for us to show a loader until loading is complete
