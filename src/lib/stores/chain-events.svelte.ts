@@ -142,7 +142,7 @@ export const tokenBalanceLoadingKey = (chainId: number, address: string, account
 // this is not the optimal way to do this, but these watchers
 // should only be used for a heavily constrained set of cases
 // the cases are being cleared on a regular interval
-const balanceTTL = 1000 * 10
+const balanceTTL = 1000 * 20
 export const balances = new SvelteMap<string, { time: number; value: bigint | null }>()
 export class TokenBalanceWatcher {
   private balanceCleanup: Cleanup | null = null

@@ -89,7 +89,7 @@
       <Loading key={loadingKey} class="w-4 h-5" />
     {/if}
     <span class={decimalClassNames} class:opacity-75={!loading.isResolved(loadingKey)}
-      >{tokenBalance?.value === null ? '' : humanReadableText}
+      >{humanReadableText}
     </span>
     <span class="flex">{token?.symbol}</span>
   </span>
