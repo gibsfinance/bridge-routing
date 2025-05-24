@@ -56,7 +56,6 @@
 
 <Tooltip
   {open}
-  arrow
   positioning={{ placement, gutter }}
   {closeDelay}
   {interactive}

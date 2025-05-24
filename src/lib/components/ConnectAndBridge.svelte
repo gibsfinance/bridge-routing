@@ -102,7 +102,7 @@
       return false
     }
     if (input.recipientInput.value !== input.recipient.value) {
-      console.log('recipient input mismatch', input.recipientInput.value, input.recipient.value)
+      // console.log('recipient input mismatch', input.recipientInput.value, input.recipient.value)
       return true
     }
     if (!isRequiredChain) {
