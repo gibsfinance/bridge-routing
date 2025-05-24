@@ -16,25 +16,11 @@
   import { Chains } from '../stores/auth/types'
   import { type Cleanup } from '../stores/loading.svelte'
     import Warning from "./Warning.svelte"
-    import { untrack } from "svelte"
 
   const oninput = (value: string) => {
-    // recipientIsDecoupled = true
     recipientLockedToAccount.value = false
-    // recipientInput.value = value.trim()
-    console.log('oninput', value)
     updateDestination(value)
   }
-  // let recipientIsDecoupled = $state(false)
-  // let currentRecipient = $state((accountState.address ?? '') as string)
-  // const isValidRecipient = $derived(isAddress(currentRecipient))
-  // $effect(() => {
-  //   if (recipientIsDecoupled) return
-  //   if (!accountState.address) return
-  //   const input = untrack(() => currentRecipient)
-  //   if (input === accountState.address) return
-  //   currentRecipient = accountState.address
-  // })
 
   const isValidRecipient = $derived(
     !accountState.address || (
@@ -43,20 +29,16 @@
       recipientInput.value !== zeroAddress
     ),
   )
-  // $effect.pre(() => {
-  //   recipientInput.value = accountState.address ?? zeroAddress
-  // })
-  $effect.pre(() => {
+  $effect(() => {
+    if (!recipientLockedToAccount.value) return
+    recipientInput.value = accountState.address ?? zeroAddress
+  })
+  $effect(() => {
     const r = recipientInput.value
-    if (isValidRecipient && r !== untrack(() => recipient.value)) {
+    if (isValidRecipient && r !== recipient.value) {
       recipient.value = r as Hex
     }
   })
-  // $effect(() => {
-  //   // console.log('accountState.address', accountState.address)
-  //   recipientInput.value = accountState.address ?? ''
-  //   recipientLockedToAccount.value = !!accountState.address
-  // })
   let ensToAddressLoader: {
     promise: Promise<Hex | null>
     controller: AbortController
@@ -93,8 +75,6 @@
     }
   }
   let focused = $state(false)
-  // let inputContainer: HTMLDivElement | null = $state(null)
-  // const focused = $derived(document.activeElement?.parentNode === inputContainer)
 </script>
 
 <Section id="destination-address" focused compressed flexClass="flex flex-row">
