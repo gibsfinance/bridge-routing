@@ -31,7 +31,7 @@
   )
   $effect(() => {
     if (!recipientLockedToAccount.value) return
-    recipientInput.value = accountState.address ?? zeroAddress
+    recipientInput.value = accountState.address
   })
   $effect(() => {
     const r = recipientInput.value
