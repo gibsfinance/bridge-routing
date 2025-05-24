@@ -32,43 +32,6 @@
   const focused = $derived((page.settings === null || page.settings === 'open') ? null : page.settings)
   const open = $derived(page.settings !== null)
   const value = $derived(focused ? [focused] : [])
-  // $effect(() => {
-  //   if (page.settings === settings.settings.OPEN) return
-  //   if (page.settings === settings.settings.DISABLED) return
-  // })
-  // reset settings
-  // type PageState = {
-  //   mode?: string | null
-  //   guide?: string | null
-  //   onramps?: string | null
-  //   bridgeTokenIn?: Hex
-  //   pulsexTokenOut?: Hex
-  // }
-  // let previousPageState = $state<PageState>({})
-  // const pageState: PageState = $derived({
-  //   mode: page.mode,
-  //   guide: page.guide,
-  //   onramps: page.onramps,
-  //   bridgeTokenIn: defaultOnboardTokens.value?.bridgeTokenIn ?? zeroAddress,
-  //   pulsexTokenOut: defaultOnboardTokens.value?.pulsexTokenOut ?? zeroAddress,
-  // })
-  // $effect(() => {
-  //   page.locked = !!embedSettings.value?.open
-  // })
-  // $effect(() => {
-  //   if (embedSettings.value?.open) return
-  //   previousPageState = pageState
-  // })
-  // const resetDisabled = $derived(_.isEqual(false, previousPageState))
-  const resetDisabled = $derived(true)
-  const revertPageState = $derived(() => {
-    // page.setParam('mode', previousPageState.mode ?? null)
-    // page.setParam('guide', previousPageState.guide ?? null)
-    // page.setParam('onramps', previousPageState.onramps ?? null)
-    // page.setParam('bridgeTokenIn', previousPageState.bridgeTokenIn ?? null)
-    // page.setParam('pulsexTokenOut', previousPageState.pulsexTokenOut ?? null)
-    // defaultOnboardTokens.extend({ bridgeTokenIn: previousPageState.bridgeTokenIn, pulsexTokenOut: previousPageState.pulsexTokenOut })
-  })
   // mode settings
   const embedOptions = [
     {
@@ -133,18 +96,8 @@
     },
   ]
   const detailsOption = $derived(detailsOptions.find(option => option.value === page.details)!)
-  // const stageOptionInt = $derived(stageOption.value === 'onboard' ? 1 : 2)
   // bridge token in
-  // const bridgeTokenInFromSettings = $derived(defaultOnboardTokens.value?.bridgeTokenIn ?? zeroAddress)
   let bridgeTokenIn = $state(defaultOnboardTokens.value?.bridgeTokenIn ?? zeroAddress)
-  // $effect(() => {
-  //   if (bridgeTokenIn && bridgeTokenIn !== bridgeTokenInFromSettings) {
-  //     bridgeTokenIn = bridgeTokenInFromSettings
-  //   }
-  //   // if (bridgeTokenIn && isAddress(bridgeTokenIn)) {
-  //   //   bridgeKey.assetInAddress = bridgeTokenIn as Hex
-  //   // }
-  // })
   const bridgeTokenInFromBridgeKey = $derived(bridgeKey.assetInAddress)
   $effect(() => {
     if (bridgeTokenInFromBridgeKey && bridgeTokenInFromBridgeKey !== bridgeTokenIn) {
@@ -409,12 +362,7 @@
         {/if}
       </Accordion>
     </div>
-    <div class="grid grid-cols-3 gap-1 h-14 w-full p-2 sticky bottom-0 bg-white border-t border-gray-200">
-      <Button class="flex grow flex-row items-center gap-2 text-surface-contrast-50 justify-center border rounded-lg hover:bg-gray-100 transition-all transition-duration-100 h-10 {resetDisabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}"
-        disabled={resetDisabled}
-        onclick={revertPageState}>
-        <Icon icon="grommet-icons:revert" class="size-6" />
-      </Button>
+    <div class="grid grid-cols-2 gap-1 h-14 w-full p-2 sticky bottom-0 bg-white border-t border-gray-200">
       <Button class="flex grow flex-row items-center gap-2 text-surface-contrast-50 justify-center border rounded-lg hover:bg-gray-100 transition-all transition-duration-100 h-10" onclick={copyCurrentUrl}>
         <Icon icon="mdi:content-copy" class="size-6" />
       </Button>
