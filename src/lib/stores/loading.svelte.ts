@@ -43,13 +43,13 @@ export class LoadingCounter {
     ...conditions: Condition[]
   ): (arg?: In) => { promise: Promise<Out | null>; controller: AbortController; cleanup: Cleanup } {
     return (arg?: In) => {
-      untrack(() => this.increment(key))
+      const decrement = untrack(() => this.increment(key))
       let cancelled = false
       const abortController = new AbortController()
       const cleanup = () => {
+        decrement()
         if (cancelled) return
         cancelled = true
-        untrack(() => this.decrement(key))
         if (!abortController.signal.aborted) {
           abortController.abort('cancelled')
         }
