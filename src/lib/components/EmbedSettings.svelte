@@ -1,80 +1,79 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import { page } from '../stores/page.svelte'
+  import { page } from '../stores/app-page.svelte'
   import Button from './Button.svelte'
-  import { Accordion, Popover } from '@skeletonlabs/skeleton-svelte'
-  import { activeOnboardStep, defaultOnboardTokens, embedSettings, onboardShowOnramps, showGuide } from '../stores/storage.svelte'
+  import { Accordion } from '@skeletonlabs/skeleton-svelte'
+  import { defaultOnboardTokens } from '../stores/storage.svelte'
   import TokenSelect from './TokenSelect.svelte'
-  import { tokens } from '../stores/custom-tokens.svelte'
-  import { bridgableTokens, bridgeableTokensUnder } from '../stores/input.svelte'
+  import { bridgableTokens, bridgeKey } from '../stores/input.svelte'
   import { Provider } from '../stores/auth/types'
   import { zeroAddress, type Hex } from 'viem'
-    import ModalWrapper from './ModalWrapper.svelte'
-    import SelectButtonContents from './SelectButtonContents.svelte'
-    import _ from 'lodash'
-  // let realPageState = $state(page.value)
-  // $effect(() => {
-  //   if (embedSettings.value?.open) return
-  //   realPageState = page.value
-  // })
-  $effect(() => {
-    if (embedSettings.value?.open) return
-    if (page.onramps === 'show' && onboardShowOnramps.value) return
-    if (page.onramps === 'closed' && !onboardShowOnramps.value) return
-    page.setParam('onramps', onboardShowOnramps.value ? 'show' : 'closed')
-  })
-  $effect(() => {
-    if (embedSettings.value?.open) return
-    if (page.guide === 'show' && showGuide.value) return
-    if (page.guide === 'closed' && !showGuide.value) return
-    page.setParam('guide', showGuide.value ? 'show' : 'closed')
+  import ModalWrapper from './ModalWrapper.svelte'
+  import SelectButtonContents from './SelectButtonContents.svelte'
+  import _ from 'lodash'
+  import * as settings from '../stores/settings.svelte'
+  import * as nav from '../stores/nav.svelte'
+
+  const relevantUrl = $derived.by(() => {
+    const url = new URL(page.url.toString())
+    const params = page.queryParams
+    params.set('settings', settings.settings.DISABLED)
+    const route = page.route.id
+    const hash = `${route}${params.size ? `?${params.toString()}` : ''}`
+    url.hash = hash
+    return url.toString()
   })
   const copyCurrentUrl = $derived(() => {
-    navigator.clipboard.writeText(page.url.toString())
+    navigator.clipboard.writeText(relevantUrl)
   })
   const openCurrentUrl = $derived(() => {
-    window.open(page.url.toString(), '_blank')
+    window.open(relevantUrl, '_blank')
   })
-  const focused = $derived(embedSettings.value?.focused)
-  const open = $derived(embedSettings.value?.open)
+  const focused = $derived((page.settings === null || page.settings === 'open') ? null : page.settings)
+  const open = $derived(page.settings !== null)
   const value = $derived(focused ? [focused] : [])
+  // $effect(() => {
+  //   if (page.settings === settings.settings.OPEN) return
+  //   if (page.settings === settings.settings.DISABLED) return
+  // })
   // reset settings
-  type PageState = {
-    mode?: string | null
-    guide?: string | null
-    onramps?: string | null
-    bridgeTokenIn?: Hex
-    pulsexTokenOut?: Hex
-  }
-  let previousPageState = $state<PageState>({})
-  const pageState: PageState = $derived({
-    mode: page.mode,
-    guide: page.guide,
-    onramps: page.onramps,
-    bridgeTokenIn: defaultOnboardTokens.value?.bridgeTokenIn ?? zeroAddress,
-    pulsexTokenOut: defaultOnboardTokens.value?.pulsexTokenOut ?? zeroAddress,
-  })
-  $effect(() => {
-    page.locked = !!embedSettings.value?.open
-  })
-  $effect(() => {
-    if (embedSettings.value?.open) return
-    previousPageState = pageState
-  })
-  const resetDisabled = $derived(_.isEqual(pageState, previousPageState))
+  // type PageState = {
+  //   mode?: string | null
+  //   guide?: string | null
+  //   onramps?: string | null
+  //   bridgeTokenIn?: Hex
+  //   pulsexTokenOut?: Hex
+  // }
+  // let previousPageState = $state<PageState>({})
+  // const pageState: PageState = $derived({
+  //   mode: page.mode,
+  //   guide: page.guide,
+  //   onramps: page.onramps,
+  //   bridgeTokenIn: defaultOnboardTokens.value?.bridgeTokenIn ?? zeroAddress,
+  //   pulsexTokenOut: defaultOnboardTokens.value?.pulsexTokenOut ?? zeroAddress,
+  // })
+  // $effect(() => {
+  //   page.locked = !!embedSettings.value?.open
+  // })
+  // $effect(() => {
+  //   if (embedSettings.value?.open) return
+  //   previousPageState = pageState
+  // })
+  // const resetDisabled = $derived(_.isEqual(false, previousPageState))
+  const resetDisabled = $derived(true)
   const revertPageState = $derived(() => {
-    page.setParam('mode', previousPageState.mode ?? null)
-    page.setParam('guide', previousPageState.guide ?? null)
-    page.setParam('onramps', previousPageState.onramps ?? null)
-    page.setParam('bridgeTokenIn', previousPageState.bridgeTokenIn ?? null)
-    page.setParam('pulsexTokenOut', previousPageState.pulsexTokenOut ?? null)
-    defaultOnboardTokens.extend({ bridgeTokenIn: previousPageState.bridgeTokenIn, pulsexTokenOut: previousPageState.pulsexTokenOut })
+    // page.setParam('mode', previousPageState.mode ?? null)
+    // page.setParam('guide', previousPageState.guide ?? null)
+    // page.setParam('onramps', previousPageState.onramps ?? null)
+    // page.setParam('bridgeTokenIn', previousPageState.bridgeTokenIn ?? null)
+    // page.setParam('pulsexTokenOut', previousPageState.pulsexTokenOut ?? null)
+    // defaultOnboardTokens.extend({ bridgeTokenIn: previousPageState.bridgeTokenIn, pulsexTokenOut: previousPageState.pulsexTokenOut })
   })
   // mode settings
   const embedOptions = [
     {
       name: 'Default',
-      value: null,
+      value: settings.mode.DEFAULT,
     },
     {
       name: 'Embed',
@@ -89,32 +88,24 @@
   // guide settings
   const guideOptions = [
     {
-      name: 'Default (Show First)',
-      value: null,
+      name: 'Closed',
+      value: settings.guide.CLOSED,
     },
     {
       name: 'Show',
-      value: 'show',
-    },
-    {
-      name: 'Closed',
-      value: 'closed',
+      value: settings.guide.SHOW,
     },
   ]
   const guideOption = $derived(guideOptions.find(option => option.value === page.guide)!)
   // onboard settings
   const onrampsOptions = [
     {
-      name: 'Default',
-      value: null,
+      name: 'Closed',
+      value: settings.onramps.CLOSED,
     },
     {
       name: 'Show',
-      value: 'show',
-    },
-    {
-      name: 'Closed',
-      value: 'closed',
+      value: settings.onramps.SHOW,
     },
   ]
   const onrampsOption = $derived(onrampsOptions.find(option => option.value === page.onramps)!)
@@ -122,21 +113,42 @@
   const stageOptions = [
     {
       name: 'Onboard',
-      value: 'onboard',
+      value: settings.stage.ONBOARD,
     },
     {
       name: "Swap",
-      value: 'swap',
+      value: settings.stage.SWAP,
     },
   ]
   const stageOption = $derived(stageOptions.find(option => option.value === page.stage) ?? stageOptions[0])
-  const stageOptionInt = $derived(stageOption.value === 'onboard' ? 1 : 2)
+  // advanced options for delivery
+  const detailsOptions = [
+    {
+      name: 'Closed',
+      value: settings.details.CLOSED,
+    },
+    {
+      name: 'Show',
+      value: settings.details.SHOW,
+    },
+  ]
+  const detailsOption = $derived(detailsOptions.find(option => option.value === page.details)!)
+  // const stageOptionInt = $derived(stageOption.value === 'onboard' ? 1 : 2)
   // bridge token in
-  const bridgeTokenInFromSettings = $derived(defaultOnboardTokens.value?.bridgeTokenIn ?? zeroAddress)
+  // const bridgeTokenInFromSettings = $derived(defaultOnboardTokens.value?.bridgeTokenIn ?? zeroAddress)
   let bridgeTokenIn = $state(defaultOnboardTokens.value?.bridgeTokenIn ?? zeroAddress)
+  // $effect(() => {
+  //   if (bridgeTokenIn && bridgeTokenIn !== bridgeTokenInFromSettings) {
+  //     bridgeTokenIn = bridgeTokenInFromSettings
+  //   }
+  //   // if (bridgeTokenIn && isAddress(bridgeTokenIn)) {
+  //   //   bridgeKey.assetInAddress = bridgeTokenIn as Hex
+  //   // }
+  // })
+  const bridgeTokenInFromBridgeKey = $derived(bridgeKey.assetInAddress)
   $effect(() => {
-    if (bridgeTokenIn && bridgeTokenIn !== bridgeTokenInFromSettings) {
-      bridgeTokenIn = bridgeTokenInFromSettings
+    if (bridgeTokenInFromBridgeKey && bridgeTokenInFromBridgeKey !== bridgeTokenIn) {
+      bridgeTokenIn = bridgeTokenInFromBridgeKey
     }
   })
   // pulsex token out
@@ -147,6 +159,18 @@
       pulsexTokenOut = pulsexTokenOutFromSettings
     }
   })
+  const chainInputId = $derived(Number(bridgeKey.chain.id))
+  const bridgeTokenInSettings = $derived({
+    provider: bridgeKey.provider,
+    chain: chainInputId,
+    partnerChain: Number(bridgeKey.partnerChain?.id),
+  })
+  const bridgeTokensIn = $derived(bridgableTokens.bridgeableTokensUnder(bridgeTokenInSettings))
+  const plsxTokensOut = $derived(bridgableTokens.bridgeableTokensUnder({
+    provider: Provider.PULSECHAIN,
+    chain: 369,
+    partnerChain: 1,
+  }))
 </script>
 
 <button class="flex fixed bottom-16 z-20 size-8 items-center justify-center border border-gray-200 bg-gray-50 hover:bg-gray-100 text-surface-contrast-50 transition-all duration-200"
@@ -156,7 +180,7 @@
   class:left-0={!open}
   class:left-64={open}
   class:-translate-x-full={open}
-  onclick={() => embedSettings.extend({ open: !open })}
+  onclick={() => page.setParam('settings', !page.settings ? 'open' : null)}
   >
   {#if open}
     <Icon icon="mdi:close" class="size-6" />
@@ -169,7 +193,7 @@
     <h2 class="text-2xl font-bold font-italiana py-2.5 px-4 text-surface-contrast-50 border-b border-gray-200">Embed Settings</h2>
     <div class="flex flex-col gap-2 text-surface-contrast-50 grow overflow-y-auto">
       <Accordion value={value} collapsible onValueChange={(e) => {
-        embedSettings.extend({ focused: e.value[0] ?? null })
+        page.setParam('settings', e.value[0] ?? 'true') // true means that the settings are open but nothing is 'focused'
       }} classes="[&>hr]:border-gray-200" spaceY="space-y-0">
         <Accordion.Item value="mode" panelPadding="p-2" controlPadding="px-2 py-3" controlClasses="hover:bg-gray-100 hover:text-surface-contrast-50" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="iconoir:scale-frame-enlarge" class="size-6" />{/snippet}
@@ -193,6 +217,31 @@
           </fieldset>
           {/snippet}
         </Accordion.Item>
+        {#if page.params.page === 'delivery'}
+        <hr class="hr" />
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="direction" disabled controlClasses="hover:bg-gray-100 cursor-not-allowed hover:text-surface-contrast-50" leadClasses="mr-2">
+          {#snippet lead()}<Icon icon="material-symbols-light:settings-outline-rounded" class="size-6" />{/snippet}
+          {#snippet control()}Direction{/snippet}
+          <!-- {#snippet panel()}
+          <fieldset>
+            <ul class="flex flex-col gap-1">
+              {#each directionOptions as option}
+                <li>
+                  <label for={`direction-${option.value}`}>
+                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-contrast-50 justify-start border rounded-lg hover:bg-gray-100 transition-all transition-duration-100" onclick={() => {
+                      // page.setParam('direction', option.value)
+                    }}>
+                      {option.name}
+                    </Button>
+                  </label>
+                </li>
+              {/each}
+            </ul>
+          </fieldset>
+          {/snippet} -->
+        </Accordion.Item>
+        {/if}
+        {#if page.route.id === '/onboard'}
         <hr class="hr" />
         <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="guide" controlClasses="hover:bg-gray-100 hover:text-surface-contrast-50" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="material-symbols-light:map-outline" class="size-6" />{/snippet}
@@ -205,7 +254,6 @@
                   <label for={`guide-${option.value}`}>
                     <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-contrast-50 justify-start border rounded-lg hover:bg-gray-100 transition-all transition-duration-100" onclick={() => {
                       page.setParam('guide', option.value)
-                      showGuide.value = option.value === 'show'
                     }}>
                       <input type="radio" name="guide" id={`guide-${option.value}`} value={option.value} checked={option.value === guideOption.value} />
                       {option.name}
@@ -229,7 +277,6 @@
                   <label for={`onramps-${option.value}`}>
                     <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-contrast-50 justify-start border rounded-lg hover:bg-gray-100 transition-all transition-duration-100" onclick={() => {
                       page.setParam('onramps', option.value)
-                      onboardShowOnramps.value = option.value === 'show'
                     }}>
                       <input type="radio" name="onramps" id={`onramps-${option.value}`} value={option.value} checked={option.value === onrampsOption.value} />
                       {option.name}
@@ -253,7 +300,6 @@
                   <label for={`onramps-${option.value}`}>
                     <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-contrast-50 justify-start border rounded-lg hover:bg-gray-100 transition-all transition-duration-100" onclick={() => {
                       page.setParam('stage', option.value)
-                      activeOnboardStep.value = option.value === 'onboard' ? 1 : 2
                     }}>
                       <input type="radio" name="onramps" id={`onramps-${option.value}`} value={option.value} checked={option.value === stageOption.value} />
                       {option.name}
@@ -265,17 +311,13 @@
           </fieldset>
           {/snippet}
         </Accordion.Item>
+        {/if}
         <hr class="hr" />
         <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="bridgeTokenIn" controlClasses="hover:bg-gray-100 hover:text-surface-contrast-50" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="streamline:coin-share" />{/snippet}
           {#snippet control()}Bridge Token In{/snippet}
           {#snippet panel()}
-            {@const tokens = bridgableTokens.bridgeableTokensUnder({
-              provider: Provider.PULSECHAIN,
-              chain: 1,
-              partnerChain: 369,
-            })}
-            {@const token = tokens.find(token => token.address === bridgeTokenIn)!}
+            {@const token = bridgeTokensIn.find(token => token.address === bridgeTokenIn)!}
             <div class="flex flex-col gap-2">
               <ModalWrapper
                 wrapperClasses="flex items-center justify-center h-full"
@@ -286,14 +328,18 @@
                 {/snippet}
                 {#snippet contents({ close })}
                   <TokenSelect
-                    tokens={tokens}
-                    chains={[1]}
-                    selectedChain={1}
+                    tokens={bridgeTokensIn}
+                    chains={[chainInputId]}
+                    selectedChain={chainInputId}
                     selectedToken={token}
                     onsubmit={(token) => {
                       const tokenInAddress = token?.address as Hex
-                      defaultOnboardTokens.extend({ bridgeTokenIn: tokenInAddress })
-                      page.setParam('bridgeTokenIn', tokenInAddress)
+                      if (page.params.page === 'delivery') {
+                        nav.delivery.shallow(bridgeKey.value, tokenInAddress)
+                      } else if (page.route.id === '/onboard') {
+                        page.setParam('bridgeTokenIn', tokenInAddress)
+                        defaultOnboardTokens.extend({ bridgeTokenIn: tokenInAddress })
+                      }
                       close()
                     }}
                   />
@@ -302,17 +348,13 @@
             </div>
           {/snippet}
         </Accordion.Item>
+        {#if page.route.id === '/onboard'}
         <hr class="hr" />
         <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="pulsexTokenOut" controlClasses="hover:bg-gray-100 hover:text-surface-contrast-50" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="ri:swap-3-line" />{/snippet}
           {#snippet control()}PulseX Token Out{/snippet}
           {#snippet panel()}
-            {@const tokens = bridgableTokens.bridgeableTokensUnder({
-              provider: Provider.PULSECHAIN,
-              chain: 369,
-              partnerChain: 1,
-            })}
-            {@const token = tokens.find(token => token.address === pulsexTokenOut)!}
+            {@const token = plsxTokensOut.find(token => token.address === pulsexTokenOut)!}
             <div class="flex flex-col gap-2">
               <ModalWrapper
                 wrapperClasses="flex items-center justify-center h-full"
@@ -323,7 +365,7 @@
                 {/snippet}
                 {#snippet contents({ close })}
                   <TokenSelect
-                    tokens={tokens}
+                    tokens={plsxTokensOut}
                     chains={[369]}
                     selectedChain={369}
                     selectedToken={token}
@@ -339,6 +381,32 @@
             </div>
           {/snippet}
         </Accordion.Item>
+        {/if}
+        {#if page.params.page === 'delivery'}
+          <hr class="hr" />
+          <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="details" controlClasses="hover:bg-gray-100 hover:text-surface-contrast-50" leadClasses="mr-2">
+            {#snippet lead()}<Icon icon="mdi:magnify" class="size-6" />{/snippet}
+            {#snippet control()}Details{/snippet}
+            {#snippet panel()}
+              <fieldset>
+                <ul class="flex flex-col gap-1">
+                  {#each detailsOptions as option}
+                    <li>
+                      <label for={`details-${option.value}`}>
+                        <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-contrast-50 justify-start border rounded-lg hover:bg-gray-100 transition-all transition-duration-100" onclick={() => {
+                          page.setParam('details', option.value)
+                        }}>
+                          <input type="radio" name="details" id={`details-${option.value}`} value={option.value} checked={option.value === detailsOption.value} />
+                          {option.name}
+                        </Button>
+                      </label>
+                    </li>
+                  {/each}
+                </ul>
+              </fieldset>
+            {/snippet}
+          </Accordion.Item>
+        {/if}
       </Accordion>
     </div>
     <div class="grid grid-cols-3 gap-1 h-14 w-full p-2 sticky bottom-0 bg-white border-t border-gray-200">

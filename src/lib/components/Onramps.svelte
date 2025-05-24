@@ -8,13 +8,23 @@
   import zkp2pLogo from '../../images/providers/zkp2p.svg?raw'
 
   import { accountState, modal } from '../stores/auth/AuthProvider.svelte'
-  import { embedSettings, onboardShowOnramp, onboardShowOnramps, type OnrampProviderKey } from '../stores/storage.svelte'
 
   import Button from './Button.svelte'
   import LifiWidget from './bridges/LifiWidget.svelte'
   import Image from './Image.svelte'
+  import { page } from '../stores/app-page.svelte'
+  import { settings, onramps } from '../stores/settings.svelte'
 
-  const onrampsOpen = $derived.by(() => onboardShowOnramps.value)
+  type OnrampProviderKey = 'coinbase' | 'lifi' | 'relay' | 'zkp2p' | 'others' | null
+  type OnrampProvider = {
+    key: OnrampProviderKey
+    name: string
+    logo?: string
+    logoHref?: string
+    onclick?: () => void
+  }
+  let onboardShowOnramp: OnrampProviderKey = $state(null)
+  const onrampsOpen = $derived.by(() => page.onramps === onramps.SHOW)
   const coinbaseUrl = $derived.by(() => {
     const url = new URL('https://pay.coinbase.com/buy/select-asset')
     url.searchParams.set('appId', '00e61e2f-b25d-4dd0-8d6e-9b3bb91c9764')
@@ -30,13 +40,6 @@
     url.searchParams.set('partnerUserId', accountState.address!)
     return url.toString()
   })
-  type OnrampProvider = {
-    key: OnrampProviderKey
-    name: string
-    logo?: string
-    logoHref?: string
-    onclick?: () => void
-  }
   const zkP2PUrl = $derived(`https://zkp2p.xyz/swap?toToken=ETH${accountState.address ? `&recipientAddress=${accountState.address}` : ''}`)
   const relayUrl = $derived(`https://relay.link/onramp/ethereum${accountState.address ? `?toAddress=${accountState.address}` : ''}`)
   const providers = $derived([
@@ -87,9 +90,9 @@
   ] as OnrampProvider[])
   const reversedProviders = $derived([...providers].reverse())
   const updateOnrampProviderStates = (open: boolean, key?: OnrampProviderKey) => {
-    onboardShowOnramps.value = open
+    page.setParam('onramps', open ? onramps.SHOW : onramps.CLOSED)
     if (key !== undefined) {
-      onboardShowOnramp.value = key
+      onboardShowOnramp = key
     }
   }
   const openProvider = $derived((key: OnrampProviderKey) => () => {
@@ -99,10 +102,8 @@
 
 <Popover
   open={onrampsOpen}
-  onOpenChange={(e) => {
-    updateOnrampProviderStates(e.open)
-  }}
-  closeOnInteractOutside={!embedSettings.value?.open}
+  onOpenChange={(e) => updateOnrampProviderStates(e.open)}
+  closeOnInteractOutside={page.settings === settings.CLOSED}
   positioning={{ placement: 'bottom-end', gutter: -4, shift: 4 }}
   triggerBase="flex flex-col items-center justify-items-end grow gap-1 rounded-2xl shadow-inset justify-between w-full text-surface-contrast-50 border transition-all duration-100 preset-outline-surface-500 relative shadow bg-white px-4 py-1 group"
   contentBase="card bg-white space-y-4 max-w-[320px] shadow-lg border border-gray-200 py-1"
@@ -160,6 +161,6 @@
   {/snippet}
 </Popover>
 
-{#if onboardShowOnramp.value === 'lifi'}
+{#if onboardShowOnramp === 'lifi'}
   <LifiWidget close={() => updateOnrampProviderStates(false, null)} />
 {/if}

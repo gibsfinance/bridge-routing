@@ -4,14 +4,13 @@
   import Onboard from '../components/Onboard.svelte'
   import OnboardSettings from '../components/OnboardSettings.svelte'
   import Headline from '../components/Headline.svelte'
-  import { activeOnboardStep } from '../stores/storage.svelte'
-  import { page } from '../stores/page.svelte'
+  import { page } from '../stores/app-page.svelte'
   import SizeNotifier from '../components/SizeNotifier.svelte'
-  import EmbedSettings from '../components/EmbedSettings.svelte'
+  import * as settings from '../stores/settings.svelte'
 
   const onboardImageFuzzy = 'images/runners.jpg'
-  const onboardActive = $derived(activeOnboardStep.value === 1)
-  const swapActive = $derived(activeOnboardStep.value === 2)
+  const onboardActive = $derived(!page.stage || page.stage === 'bridge')
+  const swapActive = $derived(page.stage === 'pulsex')
 </script>
 
 <div class="flex flex-col w-full">
@@ -27,16 +26,16 @@
           <Headline
             ><button
               type="button"
+              class:opacity-70={!onboardActive}
               onclick={() => {
-                activeOnboardStep.value = 1
-              }}
-              class:opacity-70={!onboardActive}>Onboard</button
+                page.setParam('stage', settings.stage.ONBOARD)
+              }}>Onboard</button
             >/<button
               type="button"
+              class:opacity-70={!swapActive}
               onclick={() => {
-                activeOnboardStep.value = 2
-              }}
-              class:opacity-70={!swapActive}>Swap</button
+                page.setParam('stage', settings.stage.SWAP)
+              }}>Swap</button
             ></Headline>
           {/if}
           {#if !page.embed || (page.mode !== 'simple')}

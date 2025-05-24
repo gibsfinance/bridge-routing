@@ -1,6 +1,5 @@
 import * as rpcs from '../stores/rpcs.svelte'
-// import { page } from '$app/state'
-import { page } from './page.svelte'
+import { page } from './app-page.svelte'
 import * as abis from './abis'
 import * as imageLinks from '../stores/image-links'
 import {
@@ -88,7 +87,9 @@ export const feeTypeValToKeyMap = new Map<FeeType, FeeTypeKeys>(
   (Object.keys(FeeType) as FeeTypeKeys[]).map((key) => [FeeType[key], key]),
 )
 
-export const recipient = new ProxyStore<Hex>(zeroAddress)
+export const recipientInput = new NullableProxyStore<string>()
+
+export const recipient = new NullableProxyStore<Hex>()
 
 export const recipientLockedToAccount = new ProxyStore<boolean>(true)
 
@@ -349,17 +350,17 @@ export const bridgeableTokensUnder = ({
           extensions: !bridgedWrappedAssetOut
             ? null
             : {
-                wrapped: {
-                  address: bridgedWrappedAssetOut.address,
-                },
-                bridgeInfo: !partnerChain
-                  ? null
-                  : {
-                      [Number(partnerChain)]: {
-                        tokenAddress,
-                      },
-                    },
+              wrapped: {
+                address: bridgedWrappedAssetOut.address,
               },
+              bridgeInfo: !partnerChain
+                ? null
+                : {
+                  [Number(partnerChain)]: {
+                    tokenAddress,
+                  },
+                },
+            },
         } as Token,
       ].concat(sortedList),
       ({ chainId, address }) => `${chainId}/${getAddress(address)}`,
@@ -428,26 +429,26 @@ export const clientFromChain = (chainId: number) => {
   // if (chainId === 56) {
   //   console.trace()
   // }
-  console.log(chainId, urls)
+  // console.log(chainId, urls)
   const transport = !urls?.length
     ? http()
     : fallback(
-        urls.map((rpc) =>
-          rpc.startsWith('http')
-            ? http(rpc, {
-                ...defaultBatchConfig,
-              })
-            : webSocket(rpc, {
-                keepAlive: true,
-                reconnect: true,
-                retryDelay: 250,
-                retryCount: 10,
-                timeout: 4_000,
-                ...defaultBatchConfig,
-              }),
-        ),
-        { rank: true },
-      )
+      urls.map((rpc) =>
+        rpc.startsWith('http')
+          ? http(rpc, {
+            ...defaultBatchConfig,
+          })
+          : webSocket(rpc, {
+            keepAlive: true,
+            reconnect: true,
+            retryDelay: 250,
+            retryCount: 10,
+            timeout: 4_000,
+            ...defaultBatchConfig,
+          }),
+      ),
+      { rank: true },
+    )
   const client = createPublicClient({
     chain,
     transport,

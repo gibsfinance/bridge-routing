@@ -4,7 +4,8 @@
   import { innerWidth, innerHeight } from 'svelte/reactivity/window'
   import Icon from '@iconify/svelte'
   import Button from './Button.svelte'
-  import { goto } from '../stores/page.svelte'
+  import * as nav from '../stores/nav.svelte'
+
   const payMe = 'images/pay-me.png'
   let toggle = $state(false)
   let showArrow = $state(true)
@@ -29,7 +30,7 @@
   const isSmallHeight = $derived(innerHeight.current && innerHeight.current < 740)
 
   const handleGetStarted = () => {
-    goto('#/onboard')
+    nav.onboard.shallow()
   }
 </script>
 

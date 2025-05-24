@@ -4,9 +4,8 @@
   import Footer from './lib/components/Footer.svelte'
   import { Toaster } from '@skeletonlabs/skeleton-svelte'
   import { toaster } from './lib/stores/toast'
-  import { page } from './lib/stores/page.svelte'
+  import { page } from './lib/stores/app-page.svelte'
   import EmbedSettings from './lib/components/EmbedSettings.svelte'
-  import { embedEphermeralSettings } from './lib/stores/storage.svelte'
 
   const { children } = $props()
 </script>
@@ -21,7 +20,7 @@
   and for us to show a loader until loading is complete
 -->
 <div class="flex flex-row">
-  {#if !embedEphermeralSettings.disabled}
+  {#if page.route.id !== '/' && page.settings !== 'disabled'}
     <EmbedSettings />
   {/if}
   {#if !page.embed}

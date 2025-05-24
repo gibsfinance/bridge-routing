@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import Icon from '@iconify/svelte'
   import Loading from './Loading.svelte'
-  import { page, goto } from '../stores/page.svelte'
+  import { page } from '../stores/app-page.svelte'
   import { bridgeKey, incrementForcedRefresh } from '../stores/input.svelte'
   import { Provider } from '../stores/auth/types'
   import { addDomain } from '../stores/window.svelte'
@@ -13,6 +13,7 @@
   import RPC from './RPC.svelte'
   import Button from './Button.svelte'
   import ConnectButton from './ConnectButton.svelte'
+  import * as nav from '../stores/nav.svelte'
   // import in order to link appropriately
   const gibs = 'images/1FAF0.svg'
 
@@ -22,13 +23,13 @@
   })
 
   const gotoHome = async () => {
-    await goto('#/')
+    nav.home.shallow()
   }
   const gotoNativeDelivery = async () => {
-    await goto('#/delivery')
+    nav.delivery.shallow(bridgeKey.value, bridgeKey.assetInAddress ?? undefined)
   }
   const gotoOnboard = async () => {
-    await goto('#/onboard')
+    nav.onboard.shallow()
   }
   const destinationBridgeKey = $derived(bridgeKey.provider)
   const isDeliveryRoute = $derived(page.route.id?.includes('/delivery'))

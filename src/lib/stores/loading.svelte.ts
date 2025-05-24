@@ -11,14 +11,17 @@ export class LoadingCounter {
   }
   isResolved(key?: string | string[] | null) {
     if (!key) return this.resolved
-    if (Array.isArray(key))
+    if (Array.isArray(key)) {
       return key.reduce((total, k) => total + (this.value.categories[k] || 0), 0) === 0
+    }
     return !this.value.categories[key as string]
   }
 
   increment(key?: string | null) {
     if (key) {
       this.value.categories[key] = (this.value.categories[key] || 0) + 1
+    } else {
+      throw new Error('increment called with no key')
     }
     this.value.total += 1
     return _.once(() => this.decrement(key))
@@ -76,7 +79,7 @@ setInterval(() => {
 
 export const resolved = <T>(val: T) => {
   return {
-    cleanup: () => {},
+    cleanup: () => { },
     promise: Promise.resolve(val),
     controller: new AbortController(),
   }

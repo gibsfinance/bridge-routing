@@ -15,7 +15,7 @@
   import Loading from './Loading.svelte'
   import { loading } from '../stores/loading.svelte'
   import { evmChainsById } from '../stores/auth/AuthProvider.svelte'
-    import type { ClassValue } from 'svelte/elements'
+  import type { ClassValue } from 'svelte/elements'
 
   type Props = {
     onsubmit?: (token: Token | null) => void

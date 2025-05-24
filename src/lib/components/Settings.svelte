@@ -64,18 +64,18 @@
     }
   }
   const nonZeroXCalldata = $derived(bridgeSettings.transactionInputs?.data?.slice(2) || '')
-  const lockRecipient = () => {
-    const current = recipientLockedToAccount.value
-    recipientLockedToAccount.value = !current
-    if (!current && accountState.address) {
-      currentRecipient = accountState.address
-    }
-  }
+  // const lockRecipient = () => {
+  //   const current = recipientLockedToAccount.value
+  //   recipientLockedToAccount.value = !current
+  //   if (!current && accountState.address) {
+  //     currentRecipient = accountState.address
+  //   }
+  // }
   const canUnwrap = $derived(input.canChangeUnwrap(bridgeKey.value, bridgeSettings.assetIn.value))
 </script>
 
-<div class="flex flex-col gap-2 text-sm">
-  <div
+<div class="flex flex-col gap-1 text-sm">
+  <!-- <div
     class="leading-6 sm:justify-between flex flex-col sm:flex-row relative sm:items-center text-left items-start">
     <Button
       class="flex flex-row items-center grow flex-nowrap"
@@ -90,7 +90,7 @@
       show={!isValidRecipient}
       wrapperPositionClass="top-0 -left-6"
       tooltip="Address is not valid. Casing influences the checksum of the address." />
-  </div>
+  </div> -->
   {#if bridgeKey.destinationRouter}
     <div
       class="leading-6 justify-between flex flex-col sm:flex-row sm:items-center disabled cursor-not-allowed relative">

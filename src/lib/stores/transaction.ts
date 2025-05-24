@@ -54,7 +54,6 @@ export const send = async ({
   after?: () => void
   wait: (txHash: string) => Promise<void>
 }) => {
-  // const decrement = loading.increment('user')
   try {
     for (const step of steps) {
       const txHash = await step()
