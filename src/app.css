@@ -40,8 +40,12 @@
 button:disabled {
   @apply opacity-75;
 }
+html, :root {
+  @apply h-screen;
+}
 body {
   font-family: Ariel, sans-serif;
+  @apply h-screen;
 }
 .MuiBox-root {
   @apply max-w-none!;

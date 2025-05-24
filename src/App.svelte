@@ -36,11 +36,13 @@
 </script>
 
 <Layout>
-  {#if page.route.id === '/'}
-    <Home />
-  {:else if page.route.id.startsWith('/delivery')}
-    <Delivery />
-  {:else if page.route.id.startsWith('/onboard')}
-    <Onboard />
-  {/if}
+  <div class="flex flex-col w-full min-w-80 h-screen overflow-y-scroll">
+    {#if page.route.id === '/'}
+      <Home />
+    {:else if page.route.id.startsWith('/delivery')}
+      <Delivery />
+    {:else if page.route.id.startsWith('/onboard')}
+      <Onboard />
+    {/if}
+  </div>
 </Layout>

@@ -126,23 +126,8 @@
   }))
 </script>
 
-<button class="flex fixed bottom-16 z-20 size-8 items-center justify-center border border-gray-200 bg-gray-50 hover:bg-gray-100 text-surface-contrast-50 transition-all duration-200"
-  type="button"
-  class:rounded-r-full={!open}
-  class:rounded-l-full={open}
-  class:left-0={!open}
-  class:left-64={open}
-  class:-translate-x-full={open}
-  onclick={() => page.setParam('settings', !page.settings ? 'open' : null)}
-  >
-  {#if open}
-    <Icon icon="mdi:close" class="size-6" />
-  {:else}
-    <Icon icon="mdi:cog" class="size-6" />
-  {/if}
-</button>
-<div class="w-0 transition-all duration-200 relative flex flex-col sticky top-0" class:w-64={open}>
-  <div class="flex flex-col h-screen bg-white top-0 right-0 w-64 sticky">
+<div class="w-0 transition-all duration-200 fixed flex flex-col top-0 bottom-0 h-screen" class:w-64={open}>
+  <div class="flex flex-col bg-white top-0 right-0 w-64 grow h-full">
     <h2 class="text-2xl font-bold font-italiana py-2.5 px-4 text-surface-contrast-50 border-b border-gray-200">Embed Settings</h2>
     <div class="flex flex-col gap-2 text-surface-contrast-50 grow overflow-y-auto">
       <Accordion value={value} collapsible onValueChange={(e) => {
@@ -371,4 +356,20 @@
       </Button>
     </div>
   </div>
+
 </div>
+<button class="flex bottom-16 size-8 z-10 absolute items-center justify-center border border-gray-200 bg-gray-50 hover:bg-gray-100 text-surface-contrast-50 transition-all duration-200"
+  type="button"
+  class:rounded-r-full={!open}
+  class:rounded-l-full={open}
+  class:-translate-x-full={open}
+  class:left-0={!open}
+  class:left-64={open}
+  onclick={() => page.setParam('settings', !page.settings ? 'open' : null)}
+  >
+  {#if open}
+    <Icon icon="mdi:close" class="size-6" />
+  {:else}
+    <Icon icon="mdi:cog" class="size-6" />
+  {/if}
+</button>
