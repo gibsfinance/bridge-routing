@@ -1,21 +1,11 @@
 <script lang="ts">
-  // export let image_url = ''
-  // export let min_height = 'auto'
-  // export let height = 'auto'
-  // export let blur = '9px'
-  // export let size = '1em'
-  // export let rect = 'inset(0)'
-  // export let opacity = '1'
-  // export let brightness = '100%'
-  // export let containerClassName = ''
-  // export let bg_color = 'bg-slate-950'
-  const { image_url = '', min_height = 'auto', height = 'auto', blur = '12px', size = '1em', rect = 'inset(0)', opacity = '1', brightness = '100%', containerClassName = '', bg_color = 'bg-slate-950', children } = $props()
+  const { image_url = '', min_height = 'auto', height = 'auto', blur = '12px', size = '1em', rect = 'inset(0)', opacity = '1', brightness = '100%', containerClassName = '', children } = $props()
 </script>
 
-<div class="h-content relative overflow-hidden w-full">
+<div class="relative w-full bg-cover bg-center" style="background-image: {image_url};">
   <div
-    class="img w-full {bg_color}"
-    style="--blur: {blur}; --size: {size}; --brightness: {brightness}; --rect: {rect}; --opacity: {opacity}; min-height: {min_height}; height: {height}; background-image: {image_url}">
+    class="img w-full backdrop-blur-md"
+    style="min-height: {min_height}; height: {height};">
     <div
       class="relative flex justify-center contents-container {containerClassName}"
       style="min-height: {min_height};">
