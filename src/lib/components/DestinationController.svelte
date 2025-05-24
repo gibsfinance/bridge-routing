@@ -16,6 +16,7 @@
   import { Chains } from '../stores/auth/types'
   import { type Cleanup } from '../stores/loading.svelte'
     import Warning from "./Warning.svelte"
+    import { untrack } from "svelte"
 
   const oninput = (value: string) => {
     // recipientIsDecoupled = true
@@ -47,7 +48,7 @@
   // })
   $effect.pre(() => {
     const r = recipientInput.value
-    if (isValidRecipient) {
+    if (isValidRecipient && r !== untrack(() => recipient.value)) {
       recipient.value = r as Hex
     }
   })

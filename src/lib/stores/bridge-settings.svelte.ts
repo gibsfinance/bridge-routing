@@ -331,7 +331,7 @@ export class BridgeSettings {
     } else if (this.feeType === input.FeeType.PERCENT) {
       multiplier = input.percentFee.value ?? 0n
     }
-    if (!isAddress(input.recipient.value)) {
+    if (!input.recipient.value || !isAddress(input.recipient.value)) {
       return null
     }
     return encodeAbiParameters(abis.feeDeliveryStruct, [
