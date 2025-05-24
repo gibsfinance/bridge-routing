@@ -21,7 +21,7 @@
       blur="12px"
       brightness="90%">
       <SizeNotifier class="flex flex-row text-lg w-full gap-4 mx-auto justify-center">
-        <div class="max-w-lg w-full flex flex-col" class:m-4={page.embed} class:my-16={!page.embed} class:justify-center={page.embed}>
+        <div class="max-w-lg w-full flex flex-col" class:m-1={page.embed} class:my-16={!page.embed} class:justify-center={page.embed}>
           {#if !page.embed || page.mode !== 'simple'}
           <Headline
             ><button
