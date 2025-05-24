@@ -52,8 +52,8 @@
         class:opacity-0={!toggle}>For Pulsechain.</span>
     </div>
     <div class="text-white text-center max-w-2xl transition-all duration-200 delay-1500"
-         class:opacity-0={!toggle}>
-      <p class="text-xl mb-6">The easiest way to bridge assets to PulseChain.<br />Simple, secure, and user-friendly.</p>
+      class:opacity-0={!toggle}>
+      <p class="text-xl mb-6">The easiest way to bring assets to PulseChain.<br />Simple, secure, and user-friendly.</p>
       <Button
         onclick={handleGetStarted}
         class="bg-white text-slate-950 hover:bg-slate-100 px-8 py-3 rounded-full text-lg font-medium flex flex-row items-center gap-2 mx-auto">
