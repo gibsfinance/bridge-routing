@@ -1,6 +1,5 @@
 <script lang="ts">
   import Tooltip from './Tooltip.svelte'
-  import { showTooltips } from '../stores/storage.svelte'
   import type { ClassValue } from 'svelte/elements'
   import type { Snippet } from 'svelte'
   type Props = {
@@ -19,7 +18,6 @@
     triggerWrapperPositionClass = 'top-0 left-0',
     contentClass,
   }: Props = $props()
-  const triggerVisible = $derived(showTooltips.value)
   const contentClasses = $derived([
     'card preset-filled-primary-500 text-sm px-2 py-1',
     contentClass,
@@ -27,7 +25,7 @@
   const triggerClasses = $derived([
     'flex items-center justify-center bg-surface-50 border-2 border-secondary-500 rounded-full size-8 leading-6 shadow text-contrast-surface-50 text-secondary-500 pointer-events-auto',
     triggerClass,
-    { invisible: !triggerVisible },
+    // { invisible: !triggerVisible },
   ])
   const trigWrapperPositionClasses = $derived([triggerWrapperPositionClass])
 </script>

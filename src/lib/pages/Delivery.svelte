@@ -4,7 +4,8 @@
   import Headline from '../components/Headline.svelte'
   import { windowStore } from '../stores/window.svelte'
   import * as input from '../stores/input.svelte'
-  import { navigating, page, goto } from '../stores/page.svelte'
+  import { page } from '../stores/app-page.svelte'
+  import * as nav from '../stores/nav.svelte'
   import { pathway } from '../stores/config.svelte'
   import Loading from '../components/Loading.svelte'
   import { Chains, type Provider, type ChainKey } from '../stores/auth/types'
@@ -18,9 +19,8 @@
 
   onMount(() => {
     if (!pathway(bridgeKey)) {
-      const bridgeKeyPath = input.toPath(input.defaultBridgeKey)
       const assetInAddress = page.params.assetInAddress ?? zeroAddress
-      goto(`#/delivery/${bridgeKeyPath}/${assetInAddress}`)
+      nav.delivery.shallow(input.defaultBridgeKey, assetInAddress)
     } else {
       input.bridgeKey.value = bridgeKey
       let assetInAddress = page.params.assetInAddress as Hex | null
@@ -35,7 +35,7 @@
 </script>
 
 <div class="flex w-full bg-slate-950">
-  {#if navigating.to}
+  {#if page.to}
     <Loading />
   {:else}
     <div class="flex flex-col w-full">

@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import OnboardRadioItem from './OnboardRadioItem.svelte'
 </script>
 
@@ -8,4 +8,4 @@
     <OnboardRadioItem step={2} />
     <OnboardRadioItem step={3} justifyClass="flex items-center justify-start" />
   </div>
-</div>
+</div> -->

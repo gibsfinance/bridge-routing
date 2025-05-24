@@ -6,7 +6,7 @@
   import { Chains, Provider } from '../stores/auth/types'
   import { formatUnits, getAddress, zeroAddress, type Hex } from 'viem'
   import { blocks } from '../stores/chain-events.svelte'
-  import { plsxTokens, showTooltips, type PulsexTokens } from '../stores/storage.svelte'
+  import { plsxTokens, showGuide, type PulsexTokens } from '../stores/storage.svelte'
   import TokenSelect from './TokenSelect.svelte'
   import { getTransactionDataFromTrade } from '../stores/pulsex/serialize'
   import { bridgableTokens, bridgeKey } from '../stores/input.svelte'
@@ -265,7 +265,7 @@
   {/snippet}
 </InputOutputForm>
 
-{#if showTooltips.value}
+{#if showGuide.value}
   <div class="absolute top-0 left-0 w-full h-full">
     <GuideShield show={true} />
     <GuideStep step={1} triggerClass="absolute top-9 right-5">

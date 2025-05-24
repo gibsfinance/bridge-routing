@@ -11,13 +11,9 @@
   } from '../stores/auth/AuthProvider.svelte'
   import _ from 'lodash'
   import {
-    activeOnboardStep,
-    foreignBridgeInputs,
     bridgeTx,
-    showTooltips,
     defaultOnboardTokens,
   } from '../stores/storage.svelte'
-  import { untrack } from 'svelte'
   import {
     assetLink,
     blocks,
@@ -31,8 +27,6 @@
   import OnboardButton from './OnboardButton.svelte'
   import { transactionButtonPress } from '../stores/transaction'
   import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
-  import GuideStep from './GuideStep.svelte'
-  import GuideShield from './GuideShield.svelte'
   import {
     assetOutKey,
     bridgeSettings,
@@ -55,11 +49,16 @@
   import { chainsMetadata } from '../stores/auth/constants'
   import Icon from '@iconify/svelte'
   import Button from './Button.svelte'
+  import OnboardGuide from './OnboardGuide.svelte'
+  import { page } from '../stores/app-page.svelte'
+  import * as settings from '../stores/settings.svelte'
+  import { untrack } from 'svelte'
 
+  const pulsechainWrappedWethFromEthereum = '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C'
   const defaultPulsexTokens = {
     bridgeTokenIn: zeroAddress,
-    bridgeTokenOut: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
-    pulsexTokenIn: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
+    bridgeTokenOut: pulsechainWrappedWethFromEthereum,
+    pulsexTokenIn: pulsechainWrappedWethFromEthereum,
     pulsexTokenOut: zeroAddress,
   } as const
   const defaultTokenAddresses = $derived({
@@ -83,7 +82,7 @@
   )
   let amountInputFromLifi = $state(0n)
   let maxCrossToEthereumBridge = $state(0n as bigint | null)
-  const destinationAddress = $derived.by(() => foreignBridgeInputs.value?.toAddress ?? null)
+  // const destinationAddress = $derived.by(() => foreignBridgeInputs.value?.toAddress ?? null)
   $effect(() => {
     if (maxCrossToEthereumBridge && amountInputFromLifi > maxCrossToEthereumBridge) {
       amountInputFromLifi = maxCrossToEthereumBridge
@@ -158,8 +157,9 @@
       ) ?? null
     )
   })
-  const bridgingToPulsechain = $derived(activeOnboardStep.value === 1)
-  const swappingOnPulsex = $derived(activeOnboardStep.value === 2)
+  const stage = $derived(page.stage ?? settings.stage.ONBOARD)
+  const bridgingToPulsechain = $derived(stage === settings.stage.ONBOARD)
+  const swappingOnPulsex = $derived(stage === settings.stage.SWAP)
 
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(
@@ -465,7 +465,7 @@
     return swapPulsexStep
   })
   const requiredChain = $derived.by(() => {
-    const chainId = activeOnboardStep.value === 1 ? Chains.ETH : Chains.PLS
+    const chainId = stage === settings.stage.ONBOARD ? Chains.ETH : Chains.PLS
     const chain = chainsMetadata[chainId]
     return {
       id: chain.id,
@@ -473,7 +473,7 @@
     }
   })
   const buttonText = $derived.by(() => {
-    if (activeOnboardStep.value === 1) {
+    if (stage === settings.stage.ONBOARD) {
       if (needsAllowanceForPulsechainBridge) {
         return `Approve ${bridgeTokenIn?.symbol} to Pulsechain`
       }
@@ -485,7 +485,7 @@
     return `Swap ${tokenInPulsex?.symbol} for ${tokenOutPulsex?.symbol}`
   })
   const loadingKey = $derived.by(() => {
-    if (activeOnboardStep.value === 1) {
+    if (stage === settings.stage.ONBOARD) {
       return 'bridge-to-pulsechain'
     }
     return pulsexQuoteResult ? 'pulsex-quote' : ''
@@ -509,7 +509,8 @@
   invalidValue={amountLessThanMin ?? false}
   onclick={() => {
     if (swappingOnPulsex) {
-      activeOnboardStep.value = 1
+      page.setParam('stage', settings.stage.ONBOARD)
+      // onboardStage.value = 1
     }
   }}
   oninput={({ int }) => {
@@ -550,7 +551,7 @@
       if (!bridgingToPulsechain) {
         return
       }
-      activeOnboardStep.value = 2
+      page.setParam('stage', settings.stage.SWAP)
       const chain = getNetwork({
         chainId: Number(Chains.PLS),
         name: '',
@@ -563,7 +564,7 @@
 {/if}
 <SectionInput
   label="Swap on PulseX"
-  focused={activeOnboardStep.value >= 1}
+  focused={true}
   token={bridgingToPulsechain ? bridgeTokenOut : pulsexTokenIn}
   value={bridgingToPulsechain ? amountOutputFromBridge : amountInputToPulsex}
   compressed={!swappingOnPulsex}
@@ -572,7 +573,7 @@
   onbalanceupdate={() => {}}
   onclick={() => {
     if (bridgingToPulsechain) {
-      activeOnboardStep.value = 2
+      page.setParam('stage', settings.stage.SWAP)
     }
   }}
   onmax={(balance) => {
@@ -624,10 +625,10 @@
   readonlyInput
   readonlyTokenSelect={!swappingOnPulsex}
   onbalanceupdate={() => {}}
-  overrideAccount={destinationAddress}
+  overrideAccount={recipient.value}
   onclick={() => {
     if (!swappingOnPulsex) {
-      activeOnboardStep.value = 2
+      page.setParam('stage', settings.stage.SWAP)
     }
   }}>
   {#snippet modal({ close })}
@@ -654,26 +655,6 @@
   text={buttonText}
   {loadingKey} />
 
-{#if showTooltips.value}
-  <div class="absolute top-0 left-0 w-full h-full z-10">
-    <GuideShield show={true} />
-    {#if bridgingToPulsechain}
-      <GuideStep step={1} triggerClass="absolute right-24 top-8">
-        <p>Onramp funds</p>
-      </GuideStep>
-      <GuideStep step={2} triggerClass="absolute left-24 top-28">
-        <p>Select the token you wish to bridge to PulseChain.</p>
-      </GuideStep>
-      <GuideStep step={3} triggerClass="absolute right-24 bottom-4">
-        <p>Trigger the bridge to PulseChain.</p>
-      </GuideStep>
-    {:else}
-      <GuideStep step={1} triggerClass="absolute right-24 top-44">
-        <p>Select the token you wish to swap from.</p>
-      </GuideStep>
-      <GuideStep step={2} triggerClass="absolute right-24 bottom-4">
-        <p>Trigger the swap on PulseX.</p>
-      </GuideStep>
-    {/if}
-  </div>
+{#if page.guide === settings.guide.SHOW}
+  <OnboardGuide {bridgingToPulsechain} />
 {/if}

@@ -2,13 +2,13 @@
   import Icon from '@iconify/svelte'
   import BlurryImage from './BlurryImage.svelte'
   import Button from './Button.svelte'
-  import { goto } from '../stores/page.svelte'
+  import * as nav from '../stores/nav.svelte'
 
   const dashAfterCrypto = 'images/dash-after-crypto.jpg'
 
   // Navigation handler
   const handleStartOnboarding = () => {
-    goto('#/onboard')
+    nav.onboard.shallow()
   }
   const scrollToTop = () => {
     window.scrollTo({

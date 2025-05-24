@@ -8,6 +8,7 @@
     focused?: boolean
     disabled?: boolean
     class?: ClassValue
+    flexClass?: ClassValue
     compressed?: boolean
     onclick?: () => void
   }
@@ -17,6 +18,7 @@
     focused = false,
     disabled = false,
     class: className = '',
+    flexClass = 'flex flex-col',
     compressed = false,
     onclick = () => {},
   }: Props = $props()
@@ -34,7 +36,7 @@
   class:cursor-not-allowed={disabled}
   {onclick}
   onkeypress={() => {}}>
-  <div class="flex relative items-center flex-col w-full gap-1">
+  <div class="{flexClass} relative items-center w-full gap-1">
     {@render children()}
   </div>
 </label>

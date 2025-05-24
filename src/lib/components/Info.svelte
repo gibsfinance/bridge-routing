@@ -5,7 +5,7 @@
   import InfoExplain from './InfoExplain.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
   import Button from './Button.svelte'
-  import { page } from '../stores/page.svelte'
+  import { page } from '../stores/app-page.svelte'
 
   const chainToDomain = {
     [Chains.ETH]: 'etherscan.io',

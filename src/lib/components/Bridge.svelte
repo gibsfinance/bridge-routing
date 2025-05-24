@@ -6,8 +6,9 @@
   import * as nav from '../stores/nav.svelte'
   import * as customTokens from '../stores/custom-tokens.svelte'
   import * as transactions from '../stores/transactions'
-  import BridgeAdvancedMode from './BridgeAdvancedMode.svelte'
-  import { page } from '../stores/page.svelte'
+  import BridgeDetails from './BridgeDetails.svelte'
+  import DestinationController from './DestinationController.svelte'
+  import { page } from '../stores/app-page.svelte'
   import {
     bridgeSettings,
     updateAssetIn,
@@ -30,9 +31,10 @@
   import InputOutputForm from './InputOutputForm.svelte'
   import { nativeAssetOut } from '../stores/config.svelte'
   import BridgeHeader from './BridgeHeader.svelte'
-  import { advancedMode, bridgeSettings as storageBridgeSettings } from '../stores/storage.svelte'
+  import { bridgeSettings as storageBridgeSettings } from '../stores/storage.svelte'
   import BridgeProgress from './BridgeProgress.svelte'
   import ExchangeInputDivider from './ExchangeInputDivider.svelte'
+  import * as settings from '../stores/settings.svelte'
 
   // watch for finalized blocks to update balances
   $effect(() => {
@@ -244,8 +246,9 @@
         <ToNetwork asset={bridgeSettings.assetOut} />
       {/snippet}
       {#snippet info()}
-        {#if advancedMode.value}
-          <BridgeAdvancedMode asset={bridgeSettings.assetOut} />
+        <DestinationController />
+        {#if page.details === settings.details.SHOW}
+          <BridgeDetails asset={bridgeSettings.assetOut} />
         {/if}
       {/snippet}
       {#snippet divider()}

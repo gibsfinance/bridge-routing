@@ -60,7 +60,7 @@ export const unwatchFinalizedBlocks = (cleanups: Cleanup[]) => {
   cleanups.forEach((cleanup) => cleanup())
 }
 
-const chainCounts = new Map<number, number>()
+// const chainCounts = new Map<number, number>()
 const watchers = new Map<number, Cleanup>()
 export const blocks = new SvelteMap<number, Block | null>()
 export const latestBaseFeePerGas = (chain: number) => {
@@ -72,39 +72,26 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
     // signals a "pending" state
     untrack(() => blocks.set(chain, null))
   }
-  const current = chainCounts.get(chain) ?? 0
-  let decrement: Cleanup = () => { }
   let cancelled = false
-  if (current === 0) {
-    untrack(() => loading.increment('gas'))
-    decrement = _.once(() => {
-      untrack(() => loading.decrement('gas'))
-    })
-    let watcher: Cleanup | null = null
-    watcher = input.clientFromChain(chain).watchBlocks({
-      emitOnBegin: true,
-      emitMissed: true,
-      blockTag,
-      onBlock: (block) => {
-        decrement()
-        if (cancelled) return
-        untrack(() => blocks.set(chain, block))
-      },
-    })
-    watchers.set(chain, watcher)
-  }
-  chainCounts.set(chain, current + 1)
+  const decrement = untrack(() => loading.increment('gas'))
+  let watcher: Cleanup | null = null
+  watcher = input.clientFromChain(chain).watchBlocks({
+    emitOnBegin: true,
+    emitMissed: true,
+    blockTag,
+    onBlock: (block) => {
+      decrement()
+      if (cancelled) return
+      untrack(() => blocks.set(chain, block))
+    },
+  })
+  watchers.set(chain, watcher)
   return () => {
     decrement()
     cancelled = true
-    const current = chainCounts.get(chain) ?? 0
-    const next = current - 1
-    chainCounts.set(chain, next)
-    if (next === 0) {
-      const watcher = watchers.get(chain)
-      watcher?.()
-      watchers.delete(chain)
-    }
+    const watcher = watchers.get(chain)
+    watcher?.()
+    watchers.delete(chain)
   }
 }
 
@@ -155,7 +142,7 @@ export const tokenBalanceLoadingKey = (chainId: number, address: string, account
 // this is not the optimal way to do this, but these watchers
 // should only be used for a heavily constrained set of cases
 // the cases are being cleared on a regular interval
-const balanceTTL = 1000 * 10
+const balanceTTL = 1000 * 20
 export const balances = new SvelteMap<string, { time: number; value: bigint | null }>()
 export class TokenBalanceWatcher {
   private balanceCleanup: Cleanup | null = null
@@ -203,7 +190,7 @@ export class TokenBalanceWatcher {
     // console.log(token, account, ticker)
     // call this function whenever a new block is ticked over
     if (!ticker || !token || !account) {
-      console.log(ticker, token, account)
+      // console.log(ticker, token, account)
       return () => { }
     }
     // const network = availableChains.get(chainId)
@@ -227,7 +214,7 @@ export class TokenBalanceWatcher {
       return () => { }
     }
     this.balanceCleanup = requestResult.cleanup
-    
+
     requestResult.promise.then((v) => {
       if (requestResult.controller.signal.aborted) {
         this.value = null

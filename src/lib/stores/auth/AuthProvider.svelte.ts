@@ -98,7 +98,7 @@ const metadata = {
 
 // 3. Create the modal
 export const modal = createAppKit({
-  adapters: [wagmiAdapter, solanaAdapter as unknown as ChainAdapter, bitcoinAdapter],
+  adapters: [wagmiAdapter as unknown as ChainAdapter, solanaAdapter as unknown as ChainAdapter, bitcoinAdapter],
   networks: appkitNetworkList,
   metadata,
   projectId,
@@ -119,6 +119,7 @@ export const connect = async () => {
 // export const provider = new NullableProxyStore<EthereumProviderType>()
 
 export const disconnect = async () => {
+  accountState.value = null
   return await modal.close()
 }
 
