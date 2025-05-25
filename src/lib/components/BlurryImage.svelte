@@ -1,5 +1,5 @@
 <script lang="ts">
-  const { image_url = '', min_height = 'auto', height = 'auto', blur = '12px', size = '1em', rect = 'inset(0)', opacity = '1', brightness = '100%', containerClassName = '', children } = $props()
+  const { image_url = '', min_height = 'auto', height = 'auto', containerClassName = '', children } = $props()
 </script>
 
 <div class="relative w-full bg-cover bg-center" style="background-image: {image_url};">
@@ -7,7 +7,7 @@
     class="img w-full backdrop-blur-md"
     style="min-height: {min_height}; height: {height};">
     <div
-      class="relative flex justify-center contents-container {containerClassName}"
+      class="relative flex justify-center contents-container w-full flex-grow {containerClassName}"
       style="min-height: {min_height};">
       {@render children?.()}
     </div>
