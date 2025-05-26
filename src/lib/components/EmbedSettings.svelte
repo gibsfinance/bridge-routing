@@ -353,7 +353,6 @@
       </Button>
     </div>
   </div>
-
 </div>
 <button class="flex bottom-16 size-8 z-10 fixed items-center justify-center border border-gray-200 bg-gray-50 hover:bg-gray-100 text-surface-contrast-50 transition-all duration-200"
   type="button"

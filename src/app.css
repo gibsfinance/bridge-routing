@@ -45,7 +45,7 @@ html, :root {
 }
 body {
   font-family: Ariel, sans-serif;
-  @apply h-screen;
+  @apply h-screen overscroll-y-none;
 }
 .MuiBox-root {
   @apply max-w-none! shadow-lg;
