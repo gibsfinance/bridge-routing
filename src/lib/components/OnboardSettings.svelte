@@ -84,8 +84,7 @@
       </Button>
     </div>
     <div class="absolute left-1/2 -translate-x-1/2 top-0 h-12 items-center justify-center flex">
-      {#each ['bridge', 'pulsex'] as step (step)}
-      {@const current = page.stage ?? 'bridge'}
+      {#each [null, 'swap'] as step (step)}
         <Button
           class="flex w-8 items-center flex-row"
           onclick={() => {
@@ -95,7 +94,7 @@
           <Icon
             icon="mingcute:run-fill"
             mode="svg"
-            class="size-8 -mr-1.5 {current !== step
+            class="size-8 -mr-1.5 {page.stage !== step
               ? 'text-gray-300 opacity-75'
               : ''}" />
         </Button>

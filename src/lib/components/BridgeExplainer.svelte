@@ -38,7 +38,7 @@
   </div>
 </div>
 
-<BlurryImage image_url="url({futureBridge})" brightness="80%" min_height="auto">
+<BlurryImage image_url="url({futureBridge})" min_height="auto">
   <div class="text-white py-12 px-4 max-w-6xl mx-auto text-base">
     <div class="space-y-12 text-shadow-lg">
       <div class="text-center mb-8">

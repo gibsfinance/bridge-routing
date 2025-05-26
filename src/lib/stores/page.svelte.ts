@@ -34,6 +34,13 @@ export class Page {
     }
     this.pushState(this.val.path, params)
   }
+  setParams(params: Record<string, string | null>) {
+    const newParams = new URLSearchParams(this.val.params ?? '')
+    for (const [key, value] of Object.entries(params)) {
+      this.setParam(key, value)
+    }
+    this.pushState(this.val.path, newParams)
+  }
   finishChange() {
     this.val.changing = false
   }

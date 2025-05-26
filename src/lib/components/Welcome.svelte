@@ -34,7 +34,7 @@
   }
 </script>
 
-<BlurryImage height={isSmallHeight ? '600px' : "calc(100vh - 180px)"} brightness="100%" image_url="url({payMe})">
+<BlurryImage height={isSmallHeight ? '600px' : "calc(100vh - 180px)"} image_url="url({payMe})">
   <div class="flex flex-col items-center justify-center h-fit gap-6 top-0 bottom-0 left-0 right-0 m-auto max-w-4xl px-4 relative text-shadow-lg">
     <h1
       class="text-white font-italiana z-10 text-center text-8xl content-center flex grow justify-center justify-items-center h-24 transition-all duration-300 font-bold"

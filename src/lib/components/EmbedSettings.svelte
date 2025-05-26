@@ -3,7 +3,6 @@
   import { page } from '../stores/app-page.svelte'
   import Button from './Button.svelte'
   import { Accordion } from '@skeletonlabs/skeleton-svelte'
-  import { defaultOnboardTokens } from '../stores/storage.svelte'
   import TokenSelect from './TokenSelect.svelte'
   import { bridgableTokens, bridgeKey } from '../stores/input.svelte'
   import { Provider } from '../stores/auth/types'
@@ -97,7 +96,7 @@
   ]
   const detailsOption = $derived(detailsOptions.find(option => option.value === page.details)!)
   // bridge token in
-  let bridgeTokenIn = $state(defaultOnboardTokens.value?.bridgeTokenIn ?? zeroAddress)
+  let bridgeTokenIn = $state(page.queryParams.get('bridgeTokenIn') ?? zeroAddress)
   const bridgeTokenInFromBridgeKey = $derived(bridgeKey.assetInAddress)
   $effect(() => {
     if (bridgeTokenInFromBridgeKey && bridgeTokenInFromBridgeKey !== bridgeTokenIn) {
@@ -105,8 +104,8 @@
     }
   })
   // pulsex token out
-  const pulsexTokenOutFromSettings = $derived(defaultOnboardTokens.value?.pulsexTokenOut ?? zeroAddress)
-  let pulsexTokenOut = $state(defaultOnboardTokens.value?.pulsexTokenOut ?? zeroAddress)
+  const pulsexTokenOutFromSettings = $derived(page.queryParams.get('pulsexTokenOut') ?? zeroAddress)
+  let pulsexTokenOut = $state(page.queryParams.get('pulsexTokenOut') ?? zeroAddress)
   $effect(() => {
     if (pulsexTokenOut && pulsexTokenOut !== pulsexTokenOutFromSettings) {
       pulsexTokenOut = pulsexTokenOutFromSettings
@@ -276,7 +275,6 @@
                         nav.delivery.shallow(bridgeKey.value, tokenInAddress)
                       } else if (page.route.id === '/onboard') {
                         page.setParam('bridgeTokenIn', tokenInAddress)
-                        defaultOnboardTokens.extend({ bridgeTokenIn: tokenInAddress })
                       }
                       close()
                     }}
@@ -309,7 +307,6 @@
                     selectedToken={token}
                     onsubmit={(token) => {
                       const tokenInAddress = token?.address as Hex
-                      defaultOnboardTokens.extend({ pulsexTokenOut: tokenInAddress })
                       page.setParam('pulsexTokenOut', tokenInAddress)
                       close()
                     }}

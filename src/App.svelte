@@ -4,7 +4,6 @@
   import Delivery from './lib/pages/Delivery.svelte'
   import Onboard from './lib/pages/Onboard.svelte'
   import { page } from './lib/stores/app-page.svelte'
-  import { defaultOnboardTokens } from './lib/stores/storage.svelte'
   import { isAddress } from 'viem'
   import { bridgeKey } from './lib/stores/input.svelte'
 
@@ -29,7 +28,6 @@
     }
     return acc
   }, {} as Record<string, string>)
-  defaultOnboardTokens.extend(updates)
   if (page.route.id === '/delivery' && updates.bridgeTokenIn && isAddress(updates.bridgeTokenIn)) {
     bridgeKey.assetInAddress = updates.bridgeTokenIn
   }

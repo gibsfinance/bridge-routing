@@ -10,18 +10,18 @@ const globalDefaultSettings: DefaultSettings = {
 }
 export const storage = new LocalProxy('gibs.finance.settings', globalDefaultSettings)
 
-export type PulsexTokens = {
-  bridgeTokenIn: Hex
-  bridgeTokenOut: Hex
-  pulsexTokenIn: Hex
-  pulsexTokenOut: Hex
-}
+// export type PulsexTokens = {
+//   bridgeTokenIn: Hex
+//   bridgeTokenOut: Hex
+//   pulsexTokenIn: Hex
+//   pulsexTokenOut: Hex
+// }
 
-export const defaultOnboardTokens = new LocalProxyProp(
-  storage,
-  ['defaultOnboardTokens'],
-  null as PulsexTokens | null,
-)
+// export const defaultOnboardTokens = new LocalProxyProp(
+//   storage,
+//   ['defaultOnboardTokens'],
+//   null as PulsexTokens | null,
+// )
 
 export type BridgeTx = {
   hash?: Hex | null

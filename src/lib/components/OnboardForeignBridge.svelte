@@ -12,7 +12,6 @@
   import _ from 'lodash'
   import {
     bridgeTx,
-    defaultOnboardTokens,
   } from '../stores/storage.svelte'
   import {
     assetLink,
@@ -55,15 +54,17 @@
   import { untrack } from 'svelte'
 
   const pulsechainWrappedWethFromEthereum = '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C'
-  const defaultPulsexTokens = {
+  const defaultToken = {
     bridgeTokenIn: zeroAddress,
     bridgeTokenOut: pulsechainWrappedWethFromEthereum,
     pulsexTokenIn: pulsechainWrappedWethFromEthereum,
     pulsexTokenOut: zeroAddress,
   } as const
   const defaultTokenAddresses = $derived({
-    ...defaultPulsexTokens,
-    ...(defaultOnboardTokens.value ?? {}),
+    bridgeTokenIn: (page.queryParams.get('bridgeTokenIn') ?? defaultToken.bridgeTokenIn) as Hex,
+    bridgeTokenOut: (page.queryParams.get('bridgeTokenOut') ?? defaultToken.bridgeTokenOut) as Hex,
+    pulsexTokenIn: (page.queryParams.get('pulsexTokenIn') ?? defaultToken.pulsexTokenIn) as Hex,
+    pulsexTokenOut: (page.queryParams.get('pulsexTokenOut') ?? defaultToken.pulsexTokenOut) as Hex,
   })
   const bridgeableTokensSettings = {
     provider: Provider.PULSECHAIN,
@@ -199,10 +200,11 @@
         ...assetOut,
         logoURI: bridgeSettings.assetIn.value?.logoURI,
       })
-      defaultOnboardTokens.extend({
+      page.setParams({
         bridgeTokenOut: assetOut.address as Hex,
         pulsexTokenIn: assetOut.address as Hex,
       })
+      // page.setParam('pulsexTokenIn', assetOut.address as Hex)
     })
     return link.cleanup
   })
@@ -491,7 +493,8 @@
     return pulsexQuoteResult ? 'pulsex-quote' : ''
   })
   const stepTokensDelinked = $derived.by(() => {
-    return defaultOnboardTokens.value?.bridgeTokenOut !== defaultOnboardTokens.value?.pulsexTokenIn
+    return page.queryParams.get('bridgeTokenOut') !== page.queryParams.get('pulsexTokenIn')
+    // return defaultOnboardTokens.value?.bridgeTokenOut !== defaultOnboardTokens.value?.pulsexTokenIn
   })
 </script>
 
@@ -534,9 +537,7 @@
       selectedToken={bridgeTokenIn}
       onsubmit={(token) => {
         if (token) {
-          defaultOnboardTokens.extend({
-            bridgeTokenIn: token.address as Hex,
-          })
+          page.setParam('bridgeTokenIn', token.address === zeroAddress ? null : token.address)
         }
         close()
       }}></TokenSelect>
@@ -590,9 +591,7 @@
       <Button
         class="flex size-5 text-surface-contrast-50"
         onclick={() => {
-          defaultOnboardTokens.extend({
-            pulsexTokenIn: defaultOnboardTokens.value?.bridgeTokenOut,
-          })
+          page.setParam('pulsexTokenIn', page.queryParams.get('bridgeTokenOut'))
         }}>
         <Icon icon="fontisto:undo" />
       </Button>
@@ -606,9 +605,7 @@
       selectedToken={tokenInPulsex}
       onsubmit={(token) => {
         if (token) {
-          defaultOnboardTokens.extend({
-            pulsexTokenIn: token.address,
-          })
+          page.setParam('pulsexTokenIn', token.address)
           pulsexQuoteResult = null
         }
         close()
@@ -639,9 +636,10 @@
       selectedToken={finalTokenOutput}
       onsubmit={(token) => {
         if (token) {
-          defaultOnboardTokens.extend({
-            pulsexTokenOut: token.address,
-          })
+          page.setParam('pulsexTokenOut', token.address === zeroAddress ? null : token.address)
+          // defaultOnboardTokens.extend({
+          //   pulsexTokenOut: token.address,
+          // })
           pulsexQuoteResult = null
         }
         close()

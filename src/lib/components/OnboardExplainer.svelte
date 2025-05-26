@@ -31,7 +31,7 @@
   </div>
 </div>
 
-<BlurryImage image_url="url({dashAfterCrypto})" brightness="80%" min_height="auto">
+<BlurryImage image_url="url({dashAfterCrypto})" min_height="auto">
   <div class="text-white p-8 text-shadow-lg">
     <div class="text-center mb-8">
       <p class="text-lg mt-2 font-light text-white/90 italic">
