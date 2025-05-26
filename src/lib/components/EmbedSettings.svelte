@@ -274,7 +274,7 @@
                       if (page.params.page === 'delivery') {
                         nav.delivery.shallow(bridgeKey.value, tokenInAddress)
                       } else if (page.route.id === '/onboard') {
-                        page.setParam('bridgeTokenIn', tokenInAddress)
+                        page.setParam('bridgeTokenIn', tokenInAddress === zeroAddress ? null : tokenInAddress)
                       }
                       close()
                     }}
@@ -307,7 +307,7 @@
                     selectedToken={token}
                     onsubmit={(token) => {
                       const tokenInAddress = token?.address as Hex
-                      page.setParam('pulsexTokenOut', tokenInAddress)
+                      page.setParam('pulsexTokenOut', tokenInAddress === zeroAddress ? null : tokenInAddress)
                       close()
                     }}
                   />

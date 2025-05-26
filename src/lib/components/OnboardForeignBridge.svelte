@@ -74,6 +74,7 @@
   const bridgeTokenOutAddress = $derived((assetOuts.get(assetOutputKey as string)?.address ?? pulsechainWrappedWethFromEthereum) as Hex)
   const pulsexTokenInAddress = $derived((page.queryParams.get('pulsexTokenIn') ?? pulsechainWrappedWethFromEthereum) as Hex)
   const pulsexTokenOutAddress = $derived((page.queryParams.get('pulsexTokenOut') ?? zeroAddress) as Hex)
+  // $inspect(pulsexTokenInAddress, pulsexTokenOutAddress)
   const bridgeableTokensSettings = {
     provider: Provider.PULSECHAIN,
     chain: Number(Chains.ETH),
@@ -630,6 +631,7 @@
       selectedToken={finalTokenOutput}
       onsubmit={(token) => {
         if (token) {
+          // console.log('token', token)
           page.setParam('pulsexTokenOut', token.address === zeroAddress ? null : token.address)
           // defaultOnboardTokens.extend({
           //   pulsexTokenOut: token.address,
