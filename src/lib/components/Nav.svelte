@@ -42,7 +42,7 @@
   )
 </script>
 
-<div class="sticky z-20 w-full -mb-14 flex h-14">
+<div class="fixed z-20 -mb-14 flex h-14 transition-all duration-200" style="width: {!page.settings ? '100vw' : 'calc(100vw - 16rem)'};">
   <nav
     class="grow flex h-14 flex-row bg-white p-2 leading-8 shadow text-surface-contrast-50">
     <div class="m-auto flex w-full max-w-5xl justify-between">

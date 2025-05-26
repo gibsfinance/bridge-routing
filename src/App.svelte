@@ -34,7 +34,7 @@
 </script>
 
 <Layout>
-  <div class="flex flex-col w-full min-w-80 h-screen overflow-y-scroll">
+  <div class="flex flex-col w-full min-w-80">
     {#if page.route.id === '/'}
       <Home />
     {:else if page.route.id.startsWith('/delivery')}

@@ -491,7 +491,6 @@
   const stepTokensDelinked = $derived.by(() => {
     return bridgeTokenOutAddress !== pulsexTokenInAddress
   })
-  $inspect(bridgingToPulsechain, bridgeTokenOut)
 </script>
 
 <Onramps />

@@ -14,11 +14,11 @@
   importing in this way allows the scripts to be loaded in parallel
   and for us to show a loader until loading is complete
 -->
-<div class="flex flex-row h-screen w-full relative">
+<div class="flex flex-row w-full relative">
   {#if page.route.id !== '/' && page.settings !== 'disabled'}
     <EmbedSettings />
   {/if}
-  <div class="flex flex-col w-full h-full w-screen relative transition-all duration-200" class:left-0={!page.settings} class:left-64={!!page.settings}>
+  <div class="flex flex-col h-full relative transition-all duration-200" class:left-0={!page.settings} class:left-64={!!page.settings} style="width: {!page.settings ? '100vw' : 'calc(100vw - 16rem)'};">
   {#if !page.embed}
     <div class="app bg-slate-950 flex grow">
       <div class="app relative">
