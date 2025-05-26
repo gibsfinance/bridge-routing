@@ -69,6 +69,7 @@ export class BridgeSettings {
       unwrap: input.unwrap.value,
     })
     if (!key) return null
+    // console.log(key)
     return this.assetOuts.get(key) ?? null
   }
   setAssetOut(assetOutKey: string, assetOut: Token) {
