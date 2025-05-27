@@ -4,14 +4,17 @@
   import Button from './Button.svelte'
   import { Accordion } from '@skeletonlabs/skeleton-svelte'
   import TokenSelect from './TokenSelect.svelte'
-  import { bridgableTokens, bridgeKey } from '../stores/input.svelte'
-  import { Provider } from '../stores/auth/types'
+  import { bridgableTokens, bridgeKey, type BridgeKey } from '../stores/input.svelte'
+  import { Chains, Provider } from '../stores/auth/types'
   import { zeroAddress, type Hex } from 'viem'
   import ModalWrapper from './ModalWrapper.svelte'
   import SelectButtonContents from './SelectButtonContents.svelte'
   import _ from 'lodash'
   import * as settings from '../stores/settings.svelte'
   import * as nav from '../stores/nav.svelte'
+  import { pathways, testnetPathways } from '../stores/config.svelte'
+  import BridgeProviderDirection from './BridgeProviderDirection.svelte'
+  import { bridgeSettings } from '../stores/bridge-settings.svelte'
 
   const relevantUrl = $derived.by(() => {
     const url = new URL(page.url.toString())
@@ -132,6 +135,38 @@
     chain: 369,
     partnerChain: 1,
   }))
+  // direction
+  type DirectionOption = {
+    provider: Provider
+    fromChain: Chains
+    toChain: Chains
+  }
+  const directionOptions: DirectionOption[] = ([pathways, testnetPathways].reduce((acc, pathways) => {
+    Object.entries(pathways).forEach(([provider, providerPathways]) => {
+      Object.entries(providerPathways).forEach(([chain, pathways]) => {
+        Object.entries(pathways).forEach(([partnerChain, pathway]) => {
+          acc.push({
+            provider: provider as Provider,
+            fromChain: chain as Chains,
+            toChain: partnerChain as Chains,
+          })
+        })
+      })
+    })
+    return acc
+  }, [] as DirectionOption[]))
+  const selectDirection = (option: DirectionOption) => {
+    const current = bridgeKey.value
+    const target = [option.provider, option.fromChain, option.toChain] as BridgeKey
+    const reversedTarget = [option.provider, option.toChain, option.fromChain] as BridgeKey
+    if (_.isEqual(current, reversedTarget)) {
+      // try to swap the token
+      const partnerToken = bridgeSettings.assetOut!.address
+      nav.bridge.shallow(target, partnerToken)
+      return
+    }
+    nav.bridge.shallow(target, zeroAddress)
+  }
 </script>
 
 <div class="w-0 transition-all duration-200 fixed flex flex-col top-0 bottom-0 h-screen" class:w-64={open}>
@@ -165,26 +200,18 @@
         </Accordion.Item>
         {#if page.params.page === 'bridge'}
         <hr class="hr" />
-        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="direction" disabled controlClasses="hover:bg-gray-100 cursor-not-allowed hover:text-surface-contrast-50" leadClasses="mr-2">
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="direction" controlClasses="hover:bg-gray-100 hover:text-surface-contrast-50" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="material-symbols-light:settings-outline-rounded" class="size-6" />{/snippet}
           {#snippet control()}Direction{/snippet}
-          <!-- {#snippet panel()}
-          <fieldset>
-            <ul class="flex flex-col gap-1">
+          {#snippet panel()}
+            <ul class="flex flex-col gap-2">
               {#each directionOptions as option}
-                <li>
-                  <label for={`direction-${option.value}`}>
-                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-contrast-50 justify-start border rounded-lg hover:bg-gray-100 transition-all transition-duration-100" onclick={() => {
-                      // page.setParam('direction', option.value)
-                    }}>
-                      {option.name}
-                    </Button>
-                  </label>
-                </li>
+              <li class="flex flex-row w-full">
+                <BridgeProviderDirection provider={option.provider} fromChain={option.fromChain} toChain={option.toChain} onclick={() => selectDirection(option)} />
+              </li>
               {/each}
             </ul>
-          </fieldset>
-          {/snippet} -->
+          {/snippet}
         </Accordion.Item>
         {/if}
         {#if page.route.id === '/onboard'}
