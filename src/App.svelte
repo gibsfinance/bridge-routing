@@ -3,26 +3,22 @@
   import Home from './lib/pages/Home.svelte'
   import Delivery from './lib/pages/Delivery.svelte'
   import Onboard from './lib/pages/Onboard.svelte'
-  import { page } from './lib/stores/page.svelte'
-  import { activeOnboardStep, defaultOnboardTokens, onboardShowOnramps, showTooltips } from './lib/stores/storage.svelte'
+  import { page } from './lib/stores/app-page.svelte'
   import { isAddress } from 'viem'
-  if (page.onramps === 'open') {
-    onboardShowOnramps.value = true
+  import { bridgeKey } from './lib/stores/input.svelte'
+
+  if (page.embed || window !== window.top) {
+    if (page.settings !== 'disabled') {
+      // page.setParam('settings', 'disabled')
+    }
   }
-  if (page.guide === 'open') {
-    showTooltips.value = true
-  } else if (page.guide === 'closed') {
-    showTooltips.value = false
-  }
-  if (page.stage === 'onboard') {
-    activeOnboardStep.value = 1
-  } else if (page.stage === 'swap') {
-    activeOnboardStep.value = 2
-  }
+  // if (page.onramps === 'open') {
+  //   onboardShowOnramps.value = true
+  // }
   const queryParams = page.queryParams
   const keys = [
     'bridgeTokenIn',
-    'bridgeTokenOut',
+    // 'bridgeTokenOut',
     'pulsexTokenIn',
     'pulsexTokenOut',
   ]
@@ -32,15 +28,19 @@
     }
     return acc
   }, {} as Record<string, string>)
-  defaultOnboardTokens.extend(updates)
+  if (page.route.id === '/delivery' && updates.bridgeTokenIn && isAddress(updates.bridgeTokenIn)) {
+    bridgeKey.assetInAddress = updates.bridgeTokenIn
+  }
 </script>
 
 <Layout>
-  {#if page.route.id === '/'}
-    <Home />
-  {:else if page.route.id.startsWith('/delivery')}
-    <Delivery />
-  {:else if page.route.id.startsWith('/onboard')}
-    <Onboard />
-  {/if}
+  <div class="flex flex-col w-full min-w-80">
+    {#if page.route.id === '/'}
+      <Home />
+    {:else if page.route.id.startsWith('/delivery')}
+      <Delivery />
+    {:else if page.route.id.startsWith('/onboard')}
+      <Onboard />
+    {/if}
+  </div>
 </Layout>

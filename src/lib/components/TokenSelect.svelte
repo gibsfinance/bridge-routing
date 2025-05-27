@@ -15,6 +15,7 @@
   import Loading from './Loading.svelte'
   import { loading } from '../stores/loading.svelte'
   import { evmChainsById } from '../stores/auth/AuthProvider.svelte'
+  import type { ClassValue } from 'svelte/elements'
 
   type Props = {
     onsubmit?: (token: Token | null) => void
@@ -23,6 +24,7 @@
     showCustomTokens?: boolean
     selectedChain?: number
     selectedToken?: Token | null
+    paddingClassesX?: ClassValue
   }
   let {
     onsubmit = () => {},
@@ -31,6 +33,7 @@
     showCustomTokens = false,
     selectedChain = 0,
     selectedToken,
+    paddingClassesX = 'px-6',
   }: Props = $props()
   let custom!: Token
   const addCustom = (newToken: Token) => {
@@ -135,10 +138,15 @@
     if (limit.count > subset.length) return
     limit.increment(50)
   }
+  const headerClasses = $derived([
+    'flex flex-row grow justify-between',
+    paddingClassesX,
+    'pt-4 pb-2',
+  ])
 </script>
 
 <div class="flex flex-col h-full max-h-[512px] rounded-2xl overflow-hidden">
-  <div class="flex flex-row grow justify-between px-6 pt-4 pb-2">
+  <div class={headerClasses}>
     <span class="flex flex-row grow">Select a Token</span>
     <Button
       class="flex flex-row"

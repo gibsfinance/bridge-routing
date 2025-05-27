@@ -1,5 +1,4 @@
 <script lang="ts">
-  // import { chainsMetadata } from '../stores/auth/constants'
   import { formatUnits, type Hex, zeroAddress } from 'viem'
   import * as transactions from '../stores/transactions'
   import {
@@ -102,6 +101,10 @@
     if (!accountState?.address) {
       return false
     }
+    if (input.recipientInput.value !== input.recipient.value) {
+      // console.log('recipient input mismatch', input.recipientInput.value, input.recipient.value)
+      return true
+    }
     if (!isRequiredChain) {
       return false
     }
@@ -132,10 +135,16 @@
       return `Approve ${assetIn?.symbol}`
     }
     const requiresDelivery = bridgeSettings.bridgePathway?.requiresDelivery
-    if ((!shouldDeliver.value && requiresDelivery) || !requiresDelivery) {
-      return `Bridge ${assetIn?.symbol} to ${toNetwork?.name}`
+    if (!toNetwork) {
+      return 'Bridge'
     }
-    return `Bridge+Deliver ${assetIn?.symbol} to ${toNetwork?.name}`
+    if (!assetIn) {
+      return `Bridge to ${toNetwork.name}`
+    }
+    if ((!shouldDeliver.value && requiresDelivery) || !requiresDelivery) {
+      return `Bridge ${assetIn.symbol} to ${toNetwork.name}`
+    }
+    return `Bridge+Deliver ${assetIn.symbol} to ${toNetwork.name}`
   })
   const switchToChain = $derived(() =>
     switchNetwork(appkitNetworkById.get(Number(input.bridgeKey.fromChain))),
@@ -154,9 +163,9 @@
   })
 </script>
 
-<div class="flex w-full">
+<div class="flex flex-row w-full relative">
   <Button
-    class="bg-tertiary-600 w-full text-surface-contrast-950 leading-10 p-2 rounded-2xl"
+    class="bg-tertiary-600 w-full text-surface-contrast-950 leading-10 rounded-2xl p-2"
     {onclick}
     {disabled}>{text}</Button>
 </div>

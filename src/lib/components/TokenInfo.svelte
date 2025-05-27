@@ -54,7 +54,7 @@
     <span class="flex flex-row text-sm items-center leading-4 gap-2">
       <span class="text-gray-500 font-light">{token.symbol}</span>
       {#if token.address !== zeroAddress}
-        <span class={addressClasses}>
+        <span class={addressClasses} title={token.address}>
           {ellipsis(token.address, { length: truncate, prefixLength: 2 })}
         </span>
       {/if}

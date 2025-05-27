@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import Icon from '@iconify/svelte'
   import Loading from './Loading.svelte'
-  import { page, goto } from '../stores/page.svelte'
+  import { page } from '../stores/app-page.svelte'
   import { bridgeKey, incrementForcedRefresh } from '../stores/input.svelte'
   import { Provider } from '../stores/auth/types'
   import { addDomain } from '../stores/window.svelte'
@@ -13,6 +13,7 @@
   import RPC from './RPC.svelte'
   import Button from './Button.svelte'
   import ConnectButton from './ConnectButton.svelte'
+  import * as nav from '../stores/nav.svelte'
   // import in order to link appropriately
   const gibs = 'images/1FAF0.svg'
 
@@ -22,13 +23,13 @@
   })
 
   const gotoHome = async () => {
-    await goto('#/')
+    nav.home.shallow()
   }
   const gotoNativeDelivery = async () => {
-    await goto('#/delivery')
+    nav.delivery.shallow(bridgeKey.value, bridgeKey.assetInAddress ?? undefined)
   }
   const gotoOnboard = async () => {
-    await goto('#/onboard')
+    nav.onboard.shallow()
   }
   const destinationBridgeKey = $derived(bridgeKey.provider)
   const isDeliveryRoute = $derived(page.route.id?.includes('/delivery'))
@@ -41,9 +42,9 @@
   )
 </script>
 
-<div class="fixed z-20 -mb-14 flex h-14">
+<div class="fixed z-20 -mb-14 flex h-14 transition-all duration-200" style="width: {!page.settings ? '100vw' : 'calc(100vw - 16rem)'};">
   <nav
-    class="fixed right-0 left-0 flex h-14 flex-row bg-white p-2 leading-8 shadow text-surface-contrast-50">
+    class="grow flex h-14 flex-row bg-white p-2 leading-8 shadow text-surface-contrast-50">
     <div class="m-auto flex w-full max-w-5xl justify-between">
       <button
         type="button"

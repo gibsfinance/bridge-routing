@@ -11,8 +11,9 @@ export class LoadingCounter {
   }
   isResolved(key?: string | string[] | null) {
     if (!key) return this.resolved
-    if (Array.isArray(key))
+    if (Array.isArray(key)) {
       return key.reduce((total, k) => total + (this.value.categories[k] || 0), 0) === 0
+    }
     return !this.value.categories[key as string]
   }
 
@@ -40,13 +41,13 @@ export class LoadingCounter {
     ...conditions: Condition[]
   ): (arg?: In) => { promise: Promise<Out | null>; controller: AbortController; cleanup: Cleanup } {
     return (arg?: In) => {
-      untrack(() => this.increment(key))
+      const decrement = !key ? () => { } : untrack(() => this.increment(key))
       let cancelled = false
       const abortController = new AbortController()
       const cleanup = () => {
+        decrement()
         if (cancelled) return
         cancelled = true
-        untrack(() => this.decrement(key))
         if (!abortController.signal.aborted) {
           abortController.abort('cancelled')
         }
@@ -76,7 +77,7 @@ setInterval(() => {
 
 export const resolved = <T>(val: T) => {
   return {
-    cleanup: () => {},
+    cleanup: () => { },
     promise: Promise.resolve(val),
     controller: new AbortController(),
   }

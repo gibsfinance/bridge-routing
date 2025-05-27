@@ -11,9 +11,10 @@
   } from '../stores/bridge-settings.svelte'
   import { assetLink, loadAssetLink } from '../stores/chain-events.svelte'
   import { bridgableTokens, loadFeeFor, recipient, bridgeKey } from '../stores/input.svelte'
-  import { activeOnboardStep, showTooltips } from '../stores/storage.svelte'
+  import { page } from '../stores/app-page.svelte'
+  import * as settings from '../stores/settings.svelte'
   const toggleHelp = () => {
-    showTooltips.value = !showTooltips.value
+    page.setParam('guide', page.guide === settings.guide.SHOW ? null : settings.guide.SHOW)
   }
   const tokenInput = $derived(bridgeSettings.assetIn.value)
   $effect.pre(() => {
@@ -75,22 +76,25 @@
     <div class="flex flex-row grow items-center gap-1 h-12">
       <Button
         onclick={toggleHelp}
-        class="flex flex-row items-center italic gap-1 pr-1 border-2 rounded-full {showTooltips.value
-          ? ' '
+        class="flex flex-row items-center italic gap-1 pr-1 border-2 rounded-full{page.guide === settings.guide.SHOW
+          ? ''
           : ' border-transparent'}">
         <Icon icon="material-symbols:help" mode="svg" class="size-9" />
-        <span class="text-sm pr-1 leading-6" class:invisible={!showTooltips.value}>Dismiss</span>
+        <span class="text-sm pr-1 leading-6" class:invisible={!page.guide}>Dismiss</span>
       </Button>
     </div>
     <div class="absolute left-1/2 -translate-x-1/2 top-0 h-12 items-center justify-center flex">
-      {#each [1, 2] as step (step)}
+      {#each [null, 'swap'] as step (step)}
         <Button
           class="flex w-8 items-center flex-row"
-          onclick={() => (activeOnboardStep.value = step)}>
+          onclick={() => {
+            page.setParam('stage', step)
+            // onboardStage.value = step
+          }}>
           <Icon
             icon="mingcute:run-fill"
             mode="svg"
-            class="size-8 -mr-1.5 {activeOnboardStep.value !== step
+            class="size-8 -mr-1.5 {page.stage !== step
               ? 'text-gray-300 opacity-75'
               : ''}" />
         </Button>

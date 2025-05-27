@@ -11,13 +11,8 @@
   } from '../stores/auth/AuthProvider.svelte'
   import _ from 'lodash'
   import {
-    activeOnboardStep,
-    foreignBridgeInputs,
     bridgeTx,
-    showTooltips,
-    defaultOnboardTokens,
   } from '../stores/storage.svelte'
-  import { untrack } from 'svelte'
   import {
     assetLink,
     blocks,
@@ -31,8 +26,6 @@
   import OnboardButton from './OnboardButton.svelte'
   import { transactionButtonPress } from '../stores/transaction'
   import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
-  import GuideStep from './GuideStep.svelte'
-  import GuideShield from './GuideShield.svelte'
   import {
     assetOutKey,
     bridgeSettings,
@@ -55,17 +48,33 @@
   import { chainsMetadata } from '../stores/auth/constants'
   import Icon from '@iconify/svelte'
   import Button from './Button.svelte'
+  import OnboardGuide from './OnboardGuide.svelte'
+  import { page } from '../stores/app-page.svelte'
+  import * as settings from '../stores/settings.svelte'
+  import { untrack } from 'svelte'
+  import { SvelteMap } from 'svelte/reactivity'
+  import type { Token } from '../types.svelte'
 
-  const defaultPulsexTokens = {
-    bridgeTokenIn: zeroAddress,
-    bridgeTokenOut: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
-    pulsexTokenIn: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
-    pulsexTokenOut: zeroAddress,
-  } as const
-  const defaultTokenAddresses = $derived({
-    ...defaultPulsexTokens,
-    ...(defaultOnboardTokens.value ?? {}),
+  const pulsechainWrappedWethFromEthereum = '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C'
+  const bridgeTokenInAddress = $derived((page.queryParams.get('bridgeTokenIn') ?? zeroAddress) as Hex)
+
+  const bridgeTokenIn = $derived.by(() => {
+    return (
+      possibleBridgeTokenInputs.find(
+        (t) => getAddress(t.address) === getAddress(bridgeTokenInAddress),
+      ) ?? null
+    )
   })
+  const assetOuts = new SvelteMap<string, Token>()
+  const assetOutputKey = $derived(bridgeTokenIn ? assetOutKey({
+      bridgeKeyPath: bridgeKey.path,
+      assetInAddress: bridgeTokenIn?.address as Hex,
+      unwrap: false,
+    }) : null)
+  const bridgeTokenOutAddress = $derived((assetOuts.get(assetOutputKey as string)?.address ?? pulsechainWrappedWethFromEthereum) as Hex)
+  const pulsexTokenInAddress = $derived((page.queryParams.get('pulsexTokenIn') ?? pulsechainWrappedWethFromEthereum) as Hex)
+  const pulsexTokenOutAddress = $derived((page.queryParams.get('pulsexTokenOut') ?? zeroAddress) as Hex)
+
   const bridgeableTokensSettings = {
     provider: Provider.PULSECHAIN,
     chain: Number(Chains.ETH),
@@ -83,7 +92,7 @@
   )
   let amountInputFromLifi = $state(0n)
   let maxCrossToEthereumBridge = $state(0n as bigint | null)
-  const destinationAddress = $derived.by(() => foreignBridgeInputs.value?.toAddress ?? null)
+  // const destinationAddress = $derived.by(() => foreignBridgeInputs.value?.toAddress ?? null)
   $effect(() => {
     if (maxCrossToEthereumBridge && amountInputFromLifi > maxCrossToEthereumBridge) {
       amountInputFromLifi = maxCrossToEthereumBridge
@@ -98,6 +107,7 @@
     return amountIn.value < minAmountIn
   })
   const buttonDisabled = $derived.by(() => {
+
     if (bridgingToPulsechain) {
       return (
         !maxCrossPulsechainBridge ||
@@ -107,12 +117,12 @@
       )
     }
     if (needsAllowanceForPulsex) {
-      return !pulsexTokenIn?.address
+      return !pulsexTokenIn?.address || !loadingKey
     }
-    return swapDisabled || !pulsexQuoteMatchesLatest
+    return swapDisabled || !pulsexQuoteMatchesLatest || !loadingKey
   })
   $effect(() => {
-    if (!defaultTokenAddresses.bridgeTokenIn) return
+    if (!bridgeTokenIn) return
     const settingsMatch =
       bridgeKey.provider === Provider.PULSECHAIN &&
       bridgeKey.fromChain === Chains.ETH &&
@@ -120,14 +130,7 @@
     if (!settingsMatch) {
       bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
     }
-    bridgeKey.assetInAddress = defaultTokenAddresses.bridgeTokenIn
-  })
-  const bridgeTokenIn = $derived.by(() => {
-    return (
-      possibleBridgeTokenInputs.find(
-        (t) => getAddress(t.address) === getAddress(defaultTokenAddresses.bridgeTokenIn),
-      ) ?? null
-    )
+    bridgeKey.assetInAddress = bridgeTokenInAddress
   })
   $effect(() => {
     if (possibleBridgeTokenInputs.length === 0 || !bridgeTokenIn) {
@@ -140,26 +143,27 @@
   const bridgeTokenOut = $derived.by(() => {
     return (
       possiblePulsexTokens.find(
-        (t) => getAddress(t.address) === getAddress(defaultTokenAddresses.bridgeTokenOut),
+        (t) => getAddress(t.address) === getAddress(bridgeTokenOutAddress),
       ) ?? null
     )
   })
   const pulsexTokenIn = $derived.by(() => {
     return (
       possiblePulsexTokens.find(
-        (t) => getAddress(t.address) === getAddress(defaultTokenAddresses.pulsexTokenIn),
+        (t) => getAddress(t.address) === getAddress(pulsexTokenInAddress),
       ) ?? null
     )
   })
   const finalTokenOutput = $derived.by(() => {
     return (
       possiblePulsexTokens.find(
-        (t) => getAddress(t.address) === getAddress(defaultTokenAddresses.pulsexTokenOut),
+        (t) => getAddress(t.address) === getAddress(pulsexTokenOutAddress),
       ) ?? null
     )
   })
-  const bridgingToPulsechain = $derived(activeOnboardStep.value === 1)
-  const swappingOnPulsex = $derived(activeOnboardStep.value === 2)
+  const stage = $derived(page.stage ?? settings.stage.ONBOARD)
+  const bridgingToPulsechain = $derived(stage === settings.stage.ONBOARD)
+  const swappingOnPulsex = $derived(stage === settings.stage.SWAP)
 
   const bridgeAmount = $derived(amountIn.value ?? 0n)
   const bridgeFeePercent = $derived(
@@ -170,12 +174,9 @@
   let amountInputToPulsex = $state(0n)
   $effect(() => {
     if (!bridgeTokenIn || !bridgeTokenIn.address) return
-    const assetOutputKey = assetOutKey({
-      bridgeKeyPath: bridgeKey.path,
-      assetInAddress: bridgeTokenIn.address as Hex,
-      unwrap: false,
-    })
-    if (!assetOutputKey) return
+    if (!assetOutputKey) {
+      return
+    }
     const tokensUnderBridgeKey = bridgableTokens.bridgeableTokensUnder({
       provider: Provider.PULSECHAIN,
       chain: Number(bridgeKey.toChain),
@@ -195,12 +196,11 @@
       })
       assetLink.value = l
       if (!assetOut) return
-      bridgeSettings.setAssetOut(assetOutputKey, {
+      assetOuts.set(assetOutputKey as string, {
         ...assetOut,
         logoURI: bridgeSettings.assetIn.value?.logoURI,
       })
-      defaultOnboardTokens.extend({
-        bridgeTokenOut: assetOut.address as Hex,
+      page.setParams({
         pulsexTokenIn: assetOut.address as Hex,
       })
     })
@@ -325,13 +325,13 @@
     return possiblePulsexTokens.find((t) => getAddress(t.address) === getAddress(address))
   }
   const tokenInPulsex = $derived.by(() => {
-    return findToken(defaultTokenAddresses.pulsexTokenIn) ?? null
+    return findToken(pulsexTokenInAddress) ?? null
   })
   const tokenOutPulsex = $derived.by(() => {
-    return findToken(defaultTokenAddresses.pulsexTokenOut) ?? null
+    return findToken(pulsexTokenOutAddress) ?? null
   })
   const tokenOut = $derived.by(() => {
-    return findToken(defaultTokenAddresses.bridgeTokenOut) ?? null
+    return findToken(bridgeTokenOutAddress) ?? null
   })
   let pulsexQuoteResult = $state<SerializedTrade | null>(null)
   const latestPulseBlock = $derived(blocks.get(Number(Chains.PLS)))
@@ -465,7 +465,7 @@
     return swapPulsexStep
   })
   const requiredChain = $derived.by(() => {
-    const chainId = activeOnboardStep.value === 1 ? Chains.ETH : Chains.PLS
+    const chainId = stage === settings.stage.ONBOARD ? Chains.ETH : Chains.PLS
     const chain = chainsMetadata[chainId]
     return {
       id: chain.id,
@@ -473,7 +473,7 @@
     }
   })
   const buttonText = $derived.by(() => {
-    if (activeOnboardStep.value === 1) {
+    if (stage === settings.stage.ONBOARD) {
       if (needsAllowanceForPulsechainBridge) {
         return `Approve ${bridgeTokenIn?.symbol} to Pulsechain`
       }
@@ -485,13 +485,13 @@
     return `Swap ${tokenInPulsex?.symbol} for ${tokenOutPulsex?.symbol}`
   })
   const loadingKey = $derived.by(() => {
-    if (activeOnboardStep.value === 1) {
+    if (stage === settings.stage.ONBOARD) {
       return 'bridge-to-pulsechain'
     }
     return pulsexQuoteResult ? 'pulsex-quote' : ''
   })
   const stepTokensDelinked = $derived.by(() => {
-    return defaultOnboardTokens.value?.bridgeTokenOut !== defaultOnboardTokens.value?.pulsexTokenIn
+    return bridgeTokenOutAddress !== pulsexTokenInAddress
   })
 </script>
 
@@ -509,7 +509,7 @@
   invalidValue={amountLessThanMin ?? false}
   onclick={() => {
     if (swappingOnPulsex) {
-      activeOnboardStep.value = 1
+      page.setParam('stage', settings.stage.ONBOARD)
     }
   }}
   oninput={({ int }) => {
@@ -533,9 +533,7 @@
       selectedToken={bridgeTokenIn}
       onsubmit={(token) => {
         if (token) {
-          defaultOnboardTokens.extend({
-            bridgeTokenIn: token.address as Hex,
-          })
+          page.setParam('bridgeTokenIn', token.address === zeroAddress ? null : token.address)
         }
         close()
       }}></TokenSelect>
@@ -550,7 +548,7 @@
       if (!bridgingToPulsechain) {
         return
       }
-      activeOnboardStep.value = 2
+      page.setParam('stage', settings.stage.SWAP)
       const chain = getNetwork({
         chainId: Number(Chains.PLS),
         name: '',
@@ -563,7 +561,7 @@
 {/if}
 <SectionInput
   label="Swap on PulseX"
-  focused={activeOnboardStep.value >= 1}
+  focused={true}
   token={bridgingToPulsechain ? bridgeTokenOut : pulsexTokenIn}
   value={bridgingToPulsechain ? amountOutputFromBridge : amountInputToPulsex}
   compressed={!swappingOnPulsex}
@@ -572,7 +570,7 @@
   onbalanceupdate={() => {}}
   onclick={() => {
     if (bridgingToPulsechain) {
-      activeOnboardStep.value = 2
+      page.setParam('stage', settings.stage.SWAP)
     }
   }}
   onmax={(balance) => {
@@ -589,9 +587,7 @@
       <Button
         class="flex size-5 text-surface-contrast-50"
         onclick={() => {
-          defaultOnboardTokens.extend({
-            pulsexTokenIn: defaultOnboardTokens.value?.bridgeTokenOut,
-          })
+          page.setParam('pulsexTokenIn', bridgeTokenOutAddress)
         }}>
         <Icon icon="fontisto:undo" />
       </Button>
@@ -605,9 +601,7 @@
       selectedToken={tokenInPulsex}
       onsubmit={(token) => {
         if (token) {
-          defaultOnboardTokens.extend({
-            pulsexTokenIn: token.address,
-          })
+          page.setParam('pulsexTokenIn', token.address)
           pulsexQuoteResult = null
         }
         close()
@@ -624,10 +618,10 @@
   readonlyInput
   readonlyTokenSelect={!swappingOnPulsex}
   onbalanceupdate={() => {}}
-  overrideAccount={destinationAddress}
+  overrideAccount={recipient.value}
   onclick={() => {
     if (!swappingOnPulsex) {
-      activeOnboardStep.value = 2
+      page.setParam('stage', settings.stage.SWAP)
     }
   }}>
   {#snippet modal({ close })}
@@ -638,9 +632,7 @@
       selectedToken={finalTokenOutput}
       onsubmit={(token) => {
         if (token) {
-          defaultOnboardTokens.extend({
-            pulsexTokenOut: token.address,
-          })
+          page.setParam('pulsexTokenOut', token.address === zeroAddress ? null : token.address)
           pulsexQuoteResult = null
         }
         close()
@@ -654,26 +646,6 @@
   text={buttonText}
   {loadingKey} />
 
-{#if showTooltips.value}
-  <div class="absolute top-0 left-0 w-full h-full z-10">
-    <GuideShield show={true} />
-    {#if bridgingToPulsechain}
-      <GuideStep step={1} triggerClass="absolute right-24 top-8">
-        <p>Onramp funds</p>
-      </GuideStep>
-      <GuideStep step={2} triggerClass="absolute left-24 top-28">
-        <p>Select the token you wish to bridge to PulseChain.</p>
-      </GuideStep>
-      <GuideStep step={3} triggerClass="absolute right-24 bottom-4">
-        <p>Trigger the bridge to PulseChain.</p>
-      </GuideStep>
-    {:else}
-      <GuideStep step={1} triggerClass="absolute right-24 top-44">
-        <p>Select the token you wish to swap from.</p>
-      </GuideStep>
-      <GuideStep step={2} triggerClass="absolute right-24 bottom-4">
-        <p>Trigger the swap on PulseX.</p>
-      </GuideStep>
-    {/if}
-  </div>
+{#if page.guide === settings.guide.SHOW}
+  <OnboardGuide {bridgingToPulsechain} />
 {/if}

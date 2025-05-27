@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { showTooltips } from '../stores/storage.svelte'
+  import { page } from '../stores/app-page.svelte'
   import type { ClassValue } from 'svelte/elements'
   type Props = {
     show: boolean
@@ -18,7 +18,7 @@
     backgroundClasses = 'bg-black/50',
     zClasses = '',
     onclick = () => {
-      showTooltips.value = false
+      page.setParam('guide', null)
     },
   }: Props = $props()
   const classes = $derived([positionClasses, sizeClasses, backgroundClasses, className, zClasses])

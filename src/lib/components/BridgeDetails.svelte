@@ -67,9 +67,9 @@
   const etherBasedGasTipFeeLength = $derived(etherBasedGasTipFee.length ?? 0)
 </script>
 
-<Section id="bridge-advanced-mode" focused>
+<Section id="bridge-details" focused>
   <div class="text-surface-contrast-50 w-full text-xs sm:text-sm">
-    <div class="flex flex-row items-center leading-8 justify-between w-full text-sm">
+    <div class="flex flex-row items-center leading-7 justify-between w-full text-sm">
       <span>Bridge Fee</span>
       <Tooltip placement="top">
         {#snippet trigger()}
@@ -83,11 +83,11 @@
     </div>
     <!-- from home chain -->
     {#if fromChainId === Chains.PLS || fromChainId === Chains.V4PLS}
-      <div class="relative hover:z-10 leading-8">
-        <div class="flex flex-row leading-8 justify-between items-center text-sm">
+      <div class="relative hover:z-10 leading-7">
+        <div class="flex flex-row leading-7 justify-between items-center text-sm">
           <span class="flex items-center flex-row gap-1">
             <ButtonToggle
-              contentClass="leading-6 my-1"
+              contentClass="leading-6 my-0.5"
               title={large ? 'Delivery' : 'Deliv.'}
               checked={shouldDeliver.value}
               onclick={() => {
@@ -135,7 +135,7 @@
           {#if shouldDeliver.value}
             <Tooltip
               class="grow flex flex-row items-center"
-              triggerClasses="grow flex flex-row items-center justify-end text-sm leading-8"
+              triggerClasses="grow flex flex-row items-center justify-end text-sm leading-7"
               placement="top">
               {#snippet trigger()}
                 {#if feeType === input.FeeType.FIXED}
@@ -143,7 +143,7 @@
                 {:else if feeType === input.FeeType.GAS_TIP}
                   <span class="grow flex flex-row w-full items-center justify-end">⛽&nbsp;+</span>
                   <span
-                    class="flex flex-row grow leading-8 h-8 min-w-8 text-inherit text-sm items-center justify-end w-fit max-w-24"
+                    class="flex flex-row grow leading-7 h-7 min-w-8 text-inherit text-sm items-center justify-end w-fit max-w-24"
                     style:width={`${etherBasedGasTipFeeLength}em`}>
                     <NumericInput
                       sizeClass="flex items-center h-full w-full"
@@ -166,7 +166,7 @@
                   <span class="flex-none flex flex-row items-center leading-8">%</span>
                 {:else if feeType === input.FeeType.PERCENT}
                   <NumericInput
-                    sizeClass="flex flex-row w-auto grow leading-8 h-8 text-inherit text-sm"
+                    sizeClass="flex flex-row w-auto grow leading-7 h-7 text-inherit text-sm"
                     fontSizeInput={null}
                     {fontSizeClass}
                     value={input.percentFee.value ?? 0n}
@@ -203,7 +203,7 @@
         </div>
         <UndercompensatedWarning />
       </div>
-      <div class="flex flex-row leading-8 justify-between items-center h-8">
+      <div class="flex flex-row leading-7 justify-between items-center h-7">
         <Tooltip placement="top">
           {#snippet content()}Allows cost limit to float with the destination chain's base fee.
             While unlocked the number in the ui may change. Once a transaction is sent, the number
@@ -211,7 +211,7 @@
           {#snippet trigger()}
             <Button
               name="toggle-cost-limit"
-              class="tooltip tooltip-top tooltip-right-toward-center relative text-sm leading-8 flex flex-row items-center gap-1"
+              class="tooltip tooltip-top tooltip-right-toward-center relative text-sm leading-7 flex flex-row items-center gap-1"
               onclick={() => {
                 storageBridgeSettings.extend({
                   costLimitLocked: !costLimitLocked,
@@ -236,7 +236,7 @@
             {/snippet}
             {#snippet trigger()}
               <span
-                class="flex items-center text-sm leading-8 grow w-full justify-end"
+                class="flex items-center text-sm leading-7 grow w-full justify-end"
                 class:opacity-75={!loading.isResolved('gas')}>
                 {#if feeType === input.FeeType.PERCENT}
                   <span
@@ -251,7 +251,7 @@
                     {decimals}
                     {fontSizeClass}
                     fontSizeInput={null}
-                    sizeClass="w-full leading-8 h-8 grow"
+                    sizeClass="w-full leading-7 h-7 grow"
                     oninput={({ int }) => {
                       storageBridgeSettings.extend({
                         costLimitLocked: true,
@@ -267,7 +267,7 @@
                     {decimals}
                     {fontSizeClass}
                     fontSizeInput={null}
-                    sizeClass="w-full leading-8 h-8 grow"
+                    sizeClass="w-full leading-7 h-7 grow"
                     oninput={({ int }) => {
                       storageBridgeSettings.extend({
                         costLimitLocked: true,
@@ -288,8 +288,6 @@
         {/if}
       </div>
     {/if}
-    <div class="mt-1">
-      <Settings />
-    </div>
+    <Settings />
   </div>
 </Section>

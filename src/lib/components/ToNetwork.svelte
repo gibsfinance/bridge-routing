@@ -10,6 +10,7 @@
   import { assetLink } from '../stores/chain-events.svelte'
   import { settingKey } from '../stores/fee-manager.svelte'
   import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
+    import { untrack } from 'svelte'
 
   type Props = {
     asset: Token | null
@@ -23,11 +24,6 @@
       ? asset
       : null,
   )
-  $effect(() => {
-    input.recipient.value = isAddress(accountState.address ?? '')
-      ? (accountState.address as Hex)
-      : zeroAddress
-  })
   const feeIsEstimated = $derived(
     input.shouldDeliver.value &&
       !!asset &&

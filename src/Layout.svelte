@@ -4,33 +4,37 @@
   import Footer from './lib/components/Footer.svelte'
   import { Toaster } from '@skeletonlabs/skeleton-svelte'
   import { toaster } from './lib/stores/toast'
-  import { page } from './lib/stores/page.svelte'
+  import { page } from './lib/stores/app-page.svelte'
+  import EmbedSettings from './lib/components/EmbedSettings.svelte'
 
   const { children } = $props()
+  const settingsOpen = $derived(!!page.settings && page.settings !== 'disabled')
 </script>
-
-<svelte:head>
-  <meta name="robots" content="noindex nofollow" />
-  <meta name="description" content="Gibs Finance" />
-</svelte:head>
 
 <!--
   importing in this way allows the scripts to be loaded in parallel
   and for us to show a loader until loading is complete
 -->
-{#if !page.embed}
-  <div class="app bg-slate-950">
-    <div class="app">
-      <Nav />
-      <main class="mt-14 box-border flex min-h-screen w-full flex-col bg-slate-950 text-white">
-        {@render children()}
-        <Footer />
-      </main>
+<div class="flex flex-row w-full relative">
+  {#if page.route.id !== '/' && page.settings !== 'disabled'}
+    <EmbedSettings />
+  {/if}
+  <div class="flex flex-col h-full relative transition-all duration-200" class:left-0={!settingsOpen} class:left-64={settingsOpen} style="width: {!settingsOpen ? '100vw' : 'calc(100vw - 16rem)'};">
+  {#if !page.embed}
+    <div class="app bg-slate-950 flex grow">
+      <div class="app relative">
+        <Nav />
+        <main class="mt-14 box-border flex min-h-screen w-full flex-col bg-slate-950 text-white">
+          {@render children()}
+          <Footer />
+        </main>
+      </div>
     </div>
+  {:else}
+  {@render children()}
+  {/if}
   </div>
-{:else}
-{@render children()}
-{/if}
+</div>
 <Toaster {toaster} placement="bottom-end" />
 
 <style lang="postcss">

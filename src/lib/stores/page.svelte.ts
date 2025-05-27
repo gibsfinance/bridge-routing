@@ -1,16 +1,19 @@
-import { tick } from 'svelte'
-
 type PageState = {
   path: string
   changing: boolean
   params: URLSearchParams | null
 }
 
-const embedModes = new Set(['simple', 'embed'])
-
 const hash = location.hash.slice(1) || '/'
 const [firstPath, firstParams] = hash.split('?')
 export class Page {
+  constructor() {
+    const boundHandleHashChange = this.handleHashChange.bind(this)
+    window.addEventListener('hashchange', boundHandleHashChange)
+    window.addEventListener('popstate', boundHandleHashChange)
+    window.addEventListener('load', boundHandleHashChange)
+    this.handleHashChange() // initial load
+  }
   public val = $state<PageState>({
     path: firstPath,
     changing: false,
@@ -19,51 +22,43 @@ export class Page {
   get value() {
     return `${this.val.path}${this.val.params?.size ? `?${this.val.params.toString()}` : ''}`
   }
-  get changing() {
-    return this.val.changing
-  }
-  get mode() {
-    return this.val.params?.get('mode') ?? null
-  }
-  get embed() {
-    return embedModes.has(this.val.params?.get('mode') ?? '')
-  }
-  get onramps() {
-    return this.val.params?.get('onramps')
-  }
-  get guide() {
-    return this.val.params?.get('guide')
-  }
-  get stage() {
-    return this.val.params?.get('stage')
-  }
   get queryParams() {
     return this.val.params ?? new URLSearchParams()
   }
+  setParam(key: string, value: string | null) {
+    const params = new URLSearchParams(this.val.params ?? '')
+    if (value === null) {
+      params.delete(key)
+    } else {
+      params.set(key, value)
+    }
+    this.pushState(this.val.path, params)
+  }
+  setParams(params: Record<string, string | null>) {
+    const newParams = new URLSearchParams(this.val.params ?? '')
+    for (const [key, value] of Object.entries(params)) {
+      this.setParam(key, value)
+    }
+    this.pushState(this.val.path, newParams)
+  }
   finishChange() {
-    // await tick()
-    // await new Promise(resolve => setTimeout(resolve, 10))
     this.val.changing = false
   }
-  set value(raw: string) {
-    const [noQuery, query] = raw.split('?')
-    const entries = [...(this.val.params ?? new Map()).entries()]
-    const parsed = (new URLSearchParams(query)).entries()
-    const joined = new Map([...parsed, ...entries]) // updates are first to show up in get method
-    const qs = new URLSearchParams([...joined.entries()])
-    const r = `${raw}${qs.size ? `?${qs.toString()}` : ''}`
+  pushState(noQuery: string, query?: URLSearchParams | null) {
+    const qs = query ?? new URLSearchParams()
+    const r = `${noQuery}${qs.size ? `?${qs.toString()}` : ''}`
     if (r.split('?').length > 2) {
       console.error('invalid url', r)
       throw new Error(`invalid url: ${r}`)
     }
     if (r !== this.value) {
       this.val.changing = true
-      history.pushState(null, '', `#${r}`)
       this.val = {
         path: noQuery,
         changing: true,
         params: qs,
       }
+      history.pushState(null, '', `#${r}`)
       this.finishChange()
     }
   }
@@ -91,46 +86,31 @@ export class Page {
       id: this.val.path,
     }
   })
-}
-export const page = new Page()
-
-export class Navigating {
   to = $derived.by(() => {
-    return page.changing ? page.value : null
+    return this.val.changing ? this.value : null
   })
-}
-
-export const navigating = new Navigating()
-
-export const goto = async (path: string) => {
-  if (!path.startsWith('#')) {
-    throw new Error('path must start with #')
+  async goto(path: string) {
+    if (!path.startsWith('#')) {
+      throw new Error('path must start with #')
+    }
+    const p = path.slice(1)
+    if (!p.startsWith('/')) {
+      throw new Error('second character must be /')
+    }
+    if (p === this.value) {
+      return
+    }
+    this.pushState(p)
   }
-  const p = path.slice(1)
-  if (!p.startsWith('/')) {
-    throw new Error('second character must be /')
+  async handleHashChange() {
+    if (this.val.changing) {
+      return
+    }
+    const current = location.hash.slice(1) || '/'
+    if (current !== this.value) {
+      console.log('hashchange', current, this.value)
+      const [noQuery, query] = current.split('?')
+      this.pushState(noQuery, new URLSearchParams(query))
+    }
   }
-  if (p === page.value) {
-    return
-  }
-  page.value = p
-  // await page.finishChange()
-}
-const handleHashChange = async () => {
-  if (page.val.changing) {
-    // page.finishChange()
-    return
-  }
-  const current = location.hash.slice(1) || '/'
-  if (current !== page.value) {
-    page.value = current
-  }
-}
-window.addEventListener('hashchange', handleHashChange)
-window.addEventListener('popstate', handleHashChange)
-window.addEventListener('load', handleHashChange)
-handleHashChange()
-
-export const pushState = async (path: string, state?: Record<string, unknown>) => {
-  await goto(path)
 }
