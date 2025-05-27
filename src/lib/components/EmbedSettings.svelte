@@ -155,6 +155,7 @@
     })
     return acc
   }, [] as DirectionOption[]))
+  const selectedDirection = $derived(directionOptions.find(option => _.isEqual([option.provider, option.fromChain, option.toChain], bridgeKey.value)))
   const selectDirection = $derived((option: DirectionOption) => {
     const current = bridgeKey.value
     const target = [option.provider, option.fromChain, option.toChain] as BridgeKey
@@ -202,11 +203,13 @@
           {#snippet panel()}
             <ul class="flex flex-col gap-2">
               {#each directionOptions as option}
+              {@const selected = selectedDirection === option}
               <li class="flex flex-row w-full">
                 <BridgeProviderDirection
                   provider={option.provider}
                   fromChain={option.fromChain}
                   toChain={option.toChain}
+                  disabled={selected}
                   onclick={() => selectDirection(option)}
                   sizeClasses="size-7"
                   wrapperHeightClasses="h-8"
