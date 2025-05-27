@@ -182,10 +182,10 @@
     return assetOutAddress
   })
   const dividerDisabled = $derived(!assetOutAddress || !futureAssetOutAddress)
-  const ondividerclick = () => {
+  const ondividerclick = $derived(() => {
     input.amountIn.value = null
     nav.bridge.shallow(bridgeKey.partner, futureAssetOutAddress as string)
-  }
+  })
   const deliveryFeeLocked = $derived(storageBridgeSettings.value?.deliveryFeeLocked ?? false)
   const costLimitLocked = $derived(storageBridgeSettings.value?.costLimitLocked ?? false)
   const feeType = $derived(storageBridgeSettings.value?.feeType ?? input.FeeType.PERCENT)

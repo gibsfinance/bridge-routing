@@ -155,18 +155,14 @@
     })
     return acc
   }, [] as DirectionOption[]))
-  const selectDirection = (option: DirectionOption) => {
+  const selectDirection = $derived((option: DirectionOption) => {
     const current = bridgeKey.value
     const target = [option.provider, option.fromChain, option.toChain] as BridgeKey
     const reversedTarget = [option.provider, option.toChain, option.fromChain] as BridgeKey
-    if (_.isEqual(current, reversedTarget)) {
-      // try to swap the token
-      const partnerToken = bridgeSettings.assetOut!.address
-      nav.bridge.shallow(target, partnerToken)
-      return
-    }
-    nav.bridge.shallow(target, zeroAddress)
-  }
+    const partnerToken = bridgeSettings.assetOut?.address
+    const targetToken = _.isEqual(current, reversedTarget) && partnerToken ? partnerToken as Hex : zeroAddress
+    nav.bridge.shallow(target, targetToken)
+  })
 </script>
 
 <div class="w-0 transition-all duration-200 fixed flex flex-col top-0 bottom-0 h-screen" class:w-64={open}>
