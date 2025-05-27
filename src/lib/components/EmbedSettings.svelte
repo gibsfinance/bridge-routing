@@ -205,9 +205,9 @@
               {#each directionOptions as option}
               {@const selected = selectedDirection === option}
               <li>
-                <label for={`direction-${option.provider}-${option.fromChain}-${option.toChain}`} class="flex flex-row w-full items-center justify-between py-1" class:cursor-not-allowed={selected} class:cursor-pointer={!selected}>
+                <label for={`embed-direction-${option.provider}-${option.fromChain}-${option.toChain}`} class="flex flex-row w-full items-center justify-between py-1" class:cursor-not-allowed={selected} class:cursor-pointer={!selected}>
                 <BridgeProviderDirection
-                  id={`direction-${option.provider}-${option.fromChain}-${option.toChain}`}
+                  id={`embed-direction-${option.provider}-${option.fromChain}-${option.toChain}`}
                   provider={option.provider}
                   fromChain={option.fromChain}
                   toChain={option.toChain}
