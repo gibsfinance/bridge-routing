@@ -45,7 +45,7 @@
           image_url="url({bridgeImageFuzzyWebP})">
           <div class="max-w-lg flex flex-col text-lg w-full" class:my-4={page.embed} class:my-16={!page.embed} class:justify-center={page.embed}>
             {#if !page.embed || page.mode !== 'simple'}
-              <Headline>Delivery</Headline>
+              <Headline>Bridge</Headline>
             {/if}
             <Bridge />
           </div>
