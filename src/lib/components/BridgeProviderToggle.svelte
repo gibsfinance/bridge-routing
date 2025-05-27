@@ -1,13 +1,10 @@
 <script lang="ts">
-  import Button from './Button.svelte'
-  import ProviderIcon from './ProviderIcon.svelte'
   import * as input from '../stores/input.svelte'
   import { Provider } from '../stores/auth/types'
   import * as nav from '../stores/nav.svelte'
   import { inferBridgeKey } from '../stores/bridge-settings.svelte'
   import { zeroAddress } from 'viem'
-  import StaticNetworkImage from './StaticNetworkImage.svelte'
-  import Icon from '@iconify/svelte'
+  import BridgeProviderDirection from './BridgeProviderDirection.svelte'
   const toggleProvider = () => {
     const nextProvider =
       input.bridgeKey.provider === Provider.PULSECHAIN ? Provider.TOKENSEX : Provider.PULSECHAIN
@@ -21,16 +18,9 @@
     input.bridgeKey.assetInAddress = null
     nav.bridge.shallow(input.bridgeKey.value, zeroAddress)
   }
+  const provider = $derived(input.bridgeKey.provider)
+  const fromChain = $derived(input.bridgeKey.fromChain)
+  const toChain = $derived(input.bridgeKey.toChain)
 </script>
 
-<div class="flex flex-row bg-surface-50 p-0.5 rounded-full h-5 border">
-  <Button class="flex flex-row items-center gap-0 justify-center" onclick={toggleProvider}>
-    <StaticNetworkImage network={input.bridgeKey.fromChain} sizeClasses="size-4" />
-    <Icon icon="jam:chevron-right" />
-    {#if input.bridgeKey.provider !== Provider.PULSECHAIN}
-      <ProviderIcon provider={input.bridgeKey.provider} />
-      <Icon icon="jam:chevron-right" />
-    {/if}
-    <StaticNetworkImage network={input.bridgeKey.toChain} sizeClasses="size-4" />
-  </Button>
-</div>
+<BridgeProviderDirection {provider} {fromChain} {toChain} onclick={toggleProvider} />

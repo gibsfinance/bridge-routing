@@ -101,7 +101,7 @@
       wrapperPositionClass="-top-1 left-0 -bottom-1 m-auto h-6"
       tooltip="Address is not valid. Casing influences the checksum of the address." />
   </div>
-  <Button class="size-6 text-base justify-end flex" onclick={() => {
+  <Button class="size-6 text-base justify-end flex items-center" onclick={() => {
     recipientLockedToAccount.value = !recipientLockedToAccount.value
     if (accountState.address) {
       recipientInput.value = accountState.address

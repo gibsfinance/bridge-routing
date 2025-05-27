@@ -697,7 +697,6 @@ export const updateAssetOut = ({
         ])
       } else {
         // assumptions
-        // console.log('assetInput', assetInput)
         res = {
           ...assetInput,
           chainId: Number(toChainId),
