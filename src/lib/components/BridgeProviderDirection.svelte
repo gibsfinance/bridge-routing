@@ -23,10 +23,10 @@
 <div class={wrapperClasses}>
   <Button class="flex flex-row items-center gap-0 justify-center" onclick={onclick}>
     <StaticNetworkImage network={fromChain} sizeClasses={sizeClasses} />
-    <Icon icon="jam:chevron-right" />
+    <Icon icon="jam:chevron-right" class={sizeClasses} />
     {#if showProvider || provider !== Provider.PULSECHAIN}
       <ProviderIcon provider={provider} {sizeClasses} />
-      <Icon icon="jam:chevron-right" />
+      <Icon icon="jam:chevron-right" class={sizeClasses} />
     {/if}
     <StaticNetworkImage network={toChain} {sizeClasses} />
   </Button>

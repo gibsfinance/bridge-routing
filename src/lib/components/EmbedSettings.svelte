@@ -203,7 +203,15 @@
             <ul class="flex flex-col gap-2">
               {#each directionOptions as option}
               <li class="flex flex-row w-full">
-                <BridgeProviderDirection provider={option.provider} fromChain={option.fromChain} toChain={option.toChain} onclick={() => selectDirection(option)} />
+                <BridgeProviderDirection
+                  provider={option.provider}
+                  fromChain={option.fromChain}
+                  toChain={option.toChain}
+                  onclick={() => selectDirection(option)}
+                  sizeClasses="size-7"
+                  wrapperHeightClasses="h-8"
+                  wrapperPaddingClasses="p-0.5"
+                />
               </li>
               {/each}
             </ul>
