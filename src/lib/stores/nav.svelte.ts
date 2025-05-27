@@ -2,9 +2,9 @@ import type { Hex } from 'viem'
 import { toPath, bridgeKey, type BridgeKey } from './input.svelte'
 import { page } from './app-page.svelte'
 
-export const delivery = {
+export const bridge = {
   shallow: (key: BridgeKey, assetIn?: string, params?: Record<string, string>) => {
-    page.pushState(`/delivery/${toPath(key)}${assetIn ? `/${assetIn}` : ''}`, queryStringFromObject(params, [
+    page.pushState(`/bridge/${toPath(key)}${assetIn ? `/${assetIn}` : ''}`, queryStringFromObject(params, [
       'settings',
       'details',
       'mode',

@@ -184,7 +184,7 @@
   const dividerDisabled = $derived(!assetOutAddress || !futureAssetOutAddress)
   const ondividerclick = () => {
     input.amountIn.value = null
-    nav.delivery.shallow(bridgeKey.partner, futureAssetOutAddress as string)
+    nav.bridge.shallow(bridgeKey.partner, futureAssetOutAddress as string)
   }
   const deliveryFeeLocked = $derived(storageBridgeSettings.value?.deliveryFeeLocked ?? false)
   const costLimitLocked = $derived(storageBridgeSettings.value?.costLimitLocked ?? false)

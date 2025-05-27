@@ -23,7 +23,7 @@
     input.unwrap.value = native
     input.amountIn.value = null
     input.resetFeeInputs()
-    nav.delivery.shallow(bridgeKey, token.address)
+    nav.bridge.shallow(bridgeKey, token.address)
   }
   const chooseTokenAndNetworkSubmit = async (token: Token, chainId: number) => {
     const availablePaths = _.get(pathways, [bridgeKey.provider, toChain(chainId!)]) ?? {}
@@ -37,7 +37,7 @@
       toChain(chainId!),
       destinationChain as Chains,
     ] as input.BridgeKey
-    nav.delivery.shallow(options, token.address)
+    nav.bridge.shallow(options, token.address)
   }
   const keepBalance = (bal: bigint | null) => {
     fromTokenBalance.value = bal
