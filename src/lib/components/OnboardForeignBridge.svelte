@@ -74,7 +74,7 @@
   const bridgeTokenOutAddress = $derived((assetOuts.get(assetOutputKey as string)?.address ?? pulsechainWrappedWethFromEthereum) as Hex)
   const pulsexTokenInAddress = $derived((page.queryParams.get('pulsexTokenIn') ?? pulsechainWrappedWethFromEthereum) as Hex)
   const pulsexTokenOutAddress = $derived((page.queryParams.get('pulsexTokenOut') ?? zeroAddress) as Hex)
-  // $inspect(pulsexTokenInAddress, pulsexTokenOutAddress)
+
   const bridgeableTokensSettings = {
     provider: Provider.PULSECHAIN,
     chain: Number(Chains.ETH),
@@ -107,6 +107,7 @@
     return amountIn.value < minAmountIn
   })
   const buttonDisabled = $derived.by(() => {
+
     if (bridgingToPulsechain) {
       return (
         !maxCrossPulsechainBridge ||
@@ -116,9 +117,9 @@
       )
     }
     if (needsAllowanceForPulsex) {
-      return !pulsexTokenIn?.address
+      return !pulsexTokenIn?.address || !loadingKey
     }
-    return swapDisabled || !pulsexQuoteMatchesLatest
+    return swapDisabled || !pulsexQuoteMatchesLatest || !loadingKey
   })
   $effect(() => {
     if (!bridgeTokenIn) return
@@ -631,11 +632,7 @@
       selectedToken={finalTokenOutput}
       onsubmit={(token) => {
         if (token) {
-          // console.log('token', token)
           page.setParam('pulsexTokenOut', token.address === zeroAddress ? null : token.address)
-          // defaultOnboardTokens.extend({
-          //   pulsexTokenOut: token.address,
-          // })
           pulsexQuoteResult = null
         }
         close()

@@ -53,7 +53,7 @@
         <!-- Left Column: Description -->
         <div class="space-y-6">
           <p class="text-lg">
-            Token Delivery enhances the PulseChain to EVM bridge experience by adding convenience without compromising security. Built on the same trusted bridge infrastructure, it offers additional features while maintaining bridge-level security.
+            Token Delivery enhances the PulseChain to EVM bridge experience by adding convenience without compromising security. Built on the same trusted bridge infrastructure, it offers additional features while maintaining the current bridge's level of security.
           </p>
           <p class="text-lg">
             By eliminating the need to pre-fund destination wallets, users can save on gas fees and time while maintaining full control of their assets throughout the process.

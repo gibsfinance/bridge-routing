@@ -103,6 +103,15 @@
       bridgeTokenIn = bridgeTokenInFromBridgeKey
     }
   })
+  // pulsex token in
+  const wethOnPulsechain = '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C'
+  const pulsexTokenInFromSettings = $derived(page.queryParams.get('pulsexTokenIn') ?? wethOnPulsechain)
+  let pulsexTokenIn = $state(page.queryParams.get('pulsexTokenIn') ?? wethOnPulsechain)
+  $effect(() => {
+    if (pulsexTokenIn && pulsexTokenIn !== pulsexTokenInFromSettings) {
+      pulsexTokenIn = pulsexTokenInFromSettings
+    }
+  })
   // pulsex token out
   const pulsexTokenOutFromSettings = $derived(page.queryParams.get('pulsexTokenOut') ?? zeroAddress)
   let pulsexTokenOut = $state(page.queryParams.get('pulsexTokenOut') ?? zeroAddress)
@@ -118,7 +127,7 @@
     partnerChain: Number(bridgeKey.partnerChain?.id),
   })
   const bridgeTokensIn = $derived(bridgableTokens.bridgeableTokensUnder(bridgeTokenInSettings))
-  const plsxTokensOut = $derived(bridgableTokens.bridgeableTokensUnder({
+  const plsxTokens = $derived(bridgableTokens.bridgeableTokensUnder({
     provider: Provider.PULSECHAIN,
     chain: 369,
     partnerChain: 1,
@@ -286,11 +295,11 @@
         </Accordion.Item>
         {#if page.route.id === '/onboard'}
         <hr class="hr" />
-        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="pulsexTokenOut" controlClasses="hover:bg-gray-100 hover:text-surface-contrast-50" leadClasses="mr-2">
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="pulsexTokenIn" controlClasses="hover:bg-gray-100 hover:text-surface-contrast-50" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="ri:swap-3-line" />{/snippet}
-          {#snippet control()}PulseX Token Out{/snippet}
+          {#snippet control()}PulseX Token In{/snippet}
           {#snippet panel()}
-            {@const token = plsxTokensOut.find(token => token.address === pulsexTokenOut)!}
+            {@const token = plsxTokens.find(token => token.address === pulsexTokenIn)!}
             <div class="flex flex-col gap-2">
               <ModalWrapper
                 wrapperClasses="flex items-center justify-center h-full"
@@ -301,7 +310,38 @@
                 {/snippet}
                 {#snippet contents({ close })}
                   <TokenSelect
-                    tokens={plsxTokensOut}
+                    tokens={plsxTokens}
+                    chains={[369]}
+                    selectedChain={369}
+                    selectedToken={token}
+                    onsubmit={(token) => {
+                      const tokenInAddress = token?.address as Hex
+                      page.setParam('pulsexTokenIn', tokenInAddress === wethOnPulsechain ? null : tokenInAddress)
+                      close()
+                    }}
+                  />
+                {/snippet}
+              </ModalWrapper>
+            </div>
+          {/snippet}
+        </Accordion.Item>
+        <hr class="hr" />
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="pulsexTokenOut" controlClasses="hover:bg-gray-100 hover:text-surface-contrast-50" leadClasses="mr-2">
+          {#snippet lead()}<Icon icon="ri:swap-3-line" />{/snippet}
+          {#snippet control()}PulseX Token Out{/snippet}
+          {#snippet panel()}
+            {@const token = plsxTokens.find(token => token.address === pulsexTokenOut)!}
+            <div class="flex flex-col gap-2">
+              <ModalWrapper
+                wrapperClasses="flex items-center justify-center h-full"
+                triggerClasses=""
+                contentClasses="">
+                {#snippet button()}
+                  <SelectButtonContents {token} network={token?.chainId ?? 0} class="bg-white" />
+                {/snippet}
+                {#snippet contents({ close })}
+                  <TokenSelect
+                    tokens={plsxTokens}
                     chains={[369]}
                     selectedChain={369}
                     selectedToken={token}

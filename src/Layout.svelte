@@ -8,6 +8,7 @@
   import EmbedSettings from './lib/components/EmbedSettings.svelte'
 
   const { children } = $props()
+  const settingsOpen = $derived(!!page.settings && page.settings !== 'disabled')
 </script>
 
 <!--
@@ -18,7 +19,7 @@
   {#if page.route.id !== '/' && page.settings !== 'disabled'}
     <EmbedSettings />
   {/if}
-  <div class="flex flex-col h-full relative transition-all duration-200" class:left-0={!page.settings} class:left-64={!!page.settings} style="width: {!page.settings ? '100vw' : 'calc(100vw - 16rem)'};">
+  <div class="flex flex-col h-full relative transition-all duration-200" class:left-0={!settingsOpen} class:left-64={settingsOpen} style="width: {!settingsOpen ? '100vw' : 'calc(100vw - 16rem)'};">
   {#if !page.embed}
     <div class="app bg-slate-950 flex grow">
       <div class="app relative">

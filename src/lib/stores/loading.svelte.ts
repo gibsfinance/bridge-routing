@@ -20,8 +20,6 @@ export class LoadingCounter {
   increment(key?: string | null) {
     if (key) {
       this.value.categories[key] = (this.value.categories[key] || 0) + 1
-    } else {
-      throw new Error('increment called with no key')
     }
     this.value.total += 1
     return _.once(() => this.decrement(key))
@@ -43,7 +41,7 @@ export class LoadingCounter {
     ...conditions: Condition[]
   ): (arg?: In) => { promise: Promise<Out | null>; controller: AbortController; cleanup: Cleanup } {
     return (arg?: In) => {
-      const decrement = untrack(() => this.increment(key))
+      const decrement = !key ? () => { } : untrack(() => this.increment(key))
       let cancelled = false
       const abortController = new AbortController()
       const cleanup = () => {

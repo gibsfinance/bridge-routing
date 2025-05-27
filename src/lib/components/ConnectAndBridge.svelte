@@ -135,10 +135,16 @@
       return `Approve ${assetIn?.symbol}`
     }
     const requiresDelivery = bridgeSettings.bridgePathway?.requiresDelivery
-    if ((!shouldDeliver.value && requiresDelivery) || !requiresDelivery) {
-      return `Bridge ${assetIn?.symbol} to ${toNetwork?.name}`
+    if (!toNetwork) {
+      return 'Bridge'
     }
-    return `Bridge+Deliver ${assetIn?.symbol} to ${toNetwork?.name}`
+    if (!assetIn) {
+      return `Bridge to ${toNetwork.name}`
+    }
+    if ((!shouldDeliver.value && requiresDelivery) || !requiresDelivery) {
+      return `Bridge ${assetIn.symbol} to ${toNetwork.name}`
+    }
+    return `Bridge+Deliver ${assetIn.symbol} to ${toNetwork.name}`
   })
   const switchToChain = $derived(() =>
     switchNetwork(appkitNetworkById.get(Number(input.bridgeKey.fromChain))),
