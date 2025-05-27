@@ -201,11 +201,13 @@
           {#snippet lead()}<Icon icon="material-symbols-light:settings-outline-rounded" class="size-6" />{/snippet}
           {#snippet control()}Direction{/snippet}
           {#snippet panel()}
-            <ul class="flex flex-col gap-2">
+            <ul class="flex flex-col gap-0">
               {#each directionOptions as option}
               {@const selected = selectedDirection === option}
-              <li class="flex flex-row w-full">
+              <li>
+                <label for={`direction-${option.provider}-${option.fromChain}-${option.toChain}`} class="flex flex-row w-full items-center justify-between py-1" class:cursor-not-allowed={selected} class:cursor-pointer={!selected}>
                 <BridgeProviderDirection
+                  id={`direction-${option.provider}-${option.fromChain}-${option.toChain}`}
                   provider={option.provider}
                   fromChain={option.fromChain}
                   toChain={option.toChain}
@@ -215,6 +217,10 @@
                   wrapperHeightClasses="h-8"
                   wrapperPaddingClasses="p-0.5"
                 />
+                <span class="size-8 rounded-full bg-green-500 items-center justify-center flex" class:opacity-0={!selected} class:opacity-100={selected}>
+                  <Icon icon="mdi:check" class="size-6 text-white" />
+                </span>
+                </label>
               </li>
               {/each}
             </ul>

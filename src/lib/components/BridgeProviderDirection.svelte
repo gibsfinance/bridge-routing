@@ -7,6 +7,7 @@
   import type { ClassValue } from 'svelte/elements'
   import { clsx } from 'clsx'
   type Props = {
+    id?: string
     provider: Provider
     fromChain: Chains
     toChain: Chains
@@ -17,12 +18,12 @@
     wrapperPaddingClasses?: ClassValue
     sizeClasses?: ClassValue
   }
-  const { provider, fromChain, toChain, showProvider = false, disabled = false, onclick = () => {}, wrapperHeightClasses = 'h-5', wrapperPaddingClasses = 'p-0.5', sizeClasses = 'size-4' }: Props = $props()
+  const { id, provider, fromChain, toChain, showProvider = false, disabled = false, onclick = () => {}, wrapperHeightClasses = 'h-5', wrapperPaddingClasses = 'p-0.5', sizeClasses = 'size-4' }: Props = $props()
   const wrapperClasses = $derived(clsx('flex flex-row bg-surface-50 rounded-full border', wrapperHeightClasses, wrapperPaddingClasses))
 </script>
 
 <div class={wrapperClasses}>
-  <Button class="flex flex-row items-center gap-0 justify-center {disabled ? 'cursor-not-allowed' : ''}" onclick={onclick} disabled={disabled}>
+  <Button class="flex flex-row items-center gap-0 justify-center {disabled ? 'cursor-not-allowed' : ''}" onclick={onclick} disabled={disabled} {id}>
     <StaticNetworkImage network={fromChain} sizeClasses={sizeClasses} />
     <Icon icon="jam:chevron-right" class={sizeClasses} />
     {#if showProvider || provider !== Provider.PULSECHAIN}
