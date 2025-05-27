@@ -7,7 +7,7 @@
 
 <div class="bg-gradient-to-b from-slate-100 to-white">
   <div class="px-4 py-16 text-center m-auto text-slate-950">
-    <a href="#/delivery" onclick={scrollToTop} class="group">
+    <a href="#/bridge" onclick={scrollToTop} class="group">
       <h3 class="text-5xl font-italiana font-bold flex flex-row items-center gap-3 justify-center">
         Token Delivery
         <Icon icon="hugeicons:bridge" class="text-tertiary-600" />
@@ -96,8 +96,8 @@
 
       <!-- Call to Action -->
       <div class="text-center mt-12">
-        <a href="/#/delivery" class="inline-flex items-center gap-2 bg-tertiary-600 hover:bg-tertiary-700 text-white px-8 py-3 rounded-full transition-colors text-lg">
-          Try Token Delivery
+        <a href="/#/bridge" class="inline-flex items-center gap-2 bg-tertiary-600 hover:bg-tertiary-700 text-white px-8 py-3 rounded-full transition-colors text-lg">
+          Bridge
           <Icon icon="mdi:arrow-right" />
         </a>
       </div>

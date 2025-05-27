@@ -25,14 +25,14 @@
   const gotoHome = async () => {
     nav.home.shallow()
   }
-  const gotoNativeDelivery = async () => {
-    nav.delivery.shallow(bridgeKey.value, bridgeKey.assetInAddress ?? undefined)
+  const gotoBridge = async () => {
+    nav.bridge.shallow(bridgeKey.value, bridgeKey.assetInAddress ?? undefined)
   }
   const gotoOnboard = async () => {
     nav.onboard.shallow()
   }
   const destinationBridgeKey = $derived(bridgeKey.provider)
-  const isDeliveryRoute = $derived(page.route.id?.includes('/delivery'))
+  const isBridgeRoute = $derived(page.route.id?.includes('/bridge'))
   const isOnboardRoute = $derived(page.route.id?.includes('/onboard'))
   const isSmall = $derived(innerWidth.current && innerWidth.current < 768)
   const txsLink = $derived(
@@ -60,7 +60,7 @@
       </button>
       <div class="flex grow content-end items-center">
         <ul class="flex grow flex-row items-center justify-end text-surface-contrast-50">
-          {#if isDeliveryRoute}
+          {#if isBridgeRoute}
             <li class="flex flex-row">
               <a
                 aria-label="to recent bridge transactions on ethereum"
@@ -99,15 +99,15 @@
               {/snippet}
             </ModalWrapper>
           </li>
-          {#if !isDeliveryRoute}
+          {#if !isBridgeRoute}
             <li class="flex flex-row items-center">
               <button
                 type="button"
                 name="bridge"
                 class="link gap-1"
-                onkeypress={gotoNativeDelivery}
-                onclick={gotoNativeDelivery}>
-                {#if !isSmall}Delivery{/if}
+                onkeypress={gotoBridge}
+                onclick={gotoBridge}>
+                {#if !isSmall}Bridge{/if}
                 <Icon icon="hugeicons:bridge" height="1.6em" width="1.6em" /></button>
             </li>
           {/if}
@@ -119,7 +119,7 @@
               </Button>
             </li>
           {/if}
-          {#if isOnboardRoute || isDeliveryRoute}
+          {#if isOnboardRoute || isBridgeRoute}
             <li class="flex flex-row items-center">
               <ConnectButton />
             </li>

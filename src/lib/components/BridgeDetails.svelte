@@ -94,15 +94,6 @@
                 shouldDeliver.value = !shouldDeliver.value
               }}
               >{#if large}Delivery{:else}Deliv.{/if}</ButtonToggle>
-            <!-- <Button
-              title="toggle delivery"
-              class="border-r-2 pr-2 leading-6 transition duration-100 rounded-2xl {shouldDeliver.value
-                ? 'border-surface-500'
-                : 'border-surface-300'}"
-              onclick={() => {
-                shouldDeliver.value = !shouldDeliver.value
-              }}
-              >{#if large}Delivery{:else}Deliv.{/if}</Button> -->
             <FeeTypeToggle
               active={feeType}
               options={feeTypeOptions}

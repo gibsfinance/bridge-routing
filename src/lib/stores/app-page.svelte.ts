@@ -3,9 +3,6 @@ import { Page } from "./page.svelte"
 const embedModes = new Set(['simple', 'embed'])
 
 export class AppPage extends Page {
-  get value() {
-    return `${this.val.path}${this.val.params?.size ? `?${this.val.params.toString()}` : ''}`
-  }
   get changing() {
     return this.val.changing
   }

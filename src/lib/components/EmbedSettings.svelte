@@ -163,7 +163,7 @@
           </fieldset>
           {/snippet}
         </Accordion.Item>
-        {#if page.params.page === 'delivery'}
+        {#if page.params.page === 'bridge'}
         <hr class="hr" />
         <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="direction" disabled controlClasses="hover:bg-gray-100 cursor-not-allowed hover:text-surface-contrast-50" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="material-symbols-light:settings-outline-rounded" class="size-6" />{/snippet}
@@ -280,8 +280,8 @@
                     selectedToken={token}
                     onsubmit={(token) => {
                       const tokenInAddress = token?.address as Hex
-                      if (page.params.page === 'delivery') {
-                        nav.delivery.shallow(bridgeKey.value, tokenInAddress)
+                      if (page.params.page === 'bridge') {
+                        nav.bridge.shallow(bridgeKey.value, tokenInAddress)
                       } else if (page.route.id === '/onboard') {
                         page.setParam('bridgeTokenIn', tokenInAddress === zeroAddress ? null : tokenInAddress)
                       }
@@ -357,7 +357,7 @@
           {/snippet}
         </Accordion.Item>
         {/if}
-        {#if page.params.page === 'delivery'}
+        {#if page.params.page === 'bridge'}
           <hr class="hr" />
           <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="details" controlClasses="hover:bg-gray-100 hover:text-surface-contrast-50" leadClasses="mr-2">
             {#snippet lead()}<Icon icon="mdi:magnify" class="size-6" />{/snippet}
