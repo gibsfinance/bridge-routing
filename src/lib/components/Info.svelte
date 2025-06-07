@@ -58,7 +58,7 @@
     </Button>
   </a>
   <a
-    href="https://t.me/+6ejcIlIAbL5lYzFh"
+    href="https://t.me/gibsfinance"
     target="_blank"
     class="mr-2"
     aria-label="a link to the telegram channel">
