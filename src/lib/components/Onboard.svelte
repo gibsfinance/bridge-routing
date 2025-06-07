@@ -15,7 +15,7 @@
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())
   $effect(() => latestBlock(Number(bridgeKey.fromChain)))
   $effect(() => latestBlock(Number(bridgeKey.toChain)))
-  const block = $derived(blocks.get(Number(bridgeKey.toChain)))
+  const block = $derived(blocks.get(Number(bridgeKey.toChain))?.get('latest')?.block ?? null)
   $effect(() => {
     if (!bridgedToken || !block) return
     const price = loadPrice(bridgedToken, block)

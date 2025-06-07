@@ -113,7 +113,7 @@
     })
     return updatingAssetOut.cleanup
   })
-  const ticker = $derived(blocks.get(Number(bridgeKey.fromChain)))
+  const ticker = $derived(blocks.get(Number(bridgeKey.fromChain))!.get('latest')!.block!)
   $effect(() => {
     if (!ticker || !bridgeSettings.assetOut) return
     const priceCorrective = loadPriceCorrective({
@@ -133,7 +133,7 @@
   const toChainId = $derived(Number(bridgeKey.toChain))
   $effect(() => latestBlock(fromChainId))
   $effect(() => latestBlock(toChainId))
-  const originationTicker = $derived(blocks.get(Number(bridgeKey.fromChain))?.number)
+  const originationTicker = $derived(blocks.get(Number(bridgeKey.fromChain))?.get('latest')?.block?.number)
   $effect(() => {
     const account = accountState.address
     const token = bridgeSettings.assetIn.value?.address

@@ -54,6 +54,7 @@
   import { untrack } from 'svelte'
   import { SvelteMap } from 'svelte/reactivity'
   import type { Token } from '../types.svelte'
+  import { nativeAssetOut } from '../stores/config.svelte'
 
   const pulsechainWrappedWethFromEthereum = '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C'
   const bridgeTokenInAddress = $derived((page.queryParams.get('bridgeTokenIn') ?? zeroAddress) as Hex)
@@ -71,8 +72,13 @@
       assetInAddress: bridgeTokenIn?.address as Hex,
       unwrap: false,
     }) : null)
-  const bridgeTokenOutAddress = $derived((assetOuts.get(assetOutputKey as string)?.address ?? pulsechainWrappedWethFromEthereum) as Hex)
-  const pulsexTokenInAddress = $derived((page.queryParams.get('pulsexTokenIn') ?? pulsechainWrappedWethFromEthereum) as Hex)
+  const bridgeTokenOutAddress = $derived(assetOuts.get(assetOutputKey as string)?.address ?? null)
+  const pulsexTokenInAddress = $derived.by(() => {
+    if (!page.queryParams.get('pulsexTokenIn')) {
+      return (bridgeTokenOutAddress ?? pulsechainWrappedWethFromEthereum) as Hex
+    }
+    return (page.queryParams.get('pulsexTokenIn') ?? pulsechainWrappedWethFromEthereum) as Hex
+  })
   const pulsexTokenOutAddress = $derived((page.queryParams.get('pulsexTokenOut') ?? zeroAddress) as Hex)
 
   const bridgeableTokensSettings = {
@@ -141,11 +147,11 @@
     })
   })
   const bridgeTokenOut = $derived.by(() => {
-    return (
+    return bridgeTokenOutAddress ? (
       possiblePulsexTokens.find(
         (t) => getAddress(t.address) === getAddress(bridgeTokenOutAddress),
       ) ?? null
-    )
+    ) : null
   })
   const pulsexTokenIn = $derived.by(() => {
     return (
@@ -231,7 +237,7 @@
             spender: bridgeSettings.bridgePathway!.from!,
             chainId: Number(bridgeKey.fromChain),
             minimum: bridgeAmount,
-            latestBlock: blocks.get(Number(bridgeKey.fromChain))!,
+            latestBlock: blocks.get(Number(bridgeKey.fromChain))!.get('latest')!.block!,
           })
         },
       ],
@@ -246,7 +252,7 @@
           const tx = await transactions.sendTransaction({
             ...transactions.options(
               Number(bridgeKey.fromChain),
-              blocks.get(Number(bridgeKey.fromChain))!,
+              blocks.get(Number(bridgeKey.fromChain))!.get('latest')!.block!,
             ),
             account: accountState.address as Hex,
             ...bridgeSettings.transactionInputs,
@@ -322,26 +328,47 @@
     minBridgeAmountInKey(bridgeKey.value, bridgeSettings.assetIn.value),
   )
   const findToken = (address: Hex) => {
-    return possiblePulsexTokens.find((t) => getAddress(t.address) === getAddress(address))
+    return !address ? null : possiblePulsexTokens.find((t) => getAddress(t.address) === getAddress(address)) ?? null
   }
   const tokenInPulsex = $derived.by(() => {
-    return findToken(pulsexTokenInAddress) ?? null
+    return findToken(pulsexTokenInAddress)
   })
   const tokenOutPulsex = $derived.by(() => {
-    return findToken(pulsexTokenOutAddress) ?? null
+    return findToken(pulsexTokenOutAddress)
   })
   const tokenOut = $derived.by(() => {
-    return findToken(bridgeTokenOutAddress) ?? null
+    return bridgeTokenOutAddress ? findToken(bridgeTokenOutAddress as Hex) : null
   })
   let pulsexQuoteResult = $state<SerializedTrade | null>(null)
-  const latestPulseBlock = $derived(blocks.get(Number(Chains.PLS)))
+  const latestPulseBlock = $derived(blocks.get(Number(Chains.PLS))!.get('latest')!.block!)
+  let lastUpdatedWasOutput = $state(false)
+  const wplsTokenInAddress = '0xA1077a294dDE1B09bB078844df40758a5D0f9a27'
+  const plsxTokenAddress = '0x95B303987A60C71504D99Aa1b13B4DA07b0790ab'
+  $effect(() => {
+    if (!tokenInPulsex || !tokenOutPulsex) return
+    const tokenInAddress = tokenInPulsex.address.toLowerCase()
+    const tokenOutAddress = tokenOutPulsex.address.toLowerCase()
+    const nativeWrapped = nativeAssetOut[Chains.PLS].toLowerCase()
+    const normalizedIn = tokenInAddress === nativeWrapped ? zeroAddress : tokenInAddress
+    const normalizedOut = tokenOutAddress === nativeWrapped ? zeroAddress : tokenOutAddress
+    if (normalizedIn !== normalizedOut) return
+    const targetAddress = normalizedIn === zeroAddress ? plsxTokenAddress : wplsTokenInAddress
+    // set output to pulsex token
+    pulsexQuoteResult = null
+    if (lastUpdatedWasOutput) {
+      page.setParam('pulsexTokenIn', targetAddress)
+    } else {
+      page.setParam('pulsexTokenOut', targetAddress)
+    }
+  })
   $effect(() => {
     if (
       !tokenInPulsex ||
       !tokenOutPulsex ||
       !amountInputToPulsex ||
       !latestPulseBlock ||
-      !swappingOnPulsex
+      !swappingOnPulsex ||
+      tokenInPulsex.address.toLowerCase() === tokenOutPulsex.address.toLowerCase()
     ) {
       return
     }
@@ -384,7 +411,7 @@
     !pulsexQuoteResult || !amountInputToPulsex || !amountOutputFromPulsex,
   )
   let pulsexAllowance = $state<bigint | null>(null)
-  $effect.pre(() => {
+  $effect(() => {
     if (!tokenInPulsex || !accountState.address || !latestPulseBlock || !swappingOnPulsex) return
     const result = transactions.loadAllowance({
       account: accountState.address as Hex,
@@ -415,7 +442,7 @@
             spender: swapRouterAddress,
             chainId: Number(Chains.PLS),
             minimum: amountInputToPulsex!,
-            latestBlock: latestPulseBlock!,
+            latestBlock: latestPulseBlock,
           })
         },
       ],
@@ -431,7 +458,7 @@
             pulsexQuoteResult!,
           )
           const tx = await transactions.sendTransaction({
-            ...transactions.options(Number(Chains.PLS), latestPulseBlock!),
+            ...transactions.options(Number(Chains.PLS), latestPulseBlock),
             data: transactionInfo.calldata as Hex,
             to: swapRouterAddress,
             gas: BigInt(pulsexQuoteResult!.gasEstimate!) * 5n / 4n,
@@ -491,7 +518,7 @@
     return pulsexQuoteResult ? 'pulsex-quote' : ''
   })
   const stepTokensDelinked = $derived.by(() => {
-    return bridgeTokenOutAddress !== pulsexTokenInAddress
+    return !!page.queryParams.get('pulsexTokenIn')
   })
 </script>
 
@@ -587,7 +614,7 @@
       <Button
         class="flex size-5 text-surface-contrast-50"
         onclick={() => {
-          page.setParam('pulsexTokenIn', bridgeTokenOutAddress)
+          page.setParam('pulsexTokenIn', null)
         }}>
         <Icon icon="fontisto:undo" />
       </Button>
@@ -601,8 +628,9 @@
       selectedToken={tokenInPulsex}
       onsubmit={(token) => {
         if (token) {
-          page.setParam('pulsexTokenIn', token.address)
+          lastUpdatedWasOutput = false
           pulsexQuoteResult = null
+          page.setParam('pulsexTokenIn', token.address)
         }
         close()
       }}></TokenSelect>
@@ -617,7 +645,7 @@
   dashWhenCompressed
   readonlyInput
   readonlyTokenSelect={!swappingOnPulsex}
-  onbalanceupdate={() => {}}
+  onbalanceupdate={accountState.address ? () => {} : undefined}
   overrideAccount={recipient.value}
   onclick={() => {
     if (!swappingOnPulsex) {
@@ -632,8 +660,9 @@
       selectedToken={finalTokenOutput}
       onsubmit={(token) => {
         if (token) {
-          page.setParam('pulsexTokenOut', token.address === zeroAddress ? null : token.address)
+          lastUpdatedWasOutput = true
           pulsexQuoteResult = null
+          page.setParam('pulsexTokenOut', token.address === zeroAddress ? null : token.address)
         }
         close()
       }}></TokenSelect>

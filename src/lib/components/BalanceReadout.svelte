@@ -46,7 +46,7 @@
       return latestBlock(chainId)
     }
   })
-  const block = $derived(blocks.get(chainId))
+  const block = $derived(blocks.get(chainId)?.get('latest')?.block ?? null)
   $effect.pre(() => {
     return tokenBalance.fetch({
       chainId,

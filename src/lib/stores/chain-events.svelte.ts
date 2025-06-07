@@ -60,39 +60,72 @@ export const unwatchFinalizedBlocks = (cleanups: Cleanup[]) => {
   cleanups.forEach((cleanup) => cleanup())
 }
 
-// const chainCounts = new Map<number, number>()
-const watchers = new Map<number, Cleanup>()
-export const blocks = new SvelteMap<number, Block | null>()
+type Watcher = {
+  watcher: Cleanup | null
+  count: number
+  block: Block | null
+}
+export const blocks = new SvelteMap<number, SvelteMap<BlockTag, Watcher>>()
 export const latestBaseFeePerGas = (chain: number) => {
-  return blocks.get(chain)?.baseFeePerGas ?? 3_000_000_000n
+  return blocks.get(chain)?.get('latest')?.block?.baseFeePerGas ?? 3_000_000_000n
 }
 
 export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
-  if (!untrack(() => blocks.has(chain))) {
-    // signals a "pending" state
-    untrack(() => blocks.set(chain, null))
-  }
+  const chainBlocks = untrack(() => {
+    let existing = blocks.get(chain)
+    if (!existing) {
+      existing = new SvelteMap<BlockTag, Watcher>()
+      blocks.set(chain, existing)
+    }
+    return existing
+  })
+  const tracker = untrack(() => {
+    let existing = chainBlocks?.get(blockTag)
+    if (!existing) {
+      existing = { watcher: null, count: 0, block: null }
+      chainBlocks?.set(blockTag, existing)
+    }
+    return existing
+  })
   let cancelled = false
-  const decrement = untrack(() => loading.increment('gas'))
-  let watcher: Cleanup | null = null
-  watcher = input.clientFromChain(chain).watchBlocks({
+  const cleanup = () => {
+    if (cancelled) return
+    const tracker = untrack(() => blocks.get(chain)?.get(blockTag))
+    tracker!.count--
+    if (tracker!.count === 0) {
+      tracker!.watcher?.()
+      tracker!.watcher = null
+    }
+  }
+  let updatedTracker = {
+    ...tracker!,
+    count: tracker!.count + 1,
+  }
+  if (tracker.count > 0) {
+    untrack(() => chainBlocks.set(blockTag, updatedTracker))
+    return cleanup
+  }
+  const decrement = untrack(() => loading.increment('block'))
+  const watcher = input.clientFromChain(chain).watchBlocks({
     emitOnBegin: true,
     emitMissed: true,
     blockTag,
     onBlock: (block) => {
       decrement()
       if (cancelled) return
-      untrack(() => blocks.set(chain, block))
+      untrack(() => {
+        const chainBlocks = blocks.get(chain)
+        const entry = chainBlocks?.get(blockTag)
+        chainBlocks?.set(blockTag, { ...entry!, block })
+      })
     },
   })
-  watchers.set(chain, watcher)
-  return () => {
-    decrement()
-    cancelled = true
-    const watcher = watchers.get(chain)
-    watcher?.()
-    watchers.delete(chain)
+  updatedTracker = {
+    ...updatedTracker,
+    watcher,
   }
+  untrack(() => chainBlocks.set(blockTag, updatedTracker))
+  return cleanup
 }
 
 export const latestBlock = blockWatcher('latest')
@@ -187,23 +220,12 @@ export class TokenBalanceWatcher {
     this.chainId = chainId
     this.token = token
     this.walletAccount = account
-    // console.log(token, account, ticker)
-    // call this function whenever a new block is ticked over
     if (!ticker || !token || !account) {
-      // console.log(ticker, token, account)
       return () => { }
     }
-    // const network = availableChains.get(chainId)
-    // if (network) {
-    const accountIsHex = isHex(account)
-    const tokenIsHex = isHex(token?.address)
-    if (/*network.chainType === 'EVM' && */ !accountIsHex || !tokenIsHex) {
-      console.log(accountIsHex, tokenIsHex)
+    if (!isHex(account) || !isHex(token?.address)) {
       return () => { }
-      // } else if (network.chainType !== 'EVM' && (accountIsHex || tokenIsHex)) {
-      //   return () => {}
     }
-    // }
     const requestResult = getTokenBalance({
       chainId,
       address: token?.address,

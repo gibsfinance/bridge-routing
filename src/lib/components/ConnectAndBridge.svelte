@@ -34,7 +34,8 @@
       return
     }
     const chainId = Number(input.bridgeKey.fromChain)
-    const latestBlock = blocks.get(chainId)!
+    const latestBlock = blocks.get(chainId)?.get('latest')?.block
+    if (!latestBlock) return null
     return await transactions.sendTransaction({
       ...bridgeSettings.transactionInputs,
       ...transactions.options(chainId, latestBlock),
@@ -51,7 +52,7 @@
             spender: bridgeSettings.bridgePathway!.from!,
             chainId: Number(input.bridgeKey.fromChain),
             minimum: bridgeSettings.amountToBridge,
-            latestBlock: blocks.get(Number(input.bridgeKey.fromChain))!,
+            latestBlock: blocks.get(Number(input.bridgeKey.fromChain))?.get('latest')?.block!,
           })
         },
       ],
