@@ -141,10 +141,7 @@ export const getTokenBalance = ({ chainId, address, account }: TokenBalanceInput
   if (!address || !account) return null
   const key = tokenBalanceLoadingKey(chainId, address, account)
   let getBalance!: () => Promise<bigint | null>
-  if (isHex(account)) {
-    if (!isAddress(account)) {
-      return null
-    }
+  if (isAddress(account)) {
     const publicClient = input.clientFromChain(chainId)
     getBalance =
       address === zeroAddress
@@ -165,7 +162,8 @@ export const getTokenBalance = ({ chainId, address, account }: TokenBalanceInput
             })
             .catch(() => null)
   }
-  return loading.loadsAfterTick<bigint | null>(key, getBalance)()
+
+return loading.loadsAfterTick<bigint | null>(key, getBalance)()
 }
 
 export const tokenBalanceLoadingKey = (chainId: number, address: string, account: string) => {

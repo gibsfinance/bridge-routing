@@ -355,6 +355,8 @@
     const targetAddress = normalizedIn === zeroAddress ? plsxTokenAddress : wplsTokenInAddress
     // set output to pulsex token
     pulsexQuoteResult = null
+    amountIn.value = null
+    amountInputToPulsex = 0n
     if (lastUpdatedWasOutput) {
       page.setParam('pulsexTokenIn', targetAddress)
     } else {
@@ -520,6 +522,7 @@
   const stepTokensDelinked = $derived.by(() => {
     return !!page.queryParams.get('pulsexTokenIn')
   })
+  $inspect(amountIn.value)
 </script>
 
 <Onramps />
@@ -536,6 +539,7 @@
   invalidValue={amountLessThanMin ?? false}
   onclick={() => {
     if (swappingOnPulsex) {
+      amountIn.value = null
       page.setParam('stage', settings.stage.ONBOARD)
     }
   }}
@@ -560,6 +564,7 @@
       selectedToken={bridgeTokenIn}
       onsubmit={(token) => {
         if (token) {
+          amountIn.value = null
           page.setParam('bridgeTokenIn', token.address === zeroAddress ? null : token.address)
         }
         close()
@@ -597,6 +602,9 @@
   onbalanceupdate={() => {}}
   onclick={() => {
     if (bridgingToPulsechain) {
+      amountInputToPulsex = 0n
+      amountIn.value = null
+      pulsexQuoteResult = null
       page.setParam('stage', settings.stage.SWAP)
     }
   }}
@@ -614,6 +622,7 @@
       <Button
         class="flex size-5 text-surface-contrast-50"
         onclick={() => {
+          amountInputToPulsex = 0n
           page.setParam('pulsexTokenIn', null)
         }}>
         <Icon icon="fontisto:undo" />
@@ -630,6 +639,7 @@
         if (token) {
           lastUpdatedWasOutput = false
           pulsexQuoteResult = null
+          amountInputToPulsex = 0n
           page.setParam('pulsexTokenIn', token.address)
         }
         close()
@@ -649,6 +659,9 @@
   overrideAccount={recipient.value}
   onclick={() => {
     if (!swappingOnPulsex) {
+      amountInputToPulsex = 0n
+      pulsexQuoteResult = null
+      amountIn.value = null
       page.setParam('stage', settings.stage.SWAP)
     }
   }}>
@@ -662,6 +675,8 @@
         if (token) {
           lastUpdatedWasOutput = true
           pulsexQuoteResult = null
+          amountInputToPulsex = 0n
+          amountIn.value = null
           page.setParam('pulsexTokenOut', token.address === zeroAddress ? null : token.address)
         }
         close()

@@ -29,7 +29,7 @@
   }
   const {
     id = _.uniqueId('numeric-input-'),
-    value: startingValue = null,
+    value: startingVal = null,
     decimals,
     fontSizeInput,
     placeholder = '0',
@@ -44,6 +44,14 @@
     invalid = false,
     ...props
   }: Props = $props()
+  let inputRef: HTMLInputElement | null = null
+  let startingValue = $state(startingVal)
+  $effect(() => {
+    startingValue = startingVal
+    if (startingVal === null) {
+      updateValue('')
+    }
+  })
   const parsedValue = () => {
     try {
       return stripNonNumber(value)
@@ -59,7 +67,6 @@
     const acceptableNonNumeric = val.split(',').join('').split('.').join('')
     invalidCharacters = acceptableNonNumeric !== acceptableNonNumeric.replace(/[^0-9.]/g, '')
   }
-  let inputRef: HTMLInputElement | null = null
   let invalidCharacters = $state(false)
   let value = $state('')
   let focused = $state(false)
@@ -71,7 +78,7 @@
     fontSizeClass,
     invalidCharacters || invalid ? invalidTextClass : validTextClass,
   ])
-  $effect.pre(() => {
+  $effect(() => {
     if (_.isNil(decimals)) {
       return
     }

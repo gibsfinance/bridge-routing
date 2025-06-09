@@ -108,7 +108,6 @@ export class Page {
     }
     const current = location.hash.slice(1) || '/'
     if (current !== this.value) {
-      console.log('hashchange', current, this.value)
       const [noQuery, query] = current.split('?')
       this.pushState(noQuery, new URLSearchParams(query))
     }
