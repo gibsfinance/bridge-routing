@@ -522,7 +522,6 @@
   const stepTokensDelinked = $derived.by(() => {
     return !!page.queryParams.get('pulsexTokenIn')
   })
-  $inspect(amountIn.value)
 </script>
 
 <Onramps />
