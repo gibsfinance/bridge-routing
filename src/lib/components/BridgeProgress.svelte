@@ -65,19 +65,20 @@
   $effect(() => latestBlock(Number(Chains.PLS)))
   const latestPulsechainBlockObject = $derived(blocks.get(Number(Chains.PLS)))
   const gasIsHigh = $derived(
-    !!latestPulsechainBlockObject &&
-      latestPulsechainBlockObject.baseFeePerGas! > 20_000_000n * 10n ** 9n,
+    !!latestPulsechainBlockObject?.get('latest')?.block &&
+      latestPulsechainBlockObject.get('latest')!.block!.baseFeePerGas! > 20_000_000n * 10n ** 9n,
   )
   $effect(() => {
     const hash = bridgeTxHash
     const bridgeKey = bridgeTx.value?.bridgeKey as BridgeKey
-    if (!hash || !originationChain || !bridgeKey) {
+    const ticker = originationChain?.get('latest')?.block
+    if (!hash || !originationChain || !bridgeKey || !ticker) {
       return
     }
     const result = liveBridgeStatus({
       bridgeKey,
       hash,
-      ticker: originationChain,
+      ticker,
     })
     result.promise.then((liveResult) => {
       if (result.controller.signal.aborted) return
@@ -97,7 +98,7 @@
       return 'This transaction is still being validated by the network.'
     } else if (bridgeStatus?.status === bridgeStatuses.MINED) {
       const currentlyFinalizedBlock = bridgeStatus?.finalizedBlock?.number
-      const currentBlock = fromChainLatestBlock?.number
+      const currentBlock = fromChainLatestBlock?.get('latest')?.block?.number
       let estimatedFutureFinalizedBlock = currentlyFinalizedBlock
       const minedBlock = bridgeStatus.receipt?.blockNumber
       if (

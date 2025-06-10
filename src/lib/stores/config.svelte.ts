@@ -78,7 +78,7 @@ export const pathways = {
         toHome: false,
         requiresDelivery: true,
         defaultAssetIn: {
-          symbol: 'wWETH',
+          symbol: 'WETH',
           name: 'Wrapped Ether from Ethereum',
           address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
           decimals: 18,

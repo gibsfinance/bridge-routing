@@ -137,6 +137,7 @@ export const switchNetwork = async (chain: CaipNetwork | null | undefined) => {
       //   caipNetwork: chain as CaipNetwork,
       // })
       // console.log('switching to', chain)
+      debugger;
       await modal.switchNetwork(chain)
       // await modal.open({
       //   view: 'Networks',

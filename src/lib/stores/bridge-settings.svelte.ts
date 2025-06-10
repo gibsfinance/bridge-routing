@@ -29,15 +29,6 @@ import type { BridgeKey } from '../stores/input.svelte'
 import { accountState } from './auth/AuthProvider.svelte'
 import { SvelteMap } from 'svelte/reactivity'
 
-// const backupAssetIn = {
-//   address: zeroAddress,
-//   name: 'unknown',
-//   symbol: 'xxx',
-//   decimals: 18,
-//   logoURI: '',
-//   chainId: 369,
-// } as Token
-
 export const assetOutKey = ({
   bridgeKeyPath,
   assetInAddress,
