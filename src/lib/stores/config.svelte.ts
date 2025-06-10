@@ -83,6 +83,7 @@ export const pathways = {
           address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
           decimals: 18,
           chainId: 369,
+          logoURI: imageLinks.network(369),
           extensions: {
             bridgeInfo: {
               '1': {
@@ -110,6 +111,7 @@ export const pathways = {
           name: 'Wrapped Ether',
           symbol: 'WETH',
           decimals: 18,
+          logoURI: imageLinks.network(1),
           extensions: {
             bridgeInfo: {
               '369': {
@@ -139,6 +141,7 @@ export const pathways = {
           address: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
           decimals: 18,
           chainId: 369,
+          logoURI: imageLinks.network(369),
           extensions: {
             bridgeInfo: {
               '56': {
@@ -166,6 +169,7 @@ export const pathways = {
           name: 'Wrapped BNB from BSC',
           symbol: 'WBNB',
           decimals: 18,
+          logoURI: imageLinks.network(56),
           extensions: {
             bridgeInfo: {
               '369': {
@@ -221,6 +225,7 @@ export const testnetPathways = {
           name: 'Wrapped Ether from Sepolia',
           symbol: 'WsepETH',
           decimals: 18,
+          logoURI: imageLinks.network(943),
           extensions: {
             bridgeInfo: {
               '11155111': {
@@ -248,6 +253,7 @@ export const testnetPathways = {
           name: 'Wrapped Ether',
           symbol: 'sepWETH',
           decimals: 18,
+          logoURI: imageLinks.network(11_155_111),
           extensions: {
             bridgeInfo: {
               '943': {

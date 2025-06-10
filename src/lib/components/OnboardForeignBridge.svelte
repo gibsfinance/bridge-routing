@@ -3,6 +3,7 @@
   import * as transactions from '../stores/transactions'
   import { formatUnits, getAddress, maxUint256, zeroAddress, type Hex } from 'viem'
   import { settings as bridgeAdminSettings, settingKey } from '../stores/fee-manager.svelte'
+  import { toChain } from '../stores/auth/types'
   import {
     accountState,
     connect,
@@ -59,6 +60,14 @@
   const pulsechainWrappedWethFromEthereum = '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C'
   const bridgeTokenInAddress = $derived((page.queryParams.get('bridgeTokenIn') ?? zeroAddress) as Hex)
 
+  const bridgeableTokensSettings = {
+    provider: Provider.PULSECHAIN,
+    chain: Number(Chains.ETH),
+    partnerChain: Number(Chains.PLS),
+  }
+  const possibleBridgeTokenInputs = $derived(
+    bridgableTokens.bridgeableTokensUnder(bridgeableTokensSettings),
+  )
   const bridgeTokenIn = $derived.by(() => {
     return (
       possibleBridgeTokenInputs.find(
@@ -69,7 +78,7 @@
   const assetOuts = new SvelteMap<string, Token>()
   const assetOutputKey = $derived(bridgeTokenIn ? assetOutKey({
       bridgeKeyPath: bridgeKey.path,
-      assetInAddress: bridgeTokenIn?.address as Hex,
+      assetInAddress: bridgeTokenIn.address === zeroAddress ? nativeAssetOut[toChain(bridgeTokenIn.chainId)] : bridgeTokenIn.address,
       unwrap: false,
     }) : null)
   const bridgeTokenOutAddress = $derived(assetOuts.get(assetOutputKey as string)?.address ?? null)
@@ -81,14 +90,6 @@
   })
   const pulsexTokenOutAddress = $derived((page.queryParams.get('pulsexTokenOut') ?? zeroAddress) as Hex)
 
-  const bridgeableTokensSettings = {
-    provider: Provider.PULSECHAIN,
-    chain: Number(Chains.ETH),
-    partnerChain: Number(Chains.PLS),
-  }
-  const possibleBridgeTokenInputs = $derived(
-    bridgableTokens.bridgeableTokensUnder(bridgeableTokensSettings),
-  )
   const possiblePulsexTokens = $derived(
     bridgableTokens.bridgeableTokensUnder({
       provider: Provider.PULSECHAIN,
@@ -98,7 +99,6 @@
   )
   let amountInputFromLifi = $state(0n)
   let maxCrossToEthereumBridge = $state(0n as bigint | null)
-  // const destinationAddress = $derived.by(() => foreignBridgeInputs.value?.toAddress ?? null)
   $effect(() => {
     if (maxCrossToEthereumBridge && amountInputFromLifi > maxCrossToEthereumBridge) {
       amountInputFromLifi = maxCrossToEthereumBridge
@@ -113,7 +113,6 @@
     return amountIn.value < minAmountIn
   })
   const buttonDisabled = $derived.by(() => {
-
     if (bridgingToPulsechain) {
       return (
         !maxCrossPulsechainBridge ||
@@ -183,20 +182,24 @@
     if (!assetOutputKey) {
       return
     }
-    const tokensUnderBridgeKey = bridgableTokens.bridgeableTokensUnder({
+    const bridgeTokenInWithCorrectAddress = {
+      ...bridgeTokenIn,
+      address: bridgeTokenIn.address === zeroAddress ? nativeAssetOut[toChain(bridgeTokenIn.chainId)] : bridgeTokenIn.address,
+    }
+    const tokensUnderReversedBridgeKey = bridgableTokens.bridgeableTokensUnder({
       provider: Provider.PULSECHAIN,
       chain: Number(bridgeKey.toChain),
       partnerChain: Number(bridgeKey.fromChain),
     })
     const link = loadAssetLink({
       bridgeKey: bridgeKey.value,
-      assetIn: bridgeTokenIn,
+      assetIn: bridgeTokenInWithCorrectAddress,
     })
     link.promise.then((l) => {
       if (link.controller.signal.aborted || !l?.assetOutAddress) return
       // reverse the chains here because we are looking for the destination
       const assetOut = searchKnownAddresses({
-        tokensUnderBridgeKey,
+        tokensUnderBridgeKey: tokensUnderReversedBridgeKey,
         address: l?.assetOutAddress,
         customTokens: [],
       })
@@ -204,7 +207,7 @@
       if (!assetOut) return
       assetOuts.set(assetOutputKey as string, {
         ...assetOut,
-        logoURI: bridgeSettings.assetIn.value?.logoURI,
+        logoURI: bridgeSettings.assetIn.value?.logoURI ?? null,
       })
       page.setParams({
         pulsexTokenIn: assetOut.address as Hex,
@@ -504,14 +507,17 @@
   const buttonText = $derived.by(() => {
     if (stage === settings.stage.ONBOARD) {
       if (needsAllowanceForPulsechainBridge) {
-        return `Approve ${bridgeTokenIn?.symbol} to Pulsechain`
+        return `Approve${bridgeTokenIn?.symbol ? ` ${bridgeTokenIn.symbol}` : ''} to Pulsechain`
       }
-      return `Bridge ${bridgeTokenIn?.symbol} to Pulsechain`
+      return `Bridge${bridgeTokenIn?.symbol ? ` ${bridgeTokenIn.symbol}` : ''} to Pulsechain`
     }
     if (needsAllowanceForPulsex) {
-      return `Approve ${tokenInPulsex?.symbol} for PulseX`
+      return `Approve${tokenInPulsex?.symbol ? ` ${tokenInPulsex.symbol}` : ''} for PulseX`
     }
-    return `Swap ${tokenInPulsex?.symbol} for ${tokenOutPulsex?.symbol}`
+    if (tokenInPulsex && tokenOutPulsex) {
+      return `Swap${tokenInPulsex?.symbol ? ` ${tokenInPulsex.symbol}` : ''} for ${tokenOutPulsex?.symbol ? ` ${tokenOutPulsex.symbol}` : ''}`
+    }
+    return 'Swap'
   })
   const loadingKey = $derived.by(() => {
     if (stage === settings.stage.ONBOARD) {

@@ -5,6 +5,7 @@
   import { ellipsis } from '../stores/utils'
   import type { ClassValue } from 'svelte/elements'
   import { zeroAddress } from 'viem'
+  import { bridgableTokens } from '../stores/input.svelte'
   type Props = {
     token: Token
     truncate?: number
@@ -46,7 +47,7 @@
 
 <div class={wrapperClasses}>
   <span class="size-10 flex-shrink-0">
-    <TokenIcon src={token.logoURI || assetSources(token)} sizeClasses="size-10" />
+    <TokenIcon src={token.logoURI || assetSources(token, [], bridgableTokens.value)} sizeClasses="size-10" />
   </span>
   <span class={textContainerClasses}>
     <span class={`${nameClasses} leading-6 truncate overflow-hidden text-ellipsis`}

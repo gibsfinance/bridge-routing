@@ -26,7 +26,7 @@ export type TokenMetadata = {
 export type Token = TokenMetadata & {
   address: string
   chainId: number
-  logoURI?: string | undefined | null
+  logoURI: string | null
   extensions?: Extensions
 }
 

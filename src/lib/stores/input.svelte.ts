@@ -214,12 +214,26 @@ const nativeAssets = Object.entries(chainsMetadata).map(([chain, metadata]) => {
     chainId: Number(chain),
     address: zeroAddress as Hex,
     ...metadata.nativeCurrency,
-    logoURI: imageLinks.image({
-      chainId: Number(chain),
-      address: zeroAddress,
-    }),
+    // logoURI: imageLinks.image({
+    //   chainId: Number(chain),
+    //   address: zeroAddress,
+    // }),
+    logoURI: null,
   }
 })
+export const tokenImageLookup = (token: { chainId: number, address: string, logoURI?: string | null }, bridgableTokens: Token[]) => {
+  if (token.logoURI) {
+    return token.logoURI
+  }
+  const found = bridgableTokens.find((t) => t.chainId === token.chainId && t.address === token.address)
+  if (found) {
+    return found.logoURI
+  }
+  return imageLinks.image({
+    chainId: Number(token.chainId),
+    address: token.address,
+  })
+}
 export const loadLists = loading.loadsAfterTick<Token[] | null>(
   'loadLists',
   async (_input: undefined, c: AbortController) => {
@@ -250,55 +264,41 @@ export const loadLists = loading.loadsAfterTick<Token[] | null>(
     )
   },
   (lists: TokenList[]): Token[] => {
-    const tokens = _.uniqBy(
-      _([
-        ...nativeAssets,
-        ..._(lists)
-          .map('tokens')
-          .flatten()
-          .compact()
-          .reduce((agg, t) => {
-            const key = `${t.chainId}/${t.address}`.toLowerCase()
-            let exists = agg.get(key)
-            if (!exists) {
-              agg.set(key, t)
-              exists = t
-            }
-            if (!exists?.logoURI && t.logoURI) {
-              exists.logoURI = t.logoURI
-            }
-            exists.extensions = _.merge(_.merge({}, exists.extensions ?? {}), t.extensions ?? {})
-            return agg
-          }, new Map<string, Token>())
-          .values(),
-      ])
-        .sortBy((a) => {
-          // put pulsechain -> foreign tokens last
-          return a.name.toLowerCase().includes(' from pulsechain')
-            ? 2
-            : a.address === zeroAddress
-              ? 0
-              : 1
-        })
-        .value(),
-      ({ chainId, address }) => `${chainId}/${address}`.toLowerCase(),
-    )
+    const tokens = _([
+      ..._(lists)
+        .map('tokens')
+        .flatten()
+        .compact()
+        .reduce((agg, t) => {
+          const key = `${t.chainId}/${t.address}`.toLowerCase()
+          let exists = agg.get(key)
+          if (!exists) {
+            agg.set(key, t)
+            exists = t
+          }
+          if (!exists?.logoURI && t.logoURI) {
+            exists.logoURI = t.logoURI
+          }
+          exists.extensions = _.merge(_.merge({}, exists.extensions ?? {}), t.extensions ?? {})
+          if (exists.chainId === 1 && exists.address === zeroAddress) {
+            console.log('exists', key, exists)
+          }
+          return agg
+        }, new Map<string, Token>())
+        .values(),
+      ...nativeAssets,
+    ])
+      .sortBy((a) => {
+        // put pulsechain -> foreign tokens last
+        return a.name.toLowerCase().includes(' from pulsechain')
+          ? 2
+          : a.address === zeroAddress
+            ? 0
+            : 1
+      })
+      .value()
     return tokens
   },
-  // .map((t) => {
-  //   return {
-  //     ...t,
-  //     logoURI: imageLinks.image(t),
-  //   }
-  // })
-  // Object.values(
-  //   _.keyBy(_.flatten(_.map(lists, 'tokens')), ({
-  //     chainId,
-  //     address,
-  //   }) => {
-  //     return getAddress(address, Number(chainId))
-  //   }),
-  // )
 )
 // should only be loaded once at the start of the app
 const cancellableLoadLists = loadLists()

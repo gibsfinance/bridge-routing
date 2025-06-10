@@ -8,6 +8,7 @@
   import { chainsMetadata } from '../stores/auth/constants'
   import { toChain } from '../stores/auth/types'
   import { zeroAddress } from 'viem'
+  import { bridgableTokens } from '../stores/input.svelte'
 
   type Props = {
     class?: ClassValue
@@ -24,7 +25,7 @@
   }: Props = $props()
   const chainId = $derived(asset?.chainId ? Number(asset.chainId) : 0)
   const chain = $derived(chainsMetadata[toChain(chainId)])
-  const src = $derived(asset?.logoURI || assetSources(asset))
+  const src = $derived(asset?.logoURI || assetSources(asset, [], bridgableTokens.value))
   const tokenClasses = $derived(`overflow-hidden absolute`)
   const classes = $derived([
     'flex basis-auto relative text-surface-contrast-50',

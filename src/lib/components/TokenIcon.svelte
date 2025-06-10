@@ -3,7 +3,7 @@
   import Image from './Image.svelte'
   import type { ClassValue } from 'svelte/elements'
   type Props = {
-    src: string | null
+    src: string
     alt?: string
     sizeClasses?: ClassValue
     visible?: boolean
@@ -27,10 +27,10 @@
   const iconClass = $derived(['absolute opacity-75', className, loaded && 'invisible', sizeClasses])
 </script>
 
-<div class="flex relative rounded-full">
+<div class="flex relative rounded-full" data-src={src ?? `${src}`}>
   {#if src}
     <Image {src} {alt} {onload} {onerror} class={classes} {sizeClasses} {containerClasses} />
   {:else}
-    <Icon icon="nrk:media-404-notfound" class={iconClass} data-src={src ?? `${src}`} />
+    <Icon icon="nrk:media-404-notfound" class={iconClass} />
   {/if}
 </div>
