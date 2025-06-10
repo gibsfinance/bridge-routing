@@ -256,6 +256,7 @@ export const loadLists = loading.loadsAfterTick<Token[] | null>(
         ..._(lists)
           .map('tokens')
           .flatten()
+          .compact()
           .reduce((agg, t) => {
             const key = `${t.chainId}/${t.address}`.toLowerCase()
             let exists = agg.get(key)
