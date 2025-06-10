@@ -44,7 +44,6 @@
     reversed ? 'right-0' : 'left-0',
   ])
   const src = $derived(token.logoURI || assetSources(token, [], bridgableTokens.value))
-  $inspect(token)
 </script>
 
 <div class={wrapperClasses}>
