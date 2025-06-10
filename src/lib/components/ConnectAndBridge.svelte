@@ -143,9 +143,9 @@
       return `Bridge to ${toNetwork.name}`
     }
     if ((!shouldDeliver.value && requiresDelivery) || !requiresDelivery) {
-      return `Bridge ${assetIn.symbol} to ${toNetwork.name}`
+      return `Bridge${assetIn.symbol ? ` ${assetIn.symbol}` : ''} to ${toNetwork.name}`
     }
-    return `Bridge+Deliver ${assetIn.symbol} to ${toNetwork.name}`
+    return `Bridge+Deliver${assetIn.symbol ? ` ${assetIn.symbol}` : ''} to ${toNetwork.name}`
   })
   const switchToChain = $derived(() =>
     switchNetwork(appkitNetworkById.get(Number(input.bridgeKey.fromChain))),

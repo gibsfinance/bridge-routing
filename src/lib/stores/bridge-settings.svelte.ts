@@ -564,7 +564,9 @@ export const searchKnownAddresses = ({
 }) => {
   return (
     _.find(tokensUnderBridgeKey, { address: getAddress(address) }) ??
+    _.find(tokensUnderBridgeKey, { address: address.toLowerCase() }) ??
     _.find(customTokens, { address: getAddress(address) }) ??
+    _.find(customTokens, { address: address.toLowerCase() }) ??
     null
   )
 }
@@ -576,10 +578,10 @@ export const getAsset = async (chainId: Chains, assetInAddress: Hex) => {
       address: zeroAddress,
       chainId: Number(chainId),
       ...chain.nativeCurrency,
-      logoURI: imageLinks.image({
-        chainId: Number(chainId),
-        address: zeroAddress,
-      }),
+      // logoURI: imageLinks.image({
+      //   chainId: Number(chainId),
+      //   address: zeroAddress,
+      // }),
     }
   }
   const asset = await multicallErc20({
@@ -598,10 +600,10 @@ export const getAsset = async (chainId: Chains, assetInAddress: Hex) => {
     decimals,
     address: assetInAddress,
     chainId: Number(chainId),
-    logoURI: imageLinks.image({
-      chainId: Number(chainId),
-      address: assetInAddress,
-    }),
+    // logoURI: imageLinks.image({
+    //   chainId: Number(chainId),
+    //   address: assetInAddress,
+    // }),
   } as Token
 }
 
@@ -641,7 +643,7 @@ export const updateAssetOut = ({
       chainId: Number(toChain),
       ...chainsMetadata[toChain].nativeCurrency,
       logoURI: imageLinks.images([
-        `${Number(toChain)}/${zeroAddress}`,
+        `${Number(toChain)}`,
         `${Number(toChain)}/${assetOutAddress}`,
       ]),
     }
@@ -682,10 +684,10 @@ export const updateAssetOut = ({
           address: assetOutAddress,
         } as Token
         // res.logoURI = imageLinks.image(res)
-        res.logoURI = imageLinks.images([
-          `${Number(toChainId)}/${assetOutAddress}`,
-          `${fromChainId}/${assetInput.address}`,
-        ])
+        // res.logoURI = imageLinks.images([
+        //   `${Number(toChainId)}/${assetOutAddress}`,
+        //   `${fromChainId}/${assetInput.address}`,
+        // ])
       } else {
         // assumptions
         res = {
@@ -1505,6 +1507,7 @@ export const loadPriceCorrective = ({
 /** the sources of the asset, including the wrapped asset if it exists */
 export const assetSources = (
   asset: {
+    logoURI?: string | null
     chainId: number
     address: string
     extensions?: {
@@ -1519,6 +1522,7 @@ export const assetSources = (
     }
   } | null,
   extraSources: string[] = [],
+  bridgableTokens: Token[] = [],
 ) => {
   if (!asset) {
     return null
@@ -1562,8 +1566,16 @@ export const assetSources = (
     (a: MinTokenInfo) => a.chainId,
     (a: MinTokenInfo) => a.address.toLowerCase(),
   ]) as MinTokenInfo[]
+  sorted.forEach((a: MinTokenInfo) => {
+    if (a.address === zeroAddress) {
+      a.address = ''
+    }
+  })
   const sources = sorted.map((a: MinTokenInfo) => `${a.chainId}/${a.address}`.toLowerCase())
-  return imageLinks.images(sources.concat(extraSources))
+  return asset.logoURI ?? address === zeroAddress ? imageLinks.images(sources) : input.tokenImageLookup({
+    chainId,
+    address,
+  }, bridgableTokens)
 }
 
 export const findAssetByUnique = (
