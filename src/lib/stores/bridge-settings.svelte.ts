@@ -1575,7 +1575,7 @@ export const assetSources = (
   return asset.logoURI ?? address === zeroAddress ? imageLinks.images(sources) : input.tokenImageLookup({
     chainId,
     address,
-  }, bridgableTokens)
+  }, bridgableTokens) ?? imageLinks.images(sources)
 }
 
 export const findAssetByUnique = (
