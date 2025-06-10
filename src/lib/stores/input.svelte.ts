@@ -239,7 +239,7 @@ export const loadLists = loading.loadsAfterTick<Token[] | null>(
     return Promise.all(
       lists.map(
         async (r, index) =>
-          (await r.json().catch((err) => {
+          (await r.json().catch(() => {
             console.error('failed to load token list', imageLists[index])
             // throw err
             return {
@@ -256,6 +256,7 @@ export const loadLists = loading.loadsAfterTick<Token[] | null>(
         ..._(lists)
           .map('tokens')
           .flatten()
+          .compact()
           .reduce((agg, t) => {
             const key = `${t.chainId}/${t.address}`.toLowerCase()
             let exists = agg.get(key)
