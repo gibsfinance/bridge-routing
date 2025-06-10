@@ -43,11 +43,13 @@
     'text-gray-400 font-mono text-xs leading-4 transition-all transition-duration-100 -bottom-0.5',
     reversed ? 'right-0' : 'left-0',
   ])
+  const src = $derived(token.logoURI || assetSources(token, [], bridgableTokens.value))
+  $inspect(token)
 </script>
 
 <div class={wrapperClasses}>
-  <span class="size-10 flex-shrink-0">
-    <TokenIcon src={token.logoURI || assetSources(token, [], bridgableTokens.value)} sizeClasses="size-10" />
+  <span class="size-10 flex-shrink-0" data-src={src}>
+    <TokenIcon src={src} sizeClasses="size-10" />
   </span>
   <span class={textContainerClasses}>
     <span class={`${nameClasses} leading-6 truncate overflow-hidden text-ellipsis`}

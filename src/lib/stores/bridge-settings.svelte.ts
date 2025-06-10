@@ -1571,11 +1571,12 @@ export const assetSources = (
       a.address = ''
     }
   })
+  console.log(sorted)
   const sources = sorted.map((a: MinTokenInfo) => `${a.chainId}/${a.address}`.toLowerCase())
   return asset.logoURI ?? address === zeroAddress ? imageLinks.images(sources) : input.tokenImageLookup({
     chainId,
     address,
-  }, bridgableTokens)
+  }, bridgableTokens) ?? imageLinks.images(sources)
 }
 
 export const findAssetByUnique = (
