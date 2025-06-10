@@ -56,7 +56,7 @@
             Token Delivery enhances the PulseChain to EVM bridge experience by adding convenience without compromising security. Built on the same trusted bridge infrastructure, it offers additional features while maintaining the current bridge's level of security.
           </p>
           <p class="text-lg">
-            By eliminating the need to pre-fund destination wallets, users can save on gas fees and time while maintaining full control of their assets throughout the process.
+            By eliminating the need to have access to a wallet with gas in order to run bridge delivery, users can save on gas fees and time while maintaining full control of their assets throughout the process.
           </p>
         </div>
 
@@ -65,15 +65,23 @@
           <ul class="space-y-4">
             <li class="flex items-start gap-3">
               <Icon icon="mdi:check-circle" class="mt-1 flex-shrink-0" />
-              <span>Direct transfers to your preferred destination without pre-funding</span>
+              <span>Transfer to any destination such as offramps or cold storage</span>
             </li>
             <li class="flex items-start gap-3">
               <Icon icon="mdi:check-circle" class="mt-1 flex-shrink-0" />
-              <span>Pay delivery fees in any token, not just native tokens</span>
+              <span>Deliver any token, such as stables, not just gas tokens</span>
             </li>
             <li class="flex items-start gap-3">
               <Icon icon="mdi:check-circle" class="mt-1 flex-shrink-0" />
-              <span>Fallback to standard bridge UI available at any time</span>
+              <span>Fallback to bridge UI at any time</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <Icon icon="mdi:check-circle" class="mt-1 flex-shrink-0" />
+              <span>Run from your own device</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <Icon icon="mdi:check-circle" class="mt-1 flex-shrink-0" />
+              <span>One step closer to being fully PulseChain native</span>
             </li>
           </ul>
         </div>
