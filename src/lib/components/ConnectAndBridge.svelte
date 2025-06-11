@@ -24,7 +24,7 @@
 
   const tokenBalance = $derived(fromTokenBalance.value ?? 0n)
   const bridgeTokenIn = $derived(bridgeSettings.assetIn.value)
-  const bridgeTokenOut = $derived(bridgeSettings.assetOut.value)
+  const bridgeTokenOut = $derived(bridgeSettings.assetOut)
   const initiateBridge = $derived(async () => {
     if (!bridgeSettings.foreignDataParam) {
       return
