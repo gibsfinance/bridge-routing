@@ -10,7 +10,11 @@
     "ui:dev": "npm run dev --workspace=packages/frontend",
     "ui:preview": "npm run preview --workspace=packages/frontend",
     "ui:build": "npm run build --workspace=packages/frontend",
-    "ui:check": "npm run check --workspace=packages/frontend"
+    "ui:check": "npm run check --workspace=packages/frontend",
+    "build": "npm run ui:build",
+    "dev": "npm run ui:dev",
+    "preview": "npm run ui:preview",
+    "check": "npm run ui:check"
   },
   "keywords": [],
   "author": "",
