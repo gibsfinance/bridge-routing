@@ -506,16 +506,18 @@
   })
   const buttonText = $derived.by(() => {
     if (stage === settings.stage.ONBOARD) {
+      const step1Suffix = `${bridgeTokenIn?.symbol ? ` ${bridgeTokenIn.symbol}` : ''}`
       if (needsAllowanceForPulsechainBridge) {
-        return `Approve${bridgeTokenIn?.symbol ? ` ${bridgeTokenIn.symbol}` : ''} to Pulsechain`
+        return `Approve${step1Suffix} to Pulsechain`
       }
-      return `Bridge${bridgeTokenIn?.symbol ? ` ${bridgeTokenIn.symbol}` : ''} to Pulsechain`
+      return `Bridge${step1Suffix} to Pulsechain`
     }
+    const step2Suffix = `${tokenInPulsex?.symbol ? ` ${tokenInPulsex.symbol}` : ''}`
     if (needsAllowanceForPulsex) {
-      return `Approve${tokenInPulsex?.symbol ? ` ${tokenInPulsex.symbol}` : ''} for PulseX`
+      return `Approve${step2Suffix} for PulseX`
     }
     if (tokenInPulsex && tokenOutPulsex) {
-      return `Swap${tokenInPulsex?.symbol ? ` ${tokenInPulsex.symbol}` : ''} for ${tokenOutPulsex?.symbol ? ` ${tokenOutPulsex.symbol}` : ''}`
+      return `Swap${step2Suffix} for ${tokenOutPulsex?.symbol ? ` ${tokenOutPulsex.symbol}` : ''}`
     }
     return 'Swap'
   })
