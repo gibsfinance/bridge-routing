@@ -25,7 +25,7 @@
   const tokenBalance = $derived(fromTokenBalance.value ?? 0n)
   const bridgeTokenIn = $derived(bridgeSettings.assetIn.value)
   const bridgeTokenOut = $derived(bridgeSettings.assetOut.value)
-  const initiateBridge = async () => {
+  const initiateBridge = $derived(async () => {
     if (!bridgeSettings.foreignDataParam) {
       return
     }
@@ -43,7 +43,7 @@
       ...transactions.options(chainId, latestBlock),
       account: accountState.address as Hex,
     })
-  }
+  })
   const sendIncreaseApproval = $derived(
     transactionButtonPress({
       chainId: Number(input.bridgeKey.fromChain),
