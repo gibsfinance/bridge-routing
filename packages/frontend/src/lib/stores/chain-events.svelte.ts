@@ -1,5 +1,5 @@
 import * as input from './input.svelte'
-import { multicallRead } from '../utils.svelte'
+import { multicallRead } from '@gibsfinance/common/multicall'
 import * as abis from '@gibsfinance/bridge-sdk/abis'
 import { Chains, nativeAssetOut, toChain } from '@gibsfinance/bridge-sdk/config'
 import type { Token } from '@gibsfinance/bridge-sdk/types'

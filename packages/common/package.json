@@ -1,0 +1,25 @@
+{
+  "name": "@gibsfinance/common",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./erc20": "./src/erc20.ts",
+    "./cache": "./src/cache.ts",
+    "./serialize": "./src/serialize.ts",
+    "./types": "./src/types.ts",
+    "./multicall": "./src/multicall.ts"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "viem": "^2.31.0"
+  }
+}

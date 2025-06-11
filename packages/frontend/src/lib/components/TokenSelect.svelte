@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { Token } from '@gibsfinance/bridge-sdk/types'
+  import { multicallErc20 } from '@gibsfinance/common/erc20'
   import { type Hex, getAddress, isAddress, isHex } from 'viem'
   import Icon from '@iconify/svelte'
   import _ from 'lodash'
   import type { ClassValue } from 'svelte/elements'
 
   import * as customTokens from '../stores/custom-tokens.svelte'
-  import { multicallErc20 } from '../utils.svelte'
   import { clientFromChain } from '../stores/input.svelte'
   import { loading } from '../stores/loading.svelte'
   import { InfiniteStore } from '../stores/infinite.svelte'

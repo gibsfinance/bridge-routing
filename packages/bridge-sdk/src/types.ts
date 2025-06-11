@@ -1,13 +1,5 @@
-import type { Hex, Abi, Chain } from 'viem'
+import type { Hex, Chain } from 'viem'
 import type { Chains, Provider } from './config.js'
-
-export type Call = {
-  allowFailure?: boolean
-  functionName: string
-  target?: Hex
-  abi?: Abi
-  args?: (bigint | Hex | Hex[])[]
-}
 
 export type PerNetworkBridgeLink = {
   tokenAddress: Hex

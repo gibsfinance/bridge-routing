@@ -1,7 +1,7 @@
 import { ProxyStore } from '../types.svelte'
 import _ from 'lodash'
 import { untrack } from 'svelte'
-import { jsonAnyParse, jsonAnyStringify } from '../utils.svelte'
+import { jsonAnyParse, jsonAnyStringify } from '@gibsfinance/common/serialize'
 
 export class LocalProxy<T extends object> extends ProxyStore<T> {
   constructor(

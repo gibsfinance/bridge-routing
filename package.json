@@ -4,6 +4,7 @@
   "main": "index.js",
   "private": true,
   "workspaces": [
+    "packages/common",
     "packages/bridge-sdk",
     "packages/frontend"
   ],
