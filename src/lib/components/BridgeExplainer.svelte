@@ -73,7 +73,7 @@
             </li>
             <li class="flex items-start gap-3">
               <Icon icon="mdi:check-circle" class="mt-1 flex-shrink-0" />
-              <span>Fallback to bridge UI at any time</span>
+              <span>Fallback to other bridge UIs at any time</span>
             </li>
             <li class="flex items-start gap-3">
               <Icon icon="mdi:check-circle" class="mt-1 flex-shrink-0" />
