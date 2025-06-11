@@ -1,10 +1,10 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
+  import { toChain } from '@gibsfinance/bridge-sdk/config'
+  import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
+  import * as imageLinks from '@gibsfinance/bridge-sdk/image-links'
 
   import { accountState, connect } from '../stores/auth/AuthProvider.svelte'
-  import { toChain } from '../stores/auth/types'
-  import * as imageLinks from '../stores/image-links'
-  import { chainsMetadata } from '../stores/auth/constants'
 
   import Button from './Button.svelte'
   import Image from './Image.svelte'

@@ -1,0 +1,25 @@
+{
+  "name": "@gibsfinance/bridge-sdk",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./config": "./src/config.ts",
+    "./abis": "./src/abis.ts",
+    "./image-links": "./src/image-links.ts",
+    "./chains": "./src/chains.ts"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "viem": "^2.31.0"
+  }
+}

@@ -4,6 +4,7 @@
   "main": "index.js",
   "private": true,
   "workspaces": [
+    "packages/bridge-sdk",
     "packages/frontend"
   ],
   "scripts": {
@@ -11,7 +12,8 @@
     "ui:preview": "npm run preview --workspace=packages/frontend",
     "ui:build": "npm run build --workspace=packages/frontend",
     "ui:check": "npm run check --workspace=packages/frontend",
-    "build": "npm run ui:build",
+    "bridge-sdk:build": "npm run build --workspace=packages/bridge-sdk",
+    "build": "npm run bridge-sdk:build && npm run ui:build",
     "dev": "npm run ui:dev",
     "preview": "npm run ui:preview",
     "check": "npm run ui:check"

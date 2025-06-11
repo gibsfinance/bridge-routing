@@ -1,9 +1,11 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import Image from './Image.svelte'
   import type { ClassValue } from 'svelte/elements'
+
+  import Image from './Image.svelte'
+
   type Props = {
-    src: string
+    src: string | null
     alt?: string
     sizeClasses?: ClassValue
     visible?: boolean

@@ -1,11 +1,13 @@
 <script lang="ts">
-  import TokenIcon from './TokenIcon.svelte'
-  import type { Token } from '../types.svelte'
-  import { assetSources } from '../stores/bridge-settings.svelte'
-  import { ellipsis } from '../stores/utils'
   import type { ClassValue } from 'svelte/elements'
+  import type { Token } from '@gibsfinance/bridge-sdk/types'
   import { zeroAddress } from 'viem'
+
+  import { assetSources } from '../stores/bridge-settings.svelte'
   import { bridgableTokens } from '../stores/input.svelte'
+  import { ellipsis } from '../stores/utils'
+
+  import TokenIcon from './TokenIcon.svelte'
   type Props = {
     token: Token
     truncate?: number

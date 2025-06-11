@@ -1,11 +1,13 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
+  import { Chains } from '@gibsfinance/bridge-sdk/config'
+
   import { bridgeKey } from '../stores/input.svelte'
-  import { Chains } from '../stores/auth/types'
+  import { page } from '../stores/app-page.svelte'
+
   import InfoExplain from './InfoExplain.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
   import Button from './Button.svelte'
-  import { page } from '../stores/app-page.svelte'
 
   const chainToDomain = {
     [Chains.ETH]: 'etherscan.io',

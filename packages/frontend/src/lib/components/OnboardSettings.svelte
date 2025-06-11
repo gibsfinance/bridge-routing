@@ -1,8 +1,9 @@
 <script lang="ts">
   import { zeroAddress, type Hex } from 'viem'
-  import Button from './Button.svelte'
   import Icon from '@iconify/svelte'
-  import { Chains, Provider } from '../stores/auth/types'
+  import { Chains, Provider } from '@gibsfinance/bridge-sdk/config'
+
+  import Button from './Button.svelte'
   import { accountState } from '../stores/auth/AuthProvider.svelte'
   import {
     assetOutKey,
@@ -13,6 +14,7 @@
   import { bridgableTokens, loadFeeFor, recipient, bridgeKey } from '../stores/input.svelte'
   import { page } from '../stores/app-page.svelte'
   import * as settings from '../stores/settings.svelte'
+
   const toggleHelp = () => {
     page.setParam('guide', page.guide === settings.guide.SHOW ? null : settings.guide.SHOW)
   }

@@ -1,16 +1,15 @@
 <script lang="ts">
+  import type { Token } from '@gibsfinance/bridge-sdk/types'
+
   import * as input from '../stores/input.svelte'
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
   import { bridgeSettings as storageBridgeSettings } from '../stores/storage.svelte'
-  import SectionInput from './SectionInput.svelte'
-  import type { Token } from '../types.svelte'
-  import { isAddress, zeroAddress, type Hex } from 'viem'
   import { humanReadableNumber } from '../stores/utils'
-  import { accountState } from '../stores/auth/AuthProvider.svelte'
   import { assetLink } from '../stores/chain-events.svelte'
   import { settingKey } from '../stores/fee-manager.svelte'
+
+  import SectionInput from './SectionInput.svelte'
   import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
-    import { untrack } from 'svelte'
 
   type Props = {
     asset: Token | null

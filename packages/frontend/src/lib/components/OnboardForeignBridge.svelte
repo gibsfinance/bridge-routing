@@ -1,16 +1,20 @@
 <script lang="ts">
-  import TokenSelect from './TokenSelect.svelte'
-  import * as transactions from '../stores/transactions'
+  import { toChain, Chains, Provider, nativeAssetOut } from '@gibsfinance/bridge-sdk/config'
+  import type { BridgeKey, Token } from '@gibsfinance/bridge-sdk/types'
+  import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
   import { formatUnits, getAddress, maxUint256, zeroAddress, type Hex } from 'viem'
+  import _ from 'lodash'
+
+  import * as transactions from '../stores/transactions'
   import { settings as bridgeAdminSettings, settingKey } from '../stores/fee-manager.svelte'
-  import { toChain } from '../stores/auth/types'
   import {
     accountState,
     connect,
     getNetwork,
     switchNetwork,
   } from '../stores/auth/AuthProvider.svelte'
-  import _ from 'lodash'
+
+  import TokenSelect from './TokenSelect.svelte'
   import {
     bridgeTx,
   } from '../stores/storage.svelte'
@@ -23,7 +27,6 @@
     minBridgeAmountInKey,
   } from '../stores/chain-events.svelte'
   import SectionInput from './SectionInput.svelte'
-  import { Chains, Provider } from '../stores/auth/types'
   import OnboardButton from './OnboardButton.svelte'
   import { transactionButtonPress } from '../stores/transaction'
   import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
@@ -39,14 +42,12 @@
     loadFeeFor,
     oneEther,
     recipient,
-    type BridgeKey,
   } from '../stores/input.svelte'
   import { getPulseXQuote } from '../stores/pulsex/quote.svelte'
   import type { SerializedTrade } from '../stores/pulsex/transformers'
   import { getTransactionDataFromTrade } from '../stores/pulsex/serialize'
   import BridgeProgress from './BridgeProgress.svelte'
   import Onramps from './Onramps.svelte'
-  import { chainsMetadata } from '../stores/auth/constants'
   import Icon from '@iconify/svelte'
   import Button from './Button.svelte'
   import OnboardGuide from './OnboardGuide.svelte'
@@ -54,8 +55,6 @@
   import * as settings from '../stores/settings.svelte'
   import { untrack } from 'svelte'
   import { SvelteMap } from 'svelte/reactivity'
-  import type { Token } from '../types.svelte'
-  import { nativeAssetOut } from '../stores/config.svelte'
 
   const pulsechainWrappedWethFromEthereum = '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C'
   const bridgeTokenInAddress = $derived((page.queryParams.get('bridgeTokenIn') ?? zeroAddress) as Hex)
@@ -78,7 +77,7 @@
   const assetOuts = new SvelteMap<string, Token>()
   const assetOutputKey = $derived(bridgeTokenIn ? assetOutKey({
       bridgeKeyPath: bridgeKey.path,
-      assetInAddress: bridgeTokenIn.address === zeroAddress ? nativeAssetOut[toChain(bridgeTokenIn.chainId)] : bridgeTokenIn.address,
+      assetInAddress: bridgeTokenIn.address === zeroAddress ? nativeAssetOut[toChain(bridgeTokenIn.chainId)] : bridgeTokenIn.address as Hex,
       unwrap: false,
     }) : null)
   const bridgeTokenOutAddress = $derived(assetOuts.get(assetOutputKey as string)?.address ?? null)

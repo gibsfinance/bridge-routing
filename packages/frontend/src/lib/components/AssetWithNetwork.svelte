@@ -1,14 +1,16 @@
 <script lang="ts">
-  import type { Token } from '../types.svelte'
+  import type { Token } from '@gibsfinance/bridge-sdk/types'
+  import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
+  import { toChain } from '@gibsfinance/bridge-sdk/config'
   import type { ClassValue } from 'svelte/elements'
-  import TokenIcon from './TokenIcon.svelte'
+  import { zeroAddress } from 'viem'
+
   import { assetSources } from '../stores/bridge-settings.svelte'
   import { loading } from '../stores/loading.svelte'
-  import Image from './Image.svelte'
-  import { chainsMetadata } from '../stores/auth/constants'
-  import { toChain } from '../stores/auth/types'
-  import { zeroAddress } from 'viem'
   import { bridgableTokens } from '../stores/input.svelte'
+
+  import Image from './Image.svelte'
+  import TokenIcon from './TokenIcon.svelte'
 
   type Props = {
     class?: ClassValue

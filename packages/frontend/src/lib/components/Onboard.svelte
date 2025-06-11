@@ -1,10 +1,12 @@
 <script lang="ts">
-  import type { Token } from '../types.svelte'
-  import { Chains, Provider } from '../stores/auth/types'
+  import type { Token } from '@gibsfinance/bridge-sdk/types'
+  import { Chains, Provider } from '@gibsfinance/bridge-sdk/config'
+  import { SvelteMap } from 'svelte/reactivity'
+
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
   import { loadPrice, priceInt, latestBlock, blocks } from '../stores/chain-events.svelte'
   import { bridgeKey } from '../stores/input.svelte'
-  import { SvelteMap } from 'svelte/reactivity'
+
   import OnboardForeignBridge from './OnboardForeignBridge.svelte'
 
   const bridgedToken = $derived(bridgeSettings.assetOut as Token | null)

@@ -1,4 +1,4 @@
-import type { Token } from '../types.svelte'
+import type { Token } from '@gibsfinance/bridge-sdk/types'
 
 let temporaryTokens: Token[] = []
 // load a test
@@ -29,16 +29,3 @@ const updateLocalStorage = (list: Token[]) => {
     console.error(err)
   }
 }
-
-// export const tokens: Writable<Token[]> = {
-//   ...tokensStore,
-//   set: (tkns) => {
-//     updateLocalStorage(tkns)
-//     tokensStore.set(tkns)
-//   },
-//   update: (fn) => {
-//     const res = fn(get(tokensStore))
-//     updateLocalStorage(res)
-//     tokensStore.set(res)
-//   },
-// }

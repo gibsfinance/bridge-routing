@@ -1,21 +1,24 @@
 <script lang="ts">
+  import { Chains, toChain, pathways, validBridgeKeys } from '@gibsfinance/bridge-sdk/config'
+  import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
+  import type { BridgeKey, Token } from '@gibsfinance/bridge-sdk/types'
+  import _ from 'lodash'
+
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
   import * as input from '../stores/input.svelte'
   import * as nav from '../stores/nav.svelte'
   import { bridgeKey } from '../stores/input.svelte'
-  import type { InputValue, Token } from '../types.svelte'
-  import SectionInput from './SectionInput.svelte'
-  import TokenSelect from './TokenSelect.svelte'
-  import { chainsMetadata } from '../stores/auth/constants'
-  import BridgeProviderToggle from './BridgeProviderToggle.svelte'
-  import { isProd, pathways, validBridgeKeys } from '../stores/config.svelte'
-  import { Chains, toChain } from '../stores/auth/types'
-  import _ from 'lodash'
+  import type { InputValue } from '../types.svelte'
+  import { isProd } from '../stores/config.svelte'
   import {
     fromTokenBalance,
     minBridgeAmountIn,
     minBridgeAmountInKey,
   } from '../stores/chain-events.svelte'
+
+  import SectionInput from './SectionInput.svelte'
+  import TokenSelect from './TokenSelect.svelte'
+  import BridgeProviderToggle from './BridgeProviderToggle.svelte'
 
   const chooseTokenSubmit = async (token: Token) => {
     const bridgeKey = input.bridgeKey.value
@@ -36,7 +39,7 @@
       bridgeKey.provider,
       toChain(chainId!),
       destinationChain as Chains,
-    ] as input.BridgeKey
+    ] as BridgeKey
     nav.bridge.shallow(options, token.address)
   }
   const keepBalance = (bal: bigint | null) => {

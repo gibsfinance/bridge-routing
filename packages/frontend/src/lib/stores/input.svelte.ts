@@ -1,7 +1,6 @@
+import * as abis from '@gibsfinance/bridge-sdk/abis'
 import * as rpcs from '../stores/rpcs.svelte'
 import { page } from './app-page.svelte'
-import * as abis from './abis'
-import * as imageLinks from '../stores/image-links'
 import {
   type Hex,
   getAddress,
@@ -17,32 +16,25 @@ import {
   webSocket,
   isAddress,
 } from 'viem'
-import { chainIdToKey, Chains, Provider, toChain } from './auth/types'
+import _ from 'lodash'
+import * as networks from 'viem/chains'
+import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
+import { chainIdToKey, Chains, Provider, toChain } from '@gibsfinance/bridge-sdk/config'
+import { defaultAssetIn, nativeAssetOut, nativeTokenName, nativeTokenSymbol, pathway, pathways, validBridgeKeys, type Pathway } from '@gibsfinance/bridge-sdk/config'
+import type { Token, TokenList, TokenOut, BridgeKey } from '@gibsfinance/bridge-sdk/types'
+import * as imageLinks from '@gibsfinance/bridge-sdk/image-links'
+
 import { settingKey, settings, type PathwayExtendableConfig } from './fee-manager.svelte'
 import {
   blacklist,
-  defaultAssetIn,
   isProd,
-  nativeAssetOut,
-  nativeTokenName,
-  nativeTokenSymbol,
-  pathway,
-  pathways,
-  validBridgeKeys,
-  type Pathway,
 } from '../stores/config.svelte'
 import {
   NullableProxyStore,
   ProxyStore,
-  type Token,
-  type TokenList,
-  type TokenOut,
 } from '../types.svelte'
-import { chainsMetadata } from './auth/constants'
 import { appkitNetworkList } from './auth/AuthProvider.svelte'
-import _ from 'lodash'
 import { loading } from './loading.svelte'
-import * as networks from 'viem/chains'
 
 export const forcedRefresh = new ProxyStore(0n)
 
@@ -93,13 +85,11 @@ export const recipient = new NullableProxyStore<Hex>()
 
 export const recipientLockedToAccount = new ProxyStore<boolean>(true)
 
-export type BridgeKey = [Provider, Chains, Chains]
-
 export const defaultBridgeKey = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS] as BridgeKey
 
 const getDefaultAssetInAddress = () => {
   const assetInAddress =
-    page.params.assetInAddress || defaultAssetIn(defaultBridgeKey)?.address || null
+    page.params.assetInAddress || defaultAssetIn(defaultBridgeKey, isProd.value)?.address || null
   if (assetInAddress && isAddress(assetInAddress)) {
     return getAddress(assetInAddress)
   }
@@ -126,7 +116,7 @@ export class BridgeKeyStore {
     return [this.value[0], this.value[2], this.value[1]] as BridgeKey
   }
   get isValid() {
-    return !!pathway(this.value)
+    return !!pathway(this.value, isProd.value)
   }
   get provider() {
     return this.value[0]
@@ -144,7 +134,7 @@ export class BridgeKeyStore {
     return chainIdToChain(this.toChain)
   }
   get pathway() {
-    return pathway(this.value)
+    return pathway(this.value, isProd.value)
   }
   // get settings() {
   //   return settings.get(this.value)

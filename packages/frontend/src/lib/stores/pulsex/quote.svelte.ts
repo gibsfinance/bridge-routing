@@ -1,10 +1,10 @@
 import _ from 'lodash'
 import type { TradeType } from '@pulsex/swap-sdk-core'
 import type { Hex } from 'viem'
+import type { Token } from '@gibsfinance/bridge-sdk/types'
+import { Chains } from '@gibsfinance/bridge-sdk/config'
 
-import { Chains } from '../auth/types'
 import { loading } from '../loading.svelte'
-import type { Token } from '../../types.svelte'
 
 import type { SerializedTrade } from './transformers'
 

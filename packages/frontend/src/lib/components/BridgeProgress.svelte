@@ -1,11 +1,12 @@
 <script lang="ts">
   import { isHex, type Hex } from 'viem'
-  import { bridgeTx, type BridgeTx } from '../stores/storage.svelte'
-  import Button from './Button.svelte'
+  import { untrack } from 'svelte'
+  import { Chains } from '@gibsfinance/bridge-sdk/config'
+  import { pathway } from '@gibsfinance/bridge-sdk/config'
+  import type { BridgeKey } from '@gibsfinance/bridge-sdk/types'
   import Icon from '@iconify/svelte'
-  import Input from './Input.svelte'
   import { Progress } from '@skeletonlabs/skeleton-svelte'
-  import DirectLink from './DirectLink.svelte'
+
   import {
     liveBridgeStatus,
     bridgeStatuses,
@@ -13,12 +14,15 @@
     latestBlock,
     blocks,
   } from '../stores/chain-events.svelte'
-  import { bridgeKey, type BridgeKey } from '../stores/input.svelte'
+  import { bridgeTx, type BridgeTx } from '../stores/storage.svelte'
+  import { bridgeKey } from '../stores/input.svelte'
+
+  import Button from './Button.svelte'
+  import Input from './Input.svelte'
+  import DirectLink from './DirectLink.svelte'
   import Tooltip from './Tooltip.svelte'
-  import { untrack } from 'svelte'
   import Loader from './Loader.svelte'
-  import { Chains } from '../stores/auth/types'
-    import { pathway } from '../stores/config.svelte'
+    import { isProd } from '../stores/config.svelte'
 
   type BridgeProgressProps = {
     oncomplete?: () => void
@@ -207,7 +211,7 @@
         class="size-6 flex" />
       <span>{bridgeStatus?.status}</span>
       {#if bridgeStatus?.status === bridgeStatuses.AFFIRMED}
-        {@const path = pathway(bridgeKey.value)}
+        {@const path = pathway(bridgeKey.value, isProd.value)}
         {@const toHome = path?.toHome}
         <!-- affirmation complete events only show up on the home chain -->
         {@const affirmationCompleteChain = toHome ? bridgeKey.fromChain : bridgeKey.toChain}

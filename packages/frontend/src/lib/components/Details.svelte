@@ -1,11 +1,11 @@
 <script lang="ts">
   import { formatEther } from 'viem'
+  import type { TokenMetadata } from '@gibsfinance/bridge-sdk/types'
+  import { Chains } from '@gibsfinance/bridge-sdk/config'
 
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
   import * as utils from '../utils.svelte'
-  import type { TokenMetadata } from '../types.svelte'
   import * as input from '../stores/input.svelte'
-  import { Chains } from '../stores/auth/types'
   import { humanReadableNumber } from '../stores/utils'
 
   import UndercompensatedWarning from './warnings/Undercompensated.svelte'

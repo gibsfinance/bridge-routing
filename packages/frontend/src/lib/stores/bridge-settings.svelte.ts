@@ -1,4 +1,3 @@
-import * as input from '../stores/input.svelte'
 import {
   zeroAddress,
   type Hex,
@@ -13,21 +12,23 @@ import {
   erc20Abi,
   parseEther,
 } from 'viem'
-import { bridgeSettings as storageBridgeSettings } from './storage.svelte'
-import { Chains, Provider, toChain } from './auth/types'
-import { loading, resolved } from './loading.svelte'
-import { type Token, NullableProxyStore, ProxyStore } from '../types.svelte'
-import * as chainEvents from './chain-events.svelte'
-import { chainsMetadata } from './auth/constants'
-import { multicallErc20, multicallRead, type Erc20Metadata } from '../utils.svelte'
+import type { Token, BridgeKey } from '@gibsfinance/bridge-sdk/types'
+import { nativeAssetOut, pathway, pathways, uniV2Routers, Chains, Provider, toChain } from '@gibsfinance/bridge-sdk/config'
+import * as abis from '@gibsfinance/bridge-sdk/abis'
+import * as imageLinks from '@gibsfinance/bridge-sdk/image-links'
+import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
 import _ from 'lodash'
-import { uniV2Routers, nativeAssetOut, pathway, whitelisted, pathways } from './config.svelte'
-import * as abis from './abis'
-import * as imageLinks from './image-links'
-import { settingKey, settings } from './fee-manager.svelte'
-import type { BridgeKey } from '../stores/input.svelte'
-import { accountState } from './auth/AuthProvider.svelte'
 import { SvelteMap } from 'svelte/reactivity'
+
+import * as input from '../stores/input.svelte'
+import { bridgeSettings as storageBridgeSettings } from './storage.svelte'
+import { loading, resolved } from './loading.svelte'
+import { NullableProxyStore, ProxyStore } from '../types.svelte'
+import * as chainEvents from './chain-events.svelte'
+import { multicallErc20, multicallRead, type Erc20Metadata } from '../utils.svelte'
+import { isProd, whitelisted } from './config.svelte'
+import { settingKey, settings } from './fee-manager.svelte'
+import { accountState } from './auth/AuthProvider.svelte'
 
 export const assetOutKey = ({
   bridgeKeyPath,
@@ -68,14 +69,14 @@ export class BridgeSettings {
   }
 
   bridgePathway = $derived.by(() => {
-    return pathway(input.bridgeKey.value)
+    return pathway(input.bridgeKey.value, isProd.value)
   })
   bridgeFees = $derived.by(() => {
     return settings.get(settingKey(input.bridgeKey.value))
   })
   bridgeFee = $derived.by(() => {
     const setting = settings.get(settingKey(input.bridgeKey.value))
-    const path = pathway(input.bridgeKey.value)
+    const path = pathway(input.bridgeKey.value, isProd.value)
     return (path?.toHome ? setting?.feeF2H : setting?.feeH2F) ?? null
   })
   amountToBridge = $derived.by(() => {
@@ -196,7 +197,7 @@ export class BridgeSettings {
   })
   desiredExcessCompensationBasisPoints = $derived.by(() => {
     const bridgeKey = input.bridgeKey.value
-    const path = pathway(bridgeKey)
+    const path = pathway(bridgeKey, isProd.value)
     if (!path?.requiresDelivery) {
       return 0n
     }
@@ -622,7 +623,7 @@ export const updateAssetOut = ({
   assetLink,
   unwrap,
 }: {
-  bridgeKey: input.BridgeKey
+  bridgeKey: BridgeKey
   assetInput: Token
   assetLink: chainEvents.TokenBridgeInfo
   unwrap: boolean
@@ -774,7 +775,7 @@ const readAmountOut = (
   assetInAddress: Hex,
   oneTokenInt: bigint,
   chain: Chains,
-  bridgeKey: input.BridgeKey,
+  bridgeKey: BridgeKey,
   blockNumber: bigint,
   paths: Hex[][],
 ): Promise<FetchResult[]> => {
@@ -805,7 +806,7 @@ const readAmountOut = (
 }
 
 type PriceCorrectiveInputs = {
-  bridgeKey: input.BridgeKey
+  bridgeKey: BridgeKey
   assetOut: Token | null
   assetLink: chainEvents.TokenBridgeInfo | null
   block: Block | null
@@ -840,7 +841,7 @@ export const loadPriceCorrective = ({
     const last = result[result.length - 1]
     return (last * oneToken) / aboutToBridge
   }
-  const partner = [provider, toChain, fromChain] as input.BridgeKey
+  const partner = [provider, toChain, fromChain] as BridgeKey
   return loading.loadsAfterTick<bigint>(
     'gas',
     async () => {
@@ -1629,7 +1630,7 @@ export const inferBridgeKey = ({
   fromChain,
   toChain,
 }: {
-  currentKey: input.BridgeKey
+  currentKey: BridgeKey
   provider: Provider
   fromChain?: Chains
   toChain?: Chains
@@ -1645,5 +1646,5 @@ export const inferBridgeKey = ({
   const nextToChain = currentToChainIsValid
     ? to
     : (Object.keys(pathways[provider]![nextFromChain]!)[0] as Chains)
-  return [provider, nextFromChain, nextToChain] as input.BridgeKey
+  return [provider, nextFromChain, nextToChain] as BridgeKey
 }

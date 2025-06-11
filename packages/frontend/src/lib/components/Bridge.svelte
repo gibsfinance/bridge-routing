@@ -29,7 +29,7 @@
   import { getAddress, isAddress, zeroAddress, type Hex } from 'viem'
   import { untrack } from 'svelte'
   import InputOutputForm from './InputOutputForm.svelte'
-  import { nativeAssetOut } from '../stores/config.svelte'
+  import { nativeAssetOut } from '@gibsfinance/bridge-sdk/config'
   import BridgeHeader from './BridgeHeader.svelte'
   import { bridgeSettings as storageBridgeSettings } from '../stores/storage.svelte'
   import BridgeProgress from './BridgeProgress.svelte'

@@ -1,11 +1,15 @@
 import * as input from './input.svelte'
 import { multicallRead } from '../utils.svelte'
-import * as abis from './abis'
+import * as abis from '@gibsfinance/bridge-sdk/abis'
+import { Chains, nativeAssetOut, toChain } from '@gibsfinance/bridge-sdk/config'
+import type { Token } from '@gibsfinance/bridge-sdk/types'
+import type { BridgeKey } from '@gibsfinance/bridge-sdk/types'
+import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
+
 import {
   getContract,
   erc20Abi,
   zeroAddress,
-  parseAbi,
   getAddress,
   isHex,
   erc20Abi_bytes32,
@@ -13,17 +17,17 @@ import {
 } from 'viem'
 import type { Block, Hex, TransactionReceipt, BlockTag } from 'viem'
 import { loading, resolved, type Cleanup } from './loading.svelte'
-import { NullableProxyStore, type Token } from '../types.svelte'
-import { bridgeGraphqlUrl, chainsMetadata } from './auth/constants'
-import { nativeAssetOut, pathway } from './config.svelte'
+import { NullableProxyStore } from '../types.svelte'
+import { bridgeGraphqlUrl } from './auth/constants'
+import { pathway } from '@gibsfinance/bridge-sdk/config'
 import { SvelteMap } from 'svelte/reactivity'
 import * as rpcs from './rpcs.svelte'
 import _ from 'lodash'
 import { untrack } from 'svelte'
-import { Chains, toChain } from '../stores/auth/types'
 import { tokenToPair } from './utils'
 import { gql, GraphQLClient } from 'graphql-request'
 import { Cache } from './cache'
+import { isProd } from './config.svelte'
 
 export const watchFinalizedBlocksForSingleChain = (
   chainId: number,
@@ -163,7 +167,7 @@ export const getTokenBalance = ({ chainId, address, account }: TokenBalanceInput
             .catch(() => null)
   }
 
-return loading.loadsAfterTick<bigint | null>(key, getBalance)()
+  return loading.loadsAfterTick<bigint | null>(key, getBalance)()
 }
 
 export const tokenBalanceLoadingKey = (chainId: number, address: string, account: string) => {
@@ -254,12 +258,12 @@ export const fromTokenBalance = new TokenBalanceWatcher()
 export const toTokenBalance = new TokenBalanceWatcher()
 
 export const minBridgeAmountIn = new SvelteMap<string, bigint | null>()
-export const minBridgeAmountInKey = (bridgeKey: input.BridgeKey, assetIn: Token | null) => {
+export const minBridgeAmountInKey = (bridgeKey: BridgeKey, assetIn: Token | null) => {
   return [...bridgeKey, assetIn?.address].join('-').toLowerCase()
 }
-export const fetchMinBridgeAmountIn = (bridgeKey: input.BridgeKey, assetIn: Token | null) => {
+export const fetchMinBridgeAmountIn = (bridgeKey: BridgeKey, assetIn: Token | null) => {
   // these clients should already be created, so we should not be doing any harm by accessing them
-  const path = pathway(bridgeKey)
+  const path = pathway(bridgeKey, isProd.value)
   if (!path || !assetIn) {
     return () => { }
   }
@@ -330,10 +334,10 @@ export type TokenBridgeInfo = {
 }
 
 export const tokenBridgeInfo = async (
-  bridgeKey: input.BridgeKey,
+  bridgeKey: BridgeKey,
   assetIn: Token | null,
 ): Promise<null | TokenBridgeInfo> => {
-  const bridgePathway = pathway(bridgeKey)
+  const bridgePathway = pathway(bridgeKey, isProd.value)
   if (!assetIn || !bridgePathway) {
     console.log('missing asset in or bridge pathway')
     return null
@@ -431,19 +435,15 @@ export const assetLink = new NullableProxyStore<TokenBridgeInfo>()
 export const loadAssetLink = loading.loadsAfterTick<
   TokenBridgeInfo,
   {
-    bridgeKey: input.BridgeKey
+    bridgeKey: BridgeKey
     assetIn: Token | null
   }
->('token', ({ bridgeKey, assetIn }: { bridgeKey: input.BridgeKey; assetIn: Token | null }) =>
+>('token', ({ bridgeKey, assetIn }: { bridgeKey: BridgeKey; assetIn: Token | null }) =>
   tokenBridgeInfo(bridgeKey, assetIn),
 )
 export const tokenOriginationChainId = (assetLink: TokenBridgeInfo | null) => {
   return assetLink?.originationChainId
 }
-
-const pairAbi = parseAbi([
-  'function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
-])
 
 const getReservesFailure = (chainId: number, token: Hex) => {
   return (e: unknown) => {
@@ -527,7 +527,7 @@ export const getPoolInfo = async (chainId: number, token: Hex, block: Block) => 
         Array.from(factoryAndInitCodeHash.entries()).map(async ([factory, initCodeHash]) => {
           const [pair, token0, token1] = tokenToPair(token, wpls, factory, initCodeHash)
           const reserves = await getContract({
-            abi: pairAbi,
+            abi: abis.pair,
             address: pair,
             client,
           })
@@ -638,7 +638,7 @@ export type BridgeStatus = keyof typeof bridgeStatuses
 export type LiveBridgeStatusParams = {
   hash: Hex
   ticker: Block
-  bridgeKey: input.BridgeKey
+  bridgeKey: BridgeKey
 }
 export type ContinuedLiveBridgeStatusParams = LiveBridgeStatusParams & {
   status: BridgeStatus

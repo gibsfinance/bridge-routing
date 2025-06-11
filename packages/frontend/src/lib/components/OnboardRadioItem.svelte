@@ -1,7 +1,9 @@
 <script lang="ts">
-  import Button from './Button.svelte'
   import Icon from '@iconify/svelte'
   import type { ClassValue } from 'svelte/elements'
+
+  import Button from './Button.svelte'
+
   type Props = {
     step: string
     steps: string[]

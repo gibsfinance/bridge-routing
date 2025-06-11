@@ -6,7 +6,7 @@ import {
   type UseAppKitAccountReturn,
 } from '@reown/appkit'
 import * as networks from '@reown/appkit/networks'
-import { SolanaAdapter } from '@reown/appkit-adapter-solana'
+import { SolanaAdapter, type BaseWalletAdapter } from '@reown/appkit-adapter-solana'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { NullableProxyStore } from '../../types.svelte'
 import * as chains from 'viem/chains'
@@ -14,7 +14,7 @@ import { walletConnectProjectId as projectId } from '../../config'
 import type { GetBalanceReturnType } from '@wagmi/core'
 import { SvelteMap } from 'svelte/reactivity'
 import { SolflareWalletAdapter, PhantomWalletAdapter } from '@solana/wallet-adapter-wallets'
-import type { BaseWalletAdapter, SignerWalletAdapter } from '@solana/wallet-adapter-base'
+import type { SignerWalletAdapter } from '@solana/wallet-adapter-base'
 import { BitcoinAdapter } from '@reown/appkit-adapter-bitcoin'
 
 export const appkitNetworkList = [

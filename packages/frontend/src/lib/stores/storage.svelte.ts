@@ -1,6 +1,8 @@
 import type { Hex } from 'viem'
+import type { BridgeKey } from '@gibsfinance/bridge-sdk/types'
+
 import { LocalProxy, LocalProxyProp } from './localstorage.svelte'
-import { FeeType, type BridgeKey } from './input.svelte'
+import { FeeType } from './input.svelte'
 
 export type DefaultSettings = {
   onboardStage: number

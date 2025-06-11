@@ -1,13 +1,13 @@
 <script lang="ts">
   import { innerWidth } from 'svelte/reactivity/window'
+  import type { Token } from '@gibsfinance/bridge-sdk/types'
+  import { Chains } from '@gibsfinance/bridge-sdk/config'
 
   import * as input from '../stores/input.svelte'
   import { humanReadableNumber } from '../stores/utils'
   import { loading } from '../stores/loading.svelte'
   import { bridgeSettings, oneEther } from '../stores/bridge-settings.svelte'
-  import { Chains } from '../stores/auth/types'
   import * as utils from '../utils.svelte'
-  import type { Token } from '../types.svelte'
   import { bridgeSettings as storageBridgeSettings } from '../stores/storage.svelte'
 
   import Loading from './Loading.svelte'

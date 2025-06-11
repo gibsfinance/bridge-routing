@@ -1,9 +1,11 @@
 <script lang="ts">
+  import { zeroAddress } from 'viem'
+  import { Provider } from '@gibsfinance/bridge-sdk/config'
+
   import * as input from '../stores/input.svelte'
-  import { Provider } from '../stores/auth/types'
   import * as nav from '../stores/nav.svelte'
   import { inferBridgeKey } from '../stores/bridge-settings.svelte'
-  import { zeroAddress } from 'viem'
+
   import BridgeProviderDirection from './BridgeProviderDirection.svelte'
   const toggleProvider = () => {
     const nextProvider =

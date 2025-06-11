@@ -1,8 +1,8 @@
-import { chainsMetadata } from '../stores/auth/constants'
-import { Chains } from '../stores/auth/types'
-import { evmChainsById } from './auth/AuthProvider.svelte'
-
 import { createToaster } from '@skeletonlabs/skeleton-svelte'
+import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
+import { Chains } from '@gibsfinance/bridge-sdk/config'
+
+import { evmChainsById } from './auth/AuthProvider.svelte'
 
 export const toaster = createToaster()
 

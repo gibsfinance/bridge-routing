@@ -1,11 +1,13 @@
 <script lang="ts">
-  import Button from './Button.svelte'
-  import ProviderIcon from './ProviderIcon.svelte'
-  import { Chains, Provider } from '../stores/auth/types'
-  import StaticNetworkImage from './StaticNetworkImage.svelte'
   import Icon from '@iconify/svelte'
+  import { Chains, Provider } from '@gibsfinance/bridge-sdk/config'
   import type { ClassValue } from 'svelte/elements'
   import { clsx } from 'clsx'
+
+  import Button from './Button.svelte'
+  import ProviderIcon from './ProviderIcon.svelte'
+  import StaticNetworkImage from './StaticNetworkImage.svelte'
+
   type Props = {
     id?: string
     provider: Provider

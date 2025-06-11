@@ -1,21 +1,22 @@
 <script lang="ts">
-  import Input from "./Input.svelte"
-  import Section from "./Section.svelte"
-  import { accountState } from "../stores/auth/AuthProvider.svelte"
-  import { getAddress, isAddress, zeroAddress, type Hex } from "viem"
+  import { Chains } from '@gibsfinance/bridge-sdk/config'
   import Icon from "@iconify/svelte"
+  import { getAddress, isAddress, zeroAddress, type Hex } from "viem"
+  import { normalize } from 'viem/ens'
+
+  import { accountState } from "../stores/auth/AuthProvider.svelte"
   import { page } from "../stores/app-page.svelte"
   import { details } from "../stores/settings.svelte"
-  import Button from "./Button.svelte"
-  import LockIcon from "./LockIcon.svelte"
-  // import { untrack } from "svelte"
   import { recipient, clientFromChain, recipientLockedToAccount, recipientInput } from "../stores/input.svelte"
   import { ensTld, isEns } from '../stores/ens'
-  import { normalize } from 'viem/ens'
   import { ensToAddress } from '../stores/auth/store.svelte'
-  import { Chains } from '../stores/auth/types'
   import { type Cleanup } from '../stores/loading.svelte'
-    import Warning from "./Warning.svelte"
+
+  import Button from "./Button.svelte"
+  import LockIcon from "./LockIcon.svelte"
+  import Input from "./Input.svelte"
+  import Section from "./Section.svelte"
+  import Warning from "./Warning.svelte"
 
   const oninput = (value: string) => {
     recipientLockedToAccount.value = false

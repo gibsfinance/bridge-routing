@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { evmChainsById } from '../stores/auth/AuthProvider.svelte'
-  import { chainsMetadata } from '../stores/auth/constants'
-  import { toChain } from '../stores/auth/types'
-  import { domains, addDomain } from '../stores/window.svelte'
-  import type { ClassValue } from 'svelte/elements'
   import Icon from '@iconify/svelte'
+  import type { ClassValue } from 'svelte/elements'
+  import { toChain } from '@gibsfinance/bridge-sdk/config'
+  import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
+
+  import { evmChainsById } from '../stores/auth/AuthProvider.svelte'
+  import { domains, addDomain } from '../stores/window.svelte'
 
   type Props = {
     size?: string

@@ -1,8 +1,9 @@
 <script lang="ts">
   import type { Hex } from 'viem'
   import type { ClassValue } from 'svelte/elements'
+  import type { Token } from '@gibsfinance/bridge-sdk/types'
+
   import { humanReadableNumber } from '../stores/utils'
-  import type { Token } from '../types.svelte'
   import { loading } from '../stores/loading.svelte'
   import {
     latestBlock,
@@ -11,8 +12,9 @@
     blocks,
     balances,
   } from '../stores/chain-events.svelte'
-  import Loading from './Loading.svelte'
   import { oneEther } from '../stores/bridge-settings.svelte'
+
+  import Loading from './Loading.svelte'
   type Props = {
     token: Token | null
     account?: string | null | undefined

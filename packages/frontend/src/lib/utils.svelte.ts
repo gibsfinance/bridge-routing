@@ -11,8 +11,8 @@ import {
   erc20Abi_bytes32,
   getAddress,
 } from 'viem'
-import * as types from './types.svelte'
 import _ from 'lodash'
+import type { Call } from '@gibsfinance/bridge-sdk/types'
 
 export type Erc20Metadata = [string, string, number]
 
@@ -32,7 +32,7 @@ export const multicallRead = async <T>({
   chain: Chain
   client: PublicClient
   abi: Abi
-  calls: types.Call[]
+  calls: Call[]
   target?: Hex
 }) => {
   const multicall = getContract({
@@ -58,16 +58,16 @@ export const multicallRead = async <T>({
       call.allowFailure
         ? r[i].success
           ? decodeFunctionResult({
-              abi: call.abi || abi,
-              functionName: call.functionName,
-              data: r[i].returnData,
-            })
-          : r[i].returnData
-        : decodeFunctionResult({
             abi: call.abi || abi,
             functionName: call.functionName,
             data: r[i].returnData,
-          }),
+          })
+          : r[i].returnData
+        : decodeFunctionResult({
+          abi: call.abi || abi,
+          functionName: call.functionName,
+          data: r[i].returnData,
+        }),
     ) as T
   } catch (err) {
     console.log(client.chain?.id, target, calls, reads)
