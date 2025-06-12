@@ -15,4 +15,5 @@ ROOT_PACKAGE_JSON.workspaces.forEach((workspace) => {
   const updated = file.replace(matcher, replacement)
 
   fs.writeFileSync(packageJsonPath, updated);
+  execSync(`git add ${packageJsonPath}`);
 });
