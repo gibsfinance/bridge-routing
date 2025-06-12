@@ -22,7 +22,7 @@ export const clientFromChain = ({
 }: {
   chain: Chain
   urls: string[]
-}) => {
+}): PublicClient => {
   const key = chainKey(chain.id, urls)
   const existing = clientCache.get(chain.id)
   if (existing && existing.key === key) {

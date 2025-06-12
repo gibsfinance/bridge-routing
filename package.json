@@ -12,9 +12,10 @@
     "ui:dev": "npm run dev --workspace=packages/frontend",
     "ui:preview": "npm run preview --workspace=packages/frontend",
     "ui:build": "npm run build --workspace=packages/frontend",
+    "common:build": "npm run build --workspace=packages/common",
     "ui:check": "npm run check --workspace=packages/frontend",
     "bridge-sdk:build": "npm run build --workspace=packages/bridge-sdk",
-    "build": "npm run bridge-sdk:build && npm run ui:build",
+    "build": "npm run common:build && npm run bridge-sdk:build && npm run ui:build",
     "dev": "npm run ui:dev",
     "preview": "npm run ui:preview",
     "check": "npm run ui:check"
