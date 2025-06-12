@@ -15,9 +15,10 @@ ROOT_PACKAGE_JSON.workspaces.forEach((workspace) => {
   const packageJsonPath = path.join(ROOT, ...items, PACKAGE_JSON);
   const file = fs.readFileSync(packageJsonPath, 'utf8');
   const updated = file.replace(matcher, replacement)
+  console.log(packageJsonPath, file);
 
   fs.writeFileSync(packageJsonPath, updated);
-  execSync(`git add ${packageJsonPath}`);
+  execSync(`git add ${packageJsonPath}`, { cwd: ROOT });
 });
 
 // execSync('npm i --package-lock-only', { cwd: ROOT });
