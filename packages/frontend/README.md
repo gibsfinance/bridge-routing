@@ -5,7 +5,7 @@ run the gibs site on any system you wish
 install
 
 ```sh
-npm i
+yarn
 ```
 
 copy the `.example.env` to `.env` and source the file
@@ -13,7 +13,7 @@ copy the `.example.env` to `.env` and source the file
 build and start the code
 
 ```sh
-npm run build && npm run preview
+yarn run build && yarn run preview
 ```
 
 open `localhost:4173`
@@ -21,7 +21,7 @@ open `localhost:4173`
 ## development
 
 ```sh
-npm run dev
+yarn run dev
 ```
 
 ## embed

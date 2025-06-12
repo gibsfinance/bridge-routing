@@ -18,9 +18,9 @@ jobs:
         with:
           node-version: '22.12.x'
       - name: Install dependencies
-        run: npm ci
+        run: yarn
       - name: Build project
-        run: npm run build
+        run: yarn run build
         env:
           PUBLIC_NODE_ENV: 'production'
           PUBLIC_IMAGE_ROOT: 'https://gib.show'
@@ -48,7 +48,7 @@ jobs:
           name: 'frontend-dist-${{github.sha}}'
           path: packages/frontend/dist/
       - name: Install Pinata CLI
-        run: npm i -g pinata-upload-cli
+        run: yarn -g pinata-upload-cli
       - name: Upload build to Pinata
         env:
           NODE_ENV: 'production'
