@@ -47,10 +47,8 @@ jobs:
         with:
           name: 'frontend-dist-${{github.sha}}'
           path: packages/frontend/dist/
-      - name: Install Pinata CLI
-        run: yarn add -g pinata-upload-cli
       - name: Upload build to Pinata
         env:
           NODE_ENV: 'production'
           PINATA_API_KEY: '${{ secrets.PINATA_API_KEY }}'
-        run: pinata-cli -a $PINATA_API_KEY && pinata-cli -u packages/frontend/dist/
+        run: npx pinata-cli -a $PINATA_API_KEY && pinata-cli -u packages/frontend/dist/
