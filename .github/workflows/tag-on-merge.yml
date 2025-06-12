@@ -37,7 +37,7 @@ jobs:
           git tag -a v$VERSION -m "Release v$VERSION"
           git push origin v$VERSION
 
-  publish-npm:
+  publish-npm-common:
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -45,6 +45,20 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '22.12.x'
+      - run: cd packages/common
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-npm-bridge-sdk:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '22.12.x'
+      - run: cd packages/bridge-sdk
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
