@@ -42,7 +42,7 @@
     "@iconify/svelte": "^4.2.0",
     "@lifi/widget": "^3.18.4",
     "@pulsex/chains": "^1.0.2",
-    "@pulsex/sdk": "^1.6.3",
+    "@pulsex/sdk": "1.6.3",
     "@pulsex/swap-sdk-core": "^2.0.4",
     "@reown/appkit": "^1.7.2",
     "@reown/appkit-adapter-bitcoin": "^1.7.2",
