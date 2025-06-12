@@ -13,6 +13,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
+          cache: yarn
           node-version: '22.12.x'
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -38,6 +39,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
+          cache: yarn
           node-version: '22.12.x'
       - run: cd packages/common
       - run: npm publish
@@ -51,6 +53,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
+          cache: yarn
           node-version: '22.12.x'
       - run: cd packages/bridge-sdk
       - run: npm publish
