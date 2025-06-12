@@ -51,4 +51,4 @@ jobs:
         env:
           NODE_ENV: 'production'
           PINATA_API_KEY: '${{ secrets.PINATA_API_KEY }}'
-        run: npx pinata-cli -a $PINATA_API_KEY && pinata-cli -u packages/frontend/dist/
+        run: npm run pinata:publish

@@ -19,6 +19,7 @@
     "build": "yarn run common:build && yarn run bridge-sdk:build && yarn run ui:build",
     "dev": "yarn run ui:dev",
     "preview": "yarn run ui:preview",
+    "pinata:publish": "pinata-cli -a $PINATA_API_KEY && pinata-cli -u packages/frontend/dist/",
     "check": "yarn run common:build && yarn run bridge-sdk:build && yarn run ui:check"
   },
   "keywords": [],
