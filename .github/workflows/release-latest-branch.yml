@@ -30,11 +30,11 @@ jobs:
       - name: Copy info
         run: cp packages/frontend/package.json packages/frontend/dist/version.json
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
+          overwrite: true
           path: packages/frontend/dist/
-          retention-days: 1
   release-pinata:
     needs: build
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
         with:
           node-version: '22.12.x'
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: build-artifacts
           path: packages/frontend/dist/
