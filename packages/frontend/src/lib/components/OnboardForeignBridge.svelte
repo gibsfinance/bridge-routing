@@ -371,6 +371,10 @@
     ) {
       return
     }
+    const previousResult = untrack(() => pulsexQuoteResult)
+    if (previousResult && amountInputToPulsex && previousResult.inputAmount.value !== amountInputToPulsex.toString()) {
+      pulsexQuoteResult = null
+    }
     const quote = getPulseXQuote({
       tokenIn: tokenInPulsex,
       tokenOut: tokenOutPulsex,
@@ -378,8 +382,11 @@
       amountOut: null,
     })
     quote.promise.then((result) => {
-      if (quote.controller.signal.aborted || !result) return
-      pulsexQuoteResult = result
+      if (quote.controller.signal.aborted || !result.success) {
+        pulsexQuoteResult = null
+        return
+      }
+      pulsexQuoteResult = result.trade
     })
     return quote.cleanup
   })
@@ -650,7 +657,7 @@
 <SectionInput
   label="Output"
   token={finalTokenOutput}
-  value={amountOutputFromPulsex}
+  value={amountOutputFromPulsex ?? 0n}
   focused={swappingOnPulsex}
   compressed={!swappingOnPulsex}
   dashWhenCompressed
