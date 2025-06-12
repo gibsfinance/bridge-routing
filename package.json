@@ -1,7 +1,6 @@
 {
   "name": "@gibsfinance/frontend",
   "version": "1.6.14",
-  "main": "index.js",
   "private": true,
   "workspaces": [
     "packages/common",
