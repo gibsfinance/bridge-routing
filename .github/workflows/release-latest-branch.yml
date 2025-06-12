@@ -8,8 +8,7 @@ on:
 
 jobs:
   build:
-    permissions:
-      contents: write
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -32,7 +31,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
+          name: 'frontend-dist-${{github.sha}}'
           overwrite: true
           path: packages/frontend/dist/
   release-pinata:
@@ -46,7 +45,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-artifacts
+          name: 'frontend-dist-${{github.sha}}'
           path: packages/frontend/dist/
       - name: Install Pinata CLI
         run: npm i -g pinata-upload-cli

@@ -6,28 +6,22 @@ on:
       - master
 
 jobs:
-  build:
-    permissions: write-all
+  publish-github:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: '22.12.x'
-      - name: Build project
-        run: npm run build
-        env:
-          PUBLIC_NODE_ENV: 'production'
-          PUBLIC_IMAGE_ROOT: 'https://gib.show'
-          PUBLIC_WALLET_CONNECT_ID: '1f8a963aa1809cada8560d560360107d'
-          NODE_ENV: 'production'
-  publish-github:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: 'frontend-dist-${{github.sha}}'
+          path: packages/frontend/dist/
       - name: Read version from package.json
         id: get_version
-        run: echo "VERSION=$(node -p 'require(`./package.json`).version')" >> $GITHUB_ENV
+        run: echo "VERSION=$(node -p 'require(`./packages/frontend/package.json`).version')" >> $GITHUB_ENV
       - name: Create tag
         env:
           VERSION: ${{ env.VERSION }}
