@@ -18,3 +18,5 @@ ROOT_PACKAGE_JSON.workspaces.forEach((workspace) => {
   fs.writeFileSync(packageJsonPath, updated);
   execSync(`git add ${packageJsonPath}`);
 });
+
+execSync('npm i', { cwd: ROOT });
