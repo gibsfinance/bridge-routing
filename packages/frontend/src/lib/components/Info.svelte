@@ -72,8 +72,8 @@
   </a>
   <a href={`#${page.value}?mode=simple`} target="_blank" class="mr-2" aria-label="embed page">
     <Button
-      class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500">
-      <Icon icon="fluent-mdl2:embed" />
+      class="border-2 rounded-full size-8 flex justify-center items-center text-white hover:text-slate-500">
+      <Icon icon="icomoon-free:embed" />
     </Button>
   </a>
   <!-- <Button class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500" onclick={() => {
