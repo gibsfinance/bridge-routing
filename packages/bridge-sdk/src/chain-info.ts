@@ -318,8 +318,8 @@ export const minBridgeAmountIn = async ({
   })
 }
 /** get the symbol of the native asset, unwrap it if it needs to be */
-export const nativeSymbol = (asset: { symbol: string } | null, unwrap = false) => {
-  return asset ? (unwrap ? asset.symbol.slice(1) : asset.symbol) : ''
+export const nativeSymbol = (asset: { address: Hex, symbol: string, chainId: number } | null, unwrap = false) => {
+  return asset ? (unwrap && asset.address === nativeAssetOut[toChain(asset.chainId)] ? asset.symbol.slice(1) : asset.symbol) : ''
 }
 
 export type InputLoadFeeFor = {
