@@ -6,7 +6,7 @@ const PACKAGE_JSON = 'package.json';
 
 const ROOT = path.join(__dirname, '..');
 const ROOT_PACKAGE_JSON = require(path.join(ROOT, PACKAGE_JSON));
-const matcher = /"version":\s*"\d\.\d\.\d"/g;
+const matcher = /"version":\s*"\d+\.\d+\.\d+"/g;
 const replacement = `"version": "${ROOT_PACKAGE_JSON.version}"`;
 console.log(`updating version to ${ROOT_PACKAGE_JSON.version}`);
 ROOT_PACKAGE_JSON.workspaces.forEach((workspace) => {
