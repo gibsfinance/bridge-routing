@@ -1,6 +1,6 @@
 {
   "name": "@gibsfinance/frontend",
-  "version": "1.6.18",
+  "version": "1.6.19",
   "private": true,
   "workspaces": [
     "packages/common",
