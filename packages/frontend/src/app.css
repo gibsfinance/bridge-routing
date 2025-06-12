@@ -6,7 +6,7 @@
 
 @plugin '@tailwindcss/forms';
 
-@source '../node_modules/@skeletonlabs/skeleton-svelte/dist';
+@source '@skeletonlabs/skeleton-svelte/dist';
 
 @theme {
   --font-inter: Inter var, Inter, sans-serif;
@@ -36,7 +36,8 @@
 button:disabled {
   @apply opacity-75;
 }
-html, :root {
+html,
+:root {
   @apply h-screen;
 }
 body {
@@ -46,9 +47,6 @@ body {
 .MuiBox-root {
   @apply max-w-none! shadow-lg;
 }
-/* .link {
-  color: inherit;
-} */
 .MuiScopedCssBaseline-root {
   @apply !max-h-none;
 }

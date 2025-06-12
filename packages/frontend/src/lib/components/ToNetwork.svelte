@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
   import type { Token } from '@gibsfinance/bridge-sdk/types'
+  import { isNative } from '@gibsfinance/bridge-sdk/config'
 
   import * as input from '../stores/input.svelte'
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
@@ -26,8 +28,8 @@
   const feeIsEstimated = $derived(
     input.shouldDeliver.value &&
       !!asset &&
-      input.isNative(asset, input.bridgeKey.value) &&
-      storageBridgeSettings.value?.feeType === input.FeeType.GAS_TIP,
+      isNative(asset, input.bridgeKey.value) &&
+      storageBridgeSettings.value?.feeType === FeeType.GAS_TIP,
   )
   const amountAfterBridgeFee = $derived(bridgeSettings.amountAfterBridgeFee)
   const decimals = $derived(asset?.decimals ?? 18)

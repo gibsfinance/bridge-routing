@@ -1,8 +1,8 @@
 import type { Hex } from 'viem'
 import type { BridgeKey } from '@gibsfinance/bridge-sdk/types'
+import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
 
 import { LocalProxy, LocalProxyProp } from './localstorage.svelte'
-import { FeeType } from './input.svelte'
 
 export type DefaultSettings = {
   onboardStage: number
@@ -11,19 +11,6 @@ const globalDefaultSettings: DefaultSettings = {
   onboardStage: 1,
 }
 export const storage = new LocalProxy('gibs.finance.settings', globalDefaultSettings)
-
-// export type PulsexTokens = {
-//   bridgeTokenIn: Hex
-//   bridgeTokenOut: Hex
-//   pulsexTokenIn: Hex
-//   pulsexTokenOut: Hex
-// }
-
-// export const defaultOnboardTokens = new LocalProxyProp(
-//   storage,
-//   ['defaultOnboardTokens'],
-//   null as PulsexTokens | null,
-// )
 
 export type BridgeTx = {
   hash?: Hex | null

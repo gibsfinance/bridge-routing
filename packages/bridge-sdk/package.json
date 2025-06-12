@@ -9,7 +9,9 @@
     "./config": "./src/config.ts",
     "./abis": "./src/abis.ts",
     "./image-links": "./src/image-links.ts",
-    "./chains": "./src/chains.ts"
+    "./chains": "./src/chains.ts",
+    "./chain-info": "./src/chain-info.ts",
+    "./fee-type": "./src/fee-type.ts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,6 +21,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@gibsfinance/common": "1.0.0",
     "lodash": "^4.17.21",
     "viem": "^2.31.0"
   }

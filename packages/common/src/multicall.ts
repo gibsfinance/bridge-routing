@@ -61,7 +61,7 @@ export const multicallRead = async <T>({
         }),
     ) as T
   } catch (err) {
-    console.log(client.chain?.id, target, calls, reads)
+    console.error(client.chain?.id, target, calls, reads)
     throw err
   }
 }

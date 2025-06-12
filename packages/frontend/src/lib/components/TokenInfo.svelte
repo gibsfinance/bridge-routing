@@ -45,7 +45,7 @@
     'text-gray-400 font-mono text-xs leading-4 transition-all transition-duration-100 -bottom-0.5',
     reversed ? 'right-0' : 'left-0',
   ])
-  const src = $derived(token.logoURI || assetSources(token, [], bridgableTokens.value))
+  const src = $derived(token.logoURI || assetSources(token, bridgableTokens.value))
 </script>
 
 <div class={wrapperClasses}>

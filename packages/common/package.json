@@ -9,7 +9,8 @@
     "./cache": "./src/cache.ts",
     "./serialize": "./src/serialize.ts",
     "./types": "./src/types.ts",
-    "./multicall": "./src/multicall.ts"
+    "./multicall": "./src/multicall.ts",
+    "./client": "./src/client.ts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

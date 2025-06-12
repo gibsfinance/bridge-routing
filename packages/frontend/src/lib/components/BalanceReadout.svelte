@@ -49,7 +49,7 @@
     }
   })
   const block = $derived(blocks.get(chainId)?.get('latest')?.block ?? null)
-  $effect.pre(() => {
+  $effect(() => {
     return tokenBalance.fetch({
       chainId,
       token: token,
@@ -62,8 +62,7 @@
     if (!tokenBalance) return
     onbalanceupdate?.(tokenBalance.value)
   })
-  // const balance = $derived(tokenBalance?.value ?? 0n)
-  const balance = $derived(balances.get(tokenBalance.key)?.value ?? null)
+  const balance = $derived(tokenBalance?.value ?? null)
   const disableMax = $derived(balance === 0n)
   const loadingKey = $derived(
     token && tokenBalanceLoadingKey(token?.chainId ?? 0, token.address, (account as Hex) ?? '0x'),

@@ -10,7 +10,8 @@
   import OnboardForeignBridge from './OnboardForeignBridge.svelte'
 
   const bridgedToken = $derived(bridgeSettings.assetOut as Token | null)
-  $effect.pre(() => {
+  $effect(() => {
+    // while on the onboarding page, we only care about eth -> pls
     bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
   })
   const wplsTokenPrice = new SvelteMap<string, bigint | null>()

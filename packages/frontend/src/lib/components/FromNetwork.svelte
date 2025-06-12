@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Chains, toChain, pathways, validBridgeKeys } from '@gibsfinance/bridge-sdk/config'
+  import { Chains, toChain, pathways, validBridgeKeys, isNative } from '@gibsfinance/bridge-sdk/config'
   import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
   import type { BridgeKey, Token } from '@gibsfinance/bridge-sdk/types'
   import _ from 'lodash'
@@ -22,7 +22,7 @@
 
   const chooseTokenSubmit = async (token: Token) => {
     const bridgeKey = input.bridgeKey.value
-    const native = input.isNative(token, bridgeKey)
+    const native = isNative(token, bridgeKey)
     input.unwrap.value = native
     input.amountIn.value = null
     input.resetFeeInputs()
@@ -42,9 +42,10 @@
     ] as BridgeKey
     nav.bridge.shallow(options, token.address)
   }
-  const keepBalance = (bal: bigint | null) => {
-    fromTokenBalance.value = bal
-  }
+  // const keepBalance = (bal: bigint | null) => {
+  //   console.log('keepBalance', bal)
+  //   fromTokenBalance.value = bal
+  // }
   const handleInput = ({ int }: InputValue) => {
     if (int !== null) {
       input.amountIn.value = int
@@ -80,7 +81,7 @@
   label="Input"
   focused
   token={bridgeSettings.assetIn.value}
-  onbalanceupdate={keepBalance}
+  onbalanceupdate={() => {}}
   value={bridgeSettings.amountToBridge ?? 0n}
   onmax={handleMaxBalance}
   oninput={handleInput}

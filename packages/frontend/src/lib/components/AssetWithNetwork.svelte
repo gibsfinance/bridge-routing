@@ -27,7 +27,7 @@
   }: Props = $props()
   const chainId = $derived(asset?.chainId ? Number(asset.chainId) : 0)
   const chain = $derived(chainsMetadata[toChain(chainId)])
-  const src = $derived(asset?.logoURI || assetSources(asset, [], bridgableTokens.value))
+  const src = $derived(asset?.logoURI || assetSources(asset, bridgableTokens.value))
   const tokenClasses = $derived(`overflow-hidden absolute`)
   const classes = $derived([
     'flex basis-auto relative text-surface-contrast-50',

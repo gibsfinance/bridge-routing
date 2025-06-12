@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
+
   import Warning from '../Warning.svelte'
   import { bridgeSettings } from '../../stores/bridge-settings.svelte'
-  import { bridgeKey, FeeType } from '../../stores/input.svelte'
+  import { bridgeKey } from '../../stores/input.svelte'
+
   const estimatedNativeNetworkCostWithBuffer = $derived(
     (bridgeSettings.estimatedNativeNetworkCost ?? 0n) * 2n,
   )

@@ -217,12 +217,7 @@
   $effect(() => {
     const pathway = bridgeKey.pathway
     if (!pathway) return
-    const result = loadFeeFor({
-      value: bridgeKey.value,
-      pathway,
-      fromChain: Number(bridgeKey.fromChain),
-      toChain: Number(bridgeKey.toChain),
-    })
+    const result = loadFeeFor(bridgeKey)
     return result.cleanup
   })
   $effect(() => {

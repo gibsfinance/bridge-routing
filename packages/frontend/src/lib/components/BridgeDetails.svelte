@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
   import { innerWidth } from 'svelte/reactivity/window'
   import type { Token } from '@gibsfinance/bridge-sdk/types'
   import { Chains } from '@gibsfinance/bridge-sdk/config'
+  import { nativeSymbol } from '@gibsfinance/bridge-sdk/chain-info'
 
   import * as input from '../stores/input.svelte'
   import { humanReadableNumber } from '../stores/utils'
@@ -30,24 +32,24 @@
 
   const deliveryFeeLocked = $derived(storageBridgeSettings.value?.deliveryFeeLocked ?? false)
   const costLimitLocked = $derived(storageBridgeSettings.value?.costLimitLocked ?? false)
-  const feeType = $derived(storageBridgeSettings.value?.feeType ?? input.FeeType.PERCENT)
+  const feeType = $derived(storageBridgeSettings.value?.feeType ?? FeeType.PERCENT)
   storageBridgeSettings.extend({
     deliveryFeeLocked: false,
     costLimitLocked: false,
   })
   const feeTypeOptions = [
     {
-      key: input.FeeType.FIXED,
+      key: FeeType.FIXED,
       text: 'Fixed',
       tooltip: 'Name a fixed fee to tip',
     },
     {
-      key: input.FeeType.GAS_TIP,
+      key: FeeType.GAS_TIP,
       text: '⛽+%',
       tooltip: 'Allow the tip to float with the destination chain\'s base fee',
     },
     {
-      key: input.FeeType.PERCENT,
+      key: FeeType.PERCENT,
       text: '%',
       tooltip: 'Name a fee in percentage terms to tip',
     },
@@ -98,21 +100,21 @@
               active={feeType}
               options={feeTypeOptions}
               onchange={(e) => {
-                const feeType = e.key as input.FeeType
+                const feeType = e.key as FeeType
                 storageBridgeSettings.extend({
                   feeType,
                   deliveryFeeLocked: false,
                   costLimitLocked: false,
                 })
-                if (e.key === input.FeeType.PERCENT) {
+                if (e.key === FeeType.PERCENT) {
                   input.percentFee.value = bridgeSettings.reasonablePercentFee
-                } else if (feeType === input.FeeType.GAS_TIP) {
+                } else if (feeType === FeeType.GAS_TIP) {
                   input.gasTipFee.value = bridgeSettings.reasonablePercentOnTopOfGasFee
-                } else if (feeType === input.FeeType.FIXED) {
+                } else if (feeType === FeeType.FIXED) {
                   input.fixedFee.value = bridgeSettings.reasonableFixedFee
                 }
               }} />
-            {#if feeType === input.FeeType.GAS_TIP || feeType === input.FeeType.PERCENT}
+            {#if feeType === FeeType.GAS_TIP || feeType === FeeType.PERCENT}
               <Button
                 class="flex px-1 leading-6"
                 onclick={() => {
@@ -129,9 +131,9 @@
               triggerClasses="grow flex flex-row items-center justify-end text-sm leading-7"
               placement="top">
               {#snippet trigger()}
-                {#if feeType === input.FeeType.FIXED}
+                {#if feeType === FeeType.FIXED}
                   <!-- <span class="flex items-end self-end">0.0%</span> -->
-                {:else if feeType === input.FeeType.GAS_TIP}
+                {:else if feeType === FeeType.GAS_TIP}
                   <span class="grow flex flex-row w-full items-center justify-end">⛽&nbsp;+</span>
                   <span
                     class="flex flex-row grow leading-7 h-7 min-w-8 text-inherit text-sm items-center justify-end w-fit max-w-24"
@@ -155,7 +157,7 @@
                         }
                       }} /></span>
                   <span class="flex-none flex flex-row items-center leading-8">%</span>
-                {:else if feeType === input.FeeType.PERCENT}
+                {:else if feeType === FeeType.PERCENT}
                   <NumericInput
                     sizeClass="flex flex-row w-auto grow leading-7 h-7 text-inherit text-sm"
                     fontSizeInput={null}
@@ -168,7 +170,7 @@
                       })
                       const max = oneEther / 10n
                       if (e !== null) {
-                        if (feeType === input.FeeType.PERCENT) {
+                        if (feeType === FeeType.PERCENT) {
                           if (e > max) {
                             e = max
                           }
@@ -181,9 +183,9 @@
                 {/if}
               {/snippet}
               {#snippet content()}
-                {feeType === input.FeeType.FIXED
+                {feeType === FeeType.FIXED
                   ? 'Fee uses fixed value defined in cost limit'
-                  : feeType === input.FeeType.GAS_TIP
+                  : feeType === FeeType.GAS_TIP
                     ? `Percentage of gas used * ${input.bridgeKey.destinationSupportsEIP1559 ? 'base fee' : 'gas price'} to allocate to the router for performing this action`
                     : `The percentage of bridged tokens to use as delivery fee after the bridge fee`}
               {/snippet}
@@ -208,8 +210,8 @@
                   costLimitLocked: !costLimitLocked,
                 })
               }}>
-              <span>Cost&nbsp;{#if feeType === input.FeeType.GAS_TIP}Limit&nbsp;{/if}</span>
-              {#if feeType === input.FeeType.FIXED || feeType === input.FeeType.GAS_TIP}
+              <span>Cost&nbsp;{#if feeType === FeeType.GAS_TIP}Limit&nbsp;{/if}</span>
+              {#if feeType === FeeType.FIXED || feeType === FeeType.GAS_TIP}
               <LockIcon locked={costLimitLocked} />
               {/if}
             </Button>
@@ -221,7 +223,7 @@
             triggerClasses="grow justify-end w-full"
             placement="top">
             {#snippet content()}
-              {feeType === input.FeeType.FIXED || feeType === input.FeeType.PERCENT
+              {feeType === FeeType.FIXED || feeType === FeeType.PERCENT
                 ? 'The fixed fee to tip to an address to perform the work'
                 : 'The max you are willing to tip to the router address'}
             {/snippet}
@@ -229,13 +231,13 @@
               <span
                 class="flex items-center text-sm leading-7 grow w-full justify-end"
                 class:opacity-75={!loading.isResolved('gas')}>
-                {#if feeType === input.FeeType.PERCENT}
+                {#if feeType === FeeType.PERCENT}
                   <span
                     >{humanReadableNumber(costFromInputs ?? 0n, {
                       decimals: asset?.decimals ?? 18,
                     })}
                     {asset?.symbol}</span>
-                {:else if feeType === input.FeeType.GAS_TIP}
+                {:else if feeType === FeeType.GAS_TIP}
                   <!-- put gas tip estimates here -->
                   <NumericInput
                     value={input.limit.value}
@@ -252,7 +254,7 @@
                         return int
                       }
                     }} />
-                {:else if feeType === input.FeeType.FIXED}
+                {:else if feeType === FeeType.FIXED}
                   <NumericInput
                     value={input.fixedFee.value}
                     {decimals}
@@ -274,7 +276,7 @@
           </Tooltip>
         {:else}
           <span class="flex text-sm leading-8">
-            <span>0.0&nbsp;{utils.nativeSymbol(asset, unwrap)}</span>
+            <span>0.0&nbsp;{nativeSymbol(asset, unwrap)}</span>
           </span>
         {/if}
       </div>

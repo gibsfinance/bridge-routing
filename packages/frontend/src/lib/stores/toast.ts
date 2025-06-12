@@ -13,23 +13,6 @@ export type Message = {
   timeout?: number
 }
 
-// export class Toaster {
-//   private messages = $state<Message[]>([])
-
-//   addMessage(msg: Message) {
-//     this.messages = [...this.messages, msg]
-//     setTimeout(() => {
-//       this.removeMessage(msg)
-//     }, msg.timeout || 20_000)
-//   }
-
-//   removeMessage(msg: Message) {
-//     this.messages = this.messages.filter((m) => m !== msg)
-//   }
-// }
-
-// export const toaster = new Toaster()
-
 export const uri = (chainId: Chains, type: 'tx' | 'address' = 'tx', suffix: string) => {
   const chain = chainsMetadata[chainId] ?? evmChainsById.get(Number(chainId))
   const url = chain.blockExplorers?.default?.url

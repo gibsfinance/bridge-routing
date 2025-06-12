@@ -1,7 +1,7 @@
-import type { Hex } from "viem";
+import { zeroAddress, type Hex } from "viem";
 import _ from 'lodash'
 import * as imageLinks from '@gibsfinance/bridge-sdk/image-links'
-import type { BridgeKey, Token } from "./types.js";
+import type { BridgeKey, Token, TokenOut } from "./types.js";
 
 /**
  * Add here your chain id as hex, be sure to add your chain in the chainsMetadata object too
@@ -307,6 +307,31 @@ export const validBridgeKeys = (isProd: boolean) => [
   ...(isProd ? [] : testnetBridgeKeys),
 ]
 
+export const inferBridgeKey = ({
+  currentKey,
+  provider,
+  fromChain,
+  toChain,
+}: {
+  currentKey: BridgeKey
+  provider: Provider
+  fromChain?: Chains
+  toChain?: Chains
+}) => {
+  const [, fromChainKey, toChainKey] = currentKey
+  const from = fromChain ?? fromChainKey
+  const to = toChain ?? toChainKey
+  const currentFromChainIsValid = !!_.get(pathways, [provider, from])
+  const nextFromChain = currentFromChainIsValid
+    ? from
+    : (Object.keys(pathways[provider])[0] as Chains)
+  const currentToChainIsValid = !!_.get(pathways, [provider, nextFromChain, to])
+  const nextToChain = currentToChainIsValid
+    ? to
+    : (Object.keys(pathways[provider]![nextFromChain]!)[0] as Chains)
+  return [provider, nextFromChain, nextToChain] as BridgeKey
+}
+
 export const pathway = (bridgeKey: BridgeKey | null, isProd: boolean) => {
   if (!bridgeKey) return
   return _.get(pathways, bridgeKey) || (!isProd ? _.get(testnetPathways, bridgeKey) : undefined)
@@ -317,3 +342,28 @@ export const defaultAssetIn = ($bridgeKey: BridgeKey | null, isProd: boolean) =>
   const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token | undefined
   return defaultAssetIn
 }
+
+export const isNative = (asset: Token | TokenOut | null, bridgeKey: BridgeKey | null) => {
+  if (!bridgeKey || !asset) {
+    return false
+  }
+  return (
+    (asset.address === zeroAddress ||
+      nativeAssetOut[toChain(asset.chainId)]?.toLowerCase() === asset.address?.toLowerCase()) &&
+    !asset.name.includes(' from Pulsechain')
+  )
+}
+
+export const isUnwrappable = (
+  asset: Pick<Token, 'extensions'> | null,
+  bridgeKey: BridgeKey | null,
+) => {
+  if (!bridgeKey || !asset) {
+    return false
+  }
+  const [, , toChain] = bridgeKey
+  return nativeAssetOut[toChain] === asset.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
+}
+
+export const canChangeUnwrap = (bridgeKey: BridgeKey, assetIn: Token | null) =>
+  !!assetIn && isUnwrappable(assetIn, bridgeKey)

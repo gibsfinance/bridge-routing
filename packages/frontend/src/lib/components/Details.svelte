@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
   import { formatEther } from 'viem'
   import type { TokenMetadata } from '@gibsfinance/bridge-sdk/types'
   import { Chains } from '@gibsfinance/bridge-sdk/config'
+  import { nativeSymbol } from '@gibsfinance/bridge-sdk/chain-info'
 
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
   import * as utils from '../utils.svelte'
@@ -70,7 +72,7 @@
                     shouldDeliver.value ? (bridgeSettings.estimatedTokenNetworkCost ?? 0n) : 0n,
                     { decimals: asset.decimals },
                   )}{/snippet}
-              </Loading>&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
+              </Loading>&nbsp;{nativeSymbol(asset, bridgeSettings.unwrap)}
             </span>
           {/snippet}
           {#snippet content()}
@@ -83,14 +85,14 @@
     {#if bridgeKey.fromChain === Chains.PLS || bridgeKey.fromChain === Chains.V4PLS}
       <div class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
         <span class="w-32">
-          {#if feeType === input.FeeType.GAS_TIP}Estimated
+          {#if feeType === FeeType.GAS_TIP}Estimated
           {/if}Cost
         </span>
         <span class="flex flex-row justify-between grow">
           <span>
-            {#if feeType === input.FeeType.GAS_TIP}
+            {#if feeType === FeeType.GAS_TIP}
               ⛽&nbsp;+&nbsp;{input.gasTipFee.value}%
-            {:else if feeType === input.FeeType.PERCENT}
+            {:else if feeType === FeeType.PERCENT}
               -{input.percentFee.value}%
             {/if}
           </span>
@@ -98,7 +100,7 @@
             {#snippet trigger()}
               <span
                 class="flex flex-row items-end self-end tooltip tooltip-top tooltip-left-toward-center relative">
-                {#if feeType === input.FeeType.PERCENT}
+                {#if feeType === FeeType.PERCENT}
                   {humanReadableNumber(bridgeSettings.estimatedCost ?? 0n, {
                     decimals: asset.decimals,
                   })}
@@ -106,7 +108,7 @@
                     >{#snippet contents()}{humanReadableNumber(bridgeSettings.estimatedCost ?? 0n, {
                         decimals: asset.decimals,
                       })}{/snippet}</Loading
-                  >{/if}&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
+                  >{/if}&nbsp;{nativeSymbol(asset, bridgeSettings.unwrap)}
               </span>
             {/snippet}
             {#snippet content()}
@@ -118,7 +120,7 @@
         <UndercompensatedWarning />
       </div>
     {/if}
-    {#if feeType !== input.FeeType.GAS_TIP}
+    {#if feeType !== FeeType.GAS_TIP}
       <div class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
         <span class="w-32">Delivered</span>
         <span class="flex flex-row items-end self-end">
@@ -127,7 +129,7 @@
                 minimumDelivered < 0n ? 0n : minimumDelivered,
                 { decimals: asset.decimals },
               )}{/snippet}
-          </Loading>&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
+          </Loading>&nbsp;{nativeSymbol(asset, bridgeSettings.unwrap)}
         </span>
         <Warning
           show={minimumDelivered < (bridgeSettings.amountToBridge / 10n) * 9n}
@@ -141,7 +143,7 @@
             >{#snippet contents()}{humanReadableNumber(estimated < 0n ? 0n : estimated, {
                 decimals: asset.decimals,
               })}{/snippet}</Loading
-          >&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
+          >&nbsp;{nativeSymbol(asset, bridgeSettings.unwrap)}
         </span>
       </div>
       <div class="bg-slate-50 mt-[1px] py-2 px-3 justify-between flex flex-row relative hover:z-10">
@@ -154,7 +156,7 @@
                   minimumDelivered < 0n ? 0n : minimumDelivered,
                   { decimals: asset.decimals },
                 )}{/snippet}
-            </Loading>&nbsp;{utils.nativeSymbol(asset, bridgeSettings.unwrap)}
+            </Loading>&nbsp;{nativeSymbol(asset, bridgeSettings.unwrap)}
           </span>
         </span>
         <Warning
@@ -169,8 +171,8 @@
         <span class="flex flex-row items-end self-end font-mono text-right">
           (in-{formatEther(
             fee * 100n,
-          )}%)-{#if feeType === input.FeeType.FIXED}fixed=out{:else if feeType === input.FeeType.GAS_TIP}min(limit,base*{input
-              .gasTipFee.value}%)=out{:else if feeType === input.FeeType.PERCENT}{input.percentFee
+          )}%)-{#if feeType === FeeType.FIXED}fixed=out{:else if feeType === FeeType.GAS_TIP}min(limit,base*{input
+              .gasTipFee.value}%)=out{:else if feeType === FeeType.PERCENT}{input.percentFee
               .value}%=out
           {/if}
         </span>

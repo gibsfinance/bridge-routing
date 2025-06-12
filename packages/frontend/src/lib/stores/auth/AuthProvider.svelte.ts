@@ -58,7 +58,7 @@ export const appkitNetworkList = [
   networks.berachain,
 ] as unknown as [CaipNetwork, ...CaipNetwork[]]
 
-(networks.bsc as any).name = 'BSC'
+;(networks.bsc as unknown as { name: string }).name = 'BSC'
 
 export const appkitNetworkIds = new Set(appkitNetworkList.map((n) => n.id))
 export const appkitNetworkById = new Map<string | number, CaipNetwork>(
@@ -107,16 +107,9 @@ export const modal = createAppKit({
   },
 })
 
-// export const universalProvider = await UniversalProvider.init({
-//   projectId,
-//   metadata,
-// })
 export const connect = async () => {
   await modal.open()
 }
-
-// type EthereumProviderType = Awaited<ReturnType<typeof UniversalProvider.init>>
-// export const provider = new NullableProxyStore<EthereumProviderType>()
 
 export const disconnect = async () => {
   accountState.value = null
@@ -126,31 +119,11 @@ export const disconnect = async () => {
 export const switchNetwork = async (chain: CaipNetwork | null | undefined) => {
   if (chain) {
     try {
-      // const connectors = getConnectors(wagmiAdapter.wagmiConfig)
-      // if (!connectors.length) {
-      //   console.log('no connectors')
-      //   return
-      // }
-      // await provider.value?.connect()
-      // await provider.value?.session?.
-      // await provider.value?.switchChain({
-      //   caipNetwork: chain as CaipNetwork,
-      // })
-      // console.log('switching to', chain)
       await modal.switchNetwork(chain)
-      // await modal.open({
-      //   view: 'Networks',
-      //   data: {
-      //     caipNetwork: chain as CaipNetwork,
-      //   },
-      // })
     } catch (err) {
       console.error('err at switchNetwork', err)
       await modal.open({
         view: 'Networks',
-        // data: {
-        //   caipNetwork: chain as CaipNetwork,
-        // },
       })
     }
   }
@@ -168,13 +141,6 @@ class AccountState {
   >()
   set value(account: UseAppKitAccountReturn | null) {
     this.val = account
-    // console.log('account', account)
-    // const caipAddress = account?.caipAddress
-    // if (!caipAddress) return
-    // const chainId = +caipAddress.split(':')[1] || (null as number | null)
-    // console.log('chainId', caipAddress, chainId)
-    // this.chainId = chainId
-    // this.setupWatchBalance()
   }
   get balance() {
     const caipAddress = this.val?.caipAddress
@@ -194,15 +160,6 @@ class AccountState {
   get prefix() {
     return this.val?.caipAddress?.split(':')[0] || null
   }
-  // get chainIdHex() {
-  //   const chainId = this.chainId
-  //   if (chainId && Number.isNaN(Number(chainId))) {
-  //     // console.log('chainId is not a number', chainId)
-  //     return
-  //   }
-  //   const cId = Number(chainId)
-  //   return cId ? `0x${cId.toString(16)}` : null
-  // }
   get value() {
     return this.val
   }
@@ -222,14 +179,7 @@ class AccountState {
 }
 export const accountState = new AccountState()
 
-// modal.subscribeProviders((providers) => {
-//   console.log(providers)
-//   if (!providers.eip155) return
-//   provider.value = providers.eip155 as EthereumProviderType
-// })
-
 modal.subscribeEvents((event) => {
-  // console.log('event', event)
   const { event: e } = event.data
   if (e === 'MODAL_OPEN') {
     accountState.modalOpen = true
@@ -243,7 +193,6 @@ modal.subscribeWalletInfo((walletInfo) => {
 })
 
 modal.subscribeAccount((account) => {
-  // console.log('account', account)
   if (account.status === 'connected') {
     accountState.value = account ?? null
   } else if (account.status === 'disconnected') {
