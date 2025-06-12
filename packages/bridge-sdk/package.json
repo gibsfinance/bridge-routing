@@ -1,6 +1,6 @@
 {
   "name": "@gibsfinance/bridge-sdk",
-  "version": "1.6.9",
+  "version": "1.6.11",
   "main": "index.js",
   "type": "module",
   "exports": {
