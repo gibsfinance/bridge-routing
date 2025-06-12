@@ -1,5 +1,5 @@
 import { type Percent, type Token, validateAndParseAddress } from '@pulsex/sdk'
-import { type Address, encodeFunctionData } from 'viem'
+import { type Address, encodeFunctionData, type Hex } from 'viem'
 import { peripheryPaymentsWithFeeABI } from './abis/IPeripheryPaymentsWithFee'
 
 export interface FeeOptions {
@@ -31,11 +31,11 @@ export abstract class Payments {
     recipient: Address,
     feeOptions?: FeeOptions,
   ): `0x${string}` {
-    recipient = validateAndParseAddress(recipient)
+    recipient = validateAndParseAddress(recipient) as Hex
 
     if (feeOptions) {
       const feeBips = this.encodeFeeBips(feeOptions.fee)
-      const feeRecipient = validateAndParseAddress(feeOptions.recipient)
+      const feeRecipient = validateAndParseAddress(feeOptions.recipient) as Hex
 
       return encodeFunctionData({
         abi: Payments.ABI,
@@ -57,11 +57,11 @@ export abstract class Payments {
     recipient: Address,
     feeOptions?: FeeOptions,
   ): `0x${string}` {
-    recipient = validateAndParseAddress(recipient)
+    recipient = validateAndParseAddress(recipient) as Hex
 
     if (feeOptions) {
       const feeBips = this.encodeFeeBips(feeOptions.fee)
-      const feeRecipient = validateAndParseAddress(feeOptions.recipient)
+      const feeRecipient = validateAndParseAddress(feeOptions.recipient) as Hex
 
       return encodeFunctionData({
         abi: Payments.ABI,

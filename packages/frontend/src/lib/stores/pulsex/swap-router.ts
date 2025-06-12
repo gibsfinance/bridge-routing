@@ -93,7 +93,7 @@ export abstract class SwapRouter {
       ? ADDRESS_THIS
       : typeof options.recipient === 'undefined'
         ? MSG_SENDER
-        : validateAndParseAddress(options.recipient)
+        : validateAndParseAddress(options.recipient) as Hex
 
     if (trade.tradeType === TradeType.EXACT_INPUT) {
       const exactInputParams = [
@@ -142,7 +142,7 @@ export abstract class SwapRouter {
       ? ADDRESS_THIS
       : typeof options.recipient === 'undefined'
         ? MSG_SENDER
-        : validateAndParseAddress(options.recipient)
+        : validateAndParseAddress(options.recipient) as Hex
 
     if (trade.tradeType === TradeType.EXACT_INPUT) {
       const exactInputParams = [
@@ -196,7 +196,7 @@ export abstract class SwapRouter {
       ? ADDRESS_THIS
       : typeof options.recipient === 'undefined'
         ? MSG_SENDER
-        : validateAndParseAddress(options.recipient)
+        : validateAndParseAddress(options.recipient) as Hex
 
     if (trade.tradeType === TradeType.EXACT_INPUT) {
       const exactInputParams = [
@@ -348,7 +348,7 @@ export abstract class SwapRouter {
           // By default router holds funds until the last swap, then it is sent to the recipient
           // special case exists where we are unwrapping WETH output, in which case `routerMustCustody` is set to true
           // and router still holds the funds. That logic bundled into how the value of `recipient` is calculated
-          const recipientAddress = lastSectionInRoute ? recipient : ADDRESS_THIS
+          const recipientAddress = lastSectionInRoute ? recipient as Hex : ADDRESS_THIS
           const inAmount = i === 0 ? amountIn : 0n
           const outAmount = !lastSectionInRoute ? 0n : amountOut
           if (mixedRouteIsAllV1(newRoute)) {

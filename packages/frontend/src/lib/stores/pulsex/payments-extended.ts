@@ -23,7 +23,7 @@ export abstract class PaymentsExtended {
     // eslint-disable-next-line no-extra-boolean-cast
     if (!!feeOptions) {
       const feeBips = encodeFeeBips(feeOptions.fee)
-      const feeRecipient = validateAndParseAddress(feeOptions.recipient)
+      const feeRecipient = validateAndParseAddress(feeOptions.recipient) as Hex
 
       return encodeFunctionData({
         abi: PaymentsExtended.ABI,
@@ -53,7 +53,7 @@ export abstract class PaymentsExtended {
     // eslint-disable-next-line no-extra-boolean-cast
     if (!!feeOptions) {
       const feeBips = encodeFeeBips(feeOptions.fee)
-      const feeRecipient = validateAndParseAddress(feeOptions.recipient)
+      const feeRecipient = validateAndParseAddress(feeOptions.recipient) as Hex
 
       return encodeFunctionData({
         abi: PaymentsExtended.ABI,
