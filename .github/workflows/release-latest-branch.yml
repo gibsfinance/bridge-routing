@@ -7,17 +7,17 @@ on:
       - staging
 
 jobs:
-  release:
+  build:
     permissions:
       contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: '23.6.x'
+          node-version: '22.12.x'
       - name: Install Pinata CLI
         run: npm i -g pinata-upload-cli
       - name: Install dependencies
@@ -31,6 +31,14 @@ jobs:
           NODE_ENV: 'production'
       - name: Copy info
         run: cp packages/frontend/package.json packages/frontend/dist/version.json
+  release-pinata:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '22.12.x'
       - name: Upload build to Pinata
         env:
           NODE_ENV: 'production'

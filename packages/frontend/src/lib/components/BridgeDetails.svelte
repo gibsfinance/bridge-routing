@@ -191,7 +191,7 @@
               {/snippet}
             </Tooltip>
           {:else}
-            <span class="flex items-end self-end leading-8">0.0%</span>
+            <span class="flex items-end self-end leading-7">0.0%</span>
           {/if}
         </div>
         <UndercompensatedWarning />

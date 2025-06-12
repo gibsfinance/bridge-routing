@@ -6,16 +6,14 @@ on:
       - master
 
 jobs:
-  tag:
+  build:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: '23.6.x'
+          node-version: '22.12.x'
       - name: Build project
         run: npm run build
         env:
@@ -23,6 +21,10 @@ jobs:
           PUBLIC_IMAGE_ROOT: 'https://gib.show'
           PUBLIC_WALLET_CONNECT_ID: '1f8a963aa1809cada8560d560360107d'
           NODE_ENV: 'production'
+  publish-github:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Read version from package.json
         id: get_version
         run: echo "VERSION=$(node -p 'require(`./package.json`).version')" >> $GITHUB_ENV
@@ -34,3 +36,15 @@ jobs:
           git config user.email "action@github.com"
           git tag -a v$VERSION -m "Release v$VERSION"
           git push origin v$VERSION
+
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '22.12.x'
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
