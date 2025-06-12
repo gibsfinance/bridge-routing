@@ -19,4 +19,4 @@ ROOT_PACKAGE_JSON.workspaces.forEach((workspace) => {
   execSync(`git add ${packageJsonPath}`, { cwd: ROOT });
 });
 
-execSync('npm i --package-lock-only', { cwd: ROOT });
+execSync('npm i --package-lock-only --legacy-peer-deps', { cwd: ROOT });
