@@ -29,6 +29,12 @@ jobs:
           NODE_ENV: 'production'
       - name: Copy info
         run: cp packages/frontend/package.json packages/frontend/dist/version.json
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: packages/frontend/dist/
+          retention-days: 1
   release-pinata:
     needs: build
     runs-on: ubuntu-latest
@@ -37,6 +43,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '22.12.x'
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: packages/frontend/dist/
       - name: Install Pinata CLI
         run: npm i -g pinata-upload-cli
       - name: Upload build to Pinata
