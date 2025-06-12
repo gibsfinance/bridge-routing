@@ -9,7 +9,7 @@
     "packages/frontend"
   ],
   "scripts": {
-    "preversion": "node scripts/sync-versions.js",
+    "version": "node scripts/sync-versions.js",
     "ui:dev": "npm run dev --workspace=packages/frontend",
     "ui:preview": "npm run preview --workspace=packages/frontend",
     "ui:build": "npm run build --workspace=packages/frontend",
