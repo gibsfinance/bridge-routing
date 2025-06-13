@@ -115,4 +115,6 @@ jobs:
         with:
           name: 'bridge-sdk-dist-${{github.sha}}'
           path: packages/bridge-sdk/dist/
-      - run: export NPM_AUTH_TOKEN=${{ secrets.NPM_TOKEN }} && npm run packages:publish
+      - run: npm run packages:publish
+        env:
+          NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'

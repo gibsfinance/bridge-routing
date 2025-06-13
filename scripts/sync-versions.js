@@ -18,5 +18,7 @@ ROOT_PACKAGE_JSON.workspaces.forEach((workspace) => {
   fs.writeFileSync(packageJsonPath, updated);
   execSync(`git add ${packageJsonPath}`, { cwd: ROOT });
 });
-
-execSync('yarn', { cwd: ROOT });
+// update versions all of the packages in yarn.lock
+console.log('updating versions in yarn.lock');
+execSync('yarn', { cwd: ROOT, log: false });
+console.log('done');
