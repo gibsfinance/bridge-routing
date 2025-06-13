@@ -1,11 +1,16 @@
 import * as input from './input.svelte'
-import { multicallRead } from '../utils.svelte'
-import * as abis from './abis'
+import { tokenBridgeInfo, type TokenBridgeInfo, minBridgeAmountIn as minBridgeAmountInSdk } from '@gibs/bridge-sdk/chain-info'
+import * as abis from '@gibs/bridge-sdk/abis'
+import { Chains } from '@gibs/bridge-sdk/config'
+import type { Token } from '@gibs/bridge-sdk/types'
+import type { BridgeKey } from '@gibs/bridge-sdk/types'
+import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+import { pathway } from '@gibs/bridge-sdk/config'
+
 import {
   getContract,
   erc20Abi,
   zeroAddress,
-  parseAbi,
   getAddress,
   isHex,
   erc20Abi_bytes32,
@@ -13,17 +18,16 @@ import {
 } from 'viem'
 import type { Block, Hex, TransactionReceipt, BlockTag } from 'viem'
 import { loading, resolved, type Cleanup } from './loading.svelte'
-import { NullableProxyStore, type Token } from '../types.svelte'
-import { bridgeGraphqlUrl, chainsMetadata } from './auth/constants'
-import { nativeAssetOut, pathway } from './config.svelte'
+import { NullableProxyStore } from '../types.svelte'
+import { bridgeGraphqlUrl } from './auth/constants'
 import { SvelteMap } from 'svelte/reactivity'
 import * as rpcs from './rpcs.svelte'
 import _ from 'lodash'
 import { untrack } from 'svelte'
-import { Chains, toChain } from '../stores/auth/types'
 import { tokenToPair } from './utils'
 import { gql, GraphQLClient } from 'graphql-request'
 import { Cache } from './cache'
+import { isProd } from './config.svelte'
 
 export const watchFinalizedBlocksForSingleChain = (
   chainId: number,
@@ -163,7 +167,7 @@ export const getTokenBalance = ({ chainId, address, account }: TokenBalanceInput
             .catch(() => null)
   }
 
-return loading.loadsAfterTick<bigint | null>(key, getBalance)()
+  return loading.loadsAfterTick<bigint | null>(key, getBalance)()
 }
 
 export const tokenBalanceLoadingKey = (chainId: number, address: string, account: string) => {
@@ -254,12 +258,12 @@ export const fromTokenBalance = new TokenBalanceWatcher()
 export const toTokenBalance = new TokenBalanceWatcher()
 
 export const minBridgeAmountIn = new SvelteMap<string, bigint | null>()
-export const minBridgeAmountInKey = (bridgeKey: input.BridgeKey, assetIn: Token | null) => {
+export const minBridgeAmountInKey = (bridgeKey: BridgeKey, assetIn: Token | null) => {
   return [...bridgeKey, assetIn?.address].join('-').toLowerCase()
 }
-export const fetchMinBridgeAmountIn = (bridgeKey: input.BridgeKey, assetIn: Token | null) => {
+export const fetchMinBridgeAmountIn = (bridgeKey: BridgeKey, assetIn: Token | null) => {
   // these clients should already be created, so we should not be doing any harm by accessing them
-  const path = pathway(bridgeKey)
+  const path = pathway(bridgeKey, isProd.value)
   if (!path || !assetIn) {
     return () => { }
   }
@@ -268,12 +272,11 @@ export const fetchMinBridgeAmountIn = (bridgeKey: input.BridgeKey, assetIn: Toke
   const result = loading.loadsAfterTick<bigint>('min-amount', () => {
     const fromPublicClient = input.clientFromChain(Number(bridgeKey[1]))
     const toPublicClient = input.clientFromChain(Number(bridgeKey[2]))
-    const publicClient = path?.feeManager === 'from' ? fromPublicClient : toPublicClient
-    return publicClient.readContract({
-      abi: abis.inputBridge,
-      functionName: 'minPerTx',
-      args: [assetIn.address as Hex],
-      address: path[path.feeManager],
+    return minBridgeAmountInSdk({
+      assetIn,
+      pathway: path,
+      fromPublicClient,
+      toPublicClient,
     })
   })()
   result.promise.then((v) => {
@@ -283,167 +286,25 @@ export const fetchMinBridgeAmountIn = (bridgeKey: input.BridgeKey, assetIn: Toke
   return result.cleanup
 }
 
-const links = _.memoize(
-  async ({ chainId, target, address }: { chainId: number; target: Hex; address: Hex }) => {
-    return multicallRead<Hex[]>({
-      client: input.clientFromChain(chainId),
-      chain: chainsMetadata[toChain(chainId)],
-      abi: abis.inputBridge,
-      target,
-      calls: [
-        { functionName: 'bridgedTokenAddress', args: [address] },
-        { functionName: 'nativeTokenAddress', args: [address] },
-      ],
-    })
-  },
-  ({ chainId, target, address }) => `${chainId}-${target}-${address}`.toLowerCase(),
-)
-
-export const tokenLinks = _.memoize(
-  async ({ chainId, target, address }: { chainId: number; target: Hex; address: Hex }) => {
-    return multicallRead<[Hex, Hex]>({
-      client: input.clientFromChain(chainId),
-      chain: chainsMetadata[toChain(chainId)],
-      abi: abis.inputBridge,
-      target,
-      calls: [
-        { functionName: 'homeTokenAddress', args: [address] },
-        { functionName: 'foreignTokenAddress', args: [address] },
-      ],
-    })
-  },
-  ({ chainId, target, address }) => `${chainId}-${target}-${address}`.toLowerCase(),
-)
-
-export type TokenBridgeInfo = {
-  originationChainId: Chains
-  assetInAddress: Hex
-  assetOutAddress: Hex | null
-  toForeign?: {
-    home: Hex
-    foreign: Hex | null
-  }
-  toHome?: {
-    home: Hex | null
-    foreign: Hex
-  }
-}
-
-export const tokenBridgeInfo = async (
-  bridgeKey: input.BridgeKey,
-  assetIn: Token | null,
-): Promise<null | TokenBridgeInfo> => {
-  const bridgePathway = pathway(bridgeKey)
-  if (!assetIn || !bridgePathway) {
-    console.log('missing asset in or bridge pathway')
-    return null
-  }
-  const [, fromChain, toChain] = bridgeKey
-  const assetInAddress =
-    assetIn.address === zeroAddress ? nativeAssetOut[fromChain] : assetIn.address
-  const [toMappings, fromMappings] = await Promise.all([
-    links({
-      chainId: Number(toChain),
-      target: bridgePathway.to,
-      address: assetInAddress as Hex,
-    }),
-    links({
-      chainId: Number(fromChain),
-      target: bridgePathway.from,
-      address: assetInAddress as Hex,
-    }),
-  ])
-  const [toBridged, toNative] = toMappings
-  // const notGas = !Object.values(nativeAssetOut).find(
-  //   (v) => v.toLowerCase() === assetInAddress.toLowerCase(),
-  // )
-  if (toBridged !== zeroAddress) {
-    // if (notGas) console.log('toBridged')
-    return {
-      originationChainId: fromChain,
-      assetInAddress: assetInAddress as Hex,
-      assetOutAddress: toBridged,
-      toForeign: {
-        foreign: toBridged,
-        home: assetInAddress as Hex,
-      },
-    }
-  }
-  if (toNative !== zeroAddress) {
-    // if (notGas) console.log('toNative')
-    return {
-      originationChainId: toChain,
-      assetInAddress: assetInAddress as Hex,
-      assetOutAddress: toNative,
-      toHome: {
-        home: toNative,
-        foreign: assetInAddress as Hex,
-      },
-    }
-  }
-  const [fromBridged, fromNative] = fromMappings
-  if (fromNative !== zeroAddress) {
-    // if (notGas) console.log('fromNative')
-    return {
-      originationChainId: toChain,
-      assetInAddress: assetInAddress as Hex,
-      assetOutAddress: fromNative,
-      toHome: {
-        home: assetInAddress as Hex,
-        foreign: fromNative,
-      },
-    }
-  }
-  if (fromBridged !== zeroAddress) {
-    // if (notGas) console.log('fromBridged')
-    return {
-      originationChainId: fromChain,
-      assetInAddress: assetInAddress as Hex,
-      assetOutAddress: fromBridged,
-      toForeign: {
-        foreign: fromBridged,
-        home: assetInAddress as Hex,
-      },
-    }
-  }
-  // the token has not been bridged yet
-  return {
-    originationChainId: toChain,
-    assetInAddress: assetInAddress as Hex,
-    assetOutAddress: null,
-    ...(bridgePathway.toHome
-      ? {
-        toHome: {
-          foreign: assetInAddress as Hex,
-          home: null,
-        },
-      }
-      : {
-        toForeign: {
-          foreign: null,
-          home: assetInAddress as Hex,
-        },
-      }),
-  }
-}
-
 export const assetLink = new NullableProxyStore<TokenBridgeInfo>()
 export const loadAssetLink = loading.loadsAfterTick<
   TokenBridgeInfo,
   {
-    bridgeKey: input.BridgeKey
+    bridgeKey: BridgeKey
     assetIn: Token | null
   }
->('token', ({ bridgeKey, assetIn }: { bridgeKey: input.BridgeKey; assetIn: Token | null }) =>
-  tokenBridgeInfo(bridgeKey, assetIn),
+>('token', ({ bridgeKey, assetIn }: { bridgeKey: BridgeKey; assetIn: Token | null }) =>
+  tokenBridgeInfo({
+    bridgeKey,
+    assetIn,
+    isProd: isProd.value,
+    fromChainClient: input.clientFromChain(Number(bridgeKey[1])),
+    toChainClient: input.clientFromChain(Number(bridgeKey[2])),
+  }),
 )
 export const tokenOriginationChainId = (assetLink: TokenBridgeInfo | null) => {
   return assetLink?.originationChainId
 }
-
-const pairAbi = parseAbi([
-  'function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
-])
 
 const getReservesFailure = (chainId: number, token: Hex) => {
   return (e: unknown) => {
@@ -527,7 +388,7 @@ export const getPoolInfo = async (chainId: number, token: Hex, block: Block) => 
         Array.from(factoryAndInitCodeHash.entries()).map(async ([factory, initCodeHash]) => {
           const [pair, token0, token1] = tokenToPair(token, wpls, factory, initCodeHash)
           const reserves = await getContract({
-            abi: pairAbi,
+            abi: abis.pair,
             address: pair,
             client,
           })
@@ -638,7 +499,7 @@ export type BridgeStatus = keyof typeof bridgeStatuses
 export type LiveBridgeStatusParams = {
   hash: Hex
   ticker: Block
-  bridgeKey: input.BridgeKey
+  bridgeKey: BridgeKey
 }
 export type ContinuedLiveBridgeStatusParams = LiveBridgeStatusParams & {
   status: BridgeStatus

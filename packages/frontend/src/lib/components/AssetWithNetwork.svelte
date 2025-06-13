@@ -1,14 +1,16 @@
 <script lang="ts">
-  import type { Token } from '../types.svelte'
+  import type { Token } from '@gibs/bridge-sdk/types'
+  import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+  import { toChain } from '@gibs/bridge-sdk/config'
   import type { ClassValue } from 'svelte/elements'
-  import TokenIcon from './TokenIcon.svelte'
+  import { zeroAddress } from 'viem'
+
   import { assetSources } from '../stores/bridge-settings.svelte'
   import { loading } from '../stores/loading.svelte'
-  import Image from './Image.svelte'
-  import { chainsMetadata } from '../stores/auth/constants'
-  import { toChain } from '../stores/auth/types'
-  import { zeroAddress } from 'viem'
   import { bridgableTokens } from '../stores/input.svelte'
+
+  import Image from './Image.svelte'
+  import TokenIcon from './TokenIcon.svelte'
 
   type Props = {
     class?: ClassValue
@@ -25,7 +27,7 @@
   }: Props = $props()
   const chainId = $derived(asset?.chainId ? Number(asset.chainId) : 0)
   const chain = $derived(chainsMetadata[toChain(chainId)])
-  const src = $derived(asset?.logoURI || assetSources(asset, [], bridgableTokens.value))
+  const src = $derived(asset?.logoURI || assetSources(asset, bridgableTokens.value))
   const tokenClasses = $derived(`overflow-hidden absolute`)
   const classes = $derived([
     'flex basis-auto relative text-surface-contrast-50',

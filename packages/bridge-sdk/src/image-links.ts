@@ -1,5 +1,12 @@
 import { getAddress } from 'viem'
-import { imageRoot } from '../config'
+
+let imageRoot = 'https://gib.show'
+
+export const setImageRoot = (root: string) => {
+  imageRoot = root
+}
+
+export const getImageRoot = () => imageRoot
 
 interface MinimalTokenInfo {
   chainId: number

@@ -1,6 +1,6 @@
 <script lang="ts">
-    import Icon from "@iconify/svelte"
-    import { Popover } from "@skeletonlabs/skeleton-svelte"
+  import Icon from "@iconify/svelte"
+  import { Popover } from "@skeletonlabs/skeleton-svelte"
 
   type Option = {
     key: string

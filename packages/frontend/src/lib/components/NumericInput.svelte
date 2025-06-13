@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { untrack } from 'svelte'
-  import { numberWithCommas, stripNonNumber } from '../stores/utils'
   import type { ClassValue } from 'svelte/elements'
-  import type { InputValue } from '../types.svelte'
-  import _ from 'lodash'
   import type { FormEventHandler } from 'svelte/elements'
+  import { untrack } from 'svelte'
+  import _ from 'lodash'
   import { formatUnits, parseUnits } from 'viem'
+
+  import { numberWithCommas, stripNonNumber } from '../stores/utils'
+  import type { InputValue } from '../types.svelte'
   import { largeInputFontScaler } from '../stores/font-scaler'
 
   type Props = {

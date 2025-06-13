@@ -1,6 +1,6 @@
 import { type Currency, PairV1, PairV2, Price, CurrencyAmount } from '@pulsex/sdk'
 import memoize from 'lodash/memoize.js'
-import { type Address, parseUnits } from 'viem'
+import { type Address, type Hex, parseUnits } from 'viem'
 
 import { PoolType, type Pool, type StablePool, type V1Pool, type V2Pool } from './types'
 import { getSwapOutput } from './swap-output'
@@ -100,11 +100,11 @@ export const getPoolAddress = memoize(
     }
     if (isV1Pool(pool)) {
       const { reserve0, reserve1 } = pool
-      return computeV1PoolAddress(reserve0.currency.wrapped, reserve1.currency.wrapped)
+      return computeV1PoolAddress(reserve0.currency.wrapped, reserve1.currency.wrapped) as Hex
     }
     if (isV2Pool(pool)) {
       const { reserve0, reserve1 } = pool
-      return computeV2PoolAddress(reserve0.currency.wrapped, reserve1.currency.wrapped)
+      return computeV2PoolAddress(reserve0.currency.wrapped, reserve1.currency.wrapped) as Hex
     }
     return ''
   },

@@ -1,5 +1,7 @@
 import type { Hex } from 'viem'
-import { toPath, bridgeKey, type BridgeKey } from './input.svelte'
+import type { BridgeKey } from '@gibs/bridge-sdk/types'
+
+import { toPath, bridgeKey } from './input.svelte'
 import { page } from './app-page.svelte'
 
 export const bridge = {

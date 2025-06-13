@@ -1,11 +1,14 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
+  import { Chains } from '@gibs/bridge-sdk/config'
+
   import { bridgeKey } from '../stores/input.svelte'
-  import { Chains } from '../stores/auth/types'
+  import { page } from '../stores/app-page.svelte'
+  // import { toasts } from '../stores/transaction'
+
   import InfoExplain from './InfoExplain.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
   import Button from './Button.svelte'
-  import { page } from '../stores/app-page.svelte'
 
   const chainToDomain = {
     [Chains.ETH]: 'etherscan.io',
@@ -69,8 +72,13 @@
   </a>
   <a href={`#${page.value}?mode=simple`} target="_blank" class="mr-2" aria-label="embed page">
     <Button
-      class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500">
-      <Icon icon="fluent-mdl2:embed" />
+      class="border-2 rounded-full size-8 flex justify-center items-center text-white hover:text-slate-500">
+      <Icon icon="icomoon-free:embed" />
     </Button>
   </a>
+  <!-- <Button class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500" onclick={() => {
+    toasts.submitted('abc')
+  }}>
+    <Icon icon="material-symbols:toast-outline" height="1.25em" width="1.25em" />
+  </Button> -->
 </div>

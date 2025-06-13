@@ -51,3 +51,7 @@ export const relayTokensDirect = parseAbi([
 export const homeAmb = parseAbi([
   'function submitSignature(bytes message, bytes signature) external',
 ])
+
+export const pair = parseAbi([
+  'function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
+])

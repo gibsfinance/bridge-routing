@@ -1,8 +1,9 @@
 <script lang="ts">
   import { zeroAddress, type Hex } from 'viem'
-  import Button from './Button.svelte'
   import Icon from '@iconify/svelte'
-  import { Chains, Provider } from '../stores/auth/types'
+  import { Chains, Provider } from '@gibs/bridge-sdk/config'
+
+  import Button from './Button.svelte'
   import { accountState } from '../stores/auth/AuthProvider.svelte'
   import {
     assetOutKey,
@@ -10,14 +11,15 @@
     searchKnownAddresses,
   } from '../stores/bridge-settings.svelte'
   import { assetLink, loadAssetLink } from '../stores/chain-events.svelte'
-  import { bridgableTokens, loadFeeFor, recipient, bridgeKey } from '../stores/input.svelte'
+  import { bridgableTokens, recipient, bridgeKey } from '../stores/input.svelte'
   import { page } from '../stores/app-page.svelte'
   import * as settings from '../stores/settings.svelte'
+
   const toggleHelp = () => {
     page.setParam('guide', page.guide === settings.guide.SHOW ? null : settings.guide.SHOW)
   }
   const tokenInput = $derived(bridgeSettings.assetIn.value)
-  $effect.pre(() => {
+  $effect(() => {
     bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
   })
   $effect(() => {
@@ -54,17 +56,6 @@
       })
     })
     return link.cleanup
-  })
-  $effect(() => {
-    const pathway = bridgeKey.pathway
-    if (!pathway) return
-    const result = loadFeeFor({
-      value: bridgeKey.value,
-      pathway,
-      fromChain: Number(bridgeKey.fromChain),
-      toChain: Number(bridgeKey.toChain),
-    })
-    return result.cleanup
   })
   $effect(() => {
     recipient.value = (accountState.address ?? zeroAddress) as `0x${string}`

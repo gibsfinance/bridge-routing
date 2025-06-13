@@ -1,11 +1,13 @@
 <script lang="ts">
-  import { toChain, type VisualChain } from '../stores/auth/types'
-  import { chainsMetadata } from '../stores/auth/constants'
+  import type { ClassValue } from 'svelte/elements'
+  import { toChain } from '@gibs/bridge-sdk/config'
+  import type { VisualChain } from '@gibs/bridge-sdk/types'
+  import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+  import * as imageLinks from '@gibs/bridge-sdk/image-links'
+  import clsx from 'clsx'
+
   import ProviderIcon from './ProviderIcon.svelte'
   import Image from './Image.svelte'
-  import * as imageLinks from '../stores/image-links'
-  import type { ClassValue } from 'svelte/elements'
-  import clsx from 'clsx'
 
   type Props = {
     network: number | string

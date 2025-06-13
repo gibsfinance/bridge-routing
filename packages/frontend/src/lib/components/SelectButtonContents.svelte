@@ -2,7 +2,7 @@
   import Icon from '@iconify/svelte'
   import type { ClassValue } from 'svelte/elements'
 
-  import type { Token } from '../types.svelte'
+  import type { Token } from '@gibs/bridge-sdk/types'
 
   import AssetWithNetwork from './AssetWithNetwork.svelte'
 

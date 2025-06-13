@@ -2,9 +2,8 @@
   import Icon from '@iconify/svelte'
   import { SvelteMap } from 'svelte/reactivity'
   import _ from 'lodash'
-
-  import { chainsMetadata } from '../stores/auth/constants'
-  import { toChain } from '../stores/auth/types'
+  import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+  import { toChain } from '@gibs/bridge-sdk/config'
 
   import GreenBadge from './Badge.svelte'
   import Input from './Input.svelte'

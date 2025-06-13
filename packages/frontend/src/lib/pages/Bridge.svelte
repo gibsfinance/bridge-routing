@@ -1,4 +1,10 @@
 <script lang="ts">
+  import { getAddress, isAddress, type Hex, zeroAddress } from 'viem'
+  import { onMount } from 'svelte'
+  import { pathway } from '@gibs/bridge-sdk/config'
+  import { Chains, type Provider, type ChainKey } from '@gibs/bridge-sdk/config'
+  import type { BridgeKey } from '@gibs/bridge-sdk/types'
+
   import BlurryImage from '../components/BlurryImage.svelte'
   import Bridge from '../components/Bridge.svelte'
   import Headline from '../components/Headline.svelte'
@@ -6,19 +12,16 @@
   import * as input from '../stores/input.svelte'
   import { page } from '../stores/app-page.svelte'
   import * as nav from '../stores/nav.svelte'
-  import { pathway } from '../stores/config.svelte'
   import Loading from '../components/Loading.svelte'
-  import { Chains, type Provider, type ChainKey } from '../stores/auth/types'
-  import { getAddress, isAddress, type Hex, zeroAddress } from 'viem'
-  import { onMount } from 'svelte'
+  import { isProd } from '../stores/config.svelte'
   const bridgeImageFuzzyWebP = 'images/bridge-fuzzy.webp'
   const provider = $derived(page.params.provider as Provider)
   const fromChain = $derived(page.params.fromChain as ChainKey)
   const toChain = $derived(page.params.toChain as ChainKey)
-  const bridgeKey = $derived([provider, Chains[fromChain], Chains[toChain]] as input.BridgeKey)
+  const bridgeKey = $derived([provider, Chains[fromChain], Chains[toChain]] as BridgeKey)
 
   onMount(() => {
-    if (!pathway(bridgeKey)) {
+    if (!pathway(bridgeKey, isProd.value)) {
       const assetInAddress = page.params.assetInAddress ?? zeroAddress
       nav.bridge.shallow(input.defaultBridgeKey, assetInAddress)
     } else {

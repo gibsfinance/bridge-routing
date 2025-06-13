@@ -1,5 +1,6 @@
-import { Chains, toChain } from '../stores/auth/types'
-import { chainsMetadata } from './auth/constants'
+import { Chains, toChain } from '@gibs/bridge-sdk/config'
+import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+
 import { isProd } from '../stores/config.svelte'
 import _ from 'lodash'
 import { SvelteMap } from 'svelte/reactivity'

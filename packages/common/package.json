@@ -1,0 +1,27 @@
+{
+  "name": "@gibs/common",
+  "version": "1.6.34",
+  "main": "index.js",
+  "access": "public",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./erc20": "./src/erc20.ts",
+    "./cache": "./src/cache.ts",
+    "./serialize": "./src/serialize.ts",
+    "./types": "./src/types.ts",
+    "./multicall": "./src/multicall.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "viem": "^2.31.0"
+  }
+}

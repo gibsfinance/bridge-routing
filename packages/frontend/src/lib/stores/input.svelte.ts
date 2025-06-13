@@ -1,48 +1,34 @@
-import * as rpcs from '../stores/rpcs.svelte'
-import { page } from './app-page.svelte'
-import * as abis from './abis'
-import * as imageLinks from '../stores/image-links'
+import { chainKey, clientCache, clientFromChain as clientFromChainSDK } from '@gibs/common/client'
+import { loadBridgeFees } from '@gibs/bridge-sdk/chain-info'
+import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+import { chainIdToKey, Chains, Provider, toChain, pathway, pathways, validBridgeKeys, defaultAssetIn, nativeAssetOut, nativeTokenName, nativeTokenSymbol } from '@gibs/bridge-sdk/config'
+import type { Token, TokenList, BridgeKey } from '@gibs/bridge-sdk/types'
+import * as imageLinks from '@gibs/bridge-sdk/image-links'
 import {
   type Hex,
   getAddress,
   type WalletClient,
-  createPublicClient,
-  http,
-  getContract,
-  multicall3Abi,
-  encodeFunctionData,
   zeroAddress,
-  fallback,
-  type PublicClient,
-  webSocket,
   isAddress,
+  type PublicClient,
 } from 'viem'
-import { chainIdToKey, Chains, Provider, toChain } from './auth/types'
+import _ from 'lodash'
+import * as networks from 'viem/chains'
+
+import * as rpcs from '../stores/rpcs.svelte'
+
+import { page } from './app-page.svelte'
 import { settingKey, settings, type PathwayExtendableConfig } from './fee-manager.svelte'
 import {
   blacklist,
-  defaultAssetIn,
   isProd,
-  nativeAssetOut,
-  nativeTokenName,
-  nativeTokenSymbol,
-  pathway,
-  pathways,
-  validBridgeKeys,
-  type Pathway,
 } from '../stores/config.svelte'
 import {
   NullableProxyStore,
   ProxyStore,
-  type Token,
-  type TokenList,
-  type TokenOut,
 } from '../types.svelte'
-import { chainsMetadata } from './auth/constants'
 import { appkitNetworkList } from './auth/AuthProvider.svelte'
-import _ from 'lodash'
 import { loading } from './loading.svelte'
-import * as networks from 'viem/chains'
 
 export const forcedRefresh = new ProxyStore(0n)
 
@@ -75,31 +61,17 @@ export const resetFeeInputs = () => {
   fixedFee.value = null
 }
 
-export enum FeeType {
-  PERCENT = '%',
-  GAS_TIP = 'gas+%',
-  FIXED = 'fixed',
-}
-
-export type FeeTypeKeys = keyof typeof FeeType
-
-export const feeTypeValToKeyMap = new Map<FeeType, FeeTypeKeys>(
-  (Object.keys(FeeType) as FeeTypeKeys[]).map((key) => [FeeType[key], key]),
-)
-
 export const recipientInput = new NullableProxyStore<string>()
 
 export const recipient = new NullableProxyStore<Hex>()
 
 export const recipientLockedToAccount = new ProxyStore<boolean>(true)
 
-export type BridgeKey = [Provider, Chains, Chains]
-
 export const defaultBridgeKey = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS] as BridgeKey
 
 const getDefaultAssetInAddress = () => {
   const assetInAddress =
-    page.params.assetInAddress || defaultAssetIn(defaultBridgeKey)?.address || null
+    page.params.assetInAddress || defaultAssetIn(defaultBridgeKey, isProd.value)?.address || null
   if (assetInAddress && isAddress(assetInAddress)) {
     return getAddress(assetInAddress)
   }
@@ -126,7 +98,7 @@ export class BridgeKeyStore {
     return [this.value[0], this.value[2], this.value[1]] as BridgeKey
   }
   get isValid() {
-    return !!pathway(this.value)
+    return !!pathway(this.value, isProd.value)
   }
   get provider() {
     return this.value[0]
@@ -144,11 +116,8 @@ export class BridgeKeyStore {
     return chainIdToChain(this.toChain)
   }
   get pathway() {
-    return pathway(this.value)
+    return pathway(this.value, isProd.value)
   }
-  // get settings() {
-  //   return settings.get(this.value)
-  // }
   get destinationSupportsEIP1559() {
     return this.toChain === Chains.BNB ? false : true
   }
@@ -160,11 +129,6 @@ export class BridgeKeyStore {
   }
 }
 export const bridgeKey = new BridgeKeyStore()
-
-// export class AssetInAddressStore {
-//   value = $state(page.params.assetInAddress || defaultAssetIn(bridgeKey.value)?.address || null)
-// }
-// export const assetInAddress = new NullableProxyStore<Hex>()
 
 export const chainIdToChain = (chainId: Chains) => {
   const found = appkitNetworkList.find((n) => n.id === Number(chainId))!
@@ -214,10 +178,6 @@ const nativeAssets = Object.entries(chainsMetadata).map(([chain, metadata]) => {
     chainId: Number(chain),
     address: zeroAddress as Hex,
     ...metadata.nativeCurrency,
-    // logoURI: imageLinks.image({
-    //   chainId: Number(chain),
-    //   address: zeroAddress,
-    // }),
     logoURI: null,
   }
 })
@@ -370,40 +330,6 @@ export const bridgeableTokensUnder = ({
   return list
 }
 
-export const unwrap = new ProxyStore<boolean>(true)
-
-export const isNative = (asset: Token | TokenOut | null, bridgeKey: BridgeKey | null) => {
-  if (!bridgeKey || !asset) {
-    return false
-  }
-  return (
-    (asset.address === zeroAddress ||
-      nativeAssetOut[toChain(asset.chainId)]?.toLowerCase() === asset.address?.toLowerCase()) &&
-    !asset.name.includes(' from Pulsechain')
-  )
-}
-export const isUnwrappable = (
-  asset: Pick<Token, 'extensions'> | null,
-  bridgeKey: BridgeKey | null,
-) => {
-  if (!bridgeKey || !asset) {
-    return false
-  }
-  const [, , toChain] = bridgeKey
-  return nativeAssetOut[toChain] === asset.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
-}
-
-export const walletClient = new NullableProxyStore<WalletClient>(null)
-
-const clientCache = new Map<number, { key: string; client: PublicClient }>([])
-
-export const defaultBatchConfig = {
-  batch: {
-    wait: 10,
-    batchSize: 32,
-  },
-}
-
 const chainList = [...appkitNetworkList]
 
 const searchChainsForRpcUrls = (chainId: number) => {
@@ -419,41 +345,18 @@ const searchChainsForRpcUrls = (chainId: number) => {
   return [...(http ?? []), ...(webSocket ?? [])]
 }
 
-export const clientFromChain = (chainId: number) => {
+export const clientFromChain = (chainId: number): PublicClient => {
   const urls = _.compact(rpcs.store.get(chainId) || searchChainsForRpcUrls(chainId))
-  const key = rpcs.key(chainId, urls)
+  const key = chainKey(chainId, urls)
   const existing = clientCache.get(chainId)
   if (existing && existing.key === key) {
     return existing.client
   }
-  const chain = [...Object.values(networks)].find((chain) => chain.id === chainId)
-  // if (chainId === 56) {
-  //   console.trace()
-  // }
-  // console.log(chainId, urls)
-  const transport = !urls?.length
-    ? http()
-    : fallback(
-      urls.map((rpc) =>
-        rpc.startsWith('http')
-          ? http(rpc, {
-            ...defaultBatchConfig,
-          })
-          : webSocket(rpc, {
-            keepAlive: true,
-            reconnect: true,
-            retryDelay: 250,
-            retryCount: 10,
-            timeout: 4_000,
-            ...defaultBatchConfig,
-          }),
-      ),
-      { rank: true },
-    )
-  const client = createPublicClient({
+  const chain = [...Object.values(networks)].find((chain) => chain.id === chainId)!
+  const client = clientFromChainSDK({
     chain,
-    transport,
-  }) as PublicClient
+    urls,
+  })
   clientCache.set(chainId, {
     key,
     client,
@@ -461,115 +364,9 @@ export const clientFromChain = (chainId: number) => {
   return client
 }
 
-// export const fromPublicClient = (bridgeKey: BridgeKey) => clientFromChain(bridgeKey)
-
-// export const toPublicClient = (bridgeKey: BridgeKey) => clientFromChain(toChainId(bridgeKey))
-
-// export const getAsset = async (chainId: Chains, assetInAddress: Hex) => {
-//   if (assetInAddress === zeroAddress) {
-//     return null
-//   }
-//   const asset = await multicallErc20({
-//     client: clientFromChain(chainId),
-//     chain: chainsMetadata[chainId],
-//     target: assetInAddress,
-//   }).catch(() => null)
-//   if (!asset) {
-//     console.log('getAsset failed', assetInAddress)
-//     return null
-//   }
-//   const [name, symbol, decimals] = asset
-//   return {
-//     name,
-//     symbol,
-//     decimals,
-//     address: assetInAddress,
-//     chainId: Number(chainId),
-//     logoURI: imageLinks.image({
-//       chainId: Number(chainId),
-//       address: assetInAddress,
-//     }),
-//   } as Token
-// }
-
-// export const assetIn = new NullableProxyStore<Token>()
-
-// export const updateAssetIn = async ({
-//   bridgeKey,
-//   assetInput,
-//   customTokens,
-// }: {
-//   bridgeKey: BridgeKeyStore
-//   assetInput: Token
-//   customTokens: Token[]
-// }) => {
-//   const address = assetInAddress(bridgeKey.value, assetInput.address)
-//   if (!address) {
-//     return null
-//   }
-//   const tokensUnderBridgeKey = bridgableTokens(bridgeKey.value)
-//   const foundAssetIn = tokensUnderBridgeKey.length
-//     ? _.find(tokensUnderBridgeKey, { address }) || _.find(customTokens, { address })
-//     : null
-//   if (foundAssetIn) {
-//     return foundAssetIn
-//   }
-//   return await getAsset(bridgeKey.fromChain, address)
-// }
-
-// export const assetIn = derived(
-//   [assetInAddress, bridgeKey, bridgableTokens, customTokens.tokens],
-//   ([$assetInAddress, $bridgeKey, $bridgableTokens, $customTokens], set) => {
-//     const $assetIn = $bridgableTokens.length
-//       ? _.find($bridgableTokens || [], { address: $assetInAddress }) ||
-//         _.find($customTokens || [], { address: $assetInAddress })
-//       : null
-//     if ($assetIn) {
-//       set($assetIn)
-//       return _.noop
-//     }
-//     set(null)
-//     return loading.loadsAfterTick(
-//       'assetIn',
-//       () => getAsset($chain, $assetInAddress),
-//       (result: Token | null) => {
-//         if (!result && $bridgableTokens.length) {
-//           return defaultAssetIn($bridgeKey)
-//         }
-//         return result
-//       },
-//       set,
-//     )
-//   },
-//   null as Token | null,
-// )
-
-export const canChangeUnwrap = (bridgeKey: BridgeKey, assetIn: Token | null) =>
-  !!assetIn && isUnwrappable(assetIn, bridgeKey)
-
-// export const canChangeUnwrap = derived(
-//   [assetIn, bridgeKey],
-//   ([$assetIn, $bridgeKey]) => !!$assetIn && isUnwrappable($assetIn, $bridgeKey),
-// )
-
-export const chainMulticall = (chainId: number) => {
-  const metadata = chainsMetadata[toChain(chainId)]
-  return getContract({
-    abi: multicall3Abi,
-    client: clientFromChain(chainId),
-    address: metadata.contracts!.multicall3!.address,
-  })
-}
-
-type InputLoadFeeFor = {
-  value: BridgeKey
-  fromChain: number
-  toChain: number
-  pathway: Pathway
-}
-export const loadFeeFor = loading.loadsAfterTick<PathwayExtendableConfig, InputLoadFeeFor>(
+export const loadFeeFor = loading.loadsAfterTick<PathwayExtendableConfig, BridgeKeyStore>(
   'bridge-fee',
-  async (bridgeKey: InputLoadFeeFor) => {
+  async (bridgeKey: BridgeKeyStore) => {
     if (!bridgeKey) {
       return null
     }
@@ -581,122 +378,21 @@ export const loadFeeFor = loading.loadsAfterTick<PathwayExtendableConfig, InputL
     if (s && s.feeManager) {
       return s
     }
-    const multicall =
-      path.feeManager === 'from'
-        ? chainMulticall(bridgeKey.fromChain)
-        : chainMulticall(bridgeKey.toChain)
-
-    const [feeManagerResponse] = await multicall.read.aggregate3([
-      [
-        {
-          allowFailure: false,
-          target: path[path.feeManager],
-          callData: encodeFunctionData({
-            abi: abis.inputBridge,
-            functionName: 'feeManager',
-          }),
-        },
-      ],
-    ])
-    const { success, returnData } = feeManagerResponse
-    if (!success) {
-      throw new Error('unable to load feeManager')
-    }
-    if (returnData === '0x') {
-      throw new Error('unable to read feeManager')
-    }
-    const feeManager = (
-      returnData.startsWith('0x000000000000000000000000')
-        ? `0x${returnData.slice(26)}`
-        : `0x${returnData.slice(-40)}`
-    ) as Hex
-    const [keyH2F, keyF2H] = await multicall.read.aggregate3([
-      [
-        {
-          allowFailure: false,
-          target: feeManager,
-          callData: encodeFunctionData({
-            abi: abis.feeManager,
-            functionName: 'HOME_TO_FOREIGN_FEE',
-          }),
-        },
-        {
-          allowFailure: false,
-          target: feeManager,
-          callData: encodeFunctionData({
-            abi: abis.feeManager,
-            functionName: 'FOREIGN_TO_HOME_FEE',
-          }),
-        },
-      ],
-    ])
-    const [feeH2F, feeF2H] = await multicall.read.aggregate3([
-      [
-        {
-          allowFailure: false,
-          target: feeManager,
-          callData: encodeFunctionData({
-            abi: abis.feeManager,
-            functionName: 'getFee',
-            args: [keyH2F.returnData, zeroAddress],
-          }),
-        },
-        {
-          allowFailure: false,
-          target: feeManager,
-          callData: encodeFunctionData({
-            abi: abis.feeManager,
-            functionName: 'getFee',
-            args: [keyF2H.returnData, zeroAddress],
-          }),
-        },
-      ],
-    ])
-    const setting = {
-      feeManager,
-      feeH2F: BigInt(feeH2F.returnData),
-      feeF2H: BigInt(feeF2H.returnData),
-    } as PathwayExtendableConfig
+    const setting = await loadBridgeFees({
+      pathway: path,
+      fromChainClient: clientFromChain(Number(bridgeKey.fromChain)),
+      toChainClient: clientFromChain(Number(bridgeKey.toChain)),
+    })
     settings.set(settingKey(bridgeKey.value), setting)
     return setting
   },
 )
-
-// export const bridgeAdminSettings = new NullableProxyStore<PathwayExtendableConfig>()
 
 /** the estimated gas that will be consumed by running the foreign transaction */
 export const estimatedGas = new ProxyStore<bigint>(400_000n)
 
 export const shouldDeliver = new ProxyStore<boolean>(true)
 
-// /**
-//  * the address of the token coming out on the other side of the bridge (foreign)
-//  * this address should only be used for presentational purposes
-//  * to put this into the calldata would produce bad outcomes
-//  */
-// export const flippedTokenAddressIn = asyncDerived(
-//   [bridgeKey, assetInAddress, bridgableTokens, unwrap],
-//   async ([$bridgeKey, $assetInAddress, $bridgableTokens, $unwrap]) => {
-//     const [, fromChain, toChain] = $bridgeKey
-//     const assetInAddress = $assetInAddress === zeroAddress ? nativeAssetOut[fromChain] : getAddress($assetInAddress)
-//     const token = $bridgableTokens.find(
-//       (tkn) => getAddress(tkn.address) === assetInAddress && Number(fromChain) === tkn.chainId,
-//     )
-//     const known = token?.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
-//     if (!known) {
-//       // check at the bridge
-//       return null
-//     }
-//     if (nativeAssetOut[toChain] === known && $unwrap) {
-//       return zeroAddress
-//     }
-//     return known
-//   },
-// )
+export const unwrap = new ProxyStore<boolean>(true)
 
-// export const flipBridgeKey = ($bridgeKey: BridgeKey) => {
-//   const [provider, fromChain, toChain] = $bridgeKey
-//   return [provider, toChain, fromChain] as BridgeKey
-// }
-
-// export const flippedBridgeKey = derived([bridgeKey], ([$bridgeKey]) => flipBridgeKey($bridgeKey))
+export const walletClient = new NullableProxyStore<WalletClient>(null)

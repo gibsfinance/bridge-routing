@@ -1,19 +1,21 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import Icon from '@iconify/svelte'
-  import Loading from './Loading.svelte'
-  import { page } from '../stores/app-page.svelte'
-  import { bridgeKey, incrementForcedRefresh } from '../stores/input.svelte'
-  import { Provider } from '../stores/auth/types'
-  import { addDomain } from '../stores/window.svelte'
+  import { Provider } from '@gibs/bridge-sdk/config'
   import { innerWidth } from 'svelte/reactivity/window'
+
+  import { bridgeKey, incrementForcedRefresh } from '../stores/input.svelte'
+  import { addDomain } from '../stores/window.svelte'
+  import { page } from '../stores/app-page.svelte'
+  import * as rpcs from '../stores/rpcs.svelte'
+  import * as nav from '../stores/nav.svelte'
+
+  import Loading from './Loading.svelte'
   import Image from './Image.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
-  import * as rpcs from '../stores/rpcs.svelte'
   import RPC from './RPC.svelte'
   import Button from './Button.svelte'
   import ConnectButton from './ConnectButton.svelte'
-  import * as nav from '../stores/nav.svelte'
   // import in order to link appropriately
   const gibs = 'images/1FAF0.svg'
 

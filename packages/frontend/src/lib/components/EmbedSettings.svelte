@@ -1,20 +1,22 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import { page } from '../stores/app-page.svelte'
-  import Button from './Button.svelte'
+  import { pathways, testnetPathways, Chains, Provider } from '@gibs/bridge-sdk/config'
+  import type { BridgeKey } from '@gibs/bridge-sdk/types'
   import { Accordion } from '@skeletonlabs/skeleton-svelte'
-  import TokenSelect from './TokenSelect.svelte'
-  import { bridgableTokens, bridgeKey, type BridgeKey } from '../stores/input.svelte'
-  import { Chains, Provider } from '../stores/auth/types'
   import { zeroAddress, type Hex } from 'viem'
-  import ModalWrapper from './ModalWrapper.svelte'
-  import SelectButtonContents from './SelectButtonContents.svelte'
   import _ from 'lodash'
+
+  import { page } from '../stores/app-page.svelte'
+  import { bridgableTokens, bridgeKey } from '../stores/input.svelte'
   import * as settings from '../stores/settings.svelte'
   import * as nav from '../stores/nav.svelte'
-  import { pathways, testnetPathways } from '../stores/config.svelte'
-  import BridgeProviderDirection from './BridgeProviderDirection.svelte'
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
+
+  import Button from './Button.svelte'
+  import TokenSelect from './TokenSelect.svelte'
+  import ModalWrapper from './ModalWrapper.svelte'
+  import SelectButtonContents from './SelectButtonContents.svelte'
+  import BridgeProviderDirection from './BridgeProviderDirection.svelte'
 
   const relevantUrl = $derived.by(() => {
     const url = new URL(page.url.toString())

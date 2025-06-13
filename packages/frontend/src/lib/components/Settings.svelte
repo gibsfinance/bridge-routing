@@ -1,12 +1,15 @@
 <script lang="ts">
+  import { canChangeUnwrap } from '@gibs/bridge-sdk/config'
   import { zeroAddress } from 'viem'
+
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
   import * as input from '../stores/input.svelte'
+
   import ButtonToggle from './ButtonToggle.svelte'
 
   const { bridgeKey } = input
   const nonZeroXCalldata = $derived(bridgeSettings.transactionInputs?.data?.slice(2) || '')
-  const canUnwrap = $derived(input.canChangeUnwrap(bridgeKey.value, bridgeSettings.assetIn.value))
+  const canUnwrap = $derived(canChangeUnwrap(bridgeKey.value, bridgeSettings.assetIn.value))
 </script>
 
 <div class="flex flex-col gap-1 text-sm mt-1">

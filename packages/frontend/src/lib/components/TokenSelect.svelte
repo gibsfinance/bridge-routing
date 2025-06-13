@@ -1,21 +1,22 @@
 <script lang="ts">
-  import * as customTokens from '../stores/custom-tokens.svelte'
-  import type { Token } from '../types.svelte'
-  import type { Hex } from 'viem'
-  import { getAddress, isAddress, isHex } from 'viem'
+  import type { Token } from '@gibs/bridge-sdk/types'
+  import { multicallErc20 } from '@gibs/common/erc20'
+  import { type Hex, getAddress, isAddress, isHex } from 'viem'
   import Icon from '@iconify/svelte'
-  import { multicallErc20 } from '../utils.svelte'
-  import { clientFromChain } from '../stores/input.svelte'
   import _ from 'lodash'
+  import type { ClassValue } from 'svelte/elements'
+
+  import * as customTokens from '../stores/custom-tokens.svelte'
+  import { clientFromChain } from '../stores/input.svelte'
+  import { loading } from '../stores/loading.svelte'
+  import { InfiniteStore } from '../stores/infinite.svelte'
+  import { evmChainsById } from '../stores/auth/AuthProvider.svelte'
+
   import TokenInfo from './TokenInfo.svelte'
   import Infinite from './Infinite.svelte'
-  import { InfiniteStore } from '../stores/infinite.svelte'
   import TokenSelectInput from './TokenSelectInput.svelte'
   import Button from './Button.svelte'
   import Loading from './Loading.svelte'
-  import { loading } from '../stores/loading.svelte'
-  import { evmChainsById } from '../stores/auth/AuthProvider.svelte'
-  import type { ClassValue } from 'svelte/elements'
 
   type Props = {
     onsubmit?: (token: Token | null) => void

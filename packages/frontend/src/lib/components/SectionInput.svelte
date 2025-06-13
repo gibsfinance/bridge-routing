@@ -1,15 +1,18 @@
 <script lang="ts">
-  import type { InputValue, Token } from '../types.svelte'
+  import type { Token } from '@gibs/bridge-sdk/types'
   import _ from 'lodash'
+  import type { Snippet } from 'svelte'
+
+  import type { InputValue } from '../types.svelte'
+  import { accountState } from '../stores/auth/AuthProvider.svelte'
+  import { largeInputFontScaler } from '../stores/font-scaler'
+  import { humanReadableNumber } from '../stores/utils'
+
   import NumericInput from './NumericInput.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
   import SelectButtonContents from './SelectButtonContents.svelte'
-  import type { Snippet } from 'svelte'
   import Section from './Section.svelte'
-  import { accountState } from '../stores/auth/AuthProvider.svelte'
   import BalanceReadout from './BalanceReadout.svelte'
-  import { largeInputFontScaler } from '../stores/font-scaler'
-  import { humanReadableNumber } from '../stores/utils'
   import Loading from './Loading.svelte'
   import Warning from './Warning.svelte'
 

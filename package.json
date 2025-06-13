@@ -1,23 +1,33 @@
 {
-  "name": "pulsechain-onboarding",
-  "version": "1.0.0",
-  "main": "index.js",
+  "name": "@gibs/frontend",
+  "version": "1.6.34",
   "private": true,
+  "access": "private",
   "workspaces": [
+    "packages/common",
+    "packages/bridge-sdk",
     "packages/frontend"
   ],
   "scripts": {
-    "ui:dev": "npm run dev --workspace=packages/frontend",
-    "ui:preview": "npm run preview --workspace=packages/frontend",
-    "ui:build": "npm run build --workspace=packages/frontend",
-    "ui:check": "npm run check --workspace=packages/frontend",
-    "build": "npm run ui:build",
-    "dev": "npm run ui:dev",
-    "preview": "npm run ui:preview",
-    "check": "npm run ui:check"
+    "version": "node scripts/sync-versions.js",
+    "ui:dev": "yarn workspace @gibs/frontend run dev",
+    "ui:preview": "yarn workspace @gibs/frontend run preview",
+    "ui:build": "yarn workspace @gibs/frontend run build",
+    "common:build": "yarn workspace @gibs/common run build",
+    "ui:check": "yarn workspace @gibs/frontend run check",
+    "bridge-sdk:build": "yarn workspace @gibs/bridge-sdk run build",
+    "build": "yarn run common:build && yarn run bridge-sdk:build && yarn run ui:build",
+    "dev": "yarn run ui:dev",
+    "preview": "yarn run ui:preview",
+    "pinata:publish": "cd packages/frontend && pinata-cli -a $PINATA_API_KEY && pinata-cli -u dist",
+    "check": "yarn run common:build && yarn run bridge-sdk:build && yarn run ui:check",
+    "packages:publish": "cd packages/common && npm publish && cd ../bridge-sdk && npm publish"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "pinata-upload-cli": "^1.1.0"
+  }
 }

@@ -1,11 +1,13 @@
 <script lang="ts">
-  import TokenIcon from './TokenIcon.svelte'
-  import type { Token } from '../types.svelte'
-  import { assetSources } from '../stores/bridge-settings.svelte'
-  import { ellipsis } from '../stores/utils'
   import type { ClassValue } from 'svelte/elements'
+  import type { Token } from '@gibs/bridge-sdk/types'
   import { zeroAddress } from 'viem'
+
+  import { assetSources } from '../stores/bridge-settings.svelte'
   import { bridgableTokens } from '../stores/input.svelte'
+  import { ellipsis } from '../stores/utils'
+
+  import TokenIcon from './TokenIcon.svelte'
   type Props = {
     token: Token
     truncate?: number
@@ -43,7 +45,7 @@
     'text-gray-400 font-mono text-xs leading-4 transition-all transition-duration-100 -bottom-0.5',
     reversed ? 'right-0' : 'left-0',
   ])
-  const src = $derived(token.logoURI || assetSources(token, [], bridgableTokens.value))
+  const src = $derived(token.logoURI || assetSources(token, bridgableTokens.value))
 </script>
 
 <div class={wrapperClasses}>
