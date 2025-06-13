@@ -1,6 +1,6 @@
 {
   "name": "@gibsfinance/frontend",
-  "version": "1.6.24",
+  "version": "1.6.25",
   "private": true,
   "access": "private",
   "workspaces": [
@@ -20,7 +20,8 @@
     "dev": "yarn run ui:dev",
     "preview": "yarn run ui:preview",
     "pinata:publish": "cd packages/frontend && pinata-cli -a $PINATA_API_KEY && pinata-cli -u dist",
-    "check": "yarn run common:build && yarn run bridge-sdk:build && yarn run ui:check"
+    "check": "yarn run common:build && yarn run bridge-sdk:build && yarn run ui:check",
+    "packages:publish": "cd packages/common && npm publish && cd ../bridge-sdk && npm publish"
   },
   "keywords": [],
   "author": "",
