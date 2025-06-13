@@ -2,6 +2,7 @@
   "name": "@gibsfinance/bridge-sdk",
   "version": "1.6.24",
   "main": "index.js",
+  "access": "public",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

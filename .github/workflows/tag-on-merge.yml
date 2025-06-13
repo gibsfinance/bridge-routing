@@ -35,7 +35,20 @@ jobs:
           name: 'frontend-dist-${{github.sha}}'
           overwrite: true
           path: packages/frontend/dist/
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'bridge-sdk-dist-${{github.sha}}'
+          overwrite: true
+          path: packages/bridge-sdk/dist/
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'common-dist-${{github.sha}}'
+          overwrite: true
+          path: packages/common/dist/
   publish-github:
+    permissions: write-all
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -70,6 +83,11 @@ jobs:
         with:
           cache: yarn
           node-version: '22.12.x'
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: 'common-dist-${{github.sha}}'
+          path: packages/common/dist/
       - run: cd packages/common
       - run: npm publish
         env:
@@ -84,6 +102,11 @@ jobs:
         with:
           cache: yarn
           node-version: '22.12.x'
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: 'bridge-sdk-dist-${{github.sha}}'
+          path: packages/bridge-sdk/dist/
       - run: cd packages/bridge-sdk
       - run: npm publish
         env:
