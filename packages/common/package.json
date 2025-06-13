@@ -1,6 +1,6 @@
 {
   "name": "@gibs/common",
-  "version": "1.6.31",
+  "version": "1.6.32",
   "main": "index.js",
   "access": "public",
   "type": "module",
