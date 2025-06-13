@@ -109,26 +109,11 @@ jobs:
         with:
           name: 'common-dist-${{github.sha}}'
           path: packages/common/dist/
-      - run: cd packages/common
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-  publish-npm-bridge-sdk:
-    needs: build
-    # if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          cache: yarn
-          node-version: '22.12.x'
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: 'bridge-sdk-dist-${{github.sha}}'
           path: packages/bridge-sdk/dist/
-      - run: cd packages/bridge-sdk
-      - run: npm publish
+      - run: npm run packages:publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
