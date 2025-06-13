@@ -122,11 +122,11 @@ jobs:
         with:
           name: 'bridge-sdk-dist-${{github.sha}}'
           path: packages/bridge-sdk/dist/
-      - run: cd packages/common
       - uses: JS-DevTools/npm-publish@v3
         with:
+          package: packages/common
           token: ${{ secrets.NPM_TOKEN }}
-      - run: cd ../bridge-sdk
       - uses: JS-DevTools/npm-publish@v3
         with:
+          package: packages/bridge-sdk
           token: ${{ secrets.NPM_TOKEN }}
