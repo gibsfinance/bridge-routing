@@ -94,10 +94,11 @@ jobs:
           git config user.email "action@github.com"
           git tag -a v$VERSION -m "Release v$VERSION"
           git push origin v$VERSION
-  publish-npm-common:
+  publish-npm:
     needs: build
     # if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    permissions: write-all
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -114,6 +115,7 @@ jobs:
         with:
           name: 'bridge-sdk-dist-${{github.sha}}'
           path: packages/bridge-sdk/dist/
+      - name: Write env to file
+        id: get_version
+        run: echo "NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}" >> $GITHUB_ENV
       - run: npm run packages:publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
