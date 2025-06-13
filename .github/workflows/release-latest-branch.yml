@@ -20,6 +20,8 @@ jobs:
           node-version: '22.12.x'
       - name: Install dependencies
         run: yarn
+        env:
+          NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - name: Build project
         run: yarn run build
         env:
@@ -56,6 +58,8 @@ jobs:
         with:
           cache: yarn
           node-version: '22.12.x'
+        env:
+          NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - run: yarn
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -78,6 +82,8 @@ jobs:
         with:
           cache: yarn
           node-version: '22.12.x'
+        env:
+          NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -105,6 +111,8 @@ jobs:
         with:
           cache: yarn
           node-version: '22.12.x'
+        env:
+          NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
