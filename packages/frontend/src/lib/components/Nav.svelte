@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import Icon from '@iconify/svelte'
-  import { Provider } from '@gibsfinance/bridge-sdk/config'
+  import { Provider } from '@gibs/bridge-sdk/config'
   import { innerWidth } from 'svelte/reactivity/window'
 
   import { bridgeKey, incrementForcedRefresh } from '../stores/input.svelte'

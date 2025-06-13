@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { ClassValue } from 'svelte/elements'
-  import { toChain } from '@gibsfinance/bridge-sdk/config'
-  import type { VisualChain } from '@gibsfinance/bridge-sdk/types'
-  import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
-  import * as imageLinks from '@gibsfinance/bridge-sdk/image-links'
+  import { toChain } from '@gibs/bridge-sdk/config'
+  import type { VisualChain } from '@gibs/bridge-sdk/types'
+  import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+  import * as imageLinks from '@gibs/bridge-sdk/image-links'
   import clsx from 'clsx'
 
   import ProviderIcon from './ProviderIcon.svelte'

@@ -1,5 +1,5 @@
 import type { Hex } from 'viem'
-import type { BridgeKey } from '@gibsfinance/bridge-sdk/types'
+import type { BridgeKey } from '@gibs/bridge-sdk/types'
 import { SvelteMap } from 'svelte/reactivity'
 
 export type PathwayExtendableConfig = {

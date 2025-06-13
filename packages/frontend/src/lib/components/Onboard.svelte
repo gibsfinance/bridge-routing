@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { Token } from '@gibsfinance/bridge-sdk/types'
-  import { Chains, Provider } from '@gibsfinance/bridge-sdk/config'
+  import type { Token } from '@gibs/bridge-sdk/types'
+  import { Chains, Provider } from '@gibs/bridge-sdk/config'
   import { SvelteMap } from 'svelte/reactivity'
 
   import { bridgeSettings } from '../stores/bridge-settings.svelte'

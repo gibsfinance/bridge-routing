@@ -1,6 +1,6 @@
 import { zeroAddress, type Hex } from "viem";
 import _ from 'lodash'
-import * as imageLinks from '@gibsfinance/bridge-sdk/image-links'
+import * as imageLinks from '@gibs/bridge-sdk/image-links'
 import type { BridgeKey, Token, TokenOut } from "./types.js";
 
 /**

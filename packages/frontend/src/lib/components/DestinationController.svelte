@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Chains } from '@gibsfinance/bridge-sdk/config'
+  import { Chains } from '@gibs/bridge-sdk/config'
   import Icon from "@iconify/svelte"
   import { getAddress, isAddress, zeroAddress, type Hex } from "viem"
   import { normalize } from 'viem/ens'

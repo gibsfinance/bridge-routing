@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ClassValue } from 'svelte/elements'
 
-  import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
+  import { chainsMetadata } from '@gibs/bridge-sdk/chains'
 
   import Image from './Image.svelte'
 

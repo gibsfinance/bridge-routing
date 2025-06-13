@@ -1,7 +1,7 @@
 <script lang="ts">
   import { zeroAddress, type Hex } from 'viem'
   import Icon from '@iconify/svelte'
-  import { Chains, Provider } from '@gibsfinance/bridge-sdk/config'
+  import { Chains, Provider } from '@gibs/bridge-sdk/config'
 
   import Button from './Button.svelte'
   import { accountState } from '../stores/auth/AuthProvider.svelte'

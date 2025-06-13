@@ -1,15 +1,15 @@
 import _ from 'lodash'
 import type { TradeType } from '@pulsex/swap-sdk-core'
 import type { Hex } from 'viem'
-import type { Token } from '@gibsfinance/bridge-sdk/types'
-import { Chains } from '@gibsfinance/bridge-sdk/config'
+import type { Token } from '@gibs/bridge-sdk/types'
+import { Chains } from '@gibs/bridge-sdk/config'
+import { jsonAnyStringify } from '@gibs/common/serialize'
 
 import { loading } from '../loading.svelte'
 
 import type { SerializedTrade } from './transformers'
 import { clientFromChain } from '../input.svelte'
 import { getTransactionDataFromTrade } from './serialize'
-import { jsonAnyStringify } from '@gibsfinance/common/serialize'
 
 export type PulsexQuoteArgs = {
   amountIn: bigint | null

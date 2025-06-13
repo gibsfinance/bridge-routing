@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Chains, toChain, pathways, validBridgeKeys, isNative } from '@gibsfinance/bridge-sdk/config'
-  import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
-  import type { BridgeKey, Token } from '@gibsfinance/bridge-sdk/types'
+  import { Chains, toChain, pathways, validBridgeKeys, isNative } from '@gibs/bridge-sdk/config'
+  import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+  import type { BridgeKey, Token } from '@gibs/bridge-sdk/types'
   import _ from 'lodash'
 
   import { bridgeSettings } from '../stores/bridge-settings.svelte'

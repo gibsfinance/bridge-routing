@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
+  import { FeeType } from '@gibs/bridge-sdk/fee-type'
   import { innerWidth } from 'svelte/reactivity/window'
-  import type { Token } from '@gibsfinance/bridge-sdk/types'
-  import { Chains } from '@gibsfinance/bridge-sdk/config'
-  import { nativeSymbol } from '@gibsfinance/bridge-sdk/chain-info'
+  import type { Token } from '@gibs/bridge-sdk/types'
+  import { Chains } from '@gibs/bridge-sdk/config'
+  import { nativeSymbol } from '@gibs/bridge-sdk/chain-info'
 
   import * as input from '../stores/input.svelte'
   import { humanReadableNumber } from '../stores/utils'

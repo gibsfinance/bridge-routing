@@ -4,7 +4,7 @@ import type { BridgeKey, Token } from "./types.js"
 import _ from "lodash"
 import { chainsMetadata } from "./chains.js"
 import * as abis from "./abis.js"
-import { multicallRead } from "@gibsfinance/common/multicall"
+import { multicallRead } from "@gibs/common/multicall"
 
 export type TokenBridgeInfo = {
   originationChainId: Chains

@@ -1,5 +1,5 @@
 {
-  "name": "@gibsfinance/common",
+  "name": "@gibs/common",
   "version": "1.6.26",
   "main": "index.js",
   "access": "public",

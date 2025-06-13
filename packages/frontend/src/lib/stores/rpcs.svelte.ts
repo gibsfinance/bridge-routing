@@ -1,5 +1,5 @@
-import { Chains, toChain } from '@gibsfinance/bridge-sdk/config'
-import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
+import { Chains, toChain } from '@gibs/bridge-sdk/config'
+import { chainsMetadata } from '@gibs/bridge-sdk/chains'
 
 import { isProd } from '../stores/config.svelte'
 import _ from 'lodash'

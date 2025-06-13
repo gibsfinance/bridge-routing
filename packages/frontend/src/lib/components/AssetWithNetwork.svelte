@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { Token } from '@gibsfinance/bridge-sdk/types'
-  import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
-  import { toChain } from '@gibsfinance/bridge-sdk/config'
+  import type { Token } from '@gibs/bridge-sdk/types'
+  import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+  import { toChain } from '@gibs/bridge-sdk/config'
   import type { ClassValue } from 'svelte/elements'
   import { zeroAddress } from 'viem'
 

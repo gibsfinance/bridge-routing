@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Hex } from 'viem'
   import type { ClassValue } from 'svelte/elements'
-  import type { Token } from '@gibsfinance/bridge-sdk/types'
+  import type { Token } from '@gibs/bridge-sdk/types'
 
   import { humanReadableNumber } from '../stores/utils'
   import { loading } from '../stores/loading.svelte'

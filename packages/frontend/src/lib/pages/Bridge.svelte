@@ -1,9 +1,9 @@
 <script lang="ts">
   import { getAddress, isAddress, type Hex, zeroAddress } from 'viem'
   import { onMount } from 'svelte'
-  import { pathway } from '@gibsfinance/bridge-sdk/config'
-  import { Chains, type Provider, type ChainKey } from '@gibsfinance/bridge-sdk/config'
-  import type { BridgeKey } from '@gibsfinance/bridge-sdk/types'
+  import { pathway } from '@gibs/bridge-sdk/config'
+  import { Chains, type Provider, type ChainKey } from '@gibs/bridge-sdk/config'
+  import type { BridgeKey } from '@gibs/bridge-sdk/types'
 
   import BlurryImage from '../components/BlurryImage.svelte'
   import Bridge from '../components/Bridge.svelte'

@@ -1,10 +1,4 @@
-import { mainnet, pulsechain, bsc, sepolia, pulsechainV4 } from '@reown/appkit/networks'
-import { Chains, Provider } from '@gibsfinance/bridge-sdk/config'
-import type { ChainsMetadata } from '@gibsfinance/bridge-sdk/types'
-import * as imageLinks from '@gibsfinance/bridge-sdk/image-links'
-
-const bnbNetworkUrl = 'images/networks/0x38.png'
-const plsV4NetworkUrl = 'images/networks/0x3af.png'
+import { Chains, Provider } from '@gibs/bridge-sdk/config'
 
 const PULSECHAIN_MAINNET_BRIDGE_GRAPHQL_URLS = {
   foreign: 'https://graph.ethereum.pulsechain.com/subgraphs/name/ethereum/bridge',

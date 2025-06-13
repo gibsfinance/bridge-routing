@@ -1,6 +1,6 @@
 import { createToaster } from '@skeletonlabs/skeleton-svelte'
-import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
-import { Chains } from '@gibsfinance/bridge-sdk/config'
+import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+import { Chains } from '@gibs/bridge-sdk/config'
 
 import { evmChainsById } from './auth/AuthProvider.svelte'
 

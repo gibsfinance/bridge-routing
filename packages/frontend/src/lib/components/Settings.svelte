@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { canChangeUnwrap } from '@gibsfinance/bridge-sdk/config'
+  import { canChangeUnwrap } from '@gibs/bridge-sdk/config'
   import { zeroAddress } from 'viem'
 
   import { bridgeSettings } from '../stores/bridge-settings.svelte'

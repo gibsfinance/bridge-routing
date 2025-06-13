@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
-  import type { Token } from '@gibsfinance/bridge-sdk/types'
-  import { isNative } from '@gibsfinance/bridge-sdk/config'
+  import { FeeType } from '@gibs/bridge-sdk/fee-type'
+  import type { Token } from '@gibs/bridge-sdk/types'
+  import { isNative } from '@gibs/bridge-sdk/config'
 
   import * as input from '../stores/input.svelte'
   import { bridgeSettings } from '../stores/bridge-settings.svelte'

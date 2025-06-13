@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import { Chains } from '@gibsfinance/bridge-sdk/config'
+  import { Chains } from '@gibs/bridge-sdk/config'
 
   import { bridgeKey } from '../stores/input.svelte'
   import { page } from '../stores/app-page.svelte'

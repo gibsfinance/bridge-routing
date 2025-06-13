@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
-  import { isUnwrappable } from '@gibsfinance/bridge-sdk/config'
+  import { FeeType } from '@gibs/bridge-sdk/fee-type'
+  import { isUnwrappable } from '@gibs/bridge-sdk/config'
   import { getAddress, isAddress, zeroAddress, type Hex } from 'viem'
   import { untrack } from 'svelte'
-  import { nativeAssetOut } from '@gibsfinance/bridge-sdk/config'
+  import { nativeAssetOut } from '@gibs/bridge-sdk/config'
 
   import { bridgeSettings as storageBridgeSettings } from '../stores/storage.svelte'
   import * as settings from '../stores/settings.svelte'

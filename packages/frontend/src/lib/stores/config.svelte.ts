@@ -1,5 +1,5 @@
-import type { TokenList } from '@gibsfinance/bridge-sdk/types'
-import * as imageLinks from '@gibsfinance/bridge-sdk/image-links'
+import type { TokenList } from '@gibs/bridge-sdk/types'
+import * as imageLinks from '@gibs/bridge-sdk/image-links'
 import { type Hex, getAddress } from 'viem'
 import _ from 'lodash'
 

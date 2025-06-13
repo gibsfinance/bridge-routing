@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
+  import { FeeType } from '@gibs/bridge-sdk/fee-type'
   import { formatEther } from 'viem'
-  import type { TokenMetadata } from '@gibsfinance/bridge-sdk/types'
-  import { Chains } from '@gibsfinance/bridge-sdk/config'
-  import { nativeSymbol } from '@gibsfinance/bridge-sdk/chain-info'
+  import type { TokenMetadata } from '@gibs/bridge-sdk/types'
+  import { Chains } from '@gibs/bridge-sdk/config'
+  import { nativeSymbol } from '@gibs/bridge-sdk/chain-info'
 
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
   import * as utils from '../utils.svelte'

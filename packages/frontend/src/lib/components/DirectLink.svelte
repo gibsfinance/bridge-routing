@@ -1,8 +1,8 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
   import type { ClassValue } from 'svelte/elements'
-  import { toChain } from '@gibsfinance/bridge-sdk/config'
-  import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
+  import { toChain } from '@gibs/bridge-sdk/config'
+  import { chainsMetadata } from '@gibs/bridge-sdk/chains'
 
   import { evmChainsById } from '../stores/auth/AuthProvider.svelte'
   import { domains, addDomain } from '../stores/window.svelte'

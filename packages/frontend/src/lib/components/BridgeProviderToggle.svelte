@@ -1,6 +1,6 @@
 <script lang="ts">
   import { zeroAddress } from 'viem'
-  import { Provider, inferBridgeKey } from '@gibsfinance/bridge-sdk/config'
+  import { Provider, inferBridgeKey } from '@gibs/bridge-sdk/config'
 
   import * as input from '../stores/input.svelte'
   import * as nav from '../stores/nav.svelte'

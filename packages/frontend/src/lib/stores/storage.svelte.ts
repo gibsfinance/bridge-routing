@@ -1,6 +1,6 @@
 import type { Hex } from 'viem'
-import type { BridgeKey } from '@gibsfinance/bridge-sdk/types'
-import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
+import type { BridgeKey } from '@gibs/bridge-sdk/types'
+import { FeeType } from '@gibs/bridge-sdk/fee-type'
 
 import { LocalProxy, LocalProxyProp } from './localstorage.svelte'
 

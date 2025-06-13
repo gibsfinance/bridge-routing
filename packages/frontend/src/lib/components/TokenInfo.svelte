@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ClassValue } from 'svelte/elements'
-  import type { Token } from '@gibsfinance/bridge-sdk/types'
+  import type { Token } from '@gibs/bridge-sdk/types'
   import { zeroAddress } from 'viem'
 
   import { assetSources } from '../stores/bridge-settings.svelte'

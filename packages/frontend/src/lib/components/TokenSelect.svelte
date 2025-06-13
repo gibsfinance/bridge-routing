@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { Token } from '@gibsfinance/bridge-sdk/types'
-  import { multicallErc20 } from '@gibsfinance/common/erc20'
+  import type { Token } from '@gibs/bridge-sdk/types'
+  import { multicallErc20 } from '@gibs/common/erc20'
   import { type Hex, getAddress, isAddress, isHex } from 'viem'
   import Icon from '@iconify/svelte'
   import _ from 'lodash'

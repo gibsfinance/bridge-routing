@@ -8958,7 +8958,7 @@ pify@^5.0.0:
 
 pinata-upload-cli@^1.1.0:
   version "1.1.0"
-  resolved "https://registry.yarnpkg.com/pinata-upload-cli/-/pinata-upload-cli-1.1.0.tgz#ba076565d8e732021cac6ae6ddad4b7a0829afb5"
+  resolved "https://registry.npmjs.org/pinata-upload-cli/-/pinata-upload-cli-1.1.0.tgz"
   integrity sha512-saVtmovZdTawlY9leYXjtwm6JhhbMksWmziRCeNjtXaz97gA3oCb+bBFJtSxObKJXHkQmdZy1vPArSgnpTY4Dw==
   dependencies:
     commander "^8.3.0"

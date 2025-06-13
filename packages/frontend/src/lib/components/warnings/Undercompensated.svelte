@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
+  import { FeeType } from '@gibs/bridge-sdk/fee-type'
 
   import Warning from '../Warning.svelte'
   import { bridgeSettings } from '../../stores/bridge-settings.svelte'

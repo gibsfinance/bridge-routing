@@ -1,9 +1,9 @@
 <script lang="ts">
   import { isHex, type Hex } from 'viem'
   import { untrack } from 'svelte'
-  import { Chains } from '@gibsfinance/bridge-sdk/config'
-  import { pathway } from '@gibsfinance/bridge-sdk/config'
-  import type { BridgeKey } from '@gibsfinance/bridge-sdk/types'
+  import { Chains } from '@gibs/bridge-sdk/config'
+  import { pathway } from '@gibs/bridge-sdk/config'
+  import type { BridgeKey } from '@gibs/bridge-sdk/types'
   import Icon from '@iconify/svelte'
   import { Progress } from '@skeletonlabs/skeleton-svelte'
 

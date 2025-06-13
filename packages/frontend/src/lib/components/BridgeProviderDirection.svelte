@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import { Chains, Provider } from '@gibsfinance/bridge-sdk/config'
+  import { Chains, Provider } from '@gibs/bridge-sdk/config'
   import type { ClassValue } from 'svelte/elements'
   import { clsx } from 'clsx'
 

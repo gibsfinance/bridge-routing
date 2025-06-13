@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import { pathways, testnetPathways, Chains, Provider } from '@gibsfinance/bridge-sdk/config'
-  import type { BridgeKey } from '@gibsfinance/bridge-sdk/types'
+  import { pathways, testnetPathways, Chains, Provider } from '@gibs/bridge-sdk/config'
+  import type { BridgeKey } from '@gibs/bridge-sdk/types'
   import { Accordion } from '@skeletonlabs/skeleton-svelte'
   import { zeroAddress, type Hex } from 'viem'
   import _ from 'lodash'

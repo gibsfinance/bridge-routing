@@ -1,9 +1,9 @@
-import { chainKey, clientCache, clientFromChain as clientFromChainSDK } from '@gibsfinance/common/client'
-import { loadBridgeFees } from '@gibsfinance/bridge-sdk/chain-info'
-import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
-import { chainIdToKey, Chains, Provider, toChain, pathway, pathways, validBridgeKeys, defaultAssetIn, nativeAssetOut, nativeTokenName, nativeTokenSymbol } from '@gibsfinance/bridge-sdk/config'
-import type { Token, TokenList, BridgeKey } from '@gibsfinance/bridge-sdk/types'
-import * as imageLinks from '@gibsfinance/bridge-sdk/image-links'
+import { chainKey, clientCache, clientFromChain as clientFromChainSDK } from '@gibs/common/client'
+import { loadBridgeFees } from '@gibs/bridge-sdk/chain-info'
+import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+import { chainIdToKey, Chains, Provider, toChain, pathway, pathways, validBridgeKeys, defaultAssetIn, nativeAssetOut, nativeTokenName, nativeTokenSymbol } from '@gibs/bridge-sdk/config'
+import type { Token, TokenList, BridgeKey } from '@gibs/bridge-sdk/types'
+import * as imageLinks from '@gibs/bridge-sdk/image-links'
 import {
   type Hex,
   getAddress,

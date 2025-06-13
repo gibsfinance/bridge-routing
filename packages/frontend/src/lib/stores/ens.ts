@@ -3,7 +3,7 @@ import { normalize } from 'viem/ens'
 
 import { writable } from 'svelte/store'
 import { getAddress, isAddress, zeroAddress, type Hex } from 'viem'
-import { Chains, type ChainKey } from '@gibsfinance/bridge-sdk/config'
+import { Chains, type ChainKey } from '@gibs/bridge-sdk/config'
 import { clientFromChain } from '../stores/input.svelte'
 
 export const isEns = (val: string) => {

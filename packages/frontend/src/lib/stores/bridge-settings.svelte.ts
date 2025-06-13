@@ -12,14 +12,15 @@ import {
   erc20Abi,
   parseEther,
 } from 'viem'
-import { FeeType } from '@gibsfinance/bridge-sdk/fee-type'
-import type { Token, BridgeKey } from '@gibsfinance/bridge-sdk/types'
-import { nativeAssetOut, pathway, Chains, canChangeUnwrap, isNative, toChain } from '@gibsfinance/bridge-sdk/config'
-import * as abis from '@gibsfinance/bridge-sdk/abis'
-import * as imageLinks from '@gibsfinance/bridge-sdk/image-links'
-import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
-import { multicallErc20 } from '@gibsfinance/common/erc20'
-import type { Erc20Metadata } from '@gibsfinance/common/types'
+import { FeeType } from '@gibs/bridge-sdk/fee-type'
+import type { Token, BridgeKey } from '@gibs/bridge-sdk/types'
+import { nativeAssetOut, pathway, Chains, canChangeUnwrap, isNative, toChain } from '@gibs/bridge-sdk/config'
+import * as abis from '@gibs/bridge-sdk/abis'
+import * as imageLinks from '@gibs/bridge-sdk/image-links'
+import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+import { multicallErc20 } from '@gibs/common/erc20'
+import type { Erc20Metadata } from '@gibs/common/types'
+import { fetchPriceCorrective, type TokenBridgeInfo } from '@gibs/bridge-sdk/chain-info'
 import _ from 'lodash'
 import { SvelteMap } from 'svelte/reactivity'
 
@@ -31,7 +32,6 @@ import * as chainEvents from './chain-events.svelte'
 import { isProd, whitelisted } from './config.svelte'
 import { settingKey, settings } from './fee-manager.svelte'
 import { accountState } from './auth/AuthProvider.svelte'
-import { fetchPriceCorrective, tokenBridgeInfo, type TokenBridgeInfo } from '@gibsfinance/bridge-sdk/chain-info'
 
 export const assetOutKey = ({
   bridgeKeyPath,

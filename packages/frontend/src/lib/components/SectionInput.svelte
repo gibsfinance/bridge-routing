@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Token } from '@gibsfinance/bridge-sdk/types'
+  import type { Token } from '@gibs/bridge-sdk/types'
   import _ from 'lodash'
   import type { Snippet } from 'svelte'
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { toChain, Chains, Provider, nativeAssetOut } from '@gibsfinance/bridge-sdk/config'
-  import type { BridgeKey, Token } from '@gibsfinance/bridge-sdk/types'
-  import { chainsMetadata } from '@gibsfinance/bridge-sdk/chains'
+  import { toChain, Chains, Provider, nativeAssetOut } from '@gibs/bridge-sdk/config'
+  import type { BridgeKey, Token } from '@gibs/bridge-sdk/types'
+  import { chainsMetadata } from '@gibs/bridge-sdk/chains'
   import { formatUnits, getAddress, maxUint256, zeroAddress, type Hex } from 'viem'
   import _ from 'lodash'
 

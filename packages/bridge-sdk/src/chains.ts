@@ -1,7 +1,7 @@
 import { mainnet, pulsechain, bsc, sepolia, pulsechainV4 } from '@reown/appkit/networks'
-import { Chains } from '@gibsfinance/bridge-sdk/config'
-import type { ChainsMetadata } from '@gibsfinance/bridge-sdk/types'
-import * as imageLinks from '@gibsfinance/bridge-sdk/image-links'
+import { Chains } from '@gibs/bridge-sdk/config'
+import type { ChainsMetadata } from '@gibs/bridge-sdk/types'
+import * as imageLinks from '@gibs/bridge-sdk/image-links'
 
 /**
  * all of the chains that are enabled in this dapp
