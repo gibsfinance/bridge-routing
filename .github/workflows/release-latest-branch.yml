@@ -112,8 +112,6 @@ jobs:
         with:
           cache: yarn
           node-version: '22.12.x'
-        env:
-          NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -124,6 +122,10 @@ jobs:
         with:
           name: 'bridge-sdk-dist-${{github.sha}}'
           path: packages/bridge-sdk/dist/
-      - run: npm run packages:publish
-        env:
-          NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
+      - run: cd packages/common
+      - uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+      - run: cd ../bridge-sdk
+        with:
+          token: ${{ secrets.NPM_TOKEN }}

@@ -21,7 +21,7 @@
     "preview": "yarn run ui:preview",
     "pinata:publish": "cd packages/frontend && pinata-cli -a $PINATA_API_KEY && pinata-cli -u dist",
     "check": "yarn run common:build && yarn run bridge-sdk:build && yarn run ui:check",
-    "packages:publish": "cd packages/common && npm publish --access public && cd ../bridge-sdk && npm publish --access public"
+    "packages:publish": "cd packages/common && npm publish && cd ../bridge-sdk && npm publish"
   },
   "keywords": [],
   "author": "",
