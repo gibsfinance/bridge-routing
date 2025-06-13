@@ -3,8 +3,10 @@ name: Release Latest
 on:
   push:
     branches:
-      - master
       - staging
+  merge:
+    branches:
+      - master
 
 jobs:
   build:
@@ -68,14 +70,14 @@ jobs:
           name: 'frontend-dist-${{github.sha}}'
           path: packages/frontend/dist/
       - name: Upload build to Pinata
+        run: npm run pinata:publish
         env:
           NODE_ENV: 'production'
           PINATA_API_KEY: '${{ secrets.PINATA_API_KEY }}'
-        run: npm run pinata:publish
   publish-github:
     permissions: write-all
     needs: build
-    # if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -103,7 +105,7 @@ jobs:
           git push origin v$VERSION
   publish-npm:
     needs: build
-    # if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
