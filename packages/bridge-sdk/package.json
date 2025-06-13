@@ -1,6 +1,6 @@
 {
   "name": "@gibs/bridge-sdk",
-  "version": "1.6.26",
+  "version": "1.6.27",
   "main": "index.js",
   "access": "public",
   "type": "module",
