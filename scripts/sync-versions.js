@@ -20,5 +20,5 @@ ROOT_PACKAGE_JSON.workspaces.forEach((workspace) => {
 });
 // update versions all of the packages in yarn.lock
 console.log('updating versions in yarn.lock');
-execSync('yarn', { cwd: ROOT, log: false });
+execSync('yarn', { cwd: ROOT, stdio: 'ignore' });
 console.log('done');
