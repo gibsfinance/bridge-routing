@@ -42,10 +42,9 @@
     ] as BridgeKey
     nav.bridge.shallow(options, token.address)
   }
-  // const keepBalance = (bal: bigint | null) => {
-  //   console.log('keepBalance', bal)
-  //   fromTokenBalance.value = bal
-  // }
+  const keepBalance = (bal: bigint | null) => {
+    fromTokenBalance.value = bal
+  }
   const handleInput = ({ int }: InputValue) => {
     if (int !== null) {
       input.amountIn.value = int
@@ -81,7 +80,7 @@
   label="Input"
   focused
   token={bridgeSettings.assetIn.value}
-  onbalanceupdate={() => {}}
+  onbalanceupdate={keepBalance}
   value={bridgeSettings.amountToBridge ?? 0n}
   onmax={handleMaxBalance}
   oninput={handleInput}

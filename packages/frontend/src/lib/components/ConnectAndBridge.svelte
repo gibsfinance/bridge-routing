@@ -105,24 +105,30 @@
       return false
     }
     if (input.recipientInput.value !== input.recipient.value) {
-      // console.log('recipient input mismatch', input.recipientInput.value, input.recipient.value)
+      // console.log('recipient input', input.recipientInput.value, input.recipient.value)
       return true
     }
     if (!isRequiredChain) {
+      // console.log('not required chain', isRequiredChain)
       return false
     }
     if (minAmount && input.amountIn.value && input.amountIn.value < minAmount) {
+      // console.log('min amount', minAmount, input.amountIn.value)
       return true
     }
     if (input.recipient.value === zeroAddress) {
+      // console.log('recipient is zero address', input.recipient.value)
       return true
     }
     if (!skipApproval) {
       if (bridgeSettings.amountToBridge === null || bridgeSettings.amountToBridge === 0n) {
+        // console.log('amount to bridge is null', bridgeSettings.amountToBridge)
         return true
       }
+      // console.log('has sufficient approval', hasSufficientApproval)
       return hasSufficientApproval
     }
+    // console.log('token balance', tokenBalance, input.amountIn.value)
     return !input.amountIn.value || input.amountIn.value > tokenBalance
   })
   const fromNetwork = $derived(appkitNetworkById.get(Number(input.bridgeKey.fromChain)))
