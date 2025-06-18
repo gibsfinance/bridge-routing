@@ -53,14 +53,15 @@
     const keyAddress = bridgeKey.assetInAddress
     const tokens = input.bridgableTokens.value
     if (!keyAddress || !tokens.length) return
-    const assetIn = untrack(() => bridgeSettings.assetIn.value)
-    if (keyAddress && assetIn?.address) {
-      if (getAddress(keyAddress) === getAddress(assetIn?.address)) {
-        // if we don't return here, we have an infinite loop for some reason
-        // console.log('assetIn already set', keyAddress, assetIn?.address)
-        return
-      }
-    }
+    // const assetIn = bridgeSettings.assetIn.value
+    // console.log('assetIn', keyAddress, assetIn)
+    // if (keyAddress && assetIn?.address) {
+    //   if (getAddress(keyAddress) === getAddress(assetIn?.address)) {
+    //     // if we don't return here, we have an infinite loop for some reason
+    //     // console.log('assetIn already set', keyAddress, assetIn?.address)
+    //     return
+    //   }
+    // }
     const updatingAssetIn = updateAssetIn({
       bridgeKey: bridgeKey.value,
       address: keyAddress as Hex,
