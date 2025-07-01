@@ -71,7 +71,7 @@
     const minAmount = minBridgeAmountIn.get(
       minBridgeAmountInKey(bridgeKey.value, bridgeSettings.assetIn.value),
     )
-    if (!minAmount) return true
+    if (minAmount === undefined || minAmount === null) return true
     return !!input.amountIn.value && input.amountIn.value < minAmount
   })
 </script>

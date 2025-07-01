@@ -73,14 +73,14 @@ export class BridgeSettings {
   }
 
   bridgePathway = $derived.by(() => {
-    return pathway(input.bridgeKey.value, isProd.value)
+    return pathway(input.bridgeKey.value, isProd.value, this.assetIn.value?.address)
   })
   bridgeFees = $derived.by(() => {
     return settings.get(settingKey(input.bridgeKey.value))
   })
   bridgeFee = $derived.by(() => {
     const setting = settings.get(settingKey(input.bridgeKey.value))
-    const path = pathway(input.bridgeKey.value, isProd.value)
+    const path = pathway(input.bridgeKey.value, isProd.value, this.assetIn.value?.address)
     return (path?.toHome ? setting?.feeF2H : setting?.feeH2F) ?? null
   })
   amountToBridge = $derived.by(() => {
@@ -197,7 +197,7 @@ export class BridgeSettings {
   })
   desiredExcessCompensationBasisPoints = $derived.by(() => {
     const bridgeKey = input.bridgeKey.value
-    const path = pathway(bridgeKey, isProd.value)
+    const path = pathway(bridgeKey, isProd.value, this.assetIn.value?.address)
     const assetIn = this.assetIn.value
     const assetOut = this.assetOut
     const assetOutAddress = assetOut?.address ?? null
@@ -301,22 +301,36 @@ export class BridgeSettings {
       (home && getAddress(home) === assetInAddress)
     )
   })
+  requiresForeignDataParam = $derived.by(() => {
+    const bridgePathway = this.bridgePathway
+    return bridgePathway?.requiresDelivery
+  })
   foreignDataParam = $derived.by(() => {
     const bridgePathway = this.bridgePathway
     const assetIn = this.assetIn.value
+    const destinationRouter = bridgePathway?.destinationRouter
+    const feeDirectorStructEncoded = this.feeDirectorStructEncoded
+    const assetLink = chainEvents.assetLink.value
     if (!bridgePathway || !assetIn) {
       return null
     }
-    const destinationRouter = bridgePathway.destinationRouter
-    const feeDirectorStructEncoded = this.feeDirectorStructEncoded
-    const assetLink = chainEvents.assetLink.value
-    if (!destinationRouter || !feeDirectorStructEncoded || !assetLink) {
+    if (!destinationRouter) {
+      console.log('no destination router')
+      return null
+    }
+    if (bridgePathway.requiresDelivery && !feeDirectorStructEncoded) {
+      console.log('no fee director struct encoded')
+      return null
+    }
+    if (!assetLink) {
+      console.log('no asset link')
       return null
     }
     if (bridgePathway.requiresDelivery && !input.shouldDeliver.value) {
       return input.recipient.value
     }
-    return concatHex([destinationRouter, feeDirectorStructEncoded])
+    const calldata = feeDirectorStructEncoded ?? '0x'
+    return concatHex([destinationRouter, calldata])
   })
   feeDirectorStructEncoded = $derived.by(() => {
     const assetOut = this.assetOut
@@ -327,7 +341,13 @@ export class BridgeSettings {
     const gasTipFee = input.gasTipFee.value
     const feeTypeSettings = this.feeTypeSettings
     const limit = this.limit
-    if (!assetOut || !bridgePathway || !priceCorrective) {
+    if (!assetOut || !bridgePathway) {
+      return null
+    }
+    if (!bridgePathway.requiresDelivery) {
+      return null
+    }
+    if (!priceCorrective) {
       return null
     }
     let multiplier = 0n
@@ -392,6 +412,7 @@ export class BridgeSettings {
     const bridgePathway = this.bridgePathway
     const assetIn = this.assetIn.value
     const recipient = input.recipient.value
+    // const requiresForeignDataParam = this.requiresForeignDataParam
     const foreignDataParam = this.foreignDataParam
     const amountToBridge = this.amountToBridge
     const feeDirectorStructEncoded = this.feeDirectorStructEncoded
@@ -440,7 +461,9 @@ export class BridgeSettings {
       value = 0n
       // if we want delivery of the tokens (going from home to foreign) then we need to have the foreign data param
       // and it needs to start with the destination router
-      if (!foreignDataParam) return null
+      if (!foreignDataParam) {
+        return null
+      }
       data = bridgePathway.usesExtraParam
         ? encodeFunctionData({
           abi: abis.erc677ExtraInput,
@@ -676,6 +699,7 @@ export const updateAssetOut = ({
         `${Number(toChain)}/${assetOutAddress}`,
       ]),
     }
+    console.log('assetOut', assetOut)
     return resolved(assetOut)
   }
   return loading.loadsAfterTick<Token | null>(
@@ -811,6 +835,9 @@ export const loadPriceCorrective = ({
   const measurementToken = nativeAssetOut[toChain]
   const partner = [provider, toChain, fromChain] as BridgeKey
   const fromChainClient = input.clientFromChain(Number(fromChain))
+  if (fromChain !== Chains.PLS && fromChain !== Chains.V4PLS) {
+    return resolved(null)
+  }
   const fetch = fetchPriceCorrective({
     isProd: isProd.value,
     bridgeKey,

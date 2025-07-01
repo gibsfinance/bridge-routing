@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Token } from '@gibs/bridge-sdk/types'
   import { chainsMetadata } from '@gibs/bridge-sdk/chains'
-  import { toChain } from '@gibs/bridge-sdk/config'
+  import { Chains, toChain } from '@gibs/bridge-sdk/config'
   import type { ClassValue } from 'svelte/elements'
-  import { zeroAddress } from 'viem'
+  import { getAddress, zeroAddress } from 'viem'
 
   import { assetSources } from '../stores/bridge-settings.svelte'
   import { loading } from '../stores/loading.svelte'
@@ -36,11 +36,12 @@
   ])
   const finishedLoading = $derived(chain && loading.isResolved('token'))
   const nativeToken = $derived(zeroAddress === asset?.address)
+  const showWarning = $derived(asset?.chainId === Number(Chains.ETH) && getAddress(asset?.address) === getAddress('0x97ac4a2439a47c07ad535bb1188c989dae755341'))
 </script>
 
 <span class={classes} title={asset?.symbol ?? ''}>
   {#if src}
-    <TokenIcon visible sizeClasses={tokenSizeClasses} class={tokenClasses} {src} />
+    <TokenIcon visible sizeClasses={tokenSizeClasses} class={tokenClasses} {showWarning} {src} />
     {#if finishedLoading && !nativeToken}
       <Image
         class="network-image absolute -left-0.5 -bottom-0.5 rounded-full bg-surface-50"

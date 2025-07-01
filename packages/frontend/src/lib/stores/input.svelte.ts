@@ -98,7 +98,7 @@ export class BridgeKeyStore {
     return [this.value[0], this.value[2], this.value[1]] as BridgeKey
   }
   get isValid() {
-    return !!pathway(this.value, isProd.value)
+    return !!pathway(this.value, isProd.value, this.assetInAddress)
   }
   get provider() {
     return this.value[0]
@@ -116,7 +116,7 @@ export class BridgeKeyStore {
     return chainIdToChain(this.toChain)
   }
   get pathway() {
-    return pathway(this.value, isProd.value)
+    return pathway(this.value, isProd.value, this.assetInAddress)
   }
   get destinationSupportsEIP1559() {
     return this.toChain === Chains.BNB ? false : true
@@ -228,6 +228,7 @@ export const loadLists = loading.loadsAfterTick<Token[] | null>(
       ..._(lists)
         .map('tokens')
         .flatten()
+        .filter((t) => !blacklist.has(getAddress(t.address as Hex)))
         .compact()
         .reduce((agg, t) => {
           const key = `${t.chainId}/${t.address}`.toLowerCase()

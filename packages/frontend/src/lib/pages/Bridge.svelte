@@ -21,7 +21,7 @@
   const bridgeKey = $derived([provider, Chains[fromChain], Chains[toChain]] as BridgeKey)
 
   onMount(() => {
-    if (!pathway(bridgeKey, isProd.value)) {
+    if (!pathway(bridgeKey, isProd.value, page.params.assetInAddress as Hex | null)) {
       const assetInAddress = page.params.assetInAddress ?? zeroAddress
       nav.bridge.shallow(input.defaultBridgeKey, assetInAddress)
     } else {

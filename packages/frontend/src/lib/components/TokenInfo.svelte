@@ -1,13 +1,14 @@
 <script lang="ts">
   import type { ClassValue } from 'svelte/elements'
   import type { Token } from '@gibs/bridge-sdk/types'
-  import { zeroAddress } from 'viem'
+  import { getAddress, zeroAddress } from 'viem'
 
   import { assetSources } from '../stores/bridge-settings.svelte'
   import { bridgableTokens } from '../stores/input.svelte'
   import { ellipsis } from '../stores/utils'
 
   import TokenIcon from './TokenIcon.svelte'
+    import { Chains } from '@gibs/bridge-sdk/config'
   type Props = {
     token: Token
     truncate?: number
@@ -46,11 +47,13 @@
     reversed ? 'right-0' : 'left-0',
   ])
   const src = $derived(token.logoURI || assetSources(token, bridgableTokens.value))
+  const showWarning = $derived(token.chainId === Number(Chains.ETH) && getAddress(token.address) === getAddress('0x97ac4a2439a47c07ad535bb1188c989dae755341'))
+  $inspect(token)
 </script>
 
 <div class={wrapperClasses}>
   <span class="size-10 flex-shrink-0" data-src={src}>
-    <TokenIcon src={src} sizeClasses="size-10" />
+    <TokenIcon src={src} sizeClasses="size-10" showWarning={showWarning} />
   </span>
   <span class={textContainerClasses}>
     <span class={`${nameClasses} leading-6 truncate overflow-hidden text-ellipsis`}

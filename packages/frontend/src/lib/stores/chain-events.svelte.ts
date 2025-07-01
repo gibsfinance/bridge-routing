@@ -1,7 +1,7 @@
 import * as input from './input.svelte'
 import { tokenBridgeInfo, type TokenBridgeInfo, minBridgeAmountIn as minBridgeAmountInSdk } from '@gibs/bridge-sdk/chain-info'
 import * as abis from '@gibs/bridge-sdk/abis'
-import { Chains } from '@gibs/bridge-sdk/config'
+import { Chains, nativeAssetOut } from '@gibs/bridge-sdk/config'
 import type { Token } from '@gibs/bridge-sdk/types'
 import type { BridgeKey } from '@gibs/bridge-sdk/types'
 import { chainsMetadata } from '@gibs/bridge-sdk/chains'
@@ -263,7 +263,7 @@ export const minBridgeAmountInKey = (bridgeKey: BridgeKey, assetIn: Token | null
 }
 export const fetchMinBridgeAmountIn = (bridgeKey: BridgeKey, assetIn: Token | null) => {
   // these clients should already be created, so we should not be doing any harm by accessing them
-  const path = pathway(bridgeKey, isProd.value)
+  const path = pathway(bridgeKey, isProd.value, assetIn?.address)
   if (!path || !assetIn) {
     return () => { }
   }
@@ -313,8 +313,6 @@ const getReservesFailure = (chainId: number, token: Hex) => {
   }
 }
 
-const wpls = '0xA1077a294dDE1B09bB078844df40758a5D0f9a27'
-
 const retryCount = 3
 const retry = async <T>(
   delay: number,
@@ -361,8 +359,8 @@ const formatReserveQuery = (
     }
   }
   const [rt0, rt1, timestamp] = reserves
-  const wplsReserve = token0 === wpls ? rt0 : rt1
-  const tokenReserve = token1 === wpls ? rt0 : rt1
+  const wplsReserve = token0 === nativeAssetOut[Chains.PLS] ? rt0 : rt1
+  const tokenReserve = token1 === nativeAssetOut[Chains.PLS] ? rt0 : rt1
   return {
     ...query,
     reserves: { wpls: wplsReserve, amount: tokenReserve, timestamp },
@@ -386,7 +384,7 @@ export const getPoolInfo = async (chainId: number, token: Hex, block: Block) => 
     () =>
       Promise.all(
         Array.from(factoryAndInitCodeHash.entries()).map(async ([factory, initCodeHash]) => {
-          const [pair, token0, token1] = tokenToPair(token, wpls, factory, initCodeHash)
+          const [pair, token0, token1] = tokenToPair(token, nativeAssetOut[Chains.PLS], factory, initCodeHash)
           const reserves = await getContract({
             abi: abis.pair,
             address: pair,

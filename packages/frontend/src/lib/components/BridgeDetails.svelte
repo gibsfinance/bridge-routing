@@ -156,7 +156,7 @@
                           return int
                         }
                       }} /></span>
-                  <span class="flex-none flex flex-row items-center leading-8">%</span>
+                  <span class="flex-none flex flex-row items-center leading-7">%</span>
                 {:else if feeType === FeeType.PERCENT}
                   <NumericInput
                     sizeClass="flex flex-row w-auto grow leading-7 h-7 text-inherit text-sm"

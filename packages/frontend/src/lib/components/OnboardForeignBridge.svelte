@@ -339,7 +339,7 @@
   let pulsexQuoteResult = $state<SerializedTrade | null>(null)
   const latestPulseBlock = $derived(blocks.get(Number(Chains.PLS))!.get('latest')!.block!)
   let lastUpdatedWasOutput = $state(false)
-  const wplsTokenInAddress = '0xA1077a294dDE1B09bB078844df40758a5D0f9a27'
+  const wplsTokenInAddress = nativeAssetOut[Chains.PLS]
   const plsxTokenAddress = '0x95B303987A60C71504D99Aa1b13B4DA07b0790ab'
   $effect(() => {
     if (!tokenInPulsex || !tokenOutPulsex) return
@@ -382,11 +382,11 @@
       amountOut: null,
     })
     quote.promise.then((result) => {
-      if (quote.controller.signal.aborted || !result.success) {
+      if (quote.controller.signal.aborted || !result?.success) {
         pulsexQuoteResult = null
         return
       }
-      pulsexQuoteResult = result.trade
+      pulsexQuoteResult = result!.trade!
     })
     return quote.cleanup
   })

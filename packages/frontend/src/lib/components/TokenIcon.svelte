@@ -11,6 +11,7 @@
     visible?: boolean
     class?: ClassValue
     containerClasses?: ClassValue
+    showWarning?: boolean
   }
   const {
     src,
@@ -18,6 +19,7 @@
     sizeClasses = 'size-8',
     class: className = '',
     containerClasses,
+    showWarning = false,
   }: Props = $props()
   let loaded: boolean | null = $state(null)
   const markLoaded = (val: boolean) => () => {
@@ -34,5 +36,8 @@
     <Image {src} {alt} {onload} {onerror} class={classes} {sizeClasses} {containerClasses} />
   {:else}
     <Icon icon="nrk:media-404-notfound" class={iconClass} />
+  {/if}
+  {#if showWarning}
+    <Icon icon="mdi:alert-circle-outline" class="bg-white rounded-full absolute -top-1 -right-1 size-5 text-red-500" />
   {/if}
 </div>

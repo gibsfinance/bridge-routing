@@ -106,7 +106,7 @@
     }
     return custom
   }
-  const fullTokenSet = $derived.by(() => {
+  const concattedTokenSet = $derived.by(() => {
     const [selected, notSelected] = selectedToken
       ? _.partition(tokens, (t) => {
           return (
@@ -122,6 +122,7 @@
     const custom = customTokens.tokens.value
     return custom.concat(rearranged)
   })
+  const fullTokenSet = $derived(_.uniqBy(concattedTokenSet, (t) => `${t.chainId}-${t.address.toLowerCase()}`))
   const filteredSubset = $derived(
     getSubset(fullTokenSet, searchValue, showAllTokens, showAllChains),
   )

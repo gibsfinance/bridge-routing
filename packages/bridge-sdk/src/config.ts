@@ -1,4 +1,4 @@
-import { zeroAddress, type Hex } from "viem";
+import { getAddress, zeroAddress, type Hex } from "viem";
 import _ from 'lodash'
 import * as imageLinks from '@gibs/bridge-sdk/image-links'
 import type { BridgeKey, Token, TokenOut } from "./types.js";
@@ -80,12 +80,20 @@ export type Pathway = {
   feeManager: 'from' | 'to'
   toHome: boolean
   requiresDelivery: boolean
+  settingOverrides?: Record<Hex, Partial<Pathway>>
 }
 
 export type DeepPathwayConfig = Record<
   Provider,
   Partial<Record<Chains, Partial<Record<Chains, Pathway>>>>
 >
+
+const pulsechainPLSETHSettings = {
+  from: '0x0e18d0d556b652794EF12Bf68B2dC857EF5f3996',
+  to: '0xe20E337DB2a00b1C37139c873B92a0AAd3F468bF',
+  destinationRouter: '0x1F0144Ce3BDaf11944Fe0beF6444599a0500695B',
+  nativeRouter: '0xE66877Cfe4CEc10ffBbBB3092B7001321AB5809D',
+}
 
 export const pathways = {
   [Provider.PULSECHAIN]: {
@@ -100,6 +108,10 @@ export const pathways = {
         feeManager: 'from',
         toHome: false,
         requiresDelivery: true,
+        settingOverrides: {
+          [zeroAddress]: pulsechainPLSETHSettings,
+          [getAddress(nativeAssetOut[Chains.PLS])]: pulsechainPLSETHSettings,
+        },
         defaultAssetIn: {
           symbol: 'WETH',
           name: 'Wrapped Ether from Ethereum',
@@ -128,6 +140,14 @@ export const pathways = {
         usesExtraParam: false,
         toHome: true,
         requiresDelivery: false,
+        settingOverrides: {
+          [getAddress('0xa882606494d86804b5514e07e6bd2d6a6ee6d68a')]: {
+            from: '0xe20E337DB2a00b1C37139c873B92a0AAd3F468bF',
+            to: '0x0e18d0d556b652794EF12Bf68B2dC857EF5f3996',
+            destinationRouter: '0xE66877Cfe4CEc10ffBbBB3092B7001321AB5809D',
+            nativeRouter: '0x1F0144Ce3BDaf11944Fe0beF6444599a0500695B',
+          },
+        },
         defaultAssetIn: {
           chainId: 1,
           address: nativeAssetOut[Chains.ETH],
@@ -332,9 +352,19 @@ export const inferBridgeKey = ({
   return [provider, nextFromChain, nextToChain] as BridgeKey
 }
 
-export const pathway = (bridgeKey: BridgeKey | null, isProd: boolean) => {
+export const pathway = (bridgeKey: BridgeKey | null, isProd: boolean, assetInAddress?: string | Hex | null | undefined) => {
   if (!bridgeKey) return
-  return _.get(pathways, bridgeKey) || (!isProd ? _.get(testnetPathways, bridgeKey) : undefined)
+  let pathway = _.get(pathways, bridgeKey) || (!isProd ? _.get(testnetPathways, bridgeKey) : undefined)
+  if (assetInAddress) {
+    const addr = getAddress(assetInAddress)
+    if (pathway?.settingOverrides?.[addr]) {
+      pathway = {
+        ...pathway,
+        ...pathway.settingOverrides[addr],
+      }
+    }
+  }
+  return pathway
 }
 
 export const defaultAssetIn = ($bridgeKey: BridgeKey | null, isProd: boolean) => {
@@ -355,13 +385,17 @@ export const isNative = (asset: Token | TokenOut | null, bridgeKey: BridgeKey | 
 }
 
 export const isUnwrappable = (
-  asset: Pick<Token, 'extensions'> | null,
+  asset: Pick<Token, 'extensions' | 'address'> | null,
   bridgeKey: BridgeKey | null,
 ) => {
   if (!bridgeKey || !asset) {
     return false
   }
   const [, , toChain] = bridgeKey
+  if (toChain === Chains.PLS) {
+    const addr = getAddress(asset.address)
+    return addr === getAddress('0x97Ac4a2439A47c07ad535bb1188c989dae755341') || addr === getAddress(nativeAssetOut[Chains.PLS])
+  }
   return nativeAssetOut[toChain] === asset.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
 }
 
