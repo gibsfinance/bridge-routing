@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 
 @import '@skeletonlabs/skeleton';
-@import '@skeletonlabs/skeleton/optional/presets';
 @import '@skeletonlabs/skeleton/themes/nouveau';
+@import '@skeletonlabs/skeleton/optional/presets';
 
 @plugin '@tailwindcss/forms';
 

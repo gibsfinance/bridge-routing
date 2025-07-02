@@ -81,9 +81,9 @@ export const tokenBridgeInfo = async ({
       originationChainId: fromChain,
       assetInAddress: assetInAddress as Hex,
       assetOutAddress: toBridged,
-      toForeign: {
-        foreign: toBridged,
-        home: assetInAddress as Hex,
+      toHome: {
+        home: toBridged,
+        foreign: assetInAddress as Hex,
       },
     }
   }
@@ -94,7 +94,7 @@ export const tokenBridgeInfo = async ({
       originationChainId: toChain,
       assetInAddress: assetInAddress as Hex,
       assetOutAddress: toNative,
-      toHome: {
+      toForeign: {
         home: toNative,
         foreign: assetInAddress as Hex,
       },

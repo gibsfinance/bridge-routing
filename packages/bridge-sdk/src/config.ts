@@ -39,6 +39,10 @@ export const nativeAssetOut = {
   [Chains.V4PLS]: '0x70499adEBB11Efd915E3b69E700c331778628707',
 } as Record<Chains, Hex>
 
+export const deprecatedNativeAssetOut = {
+  [Chains.PLS]: new Set(['0x97Ac4a2439A47c07ad535bb1188c989dae755341']),
+} as Partial<Record<Chains, Set<Hex>>>
+
 export const uniV2Routers = {
   [Chains.PLS]: [
     '0x98bf93ebf5c380C0e6Ae8e192A7e2AE08edAcc02',
@@ -394,7 +398,7 @@ export const isUnwrappable = (
   const [, , toChain] = bridgeKey
   if (toChain === Chains.PLS) {
     const addr = getAddress(asset.address)
-    return addr === getAddress('0x97Ac4a2439A47c07ad535bb1188c989dae755341') || addr === getAddress(nativeAssetOut[Chains.PLS])
+    return deprecatedNativeAssetOut[Chains.PLS]!.has(getAddress(addr)) || addr === getAddress(nativeAssetOut[Chains.PLS])
   }
   return nativeAssetOut[toChain] === asset.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
 }

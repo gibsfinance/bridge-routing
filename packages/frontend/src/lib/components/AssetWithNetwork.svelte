@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Token } from '@gibs/bridge-sdk/types'
   import { chainsMetadata } from '@gibs/bridge-sdk/chains'
-  import { Chains, toChain } from '@gibs/bridge-sdk/config'
+  import { Chains, deprecatedNativeAssetOut, toChain } from '@gibs/bridge-sdk/config'
   import type { ClassValue } from 'svelte/elements'
   import { getAddress, zeroAddress } from 'viem'
 
@@ -18,12 +18,14 @@
     network?: number
     tokenSizeClasses?: ClassValue
     networkSizeClasses?: ClassValue
+    hideNetwork?: boolean
   }
   const {
     asset,
     tokenSizeClasses = 'size-8',
     networkSizeClasses = 'size-4',
     class: className = '',
+    hideNetwork = false,
   }: Props = $props()
   const chainId = $derived(asset?.chainId ? Number(asset.chainId) : 0)
   const chain = $derived(chainsMetadata[toChain(chainId)])
@@ -36,13 +38,13 @@
   ])
   const finishedLoading = $derived(chain && loading.isResolved('token'))
   const nativeToken = $derived(zeroAddress === asset?.address)
-  const showWarning = $derived(asset?.chainId === Number(Chains.ETH) && getAddress(asset?.address) === getAddress('0x97ac4a2439a47c07ad535bb1188c989dae755341'))
+  const showWarning = $derived(asset?.chainId === Number(Chains.ETH) && deprecatedNativeAssetOut[Chains.PLS]!.has(getAddress(asset?.address)))
 </script>
 
 <span class={classes} title={asset?.symbol ?? ''}>
   {#if src}
     <TokenIcon visible sizeClasses={tokenSizeClasses} class={tokenClasses} {showWarning} {src} />
-    {#if finishedLoading && !nativeToken}
+    {#if finishedLoading && !nativeToken && !hideNetwork}
       <Image
         class="network-image absolute -left-0.5 -bottom-0.5 rounded-full bg-surface-50"
         sizeClasses={networkSizeClasses}

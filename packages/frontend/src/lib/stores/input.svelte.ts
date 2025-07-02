@@ -241,9 +241,6 @@ export const loadLists = loading.loadsAfterTick<Token[] | null>(
             exists.logoURI = t.logoURI
           }
           exists.extensions = _.merge(_.merge({}, exists.extensions ?? {}), t.extensions ?? {})
-          if (exists.chainId === 1 && exists.address === zeroAddress) {
-            console.log('exists', key, exists)
-          }
           return agg
         }, new Map<string, Token>())
         .values(),

@@ -8,7 +8,9 @@
   import { ellipsis } from '../stores/utils'
 
   import TokenIcon from './TokenIcon.svelte'
-    import { Chains } from '@gibs/bridge-sdk/config'
+  import { Chains, deprecatedNativeAssetOut } from '@gibs/bridge-sdk/config'
+    import AssetWithNetwork from './AssetWithNetwork.svelte'
+
   type Props = {
     token: Token
     truncate?: number
@@ -47,17 +49,16 @@
     reversed ? 'right-0' : 'left-0',
   ])
   const src = $derived(token.logoURI || assetSources(token, bridgableTokens.value))
-  const showWarning = $derived(token.chainId === Number(Chains.ETH) && getAddress(token.address) === getAddress('0x97ac4a2439a47c07ad535bb1188c989dae755341'))
-  $inspect(token)
+  const showWarning = $derived(token.chainId === Number(Chains.ETH) && deprecatedNativeAssetOut[Chains.PLS]!.has(getAddress(token.address)))
 </script>
 
 <div class={wrapperClasses}>
   <span class="size-10 flex-shrink-0" data-src={src}>
-    <TokenIcon src={src} sizeClasses="size-10" showWarning={showWarning} />
+    <AssetWithNetwork asset={token} tokenSizeClasses="size-10" hideNetwork />
   </span>
   <span class={textContainerClasses}>
     <span class={`${nameClasses} leading-6 truncate overflow-hidden text-ellipsis`}
-      >{token.name}</span>
+      >{token.name}{showWarning ? ' (Deprecated)' : ''}</span>
     <span class="flex flex-row text-sm items-center leading-4 gap-2">
       <span class="text-gray-500 font-light">{token.symbol}</span>
       {#if token.address !== zeroAddress}

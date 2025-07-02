@@ -14,7 +14,7 @@ export const createFontScaler =
 export const largeInputSettings = {
   maxFontSize: 36,
   minFontSize: 18,
-  freeCharacters: 4,
-  scale: 1.3,
+  freeCharacters: 10,
+  scale: 1,
 }
 export const largeInputFontScaler = createFontScaler(largeInputSettings)

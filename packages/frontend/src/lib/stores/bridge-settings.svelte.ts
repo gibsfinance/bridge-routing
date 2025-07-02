@@ -291,6 +291,7 @@ export class BridgeSettings {
   })
   interactingWithBridgeToken = $derived.by(() => {
     const { toForeign, toHome } = chainEvents.assetLink.value || {}
+    // console.log('interactingWithBridgeToken', chainEvents.assetLink.value)
     const { foreign } = toForeign || {}
     const { home } = toHome || {}
     let assetInAddress = this.assetInAddress
@@ -455,6 +456,7 @@ export class BridgeSettings {
     // only relevant for the relayTokens(AndCall) pathway outside of native tokens
     let toAddress = bridgePathway.from
     let data = '0x' as Hex
+    console.log('interactingWithBridgeToken', interactingWithBridgeToken)
     if (interactingWithBridgeToken) {
       // when interacting with a bridged token, we need to call the token address directly
       toAddress = assetIn.address as Hex
@@ -730,6 +732,7 @@ export const updateAssetOut = ({
       if (result) {
         const [name, symbol, decimals] = result
         res = {
+          ...assetInput, // preserve extensions
           name,
           symbol,
           decimals,
@@ -939,6 +942,7 @@ export const assetSources = (
     }
   })
   const sources = sorted.map((a: MinTokenInfo) => `${a.chainId}/${a.address}`.toLowerCase())
+  console.log('sources', sources, asset, inputs)
   return asset.logoURI ?? address === zeroAddress ? imageLinks.images(sources) : input.tokenImageLookup({
     chainId,
     address,
