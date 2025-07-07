@@ -84,6 +84,7 @@ export type Pathway = {
   feeManager: 'from' | 'to'
   toHome: boolean
   requiresDelivery: boolean
+  bridgedNativeAssetOut: Hex
   settingOverrides?: Record<Hex, Partial<Pathway>>
 }
 
@@ -112,6 +113,8 @@ export const pathways = {
         feeManager: 'from',
         toHome: false,
         requiresDelivery: true,
+        // weth from ethereum on pulsechain
+        bridgedNativeAssetOut: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
         settingOverrides: {
           [zeroAddress]: pulsechainPLSETHSettings,
           [getAddress(nativeAssetOut[Chains.PLS])]: pulsechainPLSETHSettings,
@@ -144,6 +147,8 @@ export const pathways = {
         usesExtraParam: false,
         toHome: true,
         requiresDelivery: false,
+        // wpls from pulsechain on ethereum
+        bridgedNativeAssetOut: '0xA882606494D86804B5514E07e6Bd2D6a6eE6d68A',
         settingOverrides: {
           [getAddress('0xa882606494d86804b5514e07e6bd2d6a6ee6d68a')]: {
             from: '0xe20E337DB2a00b1C37139c873B92a0AAd3F468bF',
@@ -182,6 +187,8 @@ export const pathways = {
         usesExtraParam: true,
         toHome: false,
         requiresDelivery: true,
+        // wbnb from bsc on pulsechain (tokensex)
+        bridgedNativeAssetOut: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
         defaultAssetIn: {
           symbol: 'WBNB',
           name: 'Wrapped BNB',
@@ -210,6 +217,8 @@ export const pathways = {
         usesExtraParam: true,
         toHome: true,
         requiresDelivery: false,
+        // wpls from pulsechain on bsc (tokensex)
+        bridgedNativeAssetOut: '0xF6088134D28eeBEF7128BA41FaDb2FCA0666c64C',
         defaultAssetIn: {
           chainId: 56,
           address: nativeAssetOut[Chains.BNB],
@@ -266,6 +275,7 @@ export const testnetPathways = {
         requiresDelivery: true,
         toHome: false,
         feeManager: 'from',
+        bridgedNativeAssetOut: '0x3677bd78ccf4d299328ecfba61790cf8dbfcf686',
         defaultAssetIn: {
           chainId: 943,
           address: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
@@ -294,6 +304,7 @@ export const testnetPathways = {
         requiresDelivery: false,
         toHome: true,
         feeManager: 'to',
+        bridgedNativeAssetOut: '0x35807560aD0597E23F452cdc82D4Fb0e7E3c6590',
         defaultAssetIn: {
           chainId: 11_155_111,
           address: nativeAssetOut[Chains.SEP],
@@ -389,19 +400,18 @@ export const isNative = (asset: Token | TokenOut | null, bridgeKey: BridgeKey | 
 }
 
 export const isUnwrappable = (
-  asset: Pick<Token, 'extensions' | 'address'> | null,
   bridgeKey: BridgeKey | null,
+  assetIn: Pick<Token, 'address'> | null,
 ) => {
-  if (!bridgeKey || !asset) {
+  if (!bridgeKey || !assetIn) {
     return false
   }
-  const [, , toChain] = bridgeKey
-  if (toChain === Chains.PLS) {
-    const addr = getAddress(asset.address)
-    return deprecatedNativeAssetOut[Chains.PLS]!.has(getAddress(addr)) || addr === getAddress(nativeAssetOut[Chains.PLS])
-  }
-  return nativeAssetOut[toChain] === asset.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
+  const addr = getAddress(assetIn.address)
+  const path = pathway(bridgeKey, false)
+  if (!path) return false
+  return path.bridgedNativeAssetOut === getAddress(addr)
 }
 
-export const canChangeUnwrap = (bridgeKey: BridgeKey, assetIn: Token | null) =>
-  !!assetIn && isUnwrappable(assetIn, bridgeKey)
+export const canChangeUnwrap = (bridgeKey: BridgeKey, assetIn: Token | null) => {
+  return !!assetIn && isUnwrappable(bridgeKey, assetIn)
+}

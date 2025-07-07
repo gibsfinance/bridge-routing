@@ -167,6 +167,7 @@
   const showTxInput = $derived(bridgeTx.value?.showEdit ?? false)
   const txHashIsValid = (v: string | null) => !!v && v.length === 66 && isHex(v)
   const isValidTxHash = $derived(txHashIsValid(txInputValue))
+  $inspect(bridgeTx.value?.hash)
 </script>
 
 {#if showTxInput}

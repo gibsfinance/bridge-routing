@@ -13,6 +13,18 @@
 </script>
 
 <div class="flex flex-col gap-1 text-sm mt-1">
+  <div
+    class="leading-6 justify-between flex flex-col sm:flex-row sm:items-center disabled cursor-not-allowed"
+    class:rounded-b-lg={!nonZeroXCalldata}>
+    <span>From (Bridge)</span>
+    <span class="font-mono text-xs">{bridgeKey.pathway?.from || zeroAddress}</span>
+  </div>
+  <div
+    class="leading-6 justify-between flex flex-col sm:flex-row sm:items-center disabled cursor-not-allowed"
+    class:rounded-b-lg={!nonZeroXCalldata}>
+    <span>To (Bridge)</span>
+    <span class="font-mono text-xs">{bridgeKey.pathway?.to || zeroAddress}</span>
+  </div>
   {#if bridgeKey.destinationRouter}
     <div
       class="leading-6 justify-between flex flex-col sm:flex-row sm:items-center disabled cursor-not-allowed relative">
@@ -31,12 +43,6 @@
         }}>Unwrap</ButtonToggle>
     </div>
   {/if}
-  <div
-    class="leading-6 justify-between flex flex-col sm:flex-row sm:items-center disabled cursor-not-allowed"
-    class:rounded-b-lg={!nonZeroXCalldata}>
-    <span>To (Bridge)</span>
-    <span class="font-mono text-xs">{bridgeKey.pathway?.to || zeroAddress}</span>
-  </div>
   {#if nonZeroXCalldata}
     <div
       class="rounded-b-lg leading-4 justify-between flex flex-col sm:flex-row cursor-not-allowed">

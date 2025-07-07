@@ -121,6 +121,10 @@ export class BridgeSettings {
     const fixedFee = amountAfterBridgeFee ? (amountAfterBridgeFee * percentFee) / input.oneEther : null
     const feeType = this.feeType
     const limit = this.limit
+    const costsToDeliver = input.shouldDeliver.value
+    if (!costsToDeliver) {
+      return 0n
+    }
     if (feeType === FeeType.FIXED) {
       return fee
     } else if (feeType === FeeType.PERCENT) {
@@ -131,16 +135,6 @@ export class BridgeSettings {
     }
     return null
   })
-
-  // deliveryCost = $derived.by(() => {
-  //   // if (this.feeType === FeeType.PERCENT) { } else if (this.feeType === FeeType.GAS_TIP) { } else if (this.feeType === FeeType.FIXED) {
-
-  //   // }
-  //   // if (this.feeType === FeeType.PERCENT) {
-  //   //   return (this.estimatedNetworkCost * (oneEther + this.percentFee)) / oneEther
-  //   // }
-  //   // return this.estimatedNetworkCost
-  // })
   estimatedNativeNetworkCost = $derived.by(() => {
     const estimatedGas = this.estimatedGas
     const latestBaseFeePerGas = this.latestBaseFeePerGas
@@ -302,16 +296,22 @@ export class BridgeSettings {
       (home && getAddress(home) === assetInAddress)
     )
   })
-  requiresForeignDataParam = $derived.by(() => {
+  requiresDestinationDataParam = $derived.by(() => {
     const bridgePathway = this.bridgePathway
     return bridgePathway?.requiresDelivery
   })
-  foreignDataParam = $derived.by(() => {
+  destinationDataParam = $derived.by(() => {
     const bridgePathway = this.bridgePathway
     const assetIn = this.assetIn.value
     const destinationRouter = bridgePathway?.destinationRouter
     const feeDirectorStructEncoded = this.feeDirectorStructEncoded
     const assetLink = chainEvents.assetLink.value
+    const shouldDeliver = input.shouldDeliver.value
+    const unwrap = input.unwrap.value && canChangeUnwrap(input.bridgeKey.value, assetIn)
+    const recipient = input.recipient.value
+    if (!recipient) {
+      return null
+    }
     if (!bridgePathway || !assetIn) {
       return null
     }
@@ -327,11 +327,23 @@ export class BridgeSettings {
       console.log('no asset link')
       return null
     }
-    if (bridgePathway.requiresDelivery && !input.shouldDeliver.value) {
-      return input.recipient.value
+    if (bridgePathway.requiresDelivery) {
+      // going from home to foreign
+      if (!shouldDeliver) {
+        // act like a regular bridge
+        return recipient
+      }
+      // going from foreign to home
+      if (feeDirectorStructEncoded) {
+        return concatHex([destinationRouter, feeDirectorStructEncoded])
+      }
+      return recipient
     }
-    const calldata = feeDirectorStructEncoded ?? '0x'
-    return concatHex([destinationRouter, calldata])
+    if (!unwrap) {
+      return recipient
+    }
+    // unwrap wpls->pls
+    return concatHex([destinationRouter, recipient])
   })
   feeDirectorStructEncoded = $derived.by(() => {
     const assetOut = this.assetOut
@@ -340,6 +352,7 @@ export class BridgeSettings {
     const feeType = this.feeType
     const recipient = input.recipient.value
     const gasTipFee = input.gasTipFee.value
+    const percentFee = input.percentFee.value
     const feeTypeSettings = this.feeTypeSettings
     const limit = this.limit
     if (!assetOut || !bridgePathway) {
@@ -357,7 +370,7 @@ export class BridgeSettings {
         ((oneEther + (gasTipFee ?? 0n)) * 10n ** BigInt(assetOut.decimals)) /
         priceCorrective
     } else if (feeType === FeeType.PERCENT) {
-      multiplier = input.percentFee.value ?? 0n
+      multiplier = percentFee ?? 0n
     }
     if (!recipient || !isAddress(recipient)) {
       return null
@@ -413,8 +426,8 @@ export class BridgeSettings {
     const bridgePathway = this.bridgePathway
     const assetIn = this.assetIn.value
     const recipient = input.recipient.value
-    // const requiresForeignDataParam = this.requiresForeignDataParam
-    const foreignDataParam = this.foreignDataParam
+    // const requiresDestinationDataParam = this.requiresDestinationDataParam
+    const destinationDataParam = this.destinationDataParam
     const amountToBridge = this.amountToBridge
     const feeDirectorStructEncoded = this.feeDirectorStructEncoded
     const interactingWithBridgeToken = this.interactingWithBridgeToken
@@ -438,17 +451,17 @@ export class BridgeSettings {
       !isAddress(accountState.address) ||
       accountState.address === zeroAddress
     ) {
-      console.log('no account')
+      // console.log('no account')
       return null
     }
     // check that asset in is valid
     if (!assetIn) {
-      console.log('no asset in')
+      // console.log('no asset in')
       return null
     }
     // check that asset link is valid
     if (!chainEvents.assetLink.value) {
-      console.log('no asset link')
+      // console.log('no asset link')
       return null
     }
     let value = 0n
@@ -456,14 +469,14 @@ export class BridgeSettings {
     // only relevant for the relayTokens(AndCall) pathway outside of native tokens
     let toAddress = bridgePathway.from
     let data = '0x' as Hex
-    console.log('interactingWithBridgeToken', interactingWithBridgeToken)
+    // console.log('interactingWithBridgeToken', interactingWithBridgeToken)
     if (interactingWithBridgeToken) {
       // when interacting with a bridged token, we need to call the token address directly
       toAddress = assetIn.address as Hex
       value = 0n
       // if we want delivery of the tokens (going from home to foreign) then we need to have the foreign data param
       // and it needs to start with the destination router
-      if (!foreignDataParam) {
+      if (!destinationDataParam) {
         return null
       }
       data = bridgePathway.usesExtraParam
@@ -473,14 +486,14 @@ export class BridgeSettings {
           args: [
             bridgePathway.from,
             amountToBridge,
-            foreignDataParam,
+            destinationDataParam,
             accountState.address,
           ],
         })
         : encodeFunctionData({
           abi: abis.erc677,
           functionName: 'transferAndCall',
-          args: [bridgePathway.from, amountToBridge, foreignDataParam],
+          args: [bridgePathway.from, amountToBridge, destinationDataParam],
         })
     } else if (assetIn.address === zeroAddress) {
       value = amountToBridge
@@ -701,7 +714,7 @@ export const updateAssetOut = ({
         `${Number(toChain)}/${assetOutAddress}`,
       ]),
     }
-    console.log('assetOut', assetOut)
+    // console.log('assetOut', assetOut)
     return resolved(assetOut)
   }
   return loading.loadsAfterTick<Token | null>(
@@ -942,7 +955,6 @@ export const assetSources = (
     }
   })
   const sources = sorted.map((a: MinTokenInfo) => `${a.chainId}/${a.address}`.toLowerCase())
-  console.log('sources', sources, asset, inputs)
   return asset.logoURI ?? address === zeroAddress ? imageLinks.images(sources) : input.tokenImageLookup({
     chainId,
     address,

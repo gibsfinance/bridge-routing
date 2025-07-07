@@ -4,7 +4,7 @@
 
   import { bridgeKey } from '../stores/input.svelte'
   import { page } from '../stores/app-page.svelte'
-  import { toasts } from '../stores/transaction'
+  // import { toasts } from '../stores/transaction'
 
   import InfoExplain from './InfoExplain.svelte'
   import ModalWrapper from './ModalWrapper.svelte'
@@ -76,9 +76,9 @@
       <Icon icon="icomoon-free:embed" />
     </Button>
   </a>
-  <Button class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500" onclick={() => {
+  <!-- <Button class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500" onclick={() => {
     toasts.confirmed('abc')
   }}>
     <Icon icon="material-symbols:toast-outline" height="1.25em" width="1.25em" />
-  </Button>
+  </Button> -->
 </div>

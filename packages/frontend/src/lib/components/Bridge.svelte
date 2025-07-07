@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FeeType } from '@gibs/bridge-sdk/fee-type'
-  import { isUnwrappable } from '@gibs/bridge-sdk/config'
+  import { canChangeUnwrap } from '@gibs/bridge-sdk/config'
   import { getAddress, isAddress, zeroAddress, type Hex } from 'viem'
   import { untrack } from 'svelte'
   import { nativeAssetOut } from '@gibs/bridge-sdk/config'
@@ -173,8 +173,7 @@
     }
     if (
       unwrap.value &&
-      bridgeSettings.assetOut &&
-      isUnwrappable(bridgeSettings.assetOut, bridgeKey.value)
+      canChangeUnwrap(bridgeKey.value, bridgeSettings.assetIn.value)
     ) {
       return zeroAddress
     }

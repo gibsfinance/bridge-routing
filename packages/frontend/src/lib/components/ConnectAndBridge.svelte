@@ -26,7 +26,7 @@
   const bridgeTokenIn = $derived(bridgeSettings.assetIn.value)
   const bridgeTokenOut = $derived(bridgeSettings.assetOut)
   const initiateBridge = $derived(async () => {
-    if (bridgeSettings.requiresForeignDataParam && !bridgeSettings.foreignDataParam) {
+    if (bridgeSettings.requiresDestinationDataParam && !bridgeSettings.destinationDataParam) {
       return
     }
     if (!bridgeSettings.bridgePathway) {

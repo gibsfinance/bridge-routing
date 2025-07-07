@@ -92,7 +92,9 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
     return existing
   })
   let cancelled = false
+  let decrement: (() => void) | null = null
   const cleanup = () => {
+    decrement?.()
     if (cancelled) return
     const tracker = untrack(() => blocks.get(chain)?.get(blockTag))
     tracker!.count--
@@ -109,7 +111,7 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
     untrack(() => chainBlocks.set(blockTag, updatedTracker))
     return cleanup
   }
-  const decrement = untrack(() => loading.increment('block'))
+  decrement = untrack(() => loading.increment('block'))
   const watcher = input.clientFromChain(chain).watchBlocks({
     emitOnBegin: true,
     emitMissed: true,
