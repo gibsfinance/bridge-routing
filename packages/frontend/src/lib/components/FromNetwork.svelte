@@ -23,7 +23,9 @@
   const chooseTokenSubmit = async (token: Token) => {
     const bridgeKey = input.bridgeKey.value
     const native = isNative(token, bridgeKey)
-    input.unwrap.value = native
+    if (native) {
+      input.unwrap.value = native
+    }
     input.amountIn.value = null
     input.resetFeeInputs()
     nav.bridge.shallow(bridgeKey, token.address)

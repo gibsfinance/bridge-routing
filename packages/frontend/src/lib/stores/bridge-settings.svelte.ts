@@ -307,7 +307,8 @@ export class BridgeSettings {
     const feeDirectorStructEncoded = this.feeDirectorStructEncoded
     const assetLink = chainEvents.assetLink.value
     const shouldDeliver = input.shouldDeliver.value
-    const unwrap = input.unwrap.value && canChangeUnwrap(input.bridgeKey.value, assetIn)
+    const bridgeKey = input.bridgeKey.value
+    const unwrap = input.unwrap.value && canChangeUnwrap(bridgeKey, assetIn)
     const recipient = input.recipient.value
     if (!recipient) {
       return null

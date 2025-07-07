@@ -392,7 +392,9 @@ export const isNative = (asset: Token | TokenOut | null, bridgeKey: BridgeKey | 
   if (!bridgeKey || !asset) {
     return false
   }
+  const path = pathway(bridgeKey, false)
   return (
+    getAddress(asset.address!) === getAddress(path!.bridgedNativeAssetOut!) ||
     (asset.address === zeroAddress ||
       nativeAssetOut[toChain(asset.chainId)]?.toLowerCase() === asset.address?.toLowerCase()) &&
     !asset.name.includes(' from Pulsechain')
