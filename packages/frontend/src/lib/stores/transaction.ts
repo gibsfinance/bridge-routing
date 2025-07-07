@@ -7,19 +7,17 @@ import { toaster } from './toast'
 
 export const toasts = {
   submitted: (id: string) => {
-    toaster.create({
+    toaster.info({
       id,
-      description: `Transaction submitted`,
-      type: 'info',
-      duration: 20_000,
+      title: `Transaction submitted`,
+      duration: 60_000,
     })
   },
   confirmed: (id: string) => {
-    toaster.create({
+    toaster.success({
       id,
-      description: `Transaction confirmed`,
-      type: 'success',
-      duration: 20_000,
+      title: `Transaction confirmed`,
+      duration: 60_000,
     })
   },
 }

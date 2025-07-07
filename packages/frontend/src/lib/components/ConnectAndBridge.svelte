@@ -26,7 +26,7 @@
   const bridgeTokenIn = $derived(bridgeSettings.assetIn.value)
   const bridgeTokenOut = $derived(bridgeSettings.assetOut)
   const initiateBridge = $derived(async () => {
-    if (!bridgeSettings.foreignDataParam) {
+    if (bridgeSettings.requiresDestinationDataParam && !bridgeSettings.destinationDataParam) {
       return
     }
     if (!bridgeSettings.bridgePathway) {
@@ -69,6 +69,7 @@
         async () => {
           amountInBefore = formatUnits(bridgeSettings.amountToBridge, decimals)
           const hash = await initiateBridge()
+          console.log(hash)
           bridgeTx.extend({
             hash,
             bridgeKey: input.bridgeKey.value,
@@ -77,6 +78,7 @@
         },
       ],
       after: () => {
+        console.log('after', bridgeSettings.amountToBridge)
         const previousAmount = formatUnits(bridgeSettings.amountToBridge!, decimals)
         if (amountInBefore === previousAmount) {
           input.amountIn.value = null

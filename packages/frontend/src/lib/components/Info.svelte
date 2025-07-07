@@ -77,7 +77,7 @@
     </Button>
   </a>
   <!-- <Button class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500" onclick={() => {
-    toasts.submitted('abc')
+    toasts.confirmed('abc')
   }}>
     <Icon icon="material-symbols:toast-outline" height="1.25em" width="1.25em" />
   </Button> -->

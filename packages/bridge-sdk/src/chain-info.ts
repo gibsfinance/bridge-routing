@@ -49,7 +49,7 @@ export const tokenBridgeInfo = async ({
   fromChainClient: PublicClient,
   toChainClient: PublicClient,
 }): Promise<null | TokenBridgeInfo> => {
-  const bridgePathway = pathway(bridgeKey, isProd)
+  const bridgePathway = pathway(bridgeKey, isProd, assetIn?.address as Hex | null)
   if (!assetIn || !bridgePathway) {
     console.log('missing asset in or bridge pathway')
     return null
@@ -81,19 +81,20 @@ export const tokenBridgeInfo = async ({
       originationChainId: fromChain,
       assetInAddress: assetInAddress as Hex,
       assetOutAddress: toBridged,
-      toForeign: {
-        foreign: toBridged,
-        home: assetInAddress as Hex,
+      toHome: {
+        home: toBridged,
+        foreign: assetInAddress as Hex,
       },
     }
   }
   if (toNative !== zeroAddress) {
     // if (notGas) console.log('toNative')
+    console.log('toNative', toNative)
     return {
       originationChainId: toChain,
       assetInAddress: assetInAddress as Hex,
       assetOutAddress: toNative,
-      toHome: {
+      toForeign: {
         home: toNative,
         foreign: assetInAddress as Hex,
       },
@@ -102,6 +103,7 @@ export const tokenBridgeInfo = async ({
   const [fromBridged, fromNative] = fromMappings
   if (fromNative !== zeroAddress) {
     // if (notGas) console.log('fromNative')
+    console.log('fromNative', fromNative)
     return {
       originationChainId: toChain,
       assetInAddress: assetInAddress as Hex,
@@ -318,7 +320,7 @@ export const minBridgeAmountIn = async ({
   })
 }
 /** get the symbol of the native asset, unwrap it if it needs to be */
-export const nativeSymbol = (asset: { address: Hex, symbol: string, chainId: number } | null, unwrap = false) => {
+export const nativeSymbol = (asset: { address: string, symbol: string, chainId: number } | null, unwrap = false) => {
   return asset ? (unwrap && asset.address === nativeAssetOut[toChain(asset.chainId)] ? asset.symbol.slice(1) : asset.symbol) : ''
 }
 

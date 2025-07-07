@@ -1,4 +1,4 @@
-import { zeroAddress, type Hex } from "viem";
+import { getAddress, zeroAddress, type Hex } from "viem";
 import _ from 'lodash'
 import * as imageLinks from '@gibs/bridge-sdk/image-links'
 import type { BridgeKey, Token, TokenOut } from "./types.js";
@@ -38,6 +38,10 @@ export const nativeAssetOut = {
   [Chains.SEP]: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
   [Chains.V4PLS]: '0x70499adEBB11Efd915E3b69E700c331778628707',
 } as Record<Chains, Hex>
+
+export const deprecatedNativeAssetOut = {
+  [Chains.PLS]: new Set(['0x97Ac4a2439A47c07ad535bb1188c989dae755341']),
+} as Partial<Record<Chains, Set<Hex>>>
 
 export const uniV2Routers = {
   [Chains.PLS]: [
@@ -80,12 +84,21 @@ export type Pathway = {
   feeManager: 'from' | 'to'
   toHome: boolean
   requiresDelivery: boolean
+  bridgedNativeAssetOut: Hex
+  settingOverrides?: Record<Hex, Partial<Pathway>>
 }
 
 export type DeepPathwayConfig = Record<
   Provider,
   Partial<Record<Chains, Partial<Record<Chains, Pathway>>>>
 >
+
+const pulsechainPLSETHSettings = {
+  from: '0x0e18d0d556b652794EF12Bf68B2dC857EF5f3996',
+  to: '0xe20E337DB2a00b1C37139c873B92a0AAd3F468bF',
+  destinationRouter: '0x1F0144Ce3BDaf11944Fe0beF6444599a0500695B',
+  nativeRouter: '0xE66877Cfe4CEc10ffBbBB3092B7001321AB5809D',
+}
 
 export const pathways = {
   [Provider.PULSECHAIN]: {
@@ -100,6 +113,12 @@ export const pathways = {
         feeManager: 'from',
         toHome: false,
         requiresDelivery: true,
+        // weth from ethereum on pulsechain
+        bridgedNativeAssetOut: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
+        settingOverrides: {
+          [zeroAddress]: pulsechainPLSETHSettings,
+          [getAddress(nativeAssetOut[Chains.PLS])]: pulsechainPLSETHSettings,
+        },
         defaultAssetIn: {
           symbol: 'WETH',
           name: 'Wrapped Ether from Ethereum',
@@ -128,6 +147,16 @@ export const pathways = {
         usesExtraParam: false,
         toHome: true,
         requiresDelivery: false,
+        // wpls from pulsechain on ethereum
+        bridgedNativeAssetOut: '0xA882606494D86804B5514E07e6Bd2D6a6eE6d68A',
+        settingOverrides: {
+          [getAddress('0xa882606494d86804b5514e07e6bd2d6a6ee6d68a')]: {
+            from: '0xe20E337DB2a00b1C37139c873B92a0AAd3F468bF',
+            to: '0x0e18d0d556b652794EF12Bf68B2dC857EF5f3996',
+            destinationRouter: '0xE66877Cfe4CEc10ffBbBB3092B7001321AB5809D',
+            nativeRouter: '0x1F0144Ce3BDaf11944Fe0beF6444599a0500695B',
+          },
+        },
         defaultAssetIn: {
           chainId: 1,
           address: nativeAssetOut[Chains.ETH],
@@ -158,6 +187,8 @@ export const pathways = {
         usesExtraParam: true,
         toHome: false,
         requiresDelivery: true,
+        // wbnb from bsc on pulsechain (tokensex)
+        bridgedNativeAssetOut: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
         defaultAssetIn: {
           symbol: 'WBNB',
           name: 'Wrapped BNB',
@@ -186,6 +217,8 @@ export const pathways = {
         usesExtraParam: true,
         toHome: true,
         requiresDelivery: false,
+        // wpls from pulsechain on bsc (tokensex)
+        bridgedNativeAssetOut: '0xF6088134D28eeBEF7128BA41FaDb2FCA0666c64C',
         defaultAssetIn: {
           chainId: 56,
           address: nativeAssetOut[Chains.BNB],
@@ -242,6 +275,7 @@ export const testnetPathways = {
         requiresDelivery: true,
         toHome: false,
         feeManager: 'from',
+        bridgedNativeAssetOut: '0x3677bd78ccf4d299328ecfba61790cf8dbfcf686',
         defaultAssetIn: {
           chainId: 943,
           address: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
@@ -270,6 +304,7 @@ export const testnetPathways = {
         requiresDelivery: false,
         toHome: true,
         feeManager: 'to',
+        bridgedNativeAssetOut: '0x35807560aD0597E23F452cdc82D4Fb0e7E3c6590',
         defaultAssetIn: {
           chainId: 11_155_111,
           address: nativeAssetOut[Chains.SEP],
@@ -332,9 +367,19 @@ export const inferBridgeKey = ({
   return [provider, nextFromChain, nextToChain] as BridgeKey
 }
 
-export const pathway = (bridgeKey: BridgeKey | null, isProd: boolean) => {
+export const pathway = (bridgeKey: BridgeKey | null, isProd: boolean, assetInAddress?: string | Hex | null | undefined) => {
   if (!bridgeKey) return
-  return _.get(pathways, bridgeKey) || (!isProd ? _.get(testnetPathways, bridgeKey) : undefined)
+  let pathway = _.get(pathways, bridgeKey) || (!isProd ? _.get(testnetPathways, bridgeKey) : undefined)
+  if (assetInAddress) {
+    const addr = getAddress(assetInAddress)
+    if (pathway?.settingOverrides?.[addr]) {
+      pathway = {
+        ...pathway,
+        ...pathway.settingOverrides[addr],
+      }
+    }
+  }
+  return pathway
 }
 
 export const defaultAssetIn = ($bridgeKey: BridgeKey | null, isProd: boolean) => {
@@ -347,7 +392,9 @@ export const isNative = (asset: Token | TokenOut | null, bridgeKey: BridgeKey | 
   if (!bridgeKey || !asset) {
     return false
   }
+  const path = pathway(bridgeKey, false)
   return (
+    getAddress(asset.address!) === getAddress(path!.bridgedNativeAssetOut!) ||
     (asset.address === zeroAddress ||
       nativeAssetOut[toChain(asset.chainId)]?.toLowerCase() === asset.address?.toLowerCase()) &&
     !asset.name.includes(' from Pulsechain')
@@ -355,15 +402,18 @@ export const isNative = (asset: Token | TokenOut | null, bridgeKey: BridgeKey | 
 }
 
 export const isUnwrappable = (
-  asset: Pick<Token, 'extensions'> | null,
   bridgeKey: BridgeKey | null,
+  assetIn: Pick<Token, 'address'> | null,
 ) => {
-  if (!bridgeKey || !asset) {
+  if (!bridgeKey || !assetIn) {
     return false
   }
-  const [, , toChain] = bridgeKey
-  return nativeAssetOut[toChain] === asset.extensions?.bridgeInfo?.[Number(toChain)]?.tokenAddress
+  const addr = getAddress(assetIn.address)
+  const path = pathway(bridgeKey, false)
+  if (!path) return false
+  return path.bridgedNativeAssetOut === getAddress(addr)
 }
 
-export const canChangeUnwrap = (bridgeKey: BridgeKey, assetIn: Token | null) =>
-  !!assetIn && isUnwrappable(assetIn, bridgeKey)
+export const canChangeUnwrap = (bridgeKey: BridgeKey, assetIn: Token | null) => {
+  return !!assetIn && isUnwrappable(bridgeKey, assetIn)
+}

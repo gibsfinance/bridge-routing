@@ -39,12 +39,11 @@
       const updatedRPCs = chainsMetadata[toChain(chain)].rpcUrls.default.http.slice(0)
       data.set(chain, updatedRPCs)
     },
-    hasDefault: (chain: number, list: string[]) => {
+    isDefault: (chain: number, list: string[]) => {
       const defaultValues = chainsMetadata[toChain(chain)].rpcUrls.default.http.slice(0)
-      const currentChainValue = data.get(chain) ?? ([] as string[])
       return (
-        currentChainValue.length === list.length &&
-        currentChainValue.every((value, index) => value === defaultValues[index])
+        defaultValues.length === list.length &&
+        defaultValues.every((value, index) => value === list[index])
       )
     },
   }
@@ -85,7 +84,7 @@
               </label>
             </li>
           {/each}
-          {#if !rpcs.hasDefault(chain, list)}
+          {#if !rpcs.isDefault(chain, list)}
             <li class="flex w-full grow">
               <label class="flex text-sm">
                 <Button

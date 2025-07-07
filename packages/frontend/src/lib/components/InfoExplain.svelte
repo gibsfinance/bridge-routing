@@ -3,11 +3,11 @@
   import VersionedLink from './VersionedLink.svelte'
 </script>
 
-<div class="p-8">
-  <h3 class="font-bold text-center items-center flex justify-center text-lg mb-2">
+<div class="py-8 h-full flex flex-col gap-6">
+  <h3 class="font-bold text-center items-center flex justify-center text-lg">
     <Icon icon="material-symbols:info-outline" height="3em" width="3em" />
   </h3>
-  <div class="flex">
+  <div class="flex h-full flex-grow overflow-y-auto px-8">
     <ul class="gap-4 flex flex-col">
       <li class="flex">
         This UI uses the bridge contracts directly, so all of the same security assumptions are

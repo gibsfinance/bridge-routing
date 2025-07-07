@@ -167,6 +167,7 @@
   const showTxInput = $derived(bridgeTx.value?.showEdit ?? false)
   const txHashIsValid = (v: string | null) => !!v && v.length === 66 && isHex(v)
   const isValidTxHash = $derived(txHashIsValid(txInputValue))
+  $inspect(bridgeTx.value?.hash)
 </script>
 
 {#if showTxInput}
@@ -211,7 +212,7 @@
         class="size-6 flex" />
       <span>{bridgeStatus?.status}</span>
       {#if bridgeStatus?.status === bridgeStatuses.AFFIRMED}
-        {@const path = pathway(bridgeKey.value, isProd.value)}
+        {@const path = pathway(bridgeKey.value, isProd.value, bridgeTx.value?.hash)}
         {@const toHome = path?.toHome}
         <!-- affirmation complete events only show up on the home chain -->
         {@const affirmationCompleteChain = toHome ? bridgeKey.fromChain : bridgeKey.toChain}

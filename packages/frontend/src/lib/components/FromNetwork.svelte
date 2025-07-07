@@ -23,7 +23,9 @@
   const chooseTokenSubmit = async (token: Token) => {
     const bridgeKey = input.bridgeKey.value
     const native = isNative(token, bridgeKey)
-    input.unwrap.value = native
+    if (native) {
+      input.unwrap.value = native
+    }
     input.amountIn.value = null
     input.resetFeeInputs()
     nav.bridge.shallow(bridgeKey, token.address)
@@ -71,7 +73,7 @@
     const minAmount = minBridgeAmountIn.get(
       minBridgeAmountInKey(bridgeKey.value, bridgeSettings.assetIn.value),
     )
-    if (!minAmount) return true
+    if (minAmount === undefined || minAmount === null) return true
     return !!input.amountIn.value && input.amountIn.value < minAmount
   })
 </script>

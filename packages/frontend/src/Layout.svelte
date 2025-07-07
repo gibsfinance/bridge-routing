@@ -35,6 +35,7 @@
   {/if}
   </div>
 </div>
+<div class="h-0 w-0 absolute top-0 left-0 opacity-0 preset-outlined-surface-200-800 preset-filled-surface-50-950 p-3 flex justify-between items-center gap-3 rounded-container preset-filled-success-500"></div>
 <Toaster {toaster} placement="bottom-end" />
 
 <style lang="postcss">
