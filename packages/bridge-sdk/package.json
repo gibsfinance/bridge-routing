@@ -12,7 +12,8 @@
     "./image-links": "./src/image-links.ts",
     "./chains": "./src/chains.ts",
     "./chain-info": "./src/chain-info.ts",
-    "./fee-type": "./src/fee-type.ts"
+    "./fee-type": "./src/fee-type.ts",
+    "./settings": "./src/settings.ts"
   },
   "scripts": {
     "build": "tsc"
