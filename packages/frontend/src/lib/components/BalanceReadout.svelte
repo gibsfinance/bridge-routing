@@ -2,6 +2,7 @@
   import type { Hex } from 'viem'
   import type { ClassValue } from 'svelte/elements'
   import type { Token } from '@gibs/bridge-sdk/types'
+  import { oneEther } from '@gibs/bridge-sdk/settings'
 
   import { humanReadableNumber } from '../stores/utils'
   import { loading } from '../stores/loading.svelte'
@@ -10,9 +11,7 @@
     tokenBalanceLoadingKey,
     TokenBalanceWatcher,
     blocks,
-    balances,
   } from '../stores/chain-events.svelte'
-  import { oneEther } from '../stores/bridge-settings.svelte'
 
   import Loading from './Loading.svelte'
   type Props = {

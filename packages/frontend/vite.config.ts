@@ -6,6 +6,7 @@ import replace from '@rollup/plugin-replace'
 import pkg from './package.json' with { type: 'json' }
 import child_process from 'child_process'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
+import type { PluginOption } from 'vite'
 
 let githash = process.env.RAILWAY_GIT_COMMIT_SHA
 if (!githash) {
@@ -18,8 +19,8 @@ if (!githash) {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    tailwindcss(),
-    enhancedImages(),
+    tailwindcss() as PluginOption,
+    enhancedImages() as PluginOption,
     replace({
       preventAssignment: true,
       values: {
@@ -33,12 +34,12 @@ export default defineConfig({
         ),
       },
     }),
-    svelte(),
+    svelte() as PluginOption,
     nodePolyfills({
       globals: {
         Buffer: true,
       },
-    }),
+    }) as PluginOption,
   ],
   base: './',
   preview: {

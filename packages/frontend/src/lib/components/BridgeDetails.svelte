@@ -4,12 +4,12 @@
   import type { Token } from '@gibs/bridge-sdk/types'
   import { Chains } from '@gibs/bridge-sdk/config'
   import { nativeSymbol } from '@gibs/bridge-sdk/chain-info'
+  import { oneEther } from '@gibs/bridge-sdk/settings'
 
   import * as input from '../stores/input.svelte'
   import { humanReadableNumber } from '../stores/utils'
   import { loading } from '../stores/loading.svelte'
-  import { bridgeSettings, oneEther } from '../stores/bridge-settings.svelte'
-  import * as utils from '../utils.svelte'
+  import { bridgeSettings } from '../stores/bridge-settings.svelte'
   import { bridgeSettings as storageBridgeSettings } from '../stores/storage.svelte'
 
   import Loading from './Loading.svelte'
