@@ -34,40 +34,21 @@ import { isProd, whitelisted } from './config.svelte'
 import { settingKey, settings } from './fee-manager.svelte'
 import { accountState } from './auth/AuthProvider.svelte'
 
-export const assetOutKey = ({
-  bridgeKeyPath,
-  assetInAddress,
-  unwrap,
-}: {
-  bridgeKeyPath: string
-  assetInAddress?: Hex | null
-  unwrap: boolean
-}) => {
-  if (!bridgeKeyPath || !assetInAddress) return null
-  return `${bridgeKeyPath}/${unwrap ? 'native' : 'erc20'}/${assetInAddress.toLowerCase()}`
-}
-
 export class BridgeSettings {
   constructor() { }
   // hold some basic state so that requests don't have to be re-created
   assetIn = new NullableProxyStore<Token>()
-  // private output = new NullableProxyStore<Token>()
   assetOuts = new SvelteMap<string, Token>()
   priceCorrective = new ProxyStore<bigint>(0n)
   approval = new NullableProxyStore<bigint>()
 
   get assetOut() {
-    const assetInAddress = input.bridgeKey.assetInAddress
-    const assetsOut = this.assetOuts
-    if (!assetInAddress) return null
-    const key = assetOutKey({
+    return sdkSettings.assetOut({
+      assetInAddress: input.bridgeKey.assetInAddress,
+      assetsOut: this.assetOuts,
       bridgeKeyPath: input.bridgeKey.path,
-      assetInAddress: assetInAddress,
       unwrap: input.unwrap.value,
     })
-    if (!key) return null
-    // console.log(key)
-    return assetsOut.get(key) ?? null
   }
   setAssetOut(assetOutKey: string, assetOut: Token) {
     this.assetOuts.set(assetOutKey, assetOut)
@@ -264,29 +245,6 @@ export class BridgeSettings {
       feeTypeSettings,
       limit,
     })
-    // if (!assetOut || !bridgePathway) {
-    //   return null
-    // }
-    // if (!bridgePathway.requiresDelivery) {
-    //   return null
-    // }
-    // if (!priceCorrective) {
-    //   return null
-    // }
-    // let multiplier = 0n
-    // if (feeType === FeeType.GAS_TIP && priceCorrective > 0n) {
-    //   multiplier =
-    //     ((oneEther + (gasTipFee ?? 0n)) * 10n ** BigInt(assetOut.decimals)) /
-    //     priceCorrective
-    // } else if (feeType === FeeType.PERCENT) {
-    //   multiplier = percentFee ?? 0n
-    // }
-    // if (!recipient || !isAddress(recipient)) {
-    //   return null
-    // }
-    // return encodeAbiParameters(abis.feeDeliveryStruct, [
-    //   [recipient, feeTypeSettings, limit, multiplier],
-    // ])
   })
   feeTypeSettings = $derived.by(() => {
     const feeType = this.feeType

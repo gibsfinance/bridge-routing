@@ -328,16 +328,6 @@ export const feeDirectorStructEncoded = ({
   bridgePathway: Pathway | null
   assetOut: Token | null
 }) => {
-
-  // const assetOut = this.assetOut
-  // const bridgePathway = this.bridgePathway
-  // const priceCorrective = this.priceCorrective.value
-  // const feeType = this.feeType
-  // const recipient = input.recipient.value
-  // const gasTipFee = input.gasTipFee.value
-  // const percentFee = input.percentFee.value
-  // const feeTypeSettings = this.feeTypeSettings
-  // const limit = this.limit
   if (!assetOut || !bridgePathway) {
     return null
   }
@@ -646,4 +636,38 @@ export const transactionInputs = ({
     value,
     data,
   }
+}
+
+export const assetOutKey = ({
+  bridgeKeyPath,
+  assetInAddress,
+  unwrap,
+}: {
+  bridgeKeyPath: string
+  assetInAddress?: Hex | null
+  unwrap: boolean
+}) => {
+  if (!bridgeKeyPath || !assetInAddress) return null
+  return `${bridgeKeyPath}/${unwrap ? 'native' : 'erc20'}/${assetInAddress.toLowerCase()}`
+}
+
+export const assetOut = ({
+  assetInAddress,
+  assetsOut,
+  bridgeKeyPath,
+  unwrap,
+}: {
+  assetInAddress: Hex | null
+  assetsOut: Map<string, Token>
+  bridgeKeyPath: string
+  unwrap: boolean
+}) => {
+  if (!assetInAddress) return null
+  const key = assetOutKey({
+    bridgeKeyPath,
+    assetInAddress,
+    unwrap,
+  })
+  if (!key) return null
+  return assetsOut.get(key) ?? null
 }
