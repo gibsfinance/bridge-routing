@@ -102,9 +102,9 @@ export const modal = createAppKit({
   networks: appkitNetworkList,
   metadata,
   projectId,
-  features: {
-    analytics: false,
-  },
+  // features: {
+  //   analytics: false,
+  // },
 })
 
 export const connect = async () => {
@@ -199,10 +199,6 @@ modal.subscribeAccount((account) => {
     accountState.value = null
   }
 })
-
-export const destroy = async () => {
-  await Promise.all([wagmiAdapter.disconnect(), modal.disconnect()])
-}
 
 export const getNetwork = (options: { chainId: number | string; name: string }) => {
   const { chainId, name } = options

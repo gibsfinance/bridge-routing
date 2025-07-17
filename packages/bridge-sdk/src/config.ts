@@ -79,7 +79,7 @@ export type Pathway = {
   destinationRouter: Hex | null
   nativeRouter: Hex
   validator: Hex
-  defaultAssetIn: Token
+  // defaultAssetIn: Token
   usesExtraParam: boolean
   feeManager: 'from' | 'to'
   toHome: boolean
@@ -119,21 +119,21 @@ export const pathways = {
           [zeroAddress]: pulsechainPLSETHSettings,
           [getAddress(nativeAssetOut[Chains.PLS])]: pulsechainPLSETHSettings,
         },
-        defaultAssetIn: {
-          symbol: 'WETH',
-          name: 'Wrapped Ether from Ethereum',
-          address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
-          decimals: 18,
-          chainId: 369,
-          logoURI: imageLinks.network(369),
-          extensions: {
-            bridgeInfo: {
-              '1': {
-                tokenAddress: nativeAssetOut[Chains.ETH],
-              },
-            },
-          },
-        },
+        // defaultAssetIn: {
+        //   symbol: 'WETH',
+        //   name: 'Wrapped Ether from Ethereum',
+        //   address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
+        //   decimals: 18,
+        //   chainId: 369,
+        //   logoURI: imageLinks.network(369),
+        //   extensions: {
+        //     bridgeInfo: {
+        //       '1': {
+        //         tokenAddress: nativeAssetOut[Chains.ETH],
+        //       },
+        //     },
+        //   },
+        // },
       },
     },
     [Chains.ETH]: {
@@ -157,21 +157,21 @@ export const pathways = {
             nativeRouter: '0x1F0144Ce3BDaf11944Fe0beF6444599a0500695B',
           },
         },
-        defaultAssetIn: {
-          chainId: 1,
-          address: nativeAssetOut[Chains.ETH],
-          name: 'Wrapped Ether',
-          symbol: 'WETH',
-          decimals: 18,
-          logoURI: imageLinks.network(1),
-          extensions: {
-            bridgeInfo: {
-              '369': {
-                tokenAddress: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
-              },
-            },
-          },
-        },
+        // defaultAssetIn: {
+        //   chainId: 1,
+        //   address: nativeAssetOut[Chains.ETH],
+        //   name: 'Wrapped Ether',
+        //   symbol: 'WETH',
+        //   decimals: 18,
+        //   logoURI: imageLinks.network(1),
+        //   extensions: {
+        //     bridgeInfo: {
+        //       '369': {
+        //         tokenAddress: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
+        //       },
+        //     },
+        //   },
+        // },
       },
     },
   },
@@ -189,21 +189,21 @@ export const pathways = {
         requiresDelivery: true,
         // wbnb from bsc on pulsechain (tokensex)
         bridgedNativeAssetOut: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
-        defaultAssetIn: {
-          symbol: 'WBNB',
-          name: 'Wrapped BNB',
-          address: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
-          decimals: 18,
-          chainId: 369,
-          logoURI: imageLinks.network(369),
-          extensions: {
-            bridgeInfo: {
-              '56': {
-                tokenAddress: nativeAssetOut[Chains.BNB],
-              },
-            },
-          },
-        },
+        // defaultAssetIn: {
+        //   symbol: 'WBNB',
+        //   name: 'Wrapped BNB',
+        //   address: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
+        //   decimals: 18,
+        //   chainId: 369,
+        //   logoURI: imageLinks.network(369),
+        //   extensions: {
+        //     bridgeInfo: {
+        //       '56': {
+        //         tokenAddress: nativeAssetOut[Chains.BNB],
+        //       },
+        //     },
+        //   },
+        // },
       },
     },
     [Chains.BNB]: {
@@ -219,21 +219,21 @@ export const pathways = {
         requiresDelivery: false,
         // wpls from pulsechain on bsc (tokensex)
         bridgedNativeAssetOut: '0xF6088134D28eeBEF7128BA41FaDb2FCA0666c64C',
-        defaultAssetIn: {
-          chainId: 56,
-          address: nativeAssetOut[Chains.BNB],
-          name: 'Wrapped BNB from BSC',
-          symbol: 'WBNB',
-          decimals: 18,
-          logoURI: imageLinks.network(56),
-          extensions: {
-            bridgeInfo: {
-              '369': {
-                tokenAddress: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
-              },
-            },
-          },
-        },
+        // defaultAssetIn: {
+        //   chainId: 56,
+        //   address: nativeAssetOut[Chains.BNB],
+        //   name: 'Wrapped BNB from BSC',
+        //   symbol: 'WBNB',
+        //   decimals: 18,
+        //   logoURI: imageLinks.network(56),
+        //   extensions: {
+        //     bridgeInfo: {
+        //       '369': {
+        //         tokenAddress: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
+        //       },
+        //     },
+        //   },
+        // },
       },
     },
   },
@@ -276,21 +276,21 @@ export const testnetPathways = {
         toHome: false,
         feeManager: 'from',
         bridgedNativeAssetOut: '0x3677bd78ccf4d299328ecfba61790cf8dbfcf686',
-        defaultAssetIn: {
-          chainId: 943,
-          address: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
-          name: 'Wrapped Ether from Sepolia',
-          symbol: 'WsepETH',
-          decimals: 18,
-          logoURI: imageLinks.network(943),
-          extensions: {
-            bridgeInfo: {
-              '11155111': {
-                tokenAddress: nativeAssetOut[Chains.SEP],
-              },
-            },
-          },
-        },
+        // defaultAssetIn: {
+        //   chainId: 943,
+        //   address: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
+        //   name: 'Wrapped Ether from Sepolia',
+        //   symbol: 'WsepETH',
+        //   decimals: 18,
+        //   logoURI: imageLinks.network(943),
+        //   extensions: {
+        //     bridgeInfo: {
+        //       '11155111': {
+        //         tokenAddress: nativeAssetOut[Chains.SEP],
+        //       },
+        //     },
+        //   },
+        // },
       },
     },
     [Chains.SEP]: {
@@ -305,21 +305,21 @@ export const testnetPathways = {
         toHome: true,
         feeManager: 'to',
         bridgedNativeAssetOut: '0x35807560aD0597E23F452cdc82D4Fb0e7E3c6590',
-        defaultAssetIn: {
-          chainId: 11_155_111,
-          address: nativeAssetOut[Chains.SEP],
-          name: 'Wrapped Ether',
-          symbol: 'sepWETH',
-          decimals: 18,
-          logoURI: imageLinks.network(11_155_111),
-          extensions: {
-            bridgeInfo: {
-              '943': {
-                tokenAddress: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
-              },
-            },
-          },
-        },
+        // defaultAssetIn: {
+        //   chainId: 11_155_111,
+        //   address: nativeAssetOut[Chains.SEP],
+        //   name: 'Wrapped Ether',
+        //   symbol: 'sepWETH',
+        //   decimals: 18,
+        //   logoURI: imageLinks.network(11_155_111),
+        //   extensions: {
+        //     bridgeInfo: {
+        //       '943': {
+        //         tokenAddress: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
+        //       },
+        //     },
+        //   },
+        // },
       },
     },
   },
@@ -383,8 +383,9 @@ export const pathway = (bridgeKey: BridgeKey | null, isProd: boolean, assetInAdd
 }
 
 export const defaultAssetIn = ($bridgeKey: BridgeKey | null, isProd: boolean) => {
+  if (!$bridgeKey) return null
   const conf = pathway($bridgeKey, isProd)
-  const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token | undefined
+  const defaultAssetIn = _.get(conf, ['bridgedNativeAssetOut']) as Hex | undefined
   return defaultAssetIn
 }
 

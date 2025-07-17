@@ -71,7 +71,7 @@ export const defaultBridgeKey = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS] as
 
 const getDefaultAssetInAddress = () => {
   const assetInAddress =
-    page.params.assetInAddress || defaultAssetIn(defaultBridgeKey, isProd.value)?.address || null
+    page.params.assetInAddress || defaultAssetIn(defaultBridgeKey, isProd.value) || null
   if (assetInAddress && isAddress(assetInAddress)) {
     return getAddress(assetInAddress)
   }
