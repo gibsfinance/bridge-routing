@@ -11,12 +11,14 @@ import _ from 'lodash'
 import type { Erc20Metadata } from './types.js'
 import { multicallRead } from './multicall.js'
 
+/** The erc20 metadata calls */
 export const erc20MetadataCalls = [
   { functionName: 'name' },
   { functionName: 'symbol' },
   { functionName: 'decimals' },
 ]
 
+/** The multicall for the erc20 metadata */
 export const multicallErc20 = _.memoize(
   async ({ client, target, chain }: { client: PublicClient; target: Hex; chain: Chain }) => {
     const options = {

@@ -1,5 +1,6 @@
 import { type Chain, type PublicClient, createPublicClient, fallback, http, webSocket } from "viem"
 
+/** The default batch config for the client */
 export const defaultBatchConfig = {
   batch: {
     wait: 10,
@@ -7,15 +8,28 @@ export const defaultBatchConfig = {
   },
 }
 
+/**
+ * Returns the chain key for the given chain id and urls
+ * @param chainId - the chain id
+ * @param urls - the urls
+ * @returns the chain key
+ */
 export const chainKey = (chainId: number, urls: string[]) => {
   return `${chainId},${urls.join(',')}`.toLowerCase()
 }
 
+/** The client cache for the given chain id */
 export const clientCache = new Map<number, {
   key: string
   client: PublicClient
 }>()
 
+/**
+ * Returns the client for the given chain and urls
+ * @param chain - the chain
+ * @param urls - the urls
+ * @returns the client
+ */
 export const clientFromChain = ({
   chain,
   urls,

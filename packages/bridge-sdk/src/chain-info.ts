@@ -20,6 +20,14 @@ export type TokenBridgeInfo = {
   }
 }
 
+/**
+ * Returns the bridged token address and native token address
+ * @param chainId - the chain id being targeted
+ * @param target - the target
+ * @param address - the address
+ * @param client - the client
+ * @returns the bridged token address and native token address
+ */
 export const links = _.memoize(
   async ({ chainId, target, address, client }: { chainId: number; target: Hex; address: Hex, client: PublicClient }) => {
     return multicallRead<Hex[]>({
@@ -36,6 +44,15 @@ export const links = _.memoize(
   ({ chainId, target, address }) => `${chainId}-${target}-${address}`.toLowerCase(),
 )
 
+/**
+ * Returns the token bridge info for the given bridge key, asset in, is prod, from chain client, and to chain client
+ * @param bridgeKey - the bridge key
+ * @param assetIn - the asset in
+ * @param isProd - whether to use the production pathway
+ * @param fromChainClient - the from chain client
+ * @param toChainClient - the to chain client
+ * @returns the token bridge info
+ */
 export const tokenBridgeInfo = async ({
   bridgeKey,
   assetIn,
@@ -72,11 +89,7 @@ export const tokenBridgeInfo = async ({
     }),
   ])
   const [toBridged, toNative] = toMappings
-  // const notGas = !Object.values(nativeAssetOut).find(
-  //   (v) => v.toLowerCase() === assetInAddress.toLowerCase(),
-  // )
   if (toBridged !== zeroAddress) {
-    // if (notGas) console.log('toBridged')
     return {
       originationChainId: fromChain,
       assetInAddress: assetInAddress as Hex,
@@ -88,8 +101,6 @@ export const tokenBridgeInfo = async ({
     }
   }
   if (toNative !== zeroAddress) {
-    // if (notGas) console.log('toNative')
-    console.log('toNative', toNative)
     return {
       originationChainId: toChain,
       assetInAddress: assetInAddress as Hex,
@@ -102,8 +113,6 @@ export const tokenBridgeInfo = async ({
   }
   const [fromBridged, fromNative] = fromMappings
   if (fromNative !== zeroAddress) {
-    // if (notGas) console.log('fromNative')
-    console.log('fromNative', fromNative)
     return {
       originationChainId: toChain,
       assetInAddress: assetInAddress as Hex,
@@ -115,7 +124,6 @@ export const tokenBridgeInfo = async ({
     }
   }
   if (fromBridged !== zeroAddress) {
-    // if (notGas) console.log('fromBridged')
     return {
       originationChainId: fromChain,
       assetInAddress: assetInAddress as Hex,
@@ -146,9 +154,10 @@ export const tokenBridgeInfo = async ({
       }),
   }
 }
+/** The result of reading the amount out from a router */
 export type FetchResult = bigint[] | Hex
 /**
- * check the prices that each router offers for the given paths
+ * Check the prices that each router offers for the given paths
  * @param assetInAddress the address of the asset going into the bridge
  * @param oneTokenInt the number of tokens to push into the bridge (before fees)
  * @param chain the chain of the asset going into the bridge
@@ -186,10 +195,19 @@ const readAmountOut = ({
   })
 }
 
+/**
+ * Fetch the price corrective for the given bridge key, asset out, measurement token, from chain client, to chain client, asset link, amount in, and is prod
+ * @param bridgeKeyPartner - the bridge key partner
+ * @param assetOut - the asset out
+ * @param measurementToken - the measurement token
+ * @param fromChainClient - the from chain client
+ * @param toChainClient - the to chain client
+ * @param assetLink - the asset link
+ * @param amountIn - the amount in
+ * @param isProd - whether to use the production pathway
+ * @returns the price corrective
+ */
 export const fetchPriceCorrective = ({
-  // bridgeKey,
-  // assetIn,
-  // isProd,
   bridgeKeyPartner,
   assetOut,
   measurementToken,
@@ -300,6 +318,14 @@ export const fetchPriceCorrective = ({
   }
 }
 
+/**
+ * Fetch the minimum bridge amount in for the given asset in, pathway, from public client, and to public client
+ * @param assetIn - the asset in
+ * @param pathway - the pathway
+ * @param fromPublicClient - the from public client
+ * @param toPublicClient - the to public client
+ * @returns the minimum bridge amount in
+ */
 export const minBridgeAmountIn = async ({
   assetIn,
   pathway,
@@ -324,18 +350,24 @@ export const nativeSymbol = (asset: { address: string, symbol: string, chainId: 
   return asset ? (unwrap && asset.address === nativeAssetOut[toChain(asset.chainId)] ? asset.symbol.slice(1) : asset.symbol) : ''
 }
 
+/** The input for loading the bridge fees */
 export type InputLoadFeeFor = {
   pathway: Pathway
   fromChainClient: PublicClient
   toChainClient: PublicClient
 }
 
+/** The fee configuration for a given pathway */
 export type PathwayExtendableConfig = {
   feeManager: Hex
   feeH2F: bigint
   feeF2H: bigint
 }
-
+/**
+ * Returns the chain multicall for the given client
+ * @param client - the client
+ * @returns the chain multicall
+ */
 export const chainMulticall = (client: PublicClient) => {
   const chainId = client.chain!.id
   const metadata = chainsMetadata[toChain(chainId)]
@@ -345,7 +377,13 @@ export const chainMulticall = (client: PublicClient) => {
     address: metadata.contracts!.multicall3!.address,
   }) as any
 }
-
+/**
+ * Load the bridge fees for the given pathway, from chain client, and to chain client
+ * @param pathway - the pathway
+ * @param fromChainClient - the from chain client
+ * @param toChainClient - the to chain client
+ * @returns the bridge fees
+ */
 export const loadBridgeFees = async ({ pathway, fromChainClient, toChainClient }: InputLoadFeeFor) => {
   const multicall = pathway.feeManager === 'from'
     ? chainMulticall(fromChainClient)

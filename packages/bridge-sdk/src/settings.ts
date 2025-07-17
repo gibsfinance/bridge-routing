@@ -9,6 +9,13 @@ export const oneEther = 10n ** 18n
 
 export const basisPoints = 10_000n
 
+/**
+ * Returns the bridge pathway (configuration) for a given bridge key, asset in, and whether to use the production pathway
+ * @param bridgeKey - the bridge key to use
+ * @param isProd - whether to use the production pathway
+ * @param assetIn - the asset in to bridge
+ * @returns the bridge pathway
+ */
 export const bridgePathway = ({
   bridgeKey,
   isProd,
@@ -21,6 +28,12 @@ export const bridgePathway = ({
   pathway(bridgeKey, isProd, assetIn?.address) ?? null
 )
 
+/**
+ * Retrieves the amount to bridge from the amount and asset in. If either of them is nil, returns 0n
+ * @param amountIn - the amount to bridge
+ * @param assetIn - the asset in to bridge
+ * @returns the amount to bridge
+ */
 export const amountToBridge = ({
   amountIn,
   assetIn,
@@ -34,6 +47,12 @@ export const amountToBridge = ({
   return amountIn
 }
 
+/**
+ * Calculates the bridge cost from the amount to bridge and bridge fee
+ * @param amountToBridge - the amount to bridge
+ * @param bridgeFee - the bridge fee
+ * @returns the bridge cost
+ */
 export const bridgeCost = ({
   amountToBridge,
   bridgeFee,
@@ -45,6 +64,12 @@ export const bridgeCost = ({
   return (amountToBridge * bridgeFee) / oneEther
 }
 
+/**
+ * Calculates the amount after bridge fee from the amount to bridge and bridge cost
+ * @param amountToBridge - the amount to bridge
+ * @param bridgeCost - the bridge cost
+ * @returns the amount after bridge fee
+ */
 export const amountAfterBridgeFee = ({
   amountToBridge,
   bridgeCost,
@@ -58,6 +83,12 @@ export const amountAfterBridgeFee = ({
   return afterFee
 }
 
+/**
+ * Calculates the estimated amount out from the amount after bridge fee and fee
+ * @param amountAfterBridgeFee - the amount after bridge fee
+ * @param fee - the fee
+ * @returns the estimated amount out
+ */
 export const estimatedAmountOut = ({
   amountAfterBridgeFee,
   fee,
@@ -71,6 +102,16 @@ export const estimatedAmountOut = ({
   return amountAfterBridgeFee - fee
 }
 
+/**
+ * Calculates the estimated fee from the amount after bridge fee, fee, percent fee, fee type, limit, and whether to deliver the costs
+ * @param amountAfterBridgeFee - the amount after bridge fee
+ * @param fee - the fee
+ * @param percentFee - the percent fee
+ * @param feeType - the fee type
+ * @param limit - the limit
+ * @param costsToDeliver - whether to deliver the costs
+ * @returns the estimated fee
+ */
 export const estimatedFee = ({
   amountAfterBridgeFee,
   fee,
@@ -101,6 +142,13 @@ export const estimatedFee = ({
   return null
 }
 
+/**
+ * Calculates the estimated native network cost from the estimated gas and latest base fee per gas
+ * @param estimatedGas - the estimated gas
+ * @param latestBaseFeePerGas - the latest base fee per gas
+ * @param requiresDelivery - whether to deliver the costs
+ * @returns the estimated native network cost
+ */
 export const estimatedNativeNetworkCost = ({
   estimatedGas,
   latestBaseFeePerGas,
@@ -116,6 +164,15 @@ export const estimatedNativeNetworkCost = ({
   return BigInt(estimatedGas * latestBaseFeePerGas)
 }
 
+/**
+ * Calculates the estimated token network cost from the estimated native
+ * network cost, price corrective, decimals, and one token int
+ * @param estimatedNativeNetworkCost - the estimated native network cost
+ * @param priceCorrective - the price corrective
+ * @param decimals - the decimals
+ * @param oneTokenInt - the one token int
+ * @returns the estimated token network cost
+ */
 export const estimatedTokenNetworkCost = ({
   estimatedNativeNetworkCost,
   priceCorrective,
@@ -134,6 +191,11 @@ export const estimatedTokenNetworkCost = ({
   return tokenCost
 }
 
+/**
+ * Calculates one token of the asset in as an int
+ * @param assetIn - the asset in to bridge
+ * @returns the one token int
+ */
 export const oneTokenInt = ({
   assetIn,
 }: {
@@ -143,6 +205,11 @@ export const oneTokenInt = ({
   return 10n ** BigInt(assetIn.decimals)
 }
 
+/**
+ * Returns the limit as a bigint. Nil uses 0n
+ * @param lim - the limit
+ * @returns the limit
+ */
 export const limit = (lim: bigint | null) => {
   if (!lim) {
     return 0n
@@ -150,6 +217,13 @@ export const limit = (lim: bigint | null) => {
   return lim
 }
 
+/**
+ * Returns the network switch asset out address from the asset out, unwrap, and to chain
+ * @param assetOut - the asset out
+ * @param unwrap - whether to unwrap
+ * @param toChain - the chain to switch to
+ * @returns the network switch asset out address
+ */
 export const networkSwitchAssetOutAddress = ({
   assetOut,
   unwrap,
@@ -164,6 +238,17 @@ export const networkSwitchAssetOutAddress = ({
   return nativeAssetOut[toChain] === assetOut.address ? zeroAddress : assetOut.address
 }
 
+/**
+ * Calculates the desired excess compensation basis points from the path, asset in, asset out, bridge key, fee type, list, and asset out address
+ * @param path - the path
+ * @param assetIn - the asset in to bridge
+ * @param assetOut - the asset out
+ * @param bridgeKey - the bridge key
+ * @param feeType - the fee type
+ * @param list - the list
+ * @param assetOutAddress - the asset out address
+ * @returns the desired excess compensation basis points
+ */
 export const desiredExcessCompensationBasisPoints = ({
   path,
   assetIn,
@@ -198,6 +283,17 @@ export const desiredExcessCompensationBasisPoints = ({
   )
 }
 
+/**
+ * Calculates the estimated cost from the should deliver, amount after bridge fee, percent fee,
+ * estimated token network cost, reasonable percent on top of gas fee, and fee type
+ * @param shouldDeliver - whether to deliver the costs
+ * @param amountAfterBridgeFee - the amount after bridge fee
+ * @param percentFee - the percent fee
+ * @param estimatedTokenNetworkCost - the estimated token network cost
+ * @param reasonablePercentOnTopOfGasFee - the reasonable percent on top of gas fee
+ * @param feeType - the fee type
+ * @returns the estimated cost
+ */
 export const estimatedCost = ({
   shouldDeliver,
   amountAfterBridgeFee,
@@ -230,6 +326,12 @@ export const estimatedCost = ({
   return estimatedTokenNetworkCost * (reasonablePercentOnTopOfGasFee + oneEther)
 }
 
+/**
+ * Calculates the reasonable fixed fee from the estimated token network cost and desired excess compensation basis points
+ * @param estimatedTokenNetworkCost - the estimated token network cost
+ * @param desiredExcessCompensationBasisPoints - the desired excess compensation basis points
+ * @returns the reasonable fixed fee
+ */
 export const reasonableFixedFee = ({
   estimatedTokenNetworkCost,
   desiredExcessCompensationBasisPoints,
@@ -246,6 +348,12 @@ export const reasonableFixedFee = ({
   )
 }
 
+/**
+ * Calculates the reasonable percent on gas limit from the gas tip fee and estimated token network cost
+ * @param gasTipFee - the gas tip fee
+ * @param estimatedTokenNetworkCost - the estimated token network cost
+ * @returns the reasonable percent on gas limit
+ */
 export const reasonablePercentOnGasLimit = ({
   gasTipFee,
   estimatedTokenNetworkCost,
@@ -260,6 +368,12 @@ export const reasonablePercentOnGasLimit = ({
   )
 }
 
+/**
+ * Calculates the reasonable percent fee from the reasonable fixed fee and amount after bridge fee
+ * @param reasonableFixedFee - the reasonable fixed fee
+ * @param amountAfterBridgeFee - the amount after bridge fee
+ * @returns the reasonable percent fee
+ */
 export const reasonablePercentFee = ({
   reasonableFixedFee,
   amountAfterBridgeFee,
@@ -290,6 +404,12 @@ export const reasonablePercentFee = ({
   return basisPoint * basisFeeTruncator
 }
 
+/**
+ * Returns whether the asset in address is interacting with a bridge token
+ * @param assetLink - the asset link
+ * @param assetInAddress - the asset in address
+ * @returns whether the asset in address is interacting with a bridge token
+ */
 export const interactingWithBridgeToken = ({
   assetLink,
   assetInAddress,
@@ -307,6 +427,19 @@ export const interactingWithBridgeToken = ({
   )
 }
 
+/**
+ * Calculates the fee director struct encoded from the recipient, bridge pathway, fee type, price corrective, gas tip fee, percent fee, fee type settings, limit, and asset out
+ * @param recipient - the recipient
+ * @param bridgePathway - the bridge pathway
+ * @param feeType - the fee type
+ * @param priceCorrective - the price corrective
+ * @param gasTipFee - the gas tip fee
+ * @param percentFee - the percent fee
+ * @param feeTypeSettings - the fee type settings
+ * @param limit - the limit
+ * @param assetOut - the asset out
+ * @returns the fee director struct encoded
+ */
 export const feeDirectorStructEncoded = ({
   recipient,
   bridgePathway,
@@ -353,6 +486,18 @@ export const feeDirectorStructEncoded = ({
   ])
 }
 
+/**
+ * Calculates the destination data param from the recipient, bridge pathway, asset in, destination router, fee director struct encoded, asset link, should deliver, and unwrap
+ * @param recipient - the recipient
+ * @param bridgePathway - the bridge pathway
+ * @param assetIn - the asset in to bridge
+ * @param destinationRouter - the destination router
+ * @param feeDirectorStructEncoded - the fee director struct encoded
+ * @param assetLink - the asset link
+ * @param shouldDeliver - whether to deliver the costs
+ * @param unwrap - whether to unwrap
+ * @returns the destination data param
+ */
 export const destinationDataParam = ({
   recipient,
   bridgePathway,
@@ -410,7 +555,11 @@ export const destinationDataParam = ({
   return concatHex([destinationRouter, recipient])
 }
 
-/** converts a desired excess compensation basis point value into a percentage as an integer, with the denominator assumed to be 1e18 */
+/**
+ * Converts a desired excess compensation basis point value into a percentage as an integer, with the denominator assumed to be 1e18
+ * @param desiredExcessCompensationBasisPoints - the desired excess compensation basis points
+ * @returns the reasonable percent on top of gas fee
+ */
 export const reasonablePercentOnTopOfGasFee = ({
   desiredExcessCompensationBasisPoints,
 }: {
@@ -419,6 +568,11 @@ export const reasonablePercentOnTopOfGasFee = ({
   return (desiredExcessCompensationBasisPoints * (oneEther / basisPoints))
 }
 
+/**
+ * Calculates the desired compensation ratio from the desired excess compensation basis points
+ * @param desiredExcessCompensationBasisPoints - the desired excess compensation basis points
+ * @returns the desired compensation ratio
+ */
 export const desiredCompensationRatio = ({
   desiredExcessCompensationBasisPoints,
 }: {
@@ -427,6 +581,15 @@ export const desiredCompensationRatio = ({
   return oneEther + (desiredExcessCompensationBasisPoints * oneEther) / basisPoints
 }
 
+/**
+ * Calculates the available compensation maximum from the amount after bridge fee, percent fee, fee type, fixed fee, and limit
+ * @param amountAfterBridgeFee - the amount after bridge fee
+ * @param percentFee - the percent fee
+ * @param feeType - the fee type
+ * @param fixedFee - the fixed fee
+ * @param limit - the limit
+ * @returns the available compensation maximum
+ */
 export const availableCompensationMaximum = ({
   amountAfterBridgeFee,
   percentFee,
@@ -452,6 +615,7 @@ export const availableCompensationMaximum = ({
 }
 
 /**
+ * Calculates the transaction inputs from the bridge pathway, asset in, recipient, account, asset link, destination data param, amount to bridge, fee director struct encoded, and should deliver
  * @param bridgePathway - the bridge pathway to use
  * @param assetIn - the asset in to bridge
  * @param recipient - the recipient of the bridge
@@ -460,6 +624,8 @@ export const availableCompensationMaximum = ({
  * @param destinationDataParam - the destination data param to use
  * @param amountToBridge - the amount to bridge
  * @param feeDirectorStructEncoded - the fee director struct encoded to use
+ * @param shouldDeliver - whether to deliver the tokens to the recipient
+ * @returns the transaction inputs
  */
 export const transactionInputs = ({
   bridgePathway,
@@ -480,7 +646,6 @@ export const transactionInputs = ({
   destinationDataParam: Hex | null
   amountToBridge: bigint
   feeDirectorStructEncoded: Hex | null
-  // interactingWithBridgeToken: boolean
   shouldDeliver: boolean
 }) => {
   if (!bridgePathway) {
@@ -638,6 +803,13 @@ export const transactionInputs = ({
   }
 }
 
+/**
+ * Calculates the asset out key from the bridge key path, asset in address, and unwrap
+ * @param bridgeKeyPath - the bridge key path
+ * @param assetInAddress - the asset in address
+ * @param unwrap - whether to unwrap
+ * @returns the asset out key
+ */
 export const assetOutKey = ({
   bridgeKeyPath,
   assetInAddress,
@@ -651,6 +823,14 @@ export const assetOutKey = ({
   return `${bridgeKeyPath}/${unwrap ? 'native' : 'erc20'}/${assetInAddress.toLowerCase()}`
 }
 
+/**
+ * Returns the asset out from the asset in address, assets out, bridge key path, and unwrap
+ * @param assetInAddress - the asset in address
+ * @param assetsOut - the assets out
+ * @param bridgeKeyPath - the bridge key path
+ * @param unwrap - whether to unwrap
+ * @returns the asset out
+ */
 export const assetOut = ({
   assetInAddress,
   assetsOut,
