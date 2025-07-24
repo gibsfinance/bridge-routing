@@ -55,10 +55,9 @@
       key: 'coinbase',
       name: 'Coinbase',
       logo: coinbaseLogo,
-      onclick: () => {
+      onclick: async () => {
         if (accountState.address) {
-          window.open(coinbaseUrl, 'coinbase-onramp', 'width=400,height=600')
-          updateOnrampProviderStates(false, null)
+          modal.open({ view: 'OnRampProviders' })
         } else {
           modal.open({ view: 'Connect' })
         }
