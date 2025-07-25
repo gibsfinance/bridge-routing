@@ -4,6 +4,7 @@
   import { chainsMetadata } from '@gibs/bridge-sdk/chains'
   import { formatUnits, getAddress, maxUint256, zeroAddress, type Hex } from 'viem'
   import _ from 'lodash'
+  import { assetOutKey } from '@gibs/bridge-sdk/settings'
 
   import * as transactions from '../stores/transactions'
   import { settings as bridgeAdminSettings, settingKey } from '../stores/fee-manager.svelte'
@@ -31,7 +32,6 @@
   import { transactionButtonPress } from '../stores/transaction'
   import BridgeProgressTxInputToggle from './BridgeProgressTxInputToggle.svelte'
   import {
-    assetOutKey,
     bridgeSettings,
     searchKnownAddresses,
   } from '../stores/bridge-settings.svelte'

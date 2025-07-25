@@ -2,8 +2,8 @@
   import { FeeType } from '@gibs/bridge-sdk/fee-type'
   import { canChangeUnwrap } from '@gibs/bridge-sdk/config'
   import { getAddress, isAddress, zeroAddress, type Hex } from 'viem'
-  import { untrack } from 'svelte'
   import { nativeAssetOut } from '@gibs/bridge-sdk/config'
+  import { assetOutKey } from '@gibs/bridge-sdk/settings'
 
   import { bridgeSettings as storageBridgeSettings } from '../stores/storage.svelte'
   import * as settings from '../stores/settings.svelte'
@@ -17,7 +17,6 @@
     updateAssetIn,
     updateAssetOut,
     loadPriceCorrective,
-    assetOutKey,
   } from '../stores/bridge-settings.svelte'
   import { bridgeKey, loadFeeFor, unwrap } from '../stores/input.svelte'
   import { accountState } from '../stores/auth/AuthProvider.svelte'

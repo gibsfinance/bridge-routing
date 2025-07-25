@@ -2,11 +2,11 @@
   import { zeroAddress, type Hex } from 'viem'
   import Icon from '@iconify/svelte'
   import { Chains, Provider } from '@gibs/bridge-sdk/config'
+  import { assetOutKey } from '@gibs/bridge-sdk/settings'
 
   import Button from './Button.svelte'
   import { accountState } from '../stores/auth/AuthProvider.svelte'
   import {
-    assetOutKey,
     bridgeSettings,
     searchKnownAddresses,
   } from '../stores/bridge-settings.svelte'

@@ -16,7 +16,7 @@ import {
   erc20Abi_bytes32,
   isAddress,
 } from 'viem'
-import type { Block, Hex, TransactionReceipt, BlockTag } from 'viem'
+import type { Block, Hex, TransactionReceipt, BlockTag, TransactionEIP2930, TransactionEIP1559 } from 'viem'
 import { loading, resolved, type Cleanup } from './loading.svelte'
 import { NullableProxyStore } from '../types.svelte'
 import { bridgeGraphqlUrl } from './auth/constants'
@@ -587,7 +587,20 @@ export const liveBridgeStatus = loading.loadsAfterTick<
       .catch(() => null)
     if (!receipt) {
       // tx has not yet been mined
-      console.log('tx has not yet been mined', hash)
+      const [transaction, latest] = await Promise.all([
+        client.getTransaction({
+          hash,
+        }),
+        client.getBlock({
+          blockTag: 'latest',
+        }),
+      ])
+      console.log(
+        'tx has not yet been mined',
+        hash,
+        transaction?.maxFeePerGas ?? transaction?.gasPrice,
+        latest.baseFeePerGas,
+      )
       return {
         ...params,
         status: bridgeStatuses.SUBMITTED,

@@ -1,12 +1,11 @@
 <script lang="ts">
   import { FeeType } from '@gibs/bridge-sdk/fee-type'
   import { formatEther } from 'viem'
-  import type { TokenMetadata } from '@gibs/bridge-sdk/types'
+  import type { Token } from '@gibs/bridge-sdk/types'
   import { Chains } from '@gibs/bridge-sdk/config'
   import { nativeSymbol } from '@gibs/bridge-sdk/chain-info'
 
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
-  import * as utils from '../utils.svelte'
   import * as input from '../stores/input.svelte'
   import { humanReadableNumber } from '../stores/utils'
 
@@ -32,7 +31,7 @@
     shouldDeliver ? afterBridge - bridgeSettings.limit : afterBridge,
   )
   type Props = {
-    asset: TokenMetadata | null
+    asset: Token | null
   }
   const { asset }: Props = $props()
 </script>

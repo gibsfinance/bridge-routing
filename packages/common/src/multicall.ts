@@ -11,6 +11,7 @@ import {
 import _ from 'lodash'
 import type { Call } from './types.js'
 
+/** The multicall for the given chain, client, abi, calls, and target */
 export const multicallRead = async <T>({
   chain,
   client,

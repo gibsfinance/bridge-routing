@@ -16,21 +16,35 @@ export enum Chains {
   // TBNB = '0x61',
 }
 
+/** The key of a chain - human readable for query params */
 export type ChainKey = keyof typeof Chains
 
+/** A map of chain ids to chain keys */
 export const chainIdToKey = new Map<Chains, ChainKey>(
   Object.entries(Chains).map(([key, chain]) => [chain, key] as [Chains, ChainKey]),
 )
 
+/**
+ * Converts a chain id to a chain key
+ * @param chainId - the chain id
+ * @returns the chain key
+ */
 export const toChain = (chainId: number | string) => `0x${Number(chainId).toString(16)}` as Chains
 
+/**
+ * Converts a chain id to a chain key
+ * @param chainId - the chain id
+ * @returns the chain key
+ */
 export const toChainKey = (chainId: number | string) => chainIdToKey.get(toChain(chainId))
 
+/** The provider of an omnibridge */
 export enum Provider {
   PULSECHAIN = 'pulsechain',
   TOKENSEX = 'tokensex',
 }
 
+/** A map of chains to native asset out addresses */
 export const nativeAssetOut = {
   [Chains.ETH]: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
   [Chains.BNB]: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
@@ -39,10 +53,12 @@ export const nativeAssetOut = {
   [Chains.V4PLS]: '0x70499adEBB11Efd915E3b69E700c331778628707',
 } as Record<Chains, Hex>
 
+/** A map of chains to deprecated native asset out addresses */
 export const deprecatedNativeAssetOut = {
   [Chains.PLS]: new Set(['0x97Ac4a2439A47c07ad535bb1188c989dae755341']),
 } as Partial<Record<Chains, Set<Hex>>>
 
+/** A map of chains to uni v2 router addresses */
 export const uniV2Routers = {
   [Chains.PLS]: [
     '0x98bf93ebf5c380C0e6Ae8e192A7e2AE08edAcc02',
@@ -57,6 +73,7 @@ export const uniV2Routers = {
   ],
 } as Record<Chains, Hex[]>
 
+/** A map of chains to native token symbols */
 export const nativeTokenSymbol = {
   [Chains.PLS]: 'PLS',
   [Chains.V4PLS]: 'V4PLS',
@@ -65,6 +82,7 @@ export const nativeTokenSymbol = {
   [Chains.BNB]: 'BNB',
 } as Record<Chains, string>
 
+/** A map of chains to native token names */
 export const nativeTokenName = {
   [Chains.PLS]: 'Pulse',
   [Chains.V4PLS]: 'V4 Pulse',
@@ -73,13 +91,14 @@ export const nativeTokenName = {
   [Chains.BNB]: 'BNB',
 } as Record<Chains, string>
 
+/** The pathway of a bridge */
 export type Pathway = {
   from: Hex
   to: Hex
   destinationRouter: Hex | null
   nativeRouter: Hex
   validator: Hex
-  defaultAssetIn: Token
+  // defaultAssetIn: Token
   usesExtraParam: boolean
   feeManager: 'from' | 'to'
   toHome: boolean
@@ -88,11 +107,13 @@ export type Pathway = {
   settingOverrides?: Record<Hex, Partial<Pathway>>
 }
 
+/** A map of providers to pathways */
 export type DeepPathwayConfig = Record<
   Provider,
   Partial<Record<Chains, Partial<Record<Chains, Pathway>>>>
 >
 
+/** The settings for the pulsechain pls eth pathway */
 const pulsechainPLSETHSettings = {
   from: '0x0e18d0d556b652794EF12Bf68B2dC857EF5f3996',
   to: '0xe20E337DB2a00b1C37139c873B92a0AAd3F468bF',
@@ -119,21 +140,6 @@ export const pathways = {
           [zeroAddress]: pulsechainPLSETHSettings,
           [getAddress(nativeAssetOut[Chains.PLS])]: pulsechainPLSETHSettings,
         },
-        defaultAssetIn: {
-          symbol: 'WETH',
-          name: 'Wrapped Ether from Ethereum',
-          address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
-          decimals: 18,
-          chainId: 369,
-          logoURI: imageLinks.network(369),
-          extensions: {
-            bridgeInfo: {
-              '1': {
-                tokenAddress: nativeAssetOut[Chains.ETH],
-              },
-            },
-          },
-        },
       },
     },
     [Chains.ETH]: {
@@ -157,21 +163,6 @@ export const pathways = {
             nativeRouter: '0x1F0144Ce3BDaf11944Fe0beF6444599a0500695B',
           },
         },
-        defaultAssetIn: {
-          chainId: 1,
-          address: nativeAssetOut[Chains.ETH],
-          name: 'Wrapped Ether',
-          symbol: 'WETH',
-          decimals: 18,
-          logoURI: imageLinks.network(1),
-          extensions: {
-            bridgeInfo: {
-              '369': {
-                tokenAddress: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
-              },
-            },
-          },
-        },
       },
     },
   },
@@ -189,21 +180,6 @@ export const pathways = {
         requiresDelivery: true,
         // wbnb from bsc on pulsechain (tokensex)
         bridgedNativeAssetOut: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
-        defaultAssetIn: {
-          symbol: 'WBNB',
-          name: 'Wrapped BNB',
-          address: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
-          decimals: 18,
-          chainId: 369,
-          logoURI: imageLinks.network(369),
-          extensions: {
-            bridgeInfo: {
-              '56': {
-                tokenAddress: nativeAssetOut[Chains.BNB],
-              },
-            },
-          },
-        },
       },
     },
     [Chains.BNB]: {
@@ -219,21 +195,6 @@ export const pathways = {
         requiresDelivery: false,
         // wpls from pulsechain on bsc (tokensex)
         bridgedNativeAssetOut: '0xF6088134D28eeBEF7128BA41FaDb2FCA0666c64C',
-        defaultAssetIn: {
-          chainId: 56,
-          address: nativeAssetOut[Chains.BNB],
-          name: 'Wrapped BNB from BSC',
-          symbol: 'WBNB',
-          decimals: 18,
-          logoURI: imageLinks.network(56),
-          extensions: {
-            bridgeInfo: {
-              '369': {
-                tokenAddress: '0x518076CCE3729eF1a3877EA3647a26e278e764FE',
-              },
-            },
-          },
-        },
       },
     },
   },
@@ -276,21 +237,6 @@ export const testnetPathways = {
         toHome: false,
         feeManager: 'from',
         bridgedNativeAssetOut: '0x3677bd78ccf4d299328ecfba61790cf8dbfcf686',
-        defaultAssetIn: {
-          chainId: 943,
-          address: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
-          name: 'Wrapped Ether from Sepolia',
-          symbol: 'WsepETH',
-          decimals: 18,
-          logoURI: imageLinks.network(943),
-          extensions: {
-            bridgeInfo: {
-              '11155111': {
-                tokenAddress: nativeAssetOut[Chains.SEP],
-              },
-            },
-          },
-        },
       },
     },
     [Chains.SEP]: {
@@ -305,26 +251,12 @@ export const testnetPathways = {
         toHome: true,
         feeManager: 'to',
         bridgedNativeAssetOut: '0x35807560aD0597E23F452cdc82D4Fb0e7E3c6590',
-        defaultAssetIn: {
-          chainId: 11_155_111,
-          address: nativeAssetOut[Chains.SEP],
-          name: 'Wrapped Ether',
-          symbol: 'sepWETH',
-          decimals: 18,
-          logoURI: imageLinks.network(11_155_111),
-          extensions: {
-            bridgeInfo: {
-              '943': {
-                tokenAddress: '0x3677bd78CCf4d299328ECFBa61790cf8dBfcF686',
-              },
-            },
-          },
-        },
       },
     },
   },
 } as DeepPathwayConfig
 
+/** The mainnet bridge keys */
 const mainnetBridgeKeys = [
   [Provider.PULSECHAIN, Chains.PLS, Chains.ETH],
   [Provider.PULSECHAIN, Chains.ETH, Chains.PLS],
@@ -332,16 +264,26 @@ const mainnetBridgeKeys = [
   [Provider.TOKENSEX, Chains.BNB, Chains.PLS],
 ] as BridgeKey[]
 
+/** The testnet bridge keys */
 const testnetBridgeKeys = [
   [Provider.PULSECHAIN, Chains.SEP, Chains.V4PLS],
   [Provider.PULSECHAIN, Chains.V4PLS, Chains.SEP],
 ] as BridgeKey[]
 
+/** Returns the valid bridge keys for the given is prod */
 export const validBridgeKeys = (isProd: boolean) => [
   ...mainnetBridgeKeys,
   ...(isProd ? [] : testnetBridgeKeys),
 ]
 
+/**
+ * Infers the bridge key from the current key, provider, from chain, and to chain
+ * @param currentKey - the current bridge key
+ * @param provider - the provider
+ * @param fromChain - the from chain
+ * @param toChain - the to chain
+ * @returns the inferred bridge key
+ */
 export const inferBridgeKey = ({
   currentKey,
   provider,
@@ -367,6 +309,13 @@ export const inferBridgeKey = ({
   return [provider, nextFromChain, nextToChain] as BridgeKey
 }
 
+/**
+ * Returns the pathway for the given bridge key, is prod, and asset in address
+ * @param bridgeKey - the bridge key
+ * @param isProd - whether to use the production pathway
+ * @param assetInAddress - the asset in address
+ * @returns the pathway
+ */
 export const pathway = (bridgeKey: BridgeKey | null, isProd: boolean, assetInAddress?: string | Hex | null | undefined) => {
   if (!bridgeKey) return
   let pathway = _.get(pathways, bridgeKey) || (!isProd ? _.get(testnetPathways, bridgeKey) : undefined)
@@ -382,12 +331,25 @@ export const pathway = (bridgeKey: BridgeKey | null, isProd: boolean, assetInAdd
   return pathway
 }
 
+/**
+ * Returns the default asset in for the given bridge key and is prod
+ * @param bridgeKey - the bridge key
+ * @param isProd - whether to use the production pathway
+ * @returns the default asset in
+ */
 export const defaultAssetIn = ($bridgeKey: BridgeKey | null, isProd: boolean) => {
+  if (!$bridgeKey) return null
   const conf = pathway($bridgeKey, isProd)
-  const defaultAssetIn = _.get(conf, ['defaultAssetIn']) as Token | undefined
+  const defaultAssetIn = _.get(conf, ['bridgedNativeAssetOut']) as Hex | undefined
   return defaultAssetIn
 }
 
+/**
+ * Returns whether the given asset is the native asset for the given bridge key
+ * @param asset - the asset
+ * @param bridgeKey - the bridge key
+ * @returns whether the given asset is the native asset for the given bridge key
+ */
 export const isNative = (asset: Token | TokenOut | null, bridgeKey: BridgeKey | null) => {
   if (!bridgeKey || !asset) {
     return false
@@ -401,6 +363,12 @@ export const isNative = (asset: Token | TokenOut | null, bridgeKey: BridgeKey | 
   )
 }
 
+/**
+ * Returns whether the given asset is unwrappable for the given bridge key
+ * @param bridgeKey - the bridge key
+ * @param assetIn - the asset in
+ * @returns whether the given asset is unwrappable for the given bridge key
+ */
 export const isUnwrappable = (
   bridgeKey: BridgeKey | null,
   assetIn: Pick<Token, 'address'> | null,
@@ -414,6 +382,12 @@ export const isUnwrappable = (
   return path.bridgedNativeAssetOut === getAddress(addr)
 }
 
+/**
+ * Returns whether the given asset can be unwrapped for the given bridge key
+ * @param bridgeKey - the bridge key
+ * @param assetIn - the asset in
+ * @returns boolean
+ */
 export const canChangeUnwrap = (bridgeKey: BridgeKey, assetIn: Token | null) => {
   return !!assetIn && isUnwrappable(bridgeKey, assetIn)
 }

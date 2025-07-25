@@ -67,11 +67,11 @@ export const recipient = new NullableProxyStore<Hex>()
 
 export const recipientLockedToAccount = new ProxyStore<boolean>(true)
 
-export const defaultBridgeKey = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS] as BridgeKey
+export const defaultBridgeKey = [Provider.PULSECHAIN, Chains.PLS, Chains.ETH] as BridgeKey
 
 const getDefaultAssetInAddress = () => {
   const assetInAddress =
-    page.params.assetInAddress || defaultAssetIn(defaultBridgeKey, isProd.value)?.address || null
+    page.params.assetInAddress || defaultAssetIn(defaultBridgeKey, isProd.value) || null
   if (assetInAddress && isAddress(assetInAddress)) {
     return getAddress(assetInAddress)
   }

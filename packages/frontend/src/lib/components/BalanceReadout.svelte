@@ -1,7 +1,8 @@
 <script lang="ts">
-  import type { Hex } from 'viem'
+  import { zeroAddress, type Hex } from 'viem'
   import type { ClassValue } from 'svelte/elements'
   import type { Token } from '@gibs/bridge-sdk/types'
+  import { oneEther } from '@gibs/bridge-sdk/settings'
 
   import { humanReadableNumber } from '../stores/utils'
   import { loading } from '../stores/loading.svelte'
@@ -10,9 +11,7 @@
     tokenBalanceLoadingKey,
     TokenBalanceWatcher,
     blocks,
-    balances,
   } from '../stores/chain-events.svelte'
-  import { oneEther } from '../stores/bridge-settings.svelte'
 
   import Loading from './Loading.svelte'
   type Props = {
@@ -27,6 +26,7 @@
     hideSymbol?: boolean
     decimalLimit?: number
     showLoader?: boolean
+    currentValue: bigint | null
   }
   const {
     token,
@@ -36,6 +36,7 @@
     showLoader = false,
     roundedClasses = 'rounded-md',
     decimalClasses = '',
+    currentValue,
     onmax,
     onbalanceupdate,
   }: Props = $props()
@@ -63,18 +64,28 @@
     onbalanceupdate?.(tokenBalance.value)
   })
   const balance = $derived(tokenBalance?.value ?? null)
-  const disableMax = $derived(balance === 0n)
+  const maxBalance = $derived.by(() => {
+    if (!token) return 0n
+    if (!balance) return 0n
+    if (token.address !== zeroAddress) return balance
+    const baseFeePerGas = block?.baseFeePerGas ?? 3_000_000_000n
+    const gasNeeds = baseFeePerGas * 400_000n
+    const balanceMinusGasNeeds = balance - (gasNeeds * 2n)
+    if (balanceMinusGasNeeds < 0n) return 0n
+    return balanceMinusGasNeeds
+  })
+  const disableMax = $derived(balance === 0n || maxBalance <= (currentValue ?? 0n))
   const loadingKey = $derived(
     token && tokenBalanceLoadingKey(token?.chainId ?? 0, token.address, (account as Hex) ?? '0x'),
   )
   const decimalClassNames = $derived(['h-full', decimalClasses])
-  const maxOutBalance = (event: MouseEvent) => {
-    if (disableMax || typeof balance !== 'bigint') return
-    const shouldStopProp = onmax?.(balance)
+  const maxOutBalance = $derived((event: MouseEvent) => {
+    if (disableMax || typeof maxBalance !== 'bigint') return
+    const shouldStopProp = onmax?.(maxBalance)
     if (shouldStopProp) {
       event.stopPropagation()
     }
-  }
+  })
   const wrapperClasses = $derived([wrapperClassNames, wrapperSizeClasses])
   const humanReadableText = $derived(
     balance === null ? '-' : humanReadableNumber(balance, {
