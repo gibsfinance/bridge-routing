@@ -32,7 +32,7 @@
     dashWhenCompressed?: boolean
     overrideAccount?: string | null
     oninput?: (values: InputValue) => bigint | undefined | void
-    value: bigint | string | null
+    value: bigint | null
     modal?: Snippet<[{ close: () => void }]>
     radio?: Snippet
     underinput?: Snippet
@@ -144,6 +144,7 @@
           roundedClasses=""
           hideSymbol
           decimalLimit={9}
+          currentValue={value}
           {onbalanceupdate}
           {onmax} />
       {/if}
