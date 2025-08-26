@@ -6,9 +6,11 @@
   "workspaces": [
     "packages/common",
     "packages/bridge-sdk",
+    "packages/indexer",
     "packages/frontend"
   ],
   "scripts": {
+    "docker:build": "docker compose build",
     "version": "node scripts/sync-versions.js",
     "ui:dev": "yarn workspace @gibs/frontend run dev",
     "ui:preview": "yarn workspace @gibs/frontend run preview",
@@ -16,7 +18,9 @@
     "common:build": "yarn workspace @gibs/common run build",
     "ui:check": "yarn workspace @gibs/frontend run check",
     "bridge-sdk:build": "yarn workspace @gibs/bridge-sdk run build",
-    "build": "yarn run common:build && yarn run bridge-sdk:build && yarn run ui:build",
+    "build": "yarn run common:build && yarn run bridge-sdk:build && yarn run indexer:build && yarn run ui:build",
+    "indexer:build": "yarn workspace @gibs/indexer run build",
+    "indexer:dev": "yarn workspace @gibs/indexer run dev",
     "dev": "yarn run ui:dev",
     "preview": "yarn run ui:preview",
     "pinata:publish": "cd packages/frontend && pinata-cli -a $PINATA_API_KEY && pinata-cli -u dist",
@@ -25,6 +29,9 @@
     "packages:publish": "cd packages/common && npm publish && cd ../bridge-sdk && npm publish"
   },
   "keywords": [],
+  "resolutions": {
+    "esbuild": "0.25.0"
+  },
   "author": "",
   "license": "ISC",
   "description": "",
