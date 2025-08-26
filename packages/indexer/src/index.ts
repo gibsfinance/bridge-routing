@@ -151,7 +151,7 @@ ponder.on(
     const blockId = ids.block(context, event.block.hash)
     const transactionId = ids.transaction(context, event.transaction.hash)
     const targetOrderId = orderId(context, event)
-    console.log(parsed.messageHash, event.args.messageId)
+    // console.log(parsed.messageHash, event.args.messageId)
     await Promise.all([
       upsertBlock(context, event.block),
       upsertTransaction(context, event.block, event.transaction),
@@ -194,7 +194,7 @@ ponder.on('HomeAMB:UserRequestForSignature', async ({ event, context }) => {
   const transactionId = ids.transaction(context, event.transaction.hash)
   const parsed = parseAMBMessage(event.transaction.from, event.args.encodedData)
   const targetOrderId = orderId(context, event)
-  console.log(parsed.messageHash, event.args.messageId)
+  // console.log(parsed.messageHash, event.args.messageId)
   await Promise.all([
     upsertBlock(context, event.block),
     upsertTransaction(context, event.block, event.transaction),
@@ -205,15 +205,15 @@ ponder.on('HomeAMB:UserRequestForSignature', async ({ event, context }) => {
     }),
     parsed.feeDirector
       ? context.db.insert(FeeDirector).values({
-          messageId: event.args.messageId,
-          recipient: parsed.feeDirector.recipient,
-          settings: parsed.feeDirector.settings,
-          limit: parsed.feeDirector.limit,
-          multiplier: parsed.feeDirector.multiplier,
-          feeType: parsed.feeDirector.feeType,
-          unwrapped: parsed.feeDirector.unwrapped,
-          excludePriority: parsed.feeDirector.excludePriority,
-        })
+        messageId: event.args.messageId,
+        recipient: parsed.feeDirector.recipient,
+        settings: parsed.feeDirector.settings,
+        limit: parsed.feeDirector.limit,
+        multiplier: parsed.feeDirector.multiplier,
+        feeType: parsed.feeDirector.feeType,
+        unwrapped: parsed.feeDirector.unwrapped,
+        excludePriority: parsed.feeDirector.excludePriority,
+      })
       : null,
     getLatestRequiredSignatures(context, bridgeId, event).then(
       (requiredSignatures) =>
