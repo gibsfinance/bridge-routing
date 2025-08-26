@@ -131,7 +131,7 @@ ponder.on(
 const getOutstandingMessageIdByHash = async (
   context: Context,
   event: SignatureEvent,
-): Promise<Hex> => {
+): Promise<Hex | null> => {
   const messageHash = event.args.messageHash
   const binding = await context.db.find(ReverseMessageHashBinding, {
     messageHash,
