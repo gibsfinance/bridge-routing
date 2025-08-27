@@ -13,4 +13,4 @@ RUN yarn
 RUN yarn run build
 
 # Run the server when the container launches
-CMD ["yarn", "run", "ui:preview"]
+CMD ["yarn", "run", "indexer:start"]
