@@ -1,13 +1,10 @@
 import type { Context } from 'ponder:registry'
 import {
-  concatHex,
   createPublicClient,
   fallback,
   getAddress,
   getContract,
   http,
-  keccak256,
-  numberToHex,
   PublicClient,
   webSocket,
   type Hex,
@@ -72,10 +69,6 @@ export const pathways = {
   },
 } as Pathway
 
-// export const providers = ['pulsechain', 'tokensex'] as const
-
-// export type Provider = (typeof providers)[number]
-
 export type Side = 'home' | 'foreign'
 
 const getProviderInControlOf = (address: Hex) => {
@@ -87,31 +80,6 @@ const getProviderInControlOf = (address: Hex) => {
     }
   }
   return Providers.TOKENSEX
-}
-
-export const staticRequiredSignatures = (chainId: ChainId, address: Hex) => {
-  if (chainId === chains.pulsechain) {
-    const provider = getProviderInControlOf(address)
-    if (provider === Providers.PULSECHAIN) {
-      return 5n
-    }
-    if (provider === Providers.TOKENSEX) {
-      return 3n
-    }
-  }
-  if (chainId === chains.pulsechainV4) {
-    return 3n
-  }
-  if (chainId === chains.ethereum) {
-    return 5n
-  }
-  if (chainId === chains.sepolia) {
-    return 3n
-  }
-  if (chainId === chains.bsc) {
-    return 3n
-  }
-  throw new Error('Unknown chain id')
 }
 
 type MinimalKey = `${ChainId}-${Hex}`
@@ -163,30 +131,18 @@ Object.entries(pathways).forEach(([provider, entries]) => {
 
 export const minimalInfo = new Map<MinimalKey, MinimalInfo>(minimalEntries)
 
-export const ids = {
-  bridge: (context: Context, address: Hex) => {
-    return keccak256(concatHex([numberToHex(context.chain.id, { size: 32 }), address]))
-  },
-  requiredSignatureChange: (context: Context, bridgeId: Hex, orderId: bigint) => {
-    return keccak256(
-      concatHex([numberToHex(context.chain.id, { size: 32 }), bridgeId, numberToHex(orderId, { size: 32 })]),
-    )
-  },
-  event: (context: Context, event: any) => {
-    return BigInt(event.log.logIndex)
-  },
-  block: (context: Context, hash: Hex) => {
-    return keccak256(concatHex([numberToHex(context.chain.id, { size: 32 }), hash]))
-  },
-  transaction: (context: Context, hash: Hex) => {
-    return keccak256(concatHex([numberToHex(context.chain.id, { size: 32 }), hash]))
-  },
-  validator: (bridgeId: Hex, address: Hex) => {
-    return keccak256(concatHex([bridgeId, address]))
-  },
-  signature: (messageHash: Hex, validatorId: Hex) => {
-    return keccak256(concatHex([messageHash, validatorId]))
-  },
+export const createOrderId = (context: Context, event: any): bigint => {
+  // Create a bigint order ID for sorting based on:
+  // timestamp (seconds) | transaction index | log index | chain id
+  const timestamp = BigInt(event.block.timestamp)
+  const txIndex = BigInt(event.transaction.transactionIndex)
+  const logIndex = BigInt(event.log.logIndex)
+  const chainId = BigInt(context.chain.id)
+  
+  // Combine into a single bigint for ordering
+  // timestamp takes highest bits for primary ordering
+  // Each component gets sufficient bits to avoid collision
+  return (timestamp << 32n) | (txIndex << 16n) | (logIndex << 8n) | chainId
 }
 
 export const bridgeValidatorCache = new Map<string, Promise<Hex>>()
@@ -248,15 +204,6 @@ export const bridgeInfo = _.memoize((bridgeAddress: Hex) => {
     return getAddress(info.address) === getAddress(bridgeAddress)
   })
 })
-
-export const orderId = (context: Context, event: any) => {
-  return concatHex([
-    numberToHex(event.block.timestamp, { size: 8 }),
-    numberToHex(event.transaction.transactionIndex, { size: 8 }),
-    numberToHex(BigInt(event.log.logIndex), { size: 8 }),
-    numberToHex(context.chain.id, { size: 8 }),
-  ])
-}
 
 export const gatherTransportList = (chainId: ChainId) => {
   let index = 0

@@ -15,7 +15,7 @@ import {
 } from 'ponder:schema'
 import type { Hex } from 'viem'
 import { parseAMBMessage } from './message'
-import { getBridgeAddressFromValidator, ids, orderId } from './utils'
+import { getBridgeAddressFromValidator, createOrderId } from './utils'
 import {
   getLatestRequiredSignatures,
   upsertBridge,
@@ -31,10 +31,7 @@ ponder.on('ValidatorContract:ValidatorAdded', async ({ event, context }) => {
     context.chain.id,
   )
   const bridgeAddress = await getBridgeAddressFromValidator(event.log.address)
-  const bridgeId = ids.bridge(context, bridgeAddress)
-  const transactionId = ids.transaction(context, event.transaction.hash)
-  const validatorId = ids.validator(bridgeId, event.args.validator)
-  const eventOrderId = orderId(context, event)
+  const orderId = createOrderId(context, event)
   await Promise.all([
     upsertBridge(context, bridgeAddress),
     upsertBlock(context, event.block),
@@ -42,19 +39,22 @@ ponder.on('ValidatorContract:ValidatorAdded', async ({ event, context }) => {
     context.db
       .insert(LatestValidatorStatusUpdate)
       .values({
-        validatorId,
-        orderId: eventOrderId,
+        bridgeChainId: context.chain.id.toString(),
+        bridgeAddress,
+        validatorAddress: event.args.validator,
+        orderId,
       })
       .onConflictDoUpdate(() => ({
-        orderId: eventOrderId,
+        orderId,
       })),
     context.db.insert(ValidatorStatusUpdate).values({
-      validatorId,
-      orderId: eventOrderId,
-      bridgeId,
-      address: event.args.validator,
+      orderId,
+      bridgeChainId: context.chain.id.toString(),
+      bridgeAddress,
+      validatorAddress: event.args.validator,
+      transactionChainId: context.chain.id.toString(),
+      transactionHash: event.transaction.hash,
       value: true,
-      transactionId,
       logIndex: event.log.logIndex,
     }),
   ])
@@ -67,10 +67,7 @@ ponder.on('ValidatorContract:ValidatorRemoved', async ({ event, context }) => {
     context.chain.id,
   )
   const bridgeAddress = await getBridgeAddressFromValidator(event.log.address)
-  const bridgeId = ids.bridge(context, bridgeAddress)
-  const transactionId = ids.transaction(context, event.transaction.hash)
-  const validatorId = ids.validator(bridgeId, event.args.validator)
-  const eventOrderId = orderId(context, event)
+  const orderId = createOrderId(context, event)
   await Promise.all([
     upsertBridge(context, bridgeAddress),
     upsertBlock(context, event.block),
@@ -78,19 +75,22 @@ ponder.on('ValidatorContract:ValidatorRemoved', async ({ event, context }) => {
     context.db
       .insert(LatestValidatorStatusUpdate)
       .values({
-        validatorId,
-        orderId: eventOrderId,
+        bridgeChainId: context.chain.id.toString(),
+        bridgeAddress,
+        validatorAddress: event.args.validator,
+        orderId,
       })
       .onConflictDoUpdate(() => ({
-        orderId: eventOrderId,
+        orderId,
       })),
     context.db.insert(ValidatorStatusUpdate).values({
-      validatorId,
-      orderId: eventOrderId,
-      bridgeId,
-      address: event.args.validator,
+      orderId,
+      bridgeChainId: context.chain.id.toString(),
+      bridgeAddress,
+      validatorAddress: event.args.validator,
+      transactionChainId: context.chain.id.toString(),
+      transactionHash: event.transaction.hash,
       value: false,
-      transactionId,
       logIndex: event.log.logIndex,
     }),
   ])
@@ -101,9 +101,7 @@ ponder.on(
   async ({ event, context }) => {
     console.log('sig changed', event.args.requiredSignatures)
     const bridgeAddress = await getBridgeAddressFromValidator(event.log.address)
-    const bridgeId = ids.bridge(context, bridgeAddress)
-    const transactionId = ids.transaction(context, event.transaction.hash)
-    const eventOrderId = orderId(context, event)
+    const orderId = createOrderId(context, event)
     await Promise.all([
       upsertBridge(context, bridgeAddress),
       upsertBlock(context, event.block),
@@ -111,17 +109,20 @@ ponder.on(
       context.db
         .insert(LatestRequiredSignaturesChanged)
         .values({
-          bridgeId,
-          orderId: eventOrderId, // pointers to required signatures change
+          bridgeChainId: context.chain.id.toString(),
+          bridgeAddress,
+          orderId,
         })
         .onConflictDoUpdate(() => ({
-          orderId: eventOrderId,
+          orderId,
         })),
       context.db.insert(RequiredSignaturesChanged).values({
-        orderId: eventOrderId,
-        bridgeId,
+        orderId,
+        bridgeChainId: context.chain.id.toString(),
+        bridgeAddress,
         value: event.args.requiredSignatures,
-        transactionId,
+        transactionChainId: context.chain.id.toString(),
+        transactionHash: event.transaction.hash,
         logIndex: event.log.logIndex,
       }),
     ])
@@ -136,7 +137,10 @@ const getOutstandingMessageIdByHash = async (
   const binding = await context.db.find(ReverseMessageHashBinding, {
     messageHash,
   })
-  if (!binding) return null
+  if (!binding) {
+    console.warn('reverse message hash binding not found', messageHash)
+    return null
+  }
   return binding!.messageId
 }
 
@@ -147,36 +151,37 @@ ponder.on(
       event.transaction.from,
       event.args.encodedData,
     )
-    const bridgeId = ids.bridge(context, event.log.address)
-    const blockId = ids.block(context, event.block.hash)
-    const transactionId = ids.transaction(context, event.transaction.hash)
-    const targetOrderId = orderId(context, event)
+    const bridgeAddress = event.log.address
+    const orderId = createOrderId(context, event)
     // console.log(parsed.messageHash, event.args.messageId)
     await Promise.all([
       upsertBlock(context, event.block),
       upsertTransaction(context, event.block, event.transaction),
-      upsertBridge(context, event.log.address),
+      upsertBridge(context, bridgeAddress),
       context.db.insert(ReverseMessageHashBinding).values({
         messageHash: parsed.messageHash,
         messageId: event.args.messageId,
       }),
-      getLatestRequiredSignatures(context, bridgeId, event).then(
+      getLatestRequiredSignatures(context, bridgeAddress).then(
         (requiredSignatures) =>
           context.db.insert(UserRequestForAffirmation).values({
-            bridgeId,
-            blockId,
-            transactionId,
-            requiredSignatureId: requiredSignatures.orderId,
+            messageId: event.args.messageId,
+            orderId,
+            blockChainId: context.chain.id.toString(),
+            blockHash: event.block.hash,
+            transactionChainId: context.chain.id.toString(),
+            transactionHash: event.transaction.hash,
             messageHash: parsed.messageHash,
             from: parsed.from,
             to: parsed.to,
             amount: parsed.nestedData.amount,
-            messageId: event.args.messageId,
             encodedData: event.args.encodedData,
             logIndex: event.log.logIndex,
+            bridgeChainId: context.chain.id.toString(),
+            bridgeAddress,
             originationChainId: parsed.originationChainId,
             destinationChainId: parsed.destinationChainId,
-            orderId: targetOrderId,
+            requiredSignatureOrderId: requiredSignatures.orderId,
             confirmedSignatures: 0n,
             finishedSigning: false,
             token: parsed.nestedData.token,
@@ -189,16 +194,14 @@ ponder.on(
 )
 
 ponder.on('HomeAMB:UserRequestForSignature', async ({ event, context }) => {
-  const bridgeId = ids.bridge(context, event.log.address)
-  const blockId = ids.block(context, event.block.hash)
-  const transactionId = ids.transaction(context, event.transaction.hash)
+  const bridgeAddress = event.log.address
   const parsed = parseAMBMessage(event.transaction.from, event.args.encodedData)
-  const targetOrderId = orderId(context, event)
+  const orderId = createOrderId(context, event)
   // console.log(parsed.messageHash, event.args.messageId)
   await Promise.all([
     upsertBlock(context, event.block),
     upsertTransaction(context, event.block, event.transaction),
-    upsertBridge(context, event.log.address),
+    upsertBridge(context, bridgeAddress),
     context.db.insert(ReverseMessageHashBinding).values({
       messageHash: parsed.messageHash,
       messageId: event.args.messageId,
@@ -215,23 +218,26 @@ ponder.on('HomeAMB:UserRequestForSignature', async ({ event, context }) => {
         excludePriority: parsed.feeDirector.excludePriority,
       })
       : null,
-    getLatestRequiredSignatures(context, bridgeId, event).then(
+    getLatestRequiredSignatures(context, bridgeAddress).then(
       (requiredSignatures) =>
         context.db.insert(UserRequestForSignature).values({
-          bridgeId,
-          blockId,
-          transactionId,
-          requiredSignatureId: requiredSignatures.orderId,
-          amount: parsed.nestedData.amount,
           messageId: event.args.messageId,
-          from: parsed.from,
-          encodedData: event.args.encodedData,
+          orderId,
+          blockChainId: context.chain.id.toString(),
+          blockHash: event.block.hash,
+          transactionChainId: context.chain.id.toString(),
+          transactionHash: event.transaction.hash,
           messageHash: parsed.messageHash,
+          from: parsed.from,
           to: parsed.to,
+          amount: parsed.nestedData.amount,
+          encodedData: event.args.encodedData,
           logIndex: event.log.logIndex,
+          bridgeChainId: context.chain.id.toString(),
+          bridgeAddress,
           originationChainId: parsed.originationChainId,
           destinationChainId: parsed.destinationChainId,
-          orderId: targetOrderId,
+          requiredSignatureOrderId: requiredSignatures.orderId,
           confirmedSignatures: 0n,
           finishedSigning: false,
           token: parsed.nestedData.token,
@@ -244,19 +250,18 @@ ponder.on('HomeAMB:UserRequestForSignature', async ({ event, context }) => {
 
 ponder.on('HomeAMB:SignedForAffirmation', async ({ event, context }) => {
   const messageHash = event.args.messageHash
-  const bridgeId = ids.bridge(context, event.log.address)
-  const validatorId = ids.validator(bridgeId, event.args.signer)
-  const blockId = ids.block(context, event.block.hash)
-  const transactionId = ids.transaction(context, event.transaction.hash)
+  const bridgeAddress = event.log.address
+  const validatorAddress = event.args.signer
+  const orderId = createOrderId(context, event)
   await Promise.all([
     upsertBlock(context, event.block),
     upsertTransaction(context, event.block, event.transaction),
-    upsertBridge(context, event.log.address),
+    upsertBridge(context, bridgeAddress),
     Promise.all([
-      getLatestRequiredSignatures(context, bridgeId, event),
+      getLatestRequiredSignatures(context, bridgeAddress),
       getOutstandingMessageIdByHash(context, event),
     ]).then(([requiredSignatures, messageId]) =>
-      messageId && requiredSignatures && Promise.all([
+      messageId && Promise.all([
         context.db
           .update(UserRequestForAffirmation, {
             messageId,
@@ -267,14 +272,17 @@ ponder.on('HomeAMB:SignedForAffirmation', async ({ event, context }) => {
               row.confirmedSignatures + 1n >= requiredSignatures.value,
           })),
         context.db.insert(SignedForAffirmation).values({
-          signatureId: ids.signature(messageHash, validatorId),
-          userRequestId: messageId,
-          blockId,
-          transactionId,
           messageHash,
-          validatorId,
+          bridgeChainId: context.chain.id.toString(),
+          bridgeAddress,
+          validatorAddress,
+          orderId,
+          blockChainId: context.chain.id.toString(),
+          blockHash: event.block.hash,
+          transactionChainId: context.chain.id.toString(),
+          transactionHash: event.transaction.hash,
+          userRequestId: messageId,
           logIndex: event.log.logIndex,
-          orderId: orderId(context, event),
         }),
       ]),
     ),
@@ -283,19 +291,18 @@ ponder.on('HomeAMB:SignedForAffirmation', async ({ event, context }) => {
 
 ponder.on('HomeAMB:SignedForUserRequest', async ({ event, context }) => {
   const messageHash = event.args.messageHash
-  const bridgeId = ids.bridge(context, event.log.address)
-  const validatorId = ids.validator(bridgeId, event.args.signer)
-  const blockId = ids.block(context, event.block.hash)
-  const transactionId = ids.transaction(context, event.transaction.hash)
+  const bridgeAddress = event.log.address
+  const validatorAddress = event.args.signer
+  const orderId = createOrderId(context, event)
   await Promise.all([
     upsertBlock(context, event.block),
     upsertTransaction(context, event.block, event.transaction),
-    upsertBridge(context, event.log.address),
+    upsertBridge(context, bridgeAddress),
     Promise.all([
-      getLatestRequiredSignatures(context, bridgeId, event),
+      getLatestRequiredSignatures(context, bridgeAddress),
       getOutstandingMessageIdByHash(context, event),
     ]).then(([requiredSignatures, messageId]) =>
-      messageId && requiredSignatures && Promise.all([
+      messageId && Promise.all([
         context.db
           .update(UserRequestForSignature, {
             messageId,
@@ -306,14 +313,17 @@ ponder.on('HomeAMB:SignedForUserRequest', async ({ event, context }) => {
               row.confirmedSignatures + 1n >= requiredSignatures.value,
           })),
         context.db.insert(SignedForUserRequest).values({
-          signatureId: ids.signature(messageHash, validatorId),
-          userRequestId: messageId,
-          blockId,
-          transactionId,
           messageHash,
-          validatorId,
+          bridgeChainId: context.chain.id.toString(),
+          bridgeAddress,
+          validatorAddress,
+          orderId,
+          blockChainId: context.chain.id.toString(),
+          blockHash: event.block.hash,
+          transactionChainId: context.chain.id.toString(),
+          transactionHash: event.transaction.hash,
+          userRequestId: messageId,
           logIndex: event.log.logIndex,
-          orderId: orderId(context, event),
         }),
       ]),
     ),
@@ -321,7 +331,7 @@ ponder.on('HomeAMB:SignedForUserRequest', async ({ event, context }) => {
 })
 
 ponder.on('HomeAMB:AffirmationCompleted', async ({ event, context }) => {
-  const transactionId = ids.transaction(context, event.transaction.hash)
+  const orderId = createOrderId(context, event)
   await Promise.all([
     upsertTransaction(context, event.block, event.transaction),
     upsertBlock(context, event.block),
@@ -330,20 +340,25 @@ ponder.on('HomeAMB:AffirmationCompleted', async ({ event, context }) => {
         messageId: event.args.messageId,
       })
       .then((userRequestForAffirmation) => {
+        if (!userRequestForAffirmation) {
+          console.warn('user request for affirmation not found', event.args)
+          return
+        }
         return context.db.insert(AffirmationCompleted).values({
-          transactionId,
-          userRequestId: event.args.messageId,
           messageHash: userRequestForAffirmation!.messageHash,
+          orderId,
+          transactionChainId: context.chain.id.toString(),
+          transactionHash: event.transaction.hash,
+          userRequestId: event.args.messageId,
           deliverer: event.transaction.from,
           logIndex: event.log.logIndex,
-          orderId: orderId(context, event),
         })
       }),
   ])
 })
 
 ponder.on('ForeignAMB:RelayedMessage', async ({ event, context }) => {
-  const transactionId = ids.transaction(context, event.transaction.hash)
+  const orderId = createOrderId(context, event)
   await Promise.all([
     upsertBlock(context, event.block),
     upsertTransaction(context, event.block, event.transaction),
@@ -353,12 +368,13 @@ ponder.on('ForeignAMB:RelayedMessage', async ({ event, context }) => {
       })
       .then((userRequestForSignature) => {
         return context.db.insert(RelayMessage).values({
-          transactionId,
-          userRequestId: event.args.messageId,
           messageHash: userRequestForSignature!.messageHash,
+          orderId,
+          transactionChainId: context.chain.id.toString(),
+          transactionHash: event.transaction.hash,
+          userRequestId: event.args.messageId,
           deliverer: event.transaction.from,
           logIndex: event.log.logIndex,
-          orderId: orderId(context, event),
         })
       }),
   ])
