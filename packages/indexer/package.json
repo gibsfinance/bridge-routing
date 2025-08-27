@@ -3,7 +3,7 @@
   "private": true,
   "access": "private",
   "type": "module",
-  "version": "0.0.1",
+  "version": "1.8.0",
   "scripts": {
     "dev": "ponder dev",
     "start": "ponder start --schema $RAILWAY_DEPLOYMENT_ID",
