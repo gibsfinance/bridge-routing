@@ -25,7 +25,7 @@ services:
     image: indexer
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.indexer
     networks:
       - indexer
     command: yarn workspace @gibs/indexer run start
