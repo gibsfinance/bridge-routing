@@ -10,7 +10,7 @@ export const upsertBlock = async (
   context: Context,
   block: PonderCore.Block,
 ) => {
-  console.log('upserting block', block.timestamp, context.chain.id)
+  // console.log('upserting block', block.timestamp, context.chain.id)
   return await context.db.insert(Block).values({
     chainId: context.chain.id.toString(),
     hash: block.hash,
@@ -66,7 +66,7 @@ export const upsertBridge = async (context: Context, address: Hex) => {
 }
 
 type RequiredSigs = {
-  orderId: bigint
+  orderId: bigint | null
   value: bigint
 }
 
@@ -80,7 +80,10 @@ export const getLatestRequiredSignatures = async (
   })
 
   if (!latest) {
-    throw new Error(`No latest required signatures found for bridge ${bridgeAddress} on chain ${context.chain.id}`)
+    return {
+      orderId: null,
+      value: 0n,
+    }
   }
 
   const requiredSignatures = await context.db.find(RequiredSignaturesChanged, {

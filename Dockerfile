@@ -8,7 +8,7 @@ COPY ./packages/ /app/packages/
 
 ENV NODE_OPTIONS "--max-old-space-size=8192"
 
-RUN yarn
+RUN yarn install --frozen-lockfile
 
 RUN yarn run build
 

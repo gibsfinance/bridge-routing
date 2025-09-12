@@ -99,9 +99,10 @@ ponder.on('ValidatorContract:ValidatorRemoved', async ({ event, context }) => {
 ponder.on(
   'ValidatorContract:RequiredSignaturesChanged',
   async ({ event, context }) => {
-    console.log('sig changed', event.args.requiredSignatures)
     const bridgeAddress = await getBridgeAddressFromValidator(event.log.address)
     const orderId = createOrderId(context, event)
+    console.log('required signatures changed address=%o required=%o',
+      bridgeAddress, event.args.requiredSignatures)
     await Promise.all([
       upsertBridge(context, bridgeAddress),
       upsertBlock(context, event.block),

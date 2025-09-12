@@ -1,8 +1,8 @@
-name: indexer
+name: gibsfinance
 
 services:
   postgres:
-    container_name: postgres-indexer
+    container_name: gibsfinance-postgres
     image: postgres:16
     command: postgres -c 'max_connections=500' -c work_mem=8GB -c maintenance_work_mem=8GB -c max_wal_size=2GB
     ports:
@@ -10,7 +10,7 @@ services:
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
     networks:
-      - indexer
+      - gibsfinance
     deploy:
       resources:
         limits:
@@ -21,14 +21,13 @@ services:
       - POSTGRES_PASSWORD=password
 
   indexer:
-    container_name: indexer
+    container_name: gibsfinance-indexer
     image: indexer
     build:
       context: .
-      dockerfile: Dockerfile.indexer
     networks:
-      - indexer
-    command: yarn workspace @gibs/indexer run start
+      - gibsfinance
+    command: yarn workspace indexer run dev
     ports:
       - 42068:42069
     depends_on:
@@ -53,7 +52,7 @@ services:
       - PONDER_LOG_LEVEL=${PONDER_LOG_LEVEL:-debug}
 
 networks:
-  indexer:
+  gibsfinance:
     driver: bridge
 
 # volumes:

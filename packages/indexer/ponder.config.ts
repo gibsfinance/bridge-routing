@@ -24,30 +24,30 @@ export default createConfig({
       pollingInterval: 15_000,
       maxRequestsPerSecond: 1_000,
     },
-    // pulsechainV4: {
-    //   id: chains.pulsechainV4,
-    //   rpc: toTransport(chains.pulsechainV4),
-    //   pollingInterval: 15_000,
-    //   maxRequestsPerSecond: 1_000,
-    // },
+    pulsechainV4: {
+      id: chains.pulsechainV4,
+      rpc: toTransport(chains.pulsechainV4),
+      pollingInterval: 15_000,
+      maxRequestsPerSecond: 1_000,
+    },
     ethereum: {
       id: chains.ethereum,
       rpc: toTransport(chains.ethereum),
       pollingInterval: 15_000,
       maxRequestsPerSecond: 1_000,
     },
-    // bsc: {
-    //   id: chains.bsc,
-    //   rpc: toTransport(chains.bsc),
-    //   pollingInterval: 15_000,
-    //   maxRequestsPerSecond: 1_000,
-    // },
-    // sepolia: {
-    //   id: chains.sepolia,
-    //   rpc: toTransport(chains.sepolia),
-    //   pollingInterval: 15_000,
-    //   maxRequestsPerSecond: 1_000,
-    // },
+    bsc: {
+      id: chains.bsc,
+      rpc: toTransport(chains.bsc),
+      pollingInterval: 15_000,
+      maxRequestsPerSecond: 1_000,
+    },
+    sepolia: {
+      id: chains.sepolia,
+      rpc: toTransport(chains.sepolia),
+      pollingInterval: 15_000,
+      maxRequestsPerSecond: 1_000,
+    },
   },
   contracts: {
     ValidatorContract: {
@@ -61,22 +61,22 @@ export default createConfig({
           ],
           startBlock: 17_268_297,
         },
-        // pulsechainV4: {
-        //   address: [await getValidatorAddress(Providers.PULSECHAIN, chains.pulsechainV4, chains.sepolia, 'home')],
-        //   startBlock: 16_564_223,
-        // },
+        pulsechainV4: {
+          address: [await getValidatorAddress(Providers.PULSECHAIN, chains.pulsechainV4, chains.sepolia, 'home')],
+          startBlock: 16_564_223,
+        },
         ethereum: {
           address: [await getValidatorAddress(Providers.PULSECHAIN, chains.pulsechain, chains.ethereum, 'foreign')],
           startBlock: 17_264_119,
         },
-        // sepolia: {
-        //   address: [await getValidatorAddress(Providers.PULSECHAIN, chains.pulsechainV4, chains.sepolia, 'foreign')],
-        //   startBlock: 3_331_893,
-        // },
-        // bsc: {
-        //   address: [await getValidatorAddress(Providers.TOKENSEX, chains.pulsechain, chains.bsc, 'foreign')],
-        //   startBlock: 28_987_322,
-        // },
+        sepolia: {
+          address: [await getValidatorAddress(Providers.PULSECHAIN, chains.pulsechainV4, chains.sepolia, 'foreign')],
+          startBlock: 3_331_893,
+        },
+        bsc: {
+          address: [await getValidatorAddress(Providers.TOKENSEX, chains.pulsechain, chains.bsc, 'foreign')],
+          startBlock: 28_987_322,
+        },
       },
     },
     HomeAMB: {
@@ -110,11 +110,11 @@ export default createConfig({
           // startBlock: 20427991,
           startBlock: 17_268_302,
         },
-        // pulsechainV4: {
-        //   address: [pathways.pulsechain[chains.pulsechainV4]![chains.sepolia]!.home],
-        //   // startBlock: 19836620,
-        //   startBlock: 16_564_237,
-        // },
+        pulsechainV4: {
+          address: [pathways.pulsechain[chains.pulsechainV4]![chains.sepolia]!.home],
+          // startBlock: 19836620,
+          startBlock: 16_564_237,
+        },
       },
     },
     ForeignAMB: {
@@ -136,16 +136,16 @@ export default createConfig({
           // startBlock: 19920476,
           startBlock: 17_264_119,
         },
-        // bsc: {
-        //   address: [pathways.tokensex[chains.pulsechain]![chains.bsc]!.foreign],
-        //   // startBlock: 39182556,
-        //   startBlock: 28_987_322,
-        // },
-        // sepolia: {
-        //   address: [pathways.pulsechain[chains.pulsechainV4]![chains.sepolia]!.foreign],
-        //   // startBlock: 7019369,
-        //   startBlock: 3_331_901,
-        // },
+        bsc: {
+          address: [pathways.tokensex[chains.pulsechain]![chains.bsc]!.foreign],
+          // startBlock: 39182556,
+          startBlock: 28_987_322,
+        },
+        sepolia: {
+          address: [pathways.pulsechain[chains.pulsechainV4]![chains.sepolia]!.foreign],
+          // startBlock: 7019369,
+          startBlock: 3_331_901,
+        },
       },
     },
   },

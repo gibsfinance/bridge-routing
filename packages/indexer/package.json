@@ -1,5 +1,5 @@
 {
-  "name": "@gibs/indexer",
+  "name": "indexer",
   "private": true,
   "access": "private",
   "type": "module",
