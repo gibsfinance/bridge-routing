@@ -520,33 +520,45 @@ const graphqlClient = _.memoize((url: string) => {
   })
 })
 type SingleUserRequest = {
-  userRequests: {
-    messageId: Hex
-    message: {
-      signatures: Hex[]
-    }
-  }[]
+  userRequestForSignatures: {
+    items: {
+      messageId: Hex
+      signatures: {
+        items: {
+          messageHash: Hex
+        }[]
+      }
+    }[]
+  }
 }
 // assumes 1 bridge per transaction
 const singleUserRequest = gql`
   query SingleUserRequest($hash: String!) {
-    userRequests(where: { txHash: $hash }) {
-      messageId
-      message {
-        signatures
+    userRequestForSignatures(where: { transactionHash: $hash }) {
+      items {
+        messageId
+        signatures {
+          items {
+            messageHash
+          }
+        }
       }
     }
   }
 `
 type SingleExecution = {
-  executions: {
-    txHash: Hex
-  }[]
+  relayedMessages: {
+    items: {
+      transactionHash: Hex
+    }[]
+  }
 }
 const singleExecution = gql`
   query SingleExecution($messageId: String!) {
-    executions(where: { messageId: $messageId }) {
-      txHash
+    relayedMessages(where: { userRequestId: $messageId }) {
+      items {
+        transactionHash
+      }
     }
   }
 `
@@ -649,14 +661,14 @@ export const liveBridgeStatus = loading.loadsAfterTick<
       },
     })) as SingleUserRequest
     console.log(originationStatus)
-    if (!originationStatus.userRequests) {
+    if (!originationStatus.userRequestForSignatures?.items?.length) {
       return params
     }
-    const userRequest = originationStatus.userRequests?.[0]
+    const userRequest = originationStatus.userRequestForSignatures.items[0]
     if (!finalizedBlock || !userRequest?.messageId) {
       return params
     }
-    const count = !userRequest ? 0 : userRequest.message?.signatures?.length
+    const count = !userRequest ? 0 : userRequest.signatures?.items?.length ?? 0
     return {
       ...params,
       messageId: userRequest.messageId,
@@ -688,16 +700,16 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     ).catch((err) => {
       console.log(err)
       return {
-        executions: [],
+        relayedMessages: { items: [] },
       }
     })
     console.log('executions', result)
-    const { executions } = result
-    if (executions[0]?.txHash) {
+    const { relayedMessages } = result
+    if (relayedMessages.items?.[0]?.transactionHash) {
       return {
         ...params,
         status: bridgeStatuses.AFFIRMED,
-        deliveredHash: executions[0].txHash,
+        deliveredHash: relayedMessages.items[0].transactionHash,
       }
     } else {
       if (params.count === 5) {

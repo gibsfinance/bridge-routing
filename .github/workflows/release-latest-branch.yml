@@ -31,13 +31,13 @@ jobs:
           NODE_ENV: 'production'
           NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - name: Copy info
-        run: cp packages/frontend/package.json packages/frontend/dist/version.json
+        run: cp packages/ui/package.json packages/ui/dist/version.json
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: 'frontend-dist-${{github.sha}}'
+          name: 'ui-dist-${{github.sha}}'
           overwrite: true
-          path: packages/frontend/dist/
+          path: packages/ui/dist/
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -65,8 +65,8 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: 'frontend-dist-${{github.sha}}'
-          path: packages/frontend/dist/
+          name: 'ui-dist-${{github.sha}}'
+          path: packages/ui/dist/
       - name: Upload build to Pinata
         run: npm run pinata:publish
         env:
@@ -88,11 +88,11 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: 'frontend-dist-${{github.sha}}'
-          path: packages/frontend/dist/
+          name: 'ui-dist-${{github.sha}}'
+          path: packages/ui/dist/
       - name: Read version from package.json
         id: get_version
-        run: echo "VERSION=$(node -p 'require(`./packages/frontend/package.json`).version')" >> $GITHUB_ENV
+        run: echo "VERSION=$(node -p 'require(`./packages/ui/package.json`).version')" >> $GITHUB_ENV
       - name: Create tag
         env:
           VERSION: ${{ env.VERSION }}

@@ -1,0 +1,21 @@
+overwrite: true
+schema: '${PUBLIC_INDEXER:http://localhost:42069}/graphql'
+documents: 'src/**/*.{ts,tsx,js,jsx,svelte}'
+generates:
+  src/lib/gql/graphql.ts:
+    plugins:
+      - 'typescript'
+      - 'typescript-operations'
+    config:
+      scalars:
+        BigInt: string
+        JSON: any
+      skipTypename: false
+      enumsAsTypes: true
+      constEnums: true
+      futureProofEnums: true
+      numericEnums: false
+      strictScalars: true
+      namingConvention:
+        typeNames: pascal-case#pascalCase
+        enumValues: keep

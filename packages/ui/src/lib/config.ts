@@ -7,4 +7,4 @@ export const nodeEnv: string = process.env.PUBLIC_NODE_ENV || 'development'
 export const version: string =
   process.env.PUBLIC_VERSION || `0.0.0_abcd_${new Date().toISOString()}`
 
-export const indexer = ''
+export const indexer = process.env.PUBLIC_INDEXER || 'https://staging.indexer.gibs.finance'

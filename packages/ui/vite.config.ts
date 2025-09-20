@@ -32,8 +32,9 @@ export default defineConfig({
         'process.env.PUBLIC_VERSION': JSON.stringify(
           [pkg.version, githash, new Date().toISOString()].join('_'),
         ),
+        'process.env.PUBLIC_INDEXER': JSON.stringify(process.env.PUBLIC_INDEXER),
       },
-    }),
+    }) as PluginOption,
     svelte() as PluginOption,
     nodePolyfills({
       globals: {

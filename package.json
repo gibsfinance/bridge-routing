@@ -1,5 +1,5 @@
 {
-  "name": "@gibs/frontend",
+  "name": "onboarding",
   "version": "1.8.0",
   "private": true,
   "access": "private",
@@ -7,23 +7,24 @@
     "packages/common",
     "packages/bridge-sdk",
     "packages/indexer",
-    "packages/frontend"
+    "packages/ui"
   ],
   "scripts": {
     "docker:build": "docker compose build",
     "version": "node scripts/sync-versions.js",
-    "ui:dev": "yarn workspace @gibs/frontend run dev",
-    "ui:preview": "yarn workspace @gibs/frontend run preview",
-    "ui:build": "yarn workspace @gibs/frontend run build",
+    "ui:dev": "yarn workspace ui run dev",
+    "ui:preview": "yarn workspace ui run preview",
+    "ui:build": "yarn workspace ui run build",
     "common:build": "yarn workspace @gibs/common run build",
-    "ui:check": "yarn workspace @gibs/frontend run check",
+    "ui:check": "yarn workspace ui run check",
+    "ui:codegen": "yarn workspace ui run codegen",
     "bridge-sdk:build": "yarn workspace @gibs/bridge-sdk run build",
     "build": "yarn run common:build && yarn run bridge-sdk:build && yarn run indexer:build && yarn run ui:build",
     "indexer:build": "yarn workspace indexer run build",
     "indexer:dev": "yarn workspace indexer run dev",
     "dev": "yarn run ui:dev",
     "preview": "yarn run ui:preview",
-    "pinata:publish": "cd packages/frontend && pinata-cli -a $PINATA_API_KEY && pinata-cli -u dist",
+    "pinata:publish": "cd packages/ui && pinata-cli -a $PINATA_API_KEY && pinata-cli -u dist",
     "check": "yarn run common:build && yarn run bridge-sdk:build && yarn run ui:check",
     "clean": "rm -rf node_modules && rm -rf packages/*/node_modules && rm -rf packages/*/dist",
     "packages:publish": "cd packages/common && npm publish && cd ../bridge-sdk && npm publish"

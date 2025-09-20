@@ -4,6 +4,10 @@ export default [
   ...parseAbi([
     'function deployAndHandleBridgedTokens(address,string,string,uint8,address,uint256)',
   ]),
+  ...parseAbi([
+    'event NewTokenRegistered(address indexed native, address indexed bridged)',
+    'event TokensBridged(address indexed token, address indexed recipient, uint256 value, bytes32 indexed messageId)',
+  ]),
   {
     inputs: [
       {
@@ -619,6 +623,11 @@ export default [
     inputs: [
       {
         indexed: true,
+        name: 'token',
+        type: 'address',
+      },
+      {
+        indexed: true,
         name: 'sender',
         type: 'address',
       },
@@ -636,28 +645,28 @@ export default [
     name: 'TokensBridgingInitiated',
     type: 'event',
   },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        name: 'recipient',
-        type: 'address',
-      },
-      {
-        indexed: false,
-        name: 'value',
-        type: 'uint256',
-      },
-      {
-        indexed: true,
-        name: 'messageId',
-        type: 'bytes32',
-      },
-    ],
-    name: 'TokensBridged',
-    type: 'event',
-  },
+  // {
+  //   anonymous: false,
+  //   inputs: [
+  //     {
+  //       indexed: true,
+  //       name: 'recipient',
+  //       type: 'address',
+  //     },
+  //     {
+  //       indexed: false,
+  //       name: 'value',
+  //       type: 'uint256',
+  //     },
+  //     {
+  //       indexed: true,
+  //       name: 'messageId',
+  //       type: 'bytes32',
+  //     },
+  //   ],
+  //   name: 'TokensBridged',
+  //   type: 'event',
+  // },
   {
     anonymous: false,
     inputs: [

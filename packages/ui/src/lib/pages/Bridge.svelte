@@ -4,6 +4,7 @@
   import { pathway } from '@gibs/bridge-sdk/config'
   import { Chains, type Provider, type ChainKey } from '@gibs/bridge-sdk/config'
   import type { BridgeKey } from '@gibs/bridge-sdk/types'
+  import BridgeHistory from '../components/BridgeHistory.svelte'
 
   import BlurryImage from '../components/BlurryImage.svelte'
   import Bridge from '../components/Bridge.svelte'
@@ -44,9 +45,9 @@
     <div class="flex flex-col w-full">
       <div class="flex w-full">
         <BlurryImage
-          min_height={page.embed ? '100vh' : windowStore.large ? 'calc(100vh - 56px)' : 'auto'}
+          min_height={page.embed ? '100vh' : 'auto'}
           image_url="url({bridgeImageFuzzyWebP})">
-          <div class="max-w-lg flex flex-col text-lg w-full" class:my-4={page.embed} class:my-16={!page.embed} class:justify-center={page.embed}>
+          <div class="max-w-lg flex flex-col text-lg w-full" class:my-4={page.embed} class:my-32={!page.embed} class:justify-center={page.embed}>
             {#if !page.embed || page.mode !== 'simple'}
               <Headline>Bridge</Headline>
             {/if}
@@ -54,6 +55,7 @@
           </div>
         </BlurryImage>
       </div>
+      <BridgeHistory />
     </div>
   {/if}
 </div>

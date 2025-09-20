@@ -26,9 +26,11 @@
     networkSizeClasses = 'size-4',
     class: className = '',
     hideNetwork = false,
+    network,
   }: Props = $props()
   const chainId = $derived(asset?.chainId ? Number(asset.chainId) : 0)
   const chain = $derived(chainsMetadata[toChain(chainId)])
+  const networkChain = $derived(chainsMetadata[toChain(network ?? chainId)])
   const src = $derived(asset?.logoURI || assetSources(asset, bridgableTokens.value))
   const tokenClasses = $derived(`overflow-hidden absolute`)
   const classes = $derived([
@@ -48,8 +50,8 @@
       <Image
         class="network-image absolute -left-0.5 -bottom-0.5 rounded-full bg-surface-50"
         sizeClasses={networkSizeClasses}
-        src={chain.logoURI}
-        alt={chain.name} />
+        src={networkChain.logoURI}
+        alt={networkChain.name} />
     {/if}
   {/if}
 </span>

@@ -10,19 +10,13 @@ export const upsertBlock = async (
   context: Context,
   block: PonderCore.Block,
 ) => {
-  // console.log('upserting block', block.timestamp, context.chain.id)
   return await context.db.insert(Block).values({
-    chainId: context.chain.id.toString(),
+    chainId: BigInt(context.chain.id),
     hash: block.hash,
     number: block.number,
     timestamp: block.timestamp,
     baseFeePerGas: block.baseFeePerGas,
-  }).onConflictDoUpdate((row) => ({
-    ...row,
-    number: block.number,
-    timestamp: block.timestamp,
-    baseFeePerGas: block.baseFeePerGas,
-  }))
+  }).onConflictDoNothing()
 }
 
 export const upsertTransaction = async (
@@ -31,13 +25,13 @@ export const upsertTransaction = async (
   transaction: PonderCore.Transaction,
 ) => {
   return await context.db.insert(Transaction).values({
-    chainId: context.chain.id.toString(),
+    chainId: BigInt(context.chain.id),
     hash: transaction.hash,
-    blockChainId: context.chain.id.toString(),
+    blockChainId: BigInt(context.chain.id),
     blockHash: block.hash,
     index: transaction.transactionIndex.toString(),
-    from: transaction.from,
-    to: transaction.to!,
+    from: transaction.from.toLowerCase() as Hex,
+    to: transaction.to!.toLowerCase() as Hex,
     value: transaction.value,
     maxFeePerGas: transaction.maxFeePerGas,
     maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
@@ -45,24 +39,18 @@ export const upsertTransaction = async (
     gasPrice: transaction.gasPrice,
     nonce: BigInt(transaction.nonce),
     type: transaction.type,
-  }).onConflictDoUpdate((row) => ({
-    ...row,
-    blockHash: block.hash,
-  }))
+  }).onConflictDoNothing()
 }
 
 export const upsertBridge = async (context: Context, address: Hex) => {
-  const info = bridgeInfo(address)
+  const info = bridgeInfo(context.chain.id, address)
   return await context.db.insert(BridgeSide).values({
-    chainId: context.chain.id.toString(),
-    address: info!.address,
+    chainId: BigInt(context.chain.id),
+    address: info!.target.omni.toLowerCase() as Hex,
     provider: info!.provider,
+    pair: info!.pair,
     side: info!.side,
-  }).onConflictDoUpdate((row) => ({
-    ...row,
-    provider: info!.provider,
-    side: info!.side,
-  }))
+  }).onConflictDoNothing()
 }
 
 type RequiredSigs = {
@@ -75,11 +63,13 @@ export const getLatestRequiredSignatures = async (
   bridgeAddress: Hex,
 ): Promise<RequiredSigs> => {
   const latest = await context.db.find(LatestRequiredSignaturesChanged, {
-    bridgeChainId: context.chain.id.toString(),
-    bridgeAddress: bridgeAddress,
+    chainId: BigInt(context.chain.id),
+    bridgeAddress: bridgeAddress.toLowerCase() as Hex,
   })
 
   if (!latest) {
+    // console.log('no latest required signatures found for bridge chain_id=%o address=%o',
+    //   context.chain.id, bridgeAddress)
     return {
       orderId: null,
       value: 0n,

@@ -22,8 +22,8 @@ services:
 
   indexer:
     container_name: gibsfinance-indexer
-    image: indexer
     build:
+      dockerfile: Dockerfile
       context: .
     networks:
       - gibsfinance

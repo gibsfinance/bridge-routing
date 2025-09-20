@@ -115,39 +115,39 @@ export const parseAMBMessage = (txFrom: Hex, msg: Hex) => {
   let from = zeroAddress as Hex
   let to = zeroAddress as Hex
   if (functionName === 'handleNativeTokens') {
-    nestedData.token = args[0] as Hex
-    nestedData.router = args[1] as Hex
+    nestedData.token = args[0].toLowerCase() as Hex
+    nestedData.router = args[1].toLowerCase() as Hex
     nestedData.amount = args[2] as bigint
   } else if (functionName === 'handleBridgedTokens') {
-    nestedData.token = args[0] as Hex
-    nestedData.router = args[1] as Hex
+    nestedData.token = args[0].toLowerCase() as Hex
+    nestedData.router = args[1].toLowerCase() as Hex
     nestedData.amount = args[2] as bigint
   } else if (functionName === 'handleNativeTokensAndCall') {
-    nestedData.token = args[0] as Hex
-    nestedData.router = args[1] as Hex
+    nestedData.token = args[0].toLowerCase() as Hex
+    nestedData.router = args[1].toLowerCase() as Hex
     nestedData.amount = args[2] as bigint
     nestedData.calldata = args[3] as Hex
   } else if (functionName === 'handleBridgedTokensAndCall') {
-    nestedData.token = args[0] as Hex
-    nestedData.router = args[1] as Hex
+    nestedData.token = args[0].toLowerCase() as Hex
+    nestedData.router = args[1].toLowerCase() as Hex
     nestedData.amount = args[2] as bigint
     nestedData.calldata = args[3] as Hex
   } else if (functionName === 'relayTokensAndCall') {
-    nestedData.token = args[0] as Hex
-    nestedData.router = args[1] as Hex
+    nestedData.token = args[0].toLowerCase() as Hex
+    nestedData.router = args[1].toLowerCase() as Hex
     nestedData.amount = args[2] as bigint
     nestedData.calldata = args[3] as Hex
     handlingNative = true
   } else if (functionName === 'deployAndHandleBridgedTokens') {
-    nestedData.token = args[0] as Hex
+    nestedData.token = args[0].toLowerCase() as Hex
     // nestedData.name = args[1] as string
     // nestedData.symbol = args[2] as string
     // nestedData.decimals = args[3] as number
-    nestedData.router = args[4] as Hex
+    nestedData.router = args[4].toLowerCase() as Hex
     nestedData.amount = args[5] as bigint
   } else if (functionName === 'deployAndHandleBridgedTokensAndCall') {
-    nestedData.token = args[0] as Hex
-    nestedData.router = args[4] as Hex
+    nestedData.token = args[0].toLowerCase() as Hex
+    nestedData.router = args[4].toLowerCase() as Hex
     nestedData.amount = args[5] as bigint
     nestedData.calldata = args[6] as Hex
   }
@@ -173,7 +173,7 @@ export const parseAMBMessage = (txFrom: Hex, msg: Hex) => {
         feeType = 'percentage'
       }
       feeDirector = {
-        recipient,
+        recipient: recipient.toLowerCase() as Hex,
         settings,
         limit,
         multiplier,
@@ -196,8 +196,8 @@ export const parseAMBMessage = (txFrom: Hex, msg: Hex) => {
     deliveringNative,
     feeDirector,
     messageHash,
-    sender: getAddress(sender),
-    executor: getAddress(executor),
+    sender: getAddress(sender).toLowerCase() as Hex,
+    executor: getAddress(executor).toLowerCase() as Hex,
     messageId,
     dataType,
     gaslimit,
@@ -207,8 +207,8 @@ export const parseAMBMessage = (txFrom: Hex, msg: Hex) => {
     bridgeCalldata,
     bridgeSigHash,
     nestedData,
-    from,
-    to,
+    from: from.toLowerCase() as Hex,
+    to: to.toLowerCase() as Hex,
   } as const
 }
 

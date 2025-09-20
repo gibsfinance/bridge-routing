@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import Icon from '@iconify/svelte'
-  import { Provider } from '@gibs/bridge-sdk/config'
   import { innerWidth } from 'svelte/reactivity/window'
 
   import { bridgeKey, incrementForcedRefresh } from '../stores/input.svelte'
@@ -37,11 +36,6 @@
   const isBridgeRoute = $derived(page.route.id?.includes('/bridge'))
   const isOnboardRoute = $derived(page.route.id?.includes('/onboard'))
   const isSmall = $derived(innerWidth.current && innerWidth.current < 768)
-  const txsLink = $derived(
-    destinationBridgeKey === Provider.PULSECHAIN
-      ? 'https://ipfs.bridge.pulsechain.com/transactions'
-      : 'https://tokensex.link/explorer'
-  )
   const settingsClosed = $derived(!page.settings || page.settings === 'disabled')
 </script>
 
@@ -63,7 +57,7 @@
       </button>
       <div class="flex grow content-end items-center">
         <ul class="flex grow flex-row items-center justify-end text-surface-contrast-50">
-          {#if isBridgeRoute}
+          <!-- {#if isBridgeRoute}
             <li class="flex flex-row">
               <a
                 aria-label="to recent bridge transactions on ethereum"
@@ -79,7 +73,7 @@
                 </button>
               </a>
             </li>
-          {/if}
+          {/if} -->
           <li class="flex flex-row">
             <ModalWrapper
               triggerClasses="flex flex-row items-center px-2 py-1 gap-1"
