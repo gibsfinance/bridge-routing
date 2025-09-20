@@ -6,7 +6,7 @@ COPY ./package.json /app/package.json
 COPY ./yarn.lock /app/yarn.lock
 COPY ./packages/ /app/packages/
 
-ENV NODE_OPTIONS "--max-old-space-size=8192"
+ENV NODE_OPTIONS="--max-old-space-size=8192"
 
 RUN yarn install --frozen-lockfile
 

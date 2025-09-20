@@ -287,12 +287,12 @@ map out the progress of each bridge and display it to the user
                     <!-- Input Token -->
                     <div class="flex items-center space-x-2">
                       <div class="flex flex-col min-w-0 flex-1 w-48 text-right">
-                        <div class="flex items-center space-x-1 truncate justify-end leading-7">
+                        <div class="flex items-center space-x-1 truncate justify-end leading-5">
                           <span class="text-lg font-semibold text-gray-900 truncate">
                             {metadata ? formatTokenAmount(bridge.amount, {decimals: metadata.decimals}) : bridge.amount}
                           </span>
                         </div>
-                        <div class="flex items-center space-x-1 truncate justify-end leading-4">
+                        <div class="flex items-center space-x-1 truncate justify-end leading-3">
                           <span class="text-sm font-medium text-gray-400 truncate">
                             {metadata ? formatTokenAmount(bridge.amount, {decimals: metadata.decimals}) : bridge.amount}
                           </span>
