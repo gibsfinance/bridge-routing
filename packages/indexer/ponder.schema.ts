@@ -293,6 +293,7 @@ export const UserRequest = onchainTable('user_request', (t) => ({
   // from derived data (encoded data)
   handlingNative: t.boolean().notNull(),
   deliveringNative: t.boolean().notNull(),
+  signatures: t.jsonb(),
 }))
 
 export const UserRequestRelations = relations(UserRequest, (t) => ({

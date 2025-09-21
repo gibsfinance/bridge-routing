@@ -288,8 +288,7 @@ export const getInfoBy = _.memoize(async ({ key, address, chainId }: {
   address: Hex,
   chainId: ChainId,
 }) => {
-  const entries = [...minimalInfo.values()]
-  for (const info of entries) {
+  for (const info of minimalInfo.values()) {
     // console.log('key=%o info=%o', key, await info.target[key])
     if ((await info.target[key])!.toLowerCase() === address.toLowerCase() && info.target.chainId === chainId) {
       // return the amb value from the target

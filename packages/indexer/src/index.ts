@@ -12,7 +12,7 @@ import {
   ValidatorStatusUpdate,
   LatestValidatorStatusUpdate,
 } from 'ponder:schema'
-import { type Hex } from 'viem'
+import { decodeFunctionData, parseAbi, type Hex } from 'viem'
 import { parseAMBMessage } from './message'
 import { getInfoBy, createOrderId } from './utils'
 import {
@@ -345,6 +345,7 @@ const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event,
           finishedSigning: false,
           handlingNative: parsed.handlingNative,
           deliveringNative: parsed.deliveringNative,
+          signatures: null,
         })
       }),
   ])
@@ -353,13 +354,40 @@ const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event,
 ponder.on('ForeignAMB:UserRequestForAffirmation', handleUserRequest('affirmation'))
 ponder.on('HomeAMB:UserRequestForSignature', handleUserRequest('signature'))
 
-// (type: 'signature' | 'affirmation') =>
+const homeAmbSignatureParseAbi = parseAbi([
+  'function submitSignature(bytes signature, bytes message) external',
+])
+
+const parseSignature = (event: Event<'HomeAMB:SignedForAffirmation' | 'HomeAMB:SignedForUserRequest'>) => {
+  try {
+    // if you are ever able to convince the team to move to a multicall signature scheme then you will have to update this
+    const { functionName, args } = decodeFunctionData({
+      abi: homeAmbSignatureParseAbi,
+      data: event.transaction.input,
+    })
+    if (functionName !== 'submitSignature') {
+      return null
+    }
+    return {
+      signature: args[0],
+      message: args[1],
+    }
+  } catch (err) {
+    return null
+  }
+  // return {
+  //   messageHash: event.args.messageHash,
+  //   signature: event.args.signature,
+  // }
+}
+
 const handleSignedFor = async ({ event, context }: {
   event: Event<'HomeAMB:SignedForAffirmation' | 'HomeAMB:SignedForUserRequest'>,
   context: Context,
 }) => {
   const messageHash = event.args.messageHash
   const info = await getInfoBy({ key: 'amb', address: event.log.address, chainId: context.chain.id })
+  const parsedSignature = parseSignature(event)
   const validatorAddress = event.args.signer
   const orderId = createOrderId(context, event)
   const validatorId = await toValidatorId({
@@ -383,6 +411,7 @@ const handleSignedFor = async ({ event, context }: {
           .set((row) => ({
             confirmedSignatures: row.confirmedSignatures + 1n,
             requiredSignatureOrderId: requiredSignatures.orderId,
+            signatures: parsedSignature ? [row.signatures ?? [], parsedSignature] : row.signatures,
           })),
         context.db.insert(Signature).values({
           messageHash,
