@@ -345,7 +345,7 @@ const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event,
           finishedSigning: false,
           handlingNative: parsed.handlingNative,
           deliveringNative: parsed.deliveringNative,
-          signatures: null,
+          signatures: type === 'signature' ? [] : null,
         })
       }),
   ])
