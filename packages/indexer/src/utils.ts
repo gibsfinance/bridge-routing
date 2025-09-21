@@ -126,16 +126,16 @@ export const toTransport = (chainId: ChainId) => {
 
 export type Side = 'home' | 'foreign'
 
-type MinimalKey = `${ChainId}-${Hex}`
+export type MinimalKey = `${ChainId}-${Hex}`
 
-type PathPairing = {
+export type PathPairing = {
   chainId: ChainId
   omni: Hex
   amb: Promise<Hex>
   validator: Promise<Hex>
 }
 
-type MinimalInfo = {
+export type MinimalInfo = {
   pair: string
   provider: Provider
   side: Side
@@ -281,32 +281,38 @@ export const accessContracts = async (i: ContractsAccessInputs) => {
   )))
 }
 
-export const getOmniFromValidator = _.memoize(async (validatorAddress: Hex) => {
-  const entries = [...minimalInfo.entries()]
-  for (const [key, info] of entries) {
-    const validatorContract = await info.target.validator
-    if (validatorContract.toLowerCase() === validatorAddress.toLowerCase()) {
-      // return the amb value from the target
-      return info.target.omni
-    }
-  }
-  throw new Error('No key found')
-})
-export const getOmniFromAmb = _.memoize(async (chainId: ChainId, ambAddress: Hex) => {
-  const entries = [...minimalInfo.entries()]
-  for (const [key, info] of entries) {
-    const ambContract = await info.target.amb
-    if (info.target.chainId === chainId && getAddress(ambContract) === getAddress(ambAddress)) {
-      // return the amb value from the target
-      return info.target.omni
-    }
-  }
-  throw new Error('No key found')
-})
+type InfoSelectionOption = 'omni' | 'amb' | 'validator'
 
-export const bridgeInfo = _.memoize((chainId: ChainId, omnibridgeAddress: Hex) => {
-  return [...minimalInfo.values()].find((info) => {
-    return info.target.chainId === chainId
-      && getAddress(info.target.omni) === getAddress(omnibridgeAddress)
-  })
-}, (chainId, omnibridgeAddress) => `${chainId}-${omnibridgeAddress}`.toLowerCase())
+export const getInfoBy = _.memoize(async ({ key, address, chainId }: {
+  key: InfoSelectionOption,
+  address: Hex,
+  chainId: ChainId,
+}) => {
+  const entries = [...minimalInfo.values()]
+  for (const info of entries) {
+    // console.log('key=%o info=%o', key, await info.target[key])
+    if ((await info.target[key])!.toLowerCase() === address.toLowerCase() && info.target.chainId === chainId) {
+      // return the amb value from the target
+      return info
+    }
+  }
+  throw new Error('No key found')
+})
+// export const getOmniFromAmb = _.memoize(async (chainId: ChainId, ambAddress: Hex) => {
+//   const entries = [...minimalInfo.entries()]
+//   for (const [key, info] of entries) {
+//     const ambContract = await info.target.amb
+//     if (info.target.chainId === chainId && getAddress(ambContract) === getAddress(ambAddress)) {
+//       // return the amb value from the target
+//       return info.target.omni
+//     }
+//   }
+//   throw new Error('No key found')
+// })
+
+// export const bridgeInfo = _.memoize((chainId: ChainId, omnibridgeAddress: Hex) => {
+//   return [...minimalInfo.values()].find((info) => {
+//     return info.target.chainId === chainId
+//       && getAddress(info.target.omni) === getAddress(omnibridgeAddress)
+//   })
+// }, (chainId, omnibridgeAddress) => `${chainId}-${omnibridgeAddress}`.toLowerCase())
