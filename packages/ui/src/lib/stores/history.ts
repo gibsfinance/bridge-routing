@@ -56,6 +56,7 @@ const fragment = gql`{
     destinationTokenAddress
     handlingNative
     deliveringNative
+    signatures
     block {
       chainId
       hash
@@ -131,7 +132,7 @@ const BRIDGE_CORE_FRAGMENT = gql`
 `
 
 
-const SIGNATURE_FRAGMENT = gql`{
+const SIGN_FOR_FRAGMENT = gql`{
   messageHash
   chainId
   validatorId
@@ -156,9 +157,6 @@ const GET_BRIDGES_QUERY = gql`
     userRequests(where: $where, limit: 1000, orderBy: "orderId", orderDirection: "desc") {
       items {
         ...BridgeCore
-        signatures(limit: 10, orderBy: "orderId", orderDirection: "desc") {
-          items ${SIGNATURE_FRAGMENT}
-        }
       }
       ${PAGE_INFO_FRAGMENT}
     }
@@ -172,9 +170,6 @@ const GET_RECENT_BRIDGES_QUERY = gql`
     userRequests(limit: $limit, orderBy: "orderId", orderDirection: "desc") {
       items {
         ...BridgeCore
-        signatures(limit: 10, orderBy: "orderId", orderDirection: "desc") {
-          items ${SIGNATURE_FRAGMENT}
-        }
       }
       ${PAGE_INFO_FRAGMENT}
     }
