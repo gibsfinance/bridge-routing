@@ -8,7 +8,7 @@ import {
   RequiredSignaturesChanged,
   ReverseMessageHashBinding,
   UserRequest,
-  Signature,
+  SignFor,
   ValidatorStatusUpdate,
   LatestValidatorStatusUpdate,
 } from 'ponder:schema'
@@ -413,7 +413,7 @@ const handleSignedFor = async ({ event, context }: {
             requiredSignatureOrderId: requiredSignatures.orderId,
             signatures: parsedSignature ? [row.signatures ?? [], parsedSignature] : row.signatures,
           })),
-        context.db.insert(Signature).values({
+        context.db.insert(SignFor).values({
           messageHash,
           ambAddress: event.log.address,
           validatorId,

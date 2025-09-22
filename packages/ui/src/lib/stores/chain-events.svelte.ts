@@ -520,7 +520,7 @@ const graphqlClient = _.memoize((url: string) => {
   })
 })
 type SingleUserRequest = {
-  userRequestForSignatures: {
+  userRequests: {
     items: {
       messageId: Hex
       signatures: {
@@ -534,7 +534,7 @@ type SingleUserRequest = {
 // assumes 1 bridge per transaction
 const singleUserRequest = gql`
   query SingleUserRequest($hash: String!) {
-    userRequestForSignatures(where: { transactionHash: $hash }) {
+    userRequests(where: { transactionHash: $hash, type: signature }) {
       items {
         messageId
         signatures {
@@ -547,15 +547,15 @@ const singleUserRequest = gql`
   }
 `
 type SingleExecution = {
-  relayedMessages: {
+  deliverys: {
     items: {
       transactionHash: Hex
     }[]
   }
 }
 const singleExecution = gql`
-  query SingleExecution($messageId: String!) {
-    relayedMessages(where: { userRequestId: $messageId }) {
+  query SingleExecution($messageHash: String!) {
+    deliverys(where: { messageHash: $messageHash }) {
       items {
         transactionHash
       }
@@ -661,10 +661,10 @@ export const liveBridgeStatus = loading.loadsAfterTick<
       },
     })) as SingleUserRequest
     console.log(originationStatus)
-    if (!originationStatus.userRequestForSignatures?.items?.length) {
+    if (!originationStatus.userRequests?.items?.length) {
       return params
     }
-    const userRequest = originationStatus.userRequestForSignatures.items[0]
+    const userRequest = originationStatus.userRequests.items[0]
     if (!finalizedBlock || !userRequest?.messageId) {
       return params
     }
@@ -694,22 +694,22 @@ export const liveBridgeStatus = loading.loadsAfterTick<
         url: fromMainnetForeign ? urls.home : urls.foreign,
         query: singleExecution,
         params: {
-          messageId,
+          messageHash: messageId,
         },
       }) as Promise<SingleExecution>
     ).catch((err) => {
       console.log(err)
       return {
-        relayedMessages: { items: [] },
+        deliverys: { items: [] },
       }
     })
     console.log('executions', result)
-    const { relayedMessages } = result
-    if (relayedMessages.items?.[0]?.transactionHash) {
+    const { deliverys } = result
+    if (deliverys.items?.[0]?.transactionHash) {
       return {
         ...params,
         status: bridgeStatuses.AFFIRMED,
-        deliveredHash: relayedMessages.items[0].transactionHash,
+        deliveredHash: deliverys.items[0].transactionHash,
       }
     } else {
       if (params.count === 5) {

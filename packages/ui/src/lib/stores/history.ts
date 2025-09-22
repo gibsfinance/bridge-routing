@@ -3,10 +3,9 @@ import { getAddress, type Hex } from 'viem'
 import * as networks from 'viem/chains'
 import type {
   Query,
-  UserRequestForAffirmation,
-  UserRequestForSignature,
-  UserRequestForSignatureFilter,
-  UserRequestForAffirmationFilter
+  UserRequest,
+  UserRequestFilter,
+  UserRequestType
 } from '../gql/graphql'
 import { gql, GraphQLClient } from 'graphql-request'
 import { indexer } from '../config'
@@ -14,9 +13,9 @@ import { sortBy } from 'lodash'
 import type { UseAppKitAccountReturn } from '@reown/appkit'
 import { multicallErc20, type Erc20Metadata } from '@gibs/common'
 import { clientFromChain } from './input.svelte'
-import { getTokenMetadata } from './token-metadata-cache.svelte'
+import { getStoreKey, getTokenMetadata, parseTokenKey, loadTokenMetadata as loadTokenMetadataFromCache } from './token-metadata-cache'
 
-export type Bridge = UserRequestForSignature | UserRequestForAffirmation
+export type Bridge = UserRequest
 
 export interface TokenMetadata {
   name: string
@@ -25,33 +24,38 @@ export interface TokenMetadata {
 }
 
 export interface BridgeData {
-  signatures: UserRequestForSignature[]
-  affirmations: UserRequestForAffirmation[]
+  userRequests: UserRequest[]
   tokenMetadata: Map<string, TokenMetadata> // Key: chainId:tokenAddress
 }
 
 const client = new GraphQLClient(indexer)
 
 const fragment = gql`{
+    messageHash
     messageId
+    type
     orderId
-    originationTokenChainId
-    destinationTokenChainId
+    blockHash
+    chainId
+    transactionHash
     from
     to
     amount
-    handlingNative
-    deliveringNative
-    messageHash
     encodedData
+    logIndex
+    requiredSignatureOrderId
     confirmedSignatures
     finishedSigning
-    chainId
-    blockHash
-    transactionHash
-    logIndex
-    bridgeAddress
-    requiredSignatureOrderId
+    originationChainId
+    originationAmbAddress
+    destinationChainId
+    destinationAmbAddress
+    originationOmnibridgeAddress
+    destinationOmnibridgeAddress
+    originationTokenAddress
+    destinationTokenAddress
+    handlingNative
+    deliveringNative
     block {
       chainId
       hash
@@ -72,7 +76,13 @@ const fragment = gql`{
       nonce
       type
     }
-    bridge {
+    originationAMBBridge {
+      chainId
+      address
+      provider
+      side
+    }
+    destinationAMBBridge {
       chainId
       address
       provider
@@ -81,69 +91,53 @@ const fragment = gql`{
     requiredSignatures {
       orderId
       chainId
-      bridgeAddress
       value
       transactionHash
       logIndex
+    }
+    completion {
+      messageHash
+      orderId
+      chainId
+      transactionHash
     }
     delivery {
       messageHash
       orderId
       chainId
       transactionHash
-      userRequestId
       deliverer
       logIndex
     }
-      originationTokenAddress
-      originationTokenChainId
-      destinationTokenAddress
-      destinationTokenChainId
-      destinationTokenAmbAddress
-      originationTokenAmbAddress
     originationToken {
       address
       chainId
       ambAddress
+      originationAddress
+      destinationAddress
     }
     destinationToken {
       address
       chainId
       ambAddress
+      originationAddress
+      destinationAddress
     }
   }`
 
 // GraphQL fragments for bridge data
 const BRIDGE_CORE_FRAGMENT = gql`
-  fragment BridgeCore on UserRequestForSignature ${fragment}
+  fragment BridgeCore on UserRequest ${fragment}
 `
 
-const BRIDGE_AFFIRMATION_FRAGMENT = gql`
-  fragment BridgeAffirmation on UserRequestForAffirmation ${fragment}
-`
-
-const FEE_DIRECTOR_FRAGMENT = gql`
-  fragment FeeDirectorInfo on FeeDirector {
-    messageId
-    recipient
-    settings
-    limit
-    multiplier
-    feeType
-    unwrapped
-    excludePriority
-  }
-`
 
 const SIGNATURE_FRAGMENT = gql`{
   messageHash
-  bridgeAddress
-  validatorAddress
-  orderId
   chainId
+  validatorId
+  orderId
   blockHash
   transactionHash
-  userRequestId
   logIndex
 }`
 
@@ -156,24 +150,12 @@ pageInfo {
   endCursor
 }`
 
-// Query to get bridge transactions for a user account (returns separate columns)
+// Query to get bridge transactions for a user account
 const GET_BRIDGES_QUERY = gql`
-  query GetBridgesUnderAccount($whereSig: UserRequestForSignatureFilter, $whereAff: UserRequestForAffirmationFilter) {
-    userRequestForSignatures(where: $whereSig, limit: 1000, orderBy: "orderId", orderDirection: "desc") {
+  query GetBridgesUnderAccount($where: UserRequestFilter) {
+    userRequests(where: $where, limit: 1000, orderBy: "orderId", orderDirection: "desc") {
       items {
         ...BridgeCore
-        feeDirector {
-          ...FeeDirectorInfo
-        }
-        signatures(limit: 10, orderBy: "orderId", orderDirection: "desc") {
-          items ${SIGNATURE_FRAGMENT}
-        }
-      }
-      ${PAGE_INFO_FRAGMENT}
-    }
-    userRequestForAffirmations(where: $whereAff, limit: 1000, orderBy: "orderId", orderDirection: "desc") {
-      items {
-        ...BridgeAffirmation
         signatures(limit: 10, orderBy: "orderId", orderDirection: "desc") {
           items ${SIGNATURE_FRAGMENT}
         }
@@ -182,28 +164,14 @@ const GET_BRIDGES_QUERY = gql`
     }
   }
   ${BRIDGE_CORE_FRAGMENT}
-  ${BRIDGE_AFFIRMATION_FRAGMENT}
-  ${FEE_DIRECTOR_FRAGMENT}
 `
 
 // Query to get recent bridge transactions without requiring an address
 const GET_RECENT_BRIDGES_QUERY = gql`
   query GetRecentBridges($limit: Int = 50) {
-    userRequestForSignatures(limit: $limit, orderBy: "orderId", orderDirection: "desc") {
+    userRequests(limit: $limit, orderBy: "orderId", orderDirection: "desc") {
       items {
         ...BridgeCore
-        feeDirector {
-          ...FeeDirectorInfo
-        }
-        signatures(limit: 10, orderBy: "orderId", orderDirection: "desc") {
-          items ${SIGNATURE_FRAGMENT}
-        }
-      }
-      ${PAGE_INFO_FRAGMENT}
-    }
-    userRequestForAffirmations(limit: $limit, orderBy: "orderId", orderDirection: "desc") {
-      items {
-        ...BridgeAffirmation
         signatures(limit: 10, orderBy: "orderId", orderDirection: "desc") {
           items ${SIGNATURE_FRAGMENT}
         }
@@ -212,8 +180,6 @@ const GET_RECENT_BRIDGES_QUERY = gql`
     }
   }
   ${BRIDGE_CORE_FRAGMENT}
-  ${BRIDGE_AFFIRMATION_FRAGMENT}
-  ${FEE_DIRECTOR_FRAGMENT}
 `
 
 // Helper function to get connected wallet address
@@ -223,24 +189,13 @@ const connectedAddress = (accountState: UseAppKitAccountReturn): string | undefi
 
 // Type for the query variables
 interface GetBridgesQueryVariables {
-  whereSig: UserRequestForSignatureFilter
-  whereAff: UserRequestForAffirmationFilter
+  where: UserRequestFilter
 }
 
 // Type for the query result
 interface GetBridgesQueryResult {
-  userRequestForSignatures: {
-    items: UserRequestForSignature[]
-    pageInfo: {
-      hasNextPage: boolean
-      hasPreviousPage: boolean
-      startCursor?: string | null
-      endCursor?: string | null
-    }
-    totalCount: number
-  }
-  userRequestForAffirmations: {
-    items: UserRequestForAffirmation[]
+  userRequests: {
+    items: UserRequest[]
     pageInfo: {
       hasNextPage: boolean
       hasPreviousPage: boolean
@@ -263,10 +218,10 @@ async function loadTokenMetadata(bridges: Bridge[]): Promise<Map<string, TokenMe
   const tokenMetadata = new Map<string, TokenMetadata>()
 
   // Extract unique token/chain combinations
-  const uniqueTokens = new Set<string>()
-  console.log('bridges', bridges)
-  bridges.forEach(bridge => {
+  const uniqueTokens: Array<{ chainId: number; address: string }> = []
+  const uniqueTokenKeys = new Set<string>()
 
+  bridges.forEach(bridge => {
     // Try to use token relations first, fallback to individual fields
     // Add origination token
     let originationAddress: string | null = null
@@ -275,14 +230,17 @@ async function loadTokenMetadata(bridges: Bridge[]): Promise<Map<string, TokenMe
     if (bridge.originationToken?.address && bridge.originationToken?.chainId) {
       originationAddress = bridge.originationToken.address
       originationChainId = Number(bridge.originationToken.chainId)
-    } else if (bridge.originationTokenAddress && bridge.originationTokenChainId) {
+    } else if (bridge.originationTokenAddress && bridge.originationChainId) {
       originationAddress = bridge.originationTokenAddress
-      originationChainId = Number(bridge.originationTokenChainId)
+      originationChainId = Number(bridge.originationChainId)
     }
 
     if (originationAddress && originationChainId) {
-      const key = `${originationChainId}:${originationAddress.toLowerCase()}`
-      uniqueTokens.add(key)
+      const key = getStoreKey(originationChainId, originationAddress)
+      if (!uniqueTokenKeys.has(key)) {
+        uniqueTokenKeys.add(key)
+        uniqueTokens.push({ chainId: originationChainId, address: originationAddress })
+      }
     }
 
     // Add destination token if it exists and is different
@@ -292,39 +250,39 @@ async function loadTokenMetadata(bridges: Bridge[]): Promise<Map<string, TokenMe
     if (bridge.destinationToken?.address && bridge.destinationToken?.chainId) {
       destinationAddress = bridge.destinationToken.address
       destinationChainId = Number(bridge.destinationToken.chainId)
-    } else if (bridge.destinationTokenAddress && bridge.destinationTokenChainId) {
+    } else if (bridge.destinationTokenAddress && bridge.destinationChainId) {
       destinationAddress = bridge.destinationTokenAddress
-      destinationChainId = Number(bridge.destinationTokenChainId)
+      destinationChainId = Number(bridge.destinationChainId)
     }
 
     if (destinationAddress && destinationChainId &&
       destinationAddress !== originationAddress) {
-      const key = `${destinationChainId}:${destinationAddress.toLowerCase()}`
-      uniqueTokens.add(key)
+      const key = getStoreKey(destinationChainId, destinationAddress)
+      if (!uniqueTokenKeys.has(key)) {
+        uniqueTokenKeys.add(key)
+        uniqueTokens.push({ chainId: destinationChainId, address: destinationAddress })
+      }
     }
   })
 
-  console.log('uniqueTokens', uniqueTokens)
-  // Load metadata for each unique token using the cache
-  const metadataPromises = Array.from(uniqueTokens).map(async (key) => {
-    const [chainIdStr, tokenAddress] = key.split(':')
-    const chainId = parseInt(chainIdStr)
+  // Load token metadata into cache first
+  if (uniqueTokens.length > 0) {
+    await loadTokenMetadataFromCache(uniqueTokens.map(token => ({
+      chainId: token.chainId,
+      address: token.address as `0x${string}`
+    })))
+  }
+
+  // Now get metadata from the populated cache
+  Array.from(uniqueTokenKeys).forEach((key) => {
     try {
-      const metadata = await getTokenMetadata(chainId, tokenAddress)
-      return { key, metadata }
+      const { chainId, address } = parseTokenKey(key)
+      const metadata = getTokenMetadata(chainId, address)
+      if (metadata) {
+        tokenMetadata.set(key, metadata)
+      }
     } catch (error) {
       console.error(`Failed to load metadata for ${key}:`, error)
-      return { key, metadata: null }
-    }
-  })
-
-  // Wait for all metadata to load
-  const results = await Promise.all(metadataPromises)
-
-  // Store successful results
-  results.forEach(({ key, metadata }) => {
-    if (metadata) {
-      tokenMetadata.set(key, metadata)
     }
   })
 
@@ -346,8 +304,8 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
       return null
     }
 
-    // Create filters for both signature and affirmation requests
-    const filter: UserRequestForSignatureFilter & UserRequestForAffirmationFilter = {
+    // Create filter for user requests
+    const filter: UserRequestFilter = {
       OR: [
         { from: account },
         { to: account }
@@ -355,8 +313,7 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
     }
 
     const variables: GetBridgesQueryVariables = {
-      whereSig: filter,
-      whereAff: filter
+      where: filter
     }
 
     try {
@@ -367,18 +324,15 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
         return null
       }
 
-      // Sort the arrays
-      const sortedSignatures = sortBy(data.userRequestForSignatures.items, [(bridge) => -BigInt(bridge.orderId)])
-      const sortedAffirmations = sortBy(data.userRequestForAffirmations.items, [(bridge) => -BigInt(bridge.orderId)])
+      // Sort the array
+      const sortedUserRequests = sortBy(data.userRequests.items, [(bridge) => -BigInt(bridge.orderId)])
 
       // Load token metadata for all bridges
-      const allBridges: Bridge[] = [...sortedSignatures, ...sortedAffirmations]
-      const tokenMetadata = await loadTokenMetadata(allBridges)
+      const tokenMetadata = await loadTokenMetadata(sortedUserRequests)
 
-      // Return separate arrays with metadata
+      // Return unified array with metadata
       return {
-        signatures: sortedSignatures,
-        affirmations: sortedAffirmations,
+        userRequests: sortedUserRequests,
         tokenMetadata
       }
 
@@ -402,7 +356,7 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
 export const loadRecentBridgeTransactions = loading.loadsAfterTick<BridgeData | null, number | undefined>(
   'recent-bridges',
   async (
-    limit: number = 50,
+    limit: number = 100,
     controller: AbortController
   ): Promise<BridgeData | null> => {
     const variables: GetRecentBridgesQueryVariables = {
@@ -417,18 +371,16 @@ export const loadRecentBridgeTransactions = loading.loadsAfterTick<BridgeData | 
         return null
       }
 
-      // Sort the arrays
-      const sortedSignatures = sortBy(data.userRequestForSignatures.items, [(bridge) => -BigInt(bridge.orderId)])
-      const sortedAffirmations = sortBy(data.userRequestForAffirmations.items, [(bridge) => -BigInt(bridge.orderId)])
+      // Sort the array
+      const sortedUserRequests = sortBy(data.userRequests.items, [(bridge) => -BigInt(bridge.orderId)])
 
       // Load token metadata for all bridges
-      const allBridges: Bridge[] = [...sortedSignatures, ...sortedAffirmations]
-      const tokenMetadata = await loadTokenMetadata(allBridges)
+      const tokenMetadata = await loadTokenMetadata(sortedUserRequests)
 
-      // Return separate arrays with metadata
+      console.log(tokenMetadata)
+      // Return unified array with metadata
       return {
-        signatures: sortedSignatures,
-        affirmations: sortedAffirmations,
+        userRequests: sortedUserRequests,
         tokenMetadata
       }
 

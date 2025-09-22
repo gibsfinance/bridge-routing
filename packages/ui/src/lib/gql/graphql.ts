@@ -14,53 +14,41 @@ export type Scalars = {
   JSON: any;
 };
 
-export type AffirmationCompleted = {
-  __typename?: 'AffirmationCompleted';
-  block?: Maybe<Block>;
-  blockHash: Scalars['String'];
+export type AmbBridge = {
+  __typename?: 'AMBBridge';
+  address: Scalars['String'];
+  bridges?: Maybe<OmnibridgePage>;
   chainId: Scalars['BigInt'];
-  deliverer: Scalars['String'];
-  destinationToken?: Maybe<Token>;
-  destinationTokenAddress?: Maybe<Scalars['String']>;
-  destinationTokenAmbAddress?: Maybe<Scalars['String']>;
-  destinationTokenChainId?: Maybe<Scalars['BigInt']>;
-  logIndex: Scalars['Float'];
-  messageHash: Scalars['String'];
-  orderId: Scalars['BigInt'];
-  originationToken?: Maybe<Token>;
-  originationTokenAddress?: Maybe<Scalars['String']>;
-  originationTokenAmbAddress?: Maybe<Scalars['String']>;
-  originationTokenChainId?: Maybe<Scalars['BigInt']>;
-  signature?: Maybe<SignedForAffirmationPage>;
-  transaction?: Maybe<Transaction>;
-  transactionHash: Scalars['String'];
-  userRequest?: Maybe<UserRequestForAffirmation>;
-  userRequestId: Scalars['String'];
+  pair: Scalars['String'];
+  provider: Provider;
+  side: Direction;
+  validatorAddress: Scalars['String'];
+  validatorContract?: Maybe<ValidatorContract>;
 };
 
 
-export type AffirmationCompletedSignatureArgs = {
+export type AmbBridgeBridgesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignedForAffirmationFilter>;
+  where?: InputMaybe<OmnibridgeFilter>;
 };
 
-export type AffirmationCompletedFilter = {
-  AND?: InputMaybe<Array<InputMaybe<AffirmationCompletedFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<AffirmationCompletedFilter>>>;
-  blockHash?: InputMaybe<Scalars['String']>;
-  blockHash_contains?: InputMaybe<Scalars['String']>;
-  blockHash_ends_with?: InputMaybe<Scalars['String']>;
-  blockHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  blockHash_not?: InputMaybe<Scalars['String']>;
-  blockHash_not_contains?: InputMaybe<Scalars['String']>;
-  blockHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  blockHash_starts_with?: InputMaybe<Scalars['String']>;
+export type AmbBridgeFilter = {
+  AND?: InputMaybe<Array<InputMaybe<AmbBridgeFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<AmbBridgeFilter>>>;
+  address?: InputMaybe<Scalars['String']>;
+  address_contains?: InputMaybe<Scalars['String']>;
+  address_ends_with?: InputMaybe<Scalars['String']>;
+  address_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  address_not?: InputMaybe<Scalars['String']>;
+  address_not_contains?: InputMaybe<Scalars['String']>;
+  address_not_ends_with?: InputMaybe<Scalars['String']>;
+  address_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  address_not_starts_with?: InputMaybe<Scalars['String']>;
+  address_starts_with?: InputMaybe<Scalars['String']>;
   chainId?: InputMaybe<Scalars['BigInt']>;
   chainId_gt?: InputMaybe<Scalars['BigInt']>;
   chainId_gte?: InputMaybe<Scalars['BigInt']>;
@@ -69,123 +57,39 @@ export type AffirmationCompletedFilter = {
   chainId_lte?: InputMaybe<Scalars['BigInt']>;
   chainId_not?: InputMaybe<Scalars['BigInt']>;
   chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  deliverer?: InputMaybe<Scalars['String']>;
-  deliverer_contains?: InputMaybe<Scalars['String']>;
-  deliverer_ends_with?: InputMaybe<Scalars['String']>;
-  deliverer_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  deliverer_not?: InputMaybe<Scalars['String']>;
-  deliverer_not_contains?: InputMaybe<Scalars['String']>;
-  deliverer_not_ends_with?: InputMaybe<Scalars['String']>;
-  deliverer_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  deliverer_not_starts_with?: InputMaybe<Scalars['String']>;
-  deliverer_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAddress_not?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_not_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAmbAddress_not?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenChainId?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_gt?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_gte?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  destinationTokenChainId_lt?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_lte?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_not?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  logIndex?: InputMaybe<Scalars['Float']>;
-  logIndex_gt?: InputMaybe<Scalars['Float']>;
-  logIndex_gte?: InputMaybe<Scalars['Float']>;
-  logIndex_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
-  logIndex_lt?: InputMaybe<Scalars['Float']>;
-  logIndex_lte?: InputMaybe<Scalars['Float']>;
-  logIndex_not?: InputMaybe<Scalars['Float']>;
-  logIndex_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
-  messageHash?: InputMaybe<Scalars['String']>;
-  messageHash_contains?: InputMaybe<Scalars['String']>;
-  messageHash_ends_with?: InputMaybe<Scalars['String']>;
-  messageHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageHash_not?: InputMaybe<Scalars['String']>;
-  messageHash_not_contains?: InputMaybe<Scalars['String']>;
-  messageHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  messageHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  messageHash_starts_with?: InputMaybe<Scalars['String']>;
-  orderId?: InputMaybe<Scalars['BigInt']>;
-  orderId_gt?: InputMaybe<Scalars['BigInt']>;
-  orderId_gte?: InputMaybe<Scalars['BigInt']>;
-  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  orderId_lt?: InputMaybe<Scalars['BigInt']>;
-  orderId_lte?: InputMaybe<Scalars['BigInt']>;
-  orderId_not?: InputMaybe<Scalars['BigInt']>;
-  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  originationTokenAddress?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAddress_not?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_not_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAmbAddress_not?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenChainId?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_gt?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_gte?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  originationTokenChainId_lt?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_lte?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_not?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  transactionHash?: InputMaybe<Scalars['String']>;
-  transactionHash_contains?: InputMaybe<Scalars['String']>;
-  transactionHash_ends_with?: InputMaybe<Scalars['String']>;
-  transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  transactionHash_not?: InputMaybe<Scalars['String']>;
-  transactionHash_not_contains?: InputMaybe<Scalars['String']>;
-  transactionHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  transactionHash_starts_with?: InputMaybe<Scalars['String']>;
-  userRequestId?: InputMaybe<Scalars['String']>;
-  userRequestId_contains?: InputMaybe<Scalars['String']>;
-  userRequestId_ends_with?: InputMaybe<Scalars['String']>;
-  userRequestId_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  userRequestId_not?: InputMaybe<Scalars['String']>;
-  userRequestId_not_contains?: InputMaybe<Scalars['String']>;
-  userRequestId_not_ends_with?: InputMaybe<Scalars['String']>;
-  userRequestId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  userRequestId_not_starts_with?: InputMaybe<Scalars['String']>;
-  userRequestId_starts_with?: InputMaybe<Scalars['String']>;
+  pair?: InputMaybe<Scalars['String']>;
+  pair_contains?: InputMaybe<Scalars['String']>;
+  pair_ends_with?: InputMaybe<Scalars['String']>;
+  pair_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  pair_not?: InputMaybe<Scalars['String']>;
+  pair_not_contains?: InputMaybe<Scalars['String']>;
+  pair_not_ends_with?: InputMaybe<Scalars['String']>;
+  pair_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  pair_not_starts_with?: InputMaybe<Scalars['String']>;
+  pair_starts_with?: InputMaybe<Scalars['String']>;
+  provider?: InputMaybe<Provider>;
+  provider_in?: InputMaybe<Array<InputMaybe<Provider>>>;
+  provider_not?: InputMaybe<Provider>;
+  provider_not_in?: InputMaybe<Array<InputMaybe<Provider>>>;
+  side?: InputMaybe<Direction>;
+  side_in?: InputMaybe<Array<InputMaybe<Direction>>>;
+  side_not?: InputMaybe<Direction>;
+  side_not_in?: InputMaybe<Array<InputMaybe<Direction>>>;
+  validatorAddress?: InputMaybe<Scalars['String']>;
+  validatorAddress_contains?: InputMaybe<Scalars['String']>;
+  validatorAddress_ends_with?: InputMaybe<Scalars['String']>;
+  validatorAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorAddress_not?: InputMaybe<Scalars['String']>;
+  validatorAddress_not_contains?: InputMaybe<Scalars['String']>;
+  validatorAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  validatorAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  validatorAddress_starts_with?: InputMaybe<Scalars['String']>;
 };
 
-export type AffirmationCompletedPage = {
-  __typename?: 'AffirmationCompletedPage';
-  items: Array<AffirmationCompleted>;
+export type AmbBridgePage = {
+  __typename?: 'AMBBridgePage';
+  items: Array<AmbBridge>;
   pageInfo: PageInfo;
   totalCount: Scalars['Int'];
 };
@@ -194,9 +98,86 @@ export type Block = {
   __typename?: 'Block';
   baseFeePerGas?: Maybe<Scalars['BigInt']>;
   chainId: Scalars['BigInt'];
+  completions?: Maybe<CompletionPage>;
+  deliveries?: Maybe<DeliveryPage>;
   hash: Scalars['String'];
   number: Scalars['BigInt'];
+  requiredSignaturesChanged?: Maybe<RequiredSignaturesChangedPage>;
+  signatures?: Maybe<SignaturePage>;
   timestamp: Scalars['BigInt'];
+  transactions?: Maybe<TransactionPage>;
+  userRequests?: Maybe<UserRequestPage>;
+  validatorStatusUpdates?: Maybe<ValidatorStatusUpdatePage>;
+};
+
+
+export type BlockCompletionsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<CompletionFilter>;
+};
+
+
+export type BlockDeliveriesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<DeliveryFilter>;
+};
+
+
+export type BlockRequiredSignaturesChangedArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<RequiredSignaturesChangedFilter>;
+};
+
+
+export type BlockSignaturesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<SignatureFilter>;
+};
+
+
+export type BlockTransactionsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<TransactionFilter>;
+};
+
+
+export type BlockUserRequestsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<UserRequestFilter>;
+};
+
+
+export type BlockValidatorStatusUpdatesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<ValidatorStatusUpdateFilter>;
 };
 
 export type BlockFilter = {
@@ -253,27 +234,38 @@ export type BlockPage = {
   totalCount: Scalars['Int'];
 };
 
-export type BridgeSide = {
-  __typename?: 'BridgeSide';
-  address: Scalars['String'];
+export type Completion = {
+  __typename?: 'Completion';
+  block?: Maybe<Block>;
+  blockHash: Scalars['String'];
   chainId: Scalars['BigInt'];
-  provider: Provider;
-  side: Direction;
+  delivery?: Maybe<Delivery>;
+  destinationAMBBridge?: Maybe<AmbBridge>;
+  destinationAmbAddress: Scalars['String'];
+  destinationChainId: Scalars['BigInt'];
+  messageHash: Scalars['String'];
+  orderId: Scalars['BigInt'];
+  originationAMBBridge?: Maybe<AmbBridge>;
+  originationAmbAddress: Scalars['String'];
+  originationChainId: Scalars['BigInt'];
+  transaction?: Maybe<Transaction>;
+  transactionHash: Scalars['String'];
+  userRequest?: Maybe<UserRequest>;
 };
 
-export type BridgeSideFilter = {
-  AND?: InputMaybe<Array<InputMaybe<BridgeSideFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<BridgeSideFilter>>>;
-  address?: InputMaybe<Scalars['String']>;
-  address_contains?: InputMaybe<Scalars['String']>;
-  address_ends_with?: InputMaybe<Scalars['String']>;
-  address_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  address_not?: InputMaybe<Scalars['String']>;
-  address_not_contains?: InputMaybe<Scalars['String']>;
-  address_not_ends_with?: InputMaybe<Scalars['String']>;
-  address_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  address_not_starts_with?: InputMaybe<Scalars['String']>;
-  address_starts_with?: InputMaybe<Scalars['String']>;
+export type CompletionFilter = {
+  AND?: InputMaybe<Array<InputMaybe<CompletionFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<CompletionFilter>>>;
+  blockHash?: InputMaybe<Scalars['String']>;
+  blockHash_contains?: InputMaybe<Scalars['String']>;
+  blockHash_ends_with?: InputMaybe<Scalars['String']>;
+  blockHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  blockHash_not?: InputMaybe<Scalars['String']>;
+  blockHash_not_contains?: InputMaybe<Scalars['String']>;
+  blockHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  blockHash_starts_with?: InputMaybe<Scalars['String']>;
   chainId?: InputMaybe<Scalars['BigInt']>;
   chainId_gt?: InputMaybe<Scalars['BigInt']>;
   chainId_gte?: InputMaybe<Scalars['BigInt']>;
@@ -282,19 +274,267 @@ export type BridgeSideFilter = {
   chainId_lte?: InputMaybe<Scalars['BigInt']>;
   chainId_not?: InputMaybe<Scalars['BigInt']>;
   chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  provider?: InputMaybe<Provider>;
-  provider_in?: InputMaybe<Array<InputMaybe<Provider>>>;
-  provider_not?: InputMaybe<Provider>;
-  provider_not_in?: InputMaybe<Array<InputMaybe<Provider>>>;
-  side?: InputMaybe<Direction>;
-  side_in?: InputMaybe<Array<InputMaybe<Direction>>>;
-  side_not?: InputMaybe<Direction>;
-  side_not_in?: InputMaybe<Array<InputMaybe<Direction>>>;
+  destinationAmbAddress?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_contains?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationAmbAddress_not?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
+  destinationChainId?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_gt?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_gte?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  destinationChainId_lt?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_lte?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_not?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  messageHash?: InputMaybe<Scalars['String']>;
+  messageHash_contains?: InputMaybe<Scalars['String']>;
+  messageHash_ends_with?: InputMaybe<Scalars['String']>;
+  messageHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  messageHash_not?: InputMaybe<Scalars['String']>;
+  messageHash_not_contains?: InputMaybe<Scalars['String']>;
+  messageHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  messageHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  messageHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  messageHash_starts_with?: InputMaybe<Scalars['String']>;
+  orderId?: InputMaybe<Scalars['BigInt']>;
+  orderId_gt?: InputMaybe<Scalars['BigInt']>;
+  orderId_gte?: InputMaybe<Scalars['BigInt']>;
+  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  orderId_lt?: InputMaybe<Scalars['BigInt']>;
+  orderId_lte?: InputMaybe<Scalars['BigInt']>;
+  orderId_not?: InputMaybe<Scalars['BigInt']>;
+  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  originationAmbAddress?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_contains?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationAmbAddress_not?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
+  originationChainId?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_gt?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_gte?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  originationChainId_lt?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_lte?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_not?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  transactionHash?: InputMaybe<Scalars['String']>;
+  transactionHash_contains?: InputMaybe<Scalars['String']>;
+  transactionHash_ends_with?: InputMaybe<Scalars['String']>;
+  transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  transactionHash_not?: InputMaybe<Scalars['String']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['String']>;
+  transactionHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  transactionHash_starts_with?: InputMaybe<Scalars['String']>;
 };
 
-export type BridgeSidePage = {
-  __typename?: 'BridgeSidePage';
-  items: Array<BridgeSide>;
+export type CompletionPage = {
+  __typename?: 'CompletionPage';
+  items: Array<Completion>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int'];
+};
+
+export type Delivery = {
+  __typename?: 'Delivery';
+  block?: Maybe<Block>;
+  blockHash: Scalars['String'];
+  chainId: Scalars['BigInt'];
+  completion?: Maybe<Completion>;
+  deliverer: Scalars['String'];
+  destinationAMBBridge?: Maybe<AmbBridge>;
+  destinationAmbAddress?: Maybe<Scalars['String']>;
+  destinationChainId?: Maybe<Scalars['BigInt']>;
+  destinationOmnibridge?: Maybe<Omnibridge>;
+  destinationOmnibridgeAddress?: Maybe<Scalars['String']>;
+  destinationToken?: Maybe<Token>;
+  destinationTokenAddress?: Maybe<Scalars['String']>;
+  logIndex: Scalars['Float'];
+  messageHash: Scalars['String'];
+  orderId: Scalars['BigInt'];
+  originationAMBBridge?: Maybe<AmbBridge>;
+  originationAmbAddress?: Maybe<Scalars['String']>;
+  originationChainId?: Maybe<Scalars['BigInt']>;
+  originationOmnibridge?: Maybe<Omnibridge>;
+  originationOmnibridgeAddress?: Maybe<Scalars['String']>;
+  originationToken?: Maybe<Token>;
+  originationTokenAddress?: Maybe<Scalars['String']>;
+  transaction?: Maybe<Transaction>;
+  transactionHash: Scalars['String'];
+  userRequest?: Maybe<UserRequest>;
+  userRequestHash: Scalars['String'];
+};
+
+export type DeliveryFilter = {
+  AND?: InputMaybe<Array<InputMaybe<DeliveryFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<DeliveryFilter>>>;
+  blockHash?: InputMaybe<Scalars['String']>;
+  blockHash_contains?: InputMaybe<Scalars['String']>;
+  blockHash_ends_with?: InputMaybe<Scalars['String']>;
+  blockHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  blockHash_not?: InputMaybe<Scalars['String']>;
+  blockHash_not_contains?: InputMaybe<Scalars['String']>;
+  blockHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  blockHash_starts_with?: InputMaybe<Scalars['String']>;
+  chainId?: InputMaybe<Scalars['BigInt']>;
+  chainId_gt?: InputMaybe<Scalars['BigInt']>;
+  chainId_gte?: InputMaybe<Scalars['BigInt']>;
+  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  chainId_lt?: InputMaybe<Scalars['BigInt']>;
+  chainId_lte?: InputMaybe<Scalars['BigInt']>;
+  chainId_not?: InputMaybe<Scalars['BigInt']>;
+  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  deliverer?: InputMaybe<Scalars['String']>;
+  deliverer_contains?: InputMaybe<Scalars['String']>;
+  deliverer_ends_with?: InputMaybe<Scalars['String']>;
+  deliverer_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  deliverer_not?: InputMaybe<Scalars['String']>;
+  deliverer_not_contains?: InputMaybe<Scalars['String']>;
+  deliverer_not_ends_with?: InputMaybe<Scalars['String']>;
+  deliverer_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  deliverer_not_starts_with?: InputMaybe<Scalars['String']>;
+  deliverer_starts_with?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_contains?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationAmbAddress_not?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
+  destinationChainId?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_gt?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_gte?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  destinationChainId_lt?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_lte?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_not?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  destinationOmnibridgeAddress?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_contains?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationOmnibridgeAddress_not?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationOmnibridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
+  destinationTokenAddress?: InputMaybe<Scalars['String']>;
+  destinationTokenAddress_contains?: InputMaybe<Scalars['String']>;
+  destinationTokenAddress_ends_with?: InputMaybe<Scalars['String']>;
+  destinationTokenAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationTokenAddress_not?: InputMaybe<Scalars['String']>;
+  destinationTokenAddress_not_contains?: InputMaybe<Scalars['String']>;
+  destinationTokenAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  destinationTokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationTokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  destinationTokenAddress_starts_with?: InputMaybe<Scalars['String']>;
+  logIndex?: InputMaybe<Scalars['Float']>;
+  logIndex_gt?: InputMaybe<Scalars['Float']>;
+  logIndex_gte?: InputMaybe<Scalars['Float']>;
+  logIndex_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
+  logIndex_lt?: InputMaybe<Scalars['Float']>;
+  logIndex_lte?: InputMaybe<Scalars['Float']>;
+  logIndex_not?: InputMaybe<Scalars['Float']>;
+  logIndex_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
+  messageHash?: InputMaybe<Scalars['String']>;
+  messageHash_contains?: InputMaybe<Scalars['String']>;
+  messageHash_ends_with?: InputMaybe<Scalars['String']>;
+  messageHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  messageHash_not?: InputMaybe<Scalars['String']>;
+  messageHash_not_contains?: InputMaybe<Scalars['String']>;
+  messageHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  messageHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  messageHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  messageHash_starts_with?: InputMaybe<Scalars['String']>;
+  orderId?: InputMaybe<Scalars['BigInt']>;
+  orderId_gt?: InputMaybe<Scalars['BigInt']>;
+  orderId_gte?: InputMaybe<Scalars['BigInt']>;
+  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  orderId_lt?: InputMaybe<Scalars['BigInt']>;
+  orderId_lte?: InputMaybe<Scalars['BigInt']>;
+  orderId_not?: InputMaybe<Scalars['BigInt']>;
+  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  originationAmbAddress?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_contains?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationAmbAddress_not?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
+  originationChainId?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_gt?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_gte?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  originationChainId_lt?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_lte?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_not?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  originationOmnibridgeAddress?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_contains?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationOmnibridgeAddress_not?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationOmnibridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
+  originationTokenAddress?: InputMaybe<Scalars['String']>;
+  originationTokenAddress_contains?: InputMaybe<Scalars['String']>;
+  originationTokenAddress_ends_with?: InputMaybe<Scalars['String']>;
+  originationTokenAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationTokenAddress_not?: InputMaybe<Scalars['String']>;
+  originationTokenAddress_not_contains?: InputMaybe<Scalars['String']>;
+  originationTokenAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  originationTokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationTokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  originationTokenAddress_starts_with?: InputMaybe<Scalars['String']>;
+  transactionHash?: InputMaybe<Scalars['String']>;
+  transactionHash_contains?: InputMaybe<Scalars['String']>;
+  transactionHash_ends_with?: InputMaybe<Scalars['String']>;
+  transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  transactionHash_not?: InputMaybe<Scalars['String']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['String']>;
+  transactionHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  transactionHash_starts_with?: InputMaybe<Scalars['String']>;
+  userRequestHash?: InputMaybe<Scalars['String']>;
+  userRequestHash_contains?: InputMaybe<Scalars['String']>;
+  userRequestHash_ends_with?: InputMaybe<Scalars['String']>;
+  userRequestHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  userRequestHash_not?: InputMaybe<Scalars['String']>;
+  userRequestHash_not_contains?: InputMaybe<Scalars['String']>;
+  userRequestHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  userRequestHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  userRequestHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  userRequestHash_starts_with?: InputMaybe<Scalars['String']>;
+};
+
+export type DeliveryPage = {
+  __typename?: 'DeliveryPage';
+  items: Array<Delivery>;
   pageInfo: PageInfo;
   totalCount: Scalars['Int'];
 };
@@ -314,7 +554,7 @@ export type FeeDirector = {
   recipient: Scalars['String'];
   settings: Scalars['BigInt'];
   unwrapped: Scalars['Boolean'];
-  userRequest?: Maybe<UserRequestForSignature>;
+  userRequest?: Maybe<UserRequest>;
 };
 
 export type FeeDirectorFilter = {
@@ -391,74 +631,31 @@ export type FeeDirectorPage = {
   totalCount: Scalars['Int'];
 };
 
-export type LatestRequiredSignaturesChanged = {
-  __typename?: 'LatestRequiredSignaturesChanged';
-  bridge?: Maybe<BridgeSide>;
-  bridgeAddress: Scalars['String'];
-  chainId: Scalars['BigInt'];
-  orderId: Scalars['BigInt'];
-};
-
-export type LatestRequiredSignaturesChangedFilter = {
-  AND?: InputMaybe<Array<InputMaybe<LatestRequiredSignaturesChangedFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<LatestRequiredSignaturesChangedFilter>>>;
-  bridgeAddress?: InputMaybe<Scalars['String']>;
-  bridgeAddress_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
-  chainId?: InputMaybe<Scalars['BigInt']>;
-  chainId_gt?: InputMaybe<Scalars['BigInt']>;
-  chainId_gte?: InputMaybe<Scalars['BigInt']>;
-  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  chainId_lt?: InputMaybe<Scalars['BigInt']>;
-  chainId_lte?: InputMaybe<Scalars['BigInt']>;
-  chainId_not?: InputMaybe<Scalars['BigInt']>;
-  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  orderId?: InputMaybe<Scalars['BigInt']>;
-  orderId_gt?: InputMaybe<Scalars['BigInt']>;
-  orderId_gte?: InputMaybe<Scalars['BigInt']>;
-  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  orderId_lt?: InputMaybe<Scalars['BigInt']>;
-  orderId_lte?: InputMaybe<Scalars['BigInt']>;
-  orderId_not?: InputMaybe<Scalars['BigInt']>;
-  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-};
-
-export type LatestRequiredSignaturesChangedPage = {
-  __typename?: 'LatestRequiredSignaturesChangedPage';
-  items: Array<LatestRequiredSignaturesChanged>;
-  pageInfo: PageInfo;
-  totalCount: Scalars['Int'];
-};
-
 export type LatestValidatorStatusUpdate = {
   __typename?: 'LatestValidatorStatusUpdate';
-  bridgeAddress: Scalars['String'];
+  ambAddress: Scalars['String'];
+  ambBridge?: Maybe<AmbBridge>;
   chainId: Scalars['BigInt'];
   orderId: Scalars['BigInt'];
-  validatorAddress: Scalars['String'];
+  validatorContract?: Maybe<ValidatorContract>;
+  validatorContractAddress: Scalars['String'];
+  validatorId: Scalars['String'];
   validatorStatusUpdate?: Maybe<ValidatorStatusUpdate>;
 };
 
 export type LatestValidatorStatusUpdateFilter = {
   AND?: InputMaybe<Array<InputMaybe<LatestValidatorStatusUpdateFilter>>>;
   OR?: InputMaybe<Array<InputMaybe<LatestValidatorStatusUpdateFilter>>>;
-  bridgeAddress?: InputMaybe<Scalars['String']>;
-  bridgeAddress_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
+  ambAddress?: InputMaybe<Scalars['String']>;
+  ambAddress_contains?: InputMaybe<Scalars['String']>;
+  ambAddress_ends_with?: InputMaybe<Scalars['String']>;
+  ambAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  ambAddress_not?: InputMaybe<Scalars['String']>;
+  ambAddress_not_contains?: InputMaybe<Scalars['String']>;
+  ambAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  ambAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  ambAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  ambAddress_starts_with?: InputMaybe<Scalars['String']>;
   chainId?: InputMaybe<Scalars['BigInt']>;
   chainId_gt?: InputMaybe<Scalars['BigInt']>;
   chainId_gte?: InputMaybe<Scalars['BigInt']>;
@@ -475,16 +672,26 @@ export type LatestValidatorStatusUpdateFilter = {
   orderId_lte?: InputMaybe<Scalars['BigInt']>;
   orderId_not?: InputMaybe<Scalars['BigInt']>;
   orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  validatorAddress?: InputMaybe<Scalars['String']>;
-  validatorAddress_contains?: InputMaybe<Scalars['String']>;
-  validatorAddress_ends_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  validatorAddress_not?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_contains?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  validatorAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_starts_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_contains?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_ends_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorContractAddress_not?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_contains?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorContractAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_starts_with?: InputMaybe<Scalars['String']>;
+  validatorId?: InputMaybe<Scalars['String']>;
+  validatorId_contains?: InputMaybe<Scalars['String']>;
+  validatorId_ends_with?: InputMaybe<Scalars['String']>;
+  validatorId_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorId_not?: InputMaybe<Scalars['String']>;
+  validatorId_not_contains?: InputMaybe<Scalars['String']>;
+  validatorId_not_ends_with?: InputMaybe<Scalars['String']>;
+  validatorId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorId_not_starts_with?: InputMaybe<Scalars['String']>;
+  validatorId_starts_with?: InputMaybe<Scalars['String']>;
 };
 
 export type LatestValidatorStatusUpdatePage = {
@@ -497,6 +704,55 @@ export type LatestValidatorStatusUpdatePage = {
 export type Meta = {
   __typename?: 'Meta';
   status?: Maybe<Scalars['JSON']>;
+};
+
+export type Omnibridge = {
+  __typename?: 'Omnibridge';
+  address: Scalars['String'];
+  ambAddress: Scalars['String'];
+  ambBridge?: Maybe<AmbBridge>;
+  chainId: Scalars['BigInt'];
+  validatorContract?: Maybe<ValidatorContract>;
+};
+
+export type OmnibridgeFilter = {
+  AND?: InputMaybe<Array<InputMaybe<OmnibridgeFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<OmnibridgeFilter>>>;
+  address?: InputMaybe<Scalars['String']>;
+  address_contains?: InputMaybe<Scalars['String']>;
+  address_ends_with?: InputMaybe<Scalars['String']>;
+  address_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  address_not?: InputMaybe<Scalars['String']>;
+  address_not_contains?: InputMaybe<Scalars['String']>;
+  address_not_ends_with?: InputMaybe<Scalars['String']>;
+  address_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  address_not_starts_with?: InputMaybe<Scalars['String']>;
+  address_starts_with?: InputMaybe<Scalars['String']>;
+  ambAddress?: InputMaybe<Scalars['String']>;
+  ambAddress_contains?: InputMaybe<Scalars['String']>;
+  ambAddress_ends_with?: InputMaybe<Scalars['String']>;
+  ambAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  ambAddress_not?: InputMaybe<Scalars['String']>;
+  ambAddress_not_contains?: InputMaybe<Scalars['String']>;
+  ambAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  ambAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  ambAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  ambAddress_starts_with?: InputMaybe<Scalars['String']>;
+  chainId?: InputMaybe<Scalars['BigInt']>;
+  chainId_gt?: InputMaybe<Scalars['BigInt']>;
+  chainId_gte?: InputMaybe<Scalars['BigInt']>;
+  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  chainId_lt?: InputMaybe<Scalars['BigInt']>;
+  chainId_lte?: InputMaybe<Scalars['BigInt']>;
+  chainId_not?: InputMaybe<Scalars['BigInt']>;
+  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+};
+
+export type OmnibridgePage = {
+  __typename?: 'OmnibridgePage';
+  items: Array<Omnibridge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int'];
 };
 
 export type PageInfo = {
@@ -515,55 +771,54 @@ export type Provider =
 export type Query = {
   __typename?: 'Query';
   _meta?: Maybe<Meta>;
-  affirmationCompleted?: Maybe<AffirmationCompleted>;
-  affirmationCompleteds: AffirmationCompletedPage;
+  aMBBridge?: Maybe<AmbBridge>;
+  aMBBridges: AmbBridgePage;
   block?: Maybe<Block>;
   blocks: BlockPage;
-  bridgeSide?: Maybe<BridgeSide>;
-  bridgeSides: BridgeSidePage;
+  completion?: Maybe<Completion>;
+  completions: CompletionPage;
+  delivery?: Maybe<Delivery>;
+  deliverys: DeliveryPage;
   feeDirector?: Maybe<FeeDirector>;
   feeDirectors: FeeDirectorPage;
-  internalTokenReverseLookup?: Maybe<InternalTokenReverseLookup>;
-  internalTokenReverseLookups: InternalTokenReverseLookupPage;
-  latestRequiredSignaturesChanged?: Maybe<LatestRequiredSignaturesChanged>;
-  latestRequiredSignaturesChangeds: LatestRequiredSignaturesChangedPage;
   latestValidatorStatusUpdate?: Maybe<LatestValidatorStatusUpdate>;
   latestValidatorStatusUpdates: LatestValidatorStatusUpdatePage;
-  relayedMessage?: Maybe<RelayedMessage>;
-  relayedMessages: RelayedMessagePage;
+  omnibridge?: Maybe<Omnibridge>;
+  omnibridges: OmnibridgePage;
   requiredSignaturesChanged?: Maybe<RequiredSignaturesChanged>;
   requiredSignaturesChangeds: RequiredSignaturesChangedPage;
   reverseMessageHashBinding?: Maybe<ReverseMessageHashBinding>;
   reverseMessageHashBindings: ReverseMessageHashBindingPage;
-  signedForAffirmation?: Maybe<SignedForAffirmation>;
-  signedForAffirmations: SignedForAffirmationPage;
-  signedForUserRequest?: Maybe<SignedForUserRequest>;
-  signedForUserRequests: SignedForUserRequestPage;
+  signature?: Maybe<Signature>;
+  signatures: SignaturePage;
   token?: Maybe<Token>;
   tokens: TokenPage;
   transaction?: Maybe<Transaction>;
   transactions: TransactionPage;
-  userRequestForAffirmation?: Maybe<UserRequestForAffirmation>;
-  userRequestForAffirmations: UserRequestForAffirmationPage;
-  userRequestForSignature?: Maybe<UserRequestForSignature>;
-  userRequestForSignatures: UserRequestForSignaturePage;
+  userRequest?: Maybe<UserRequest>;
+  userRequests: UserRequestPage;
+  validator?: Maybe<Validator>;
+  validatorContract?: Maybe<ValidatorContract>;
+  validatorContracts: ValidatorContractPage;
   validatorStatusUpdate?: Maybe<ValidatorStatusUpdate>;
   validatorStatusUpdates: ValidatorStatusUpdatePage;
+  validators: ValidatorPage;
 };
 
 
-export type QueryAffirmationCompletedArgs = {
-  messageHash: Scalars['String'];
+export type QueryAMbBridgeArgs = {
+  address: Scalars['String'];
+  chainId: Scalars['BigInt'];
 };
 
 
-export type QueryAffirmationCompletedsArgs = {
+export type QueryAMbBridgesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<AffirmationCompletedFilter>;
+  where?: InputMaybe<AmbBridgeFilter>;
 };
 
 
@@ -583,19 +838,33 @@ export type QueryBlocksArgs = {
 };
 
 
-export type QueryBridgeSideArgs = {
-  address: Scalars['String'];
-  chainId: Scalars['BigInt'];
+export type QueryCompletionArgs = {
+  messageHash: Scalars['String'];
 };
 
 
-export type QueryBridgeSidesArgs = {
+export type QueryCompletionsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<BridgeSideFilter>;
+  where?: InputMaybe<CompletionFilter>;
+};
+
+
+export type QueryDeliveryArgs = {
+  messageHash: Scalars['String'];
+};
+
+
+export type QueryDeliverysArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<DeliveryFilter>;
 };
 
 
@@ -614,43 +883,10 @@ export type QueryFeeDirectorsArgs = {
 };
 
 
-export type QueryInternalTokenReverseLookupArgs = {
-  address: Scalars['String'];
-  chainId: Scalars['BigInt'];
-  omnibridgeAddress: Scalars['String'];
-};
-
-
-export type QueryInternalTokenReverseLookupsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  limit?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Scalars['String']>;
-  orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<InternalTokenReverseLookupFilter>;
-};
-
-
-export type QueryLatestRequiredSignaturesChangedArgs = {
-  bridgeAddress: Scalars['String'];
-  chainId: Scalars['BigInt'];
-};
-
-
-export type QueryLatestRequiredSignaturesChangedsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  limit?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Scalars['String']>;
-  orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<LatestRequiredSignaturesChangedFilter>;
-};
-
-
 export type QueryLatestValidatorStatusUpdateArgs = {
-  bridgeAddress: Scalars['String'];
+  ambAddress: Scalars['String'];
   chainId: Scalars['BigInt'];
-  validatorAddress: Scalars['String'];
+  validatorId: Scalars['String'];
 };
 
 
@@ -664,18 +900,19 @@ export type QueryLatestValidatorStatusUpdatesArgs = {
 };
 
 
-export type QueryRelayedMessageArgs = {
-  messageHash: Scalars['String'];
+export type QueryOmnibridgeArgs = {
+  address: Scalars['String'];
+  chainId: Scalars['BigInt'];
 };
 
 
-export type QueryRelayedMessagesArgs = {
+export type QueryOmnibridgesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<RelayedMessageFilter>;
+  where?: InputMaybe<OmnibridgeFilter>;
 };
 
 
@@ -695,7 +932,7 @@ export type QueryRequiredSignaturesChangedsArgs = {
 
 
 export type QueryReverseMessageHashBindingArgs = {
-  messageHash: Scalars['String'];
+  messageId: Scalars['String'];
 };
 
 
@@ -709,39 +946,20 @@ export type QueryReverseMessageHashBindingsArgs = {
 };
 
 
-export type QuerySignedForAffirmationArgs = {
-  bridgeAddress: Scalars['String'];
+export type QuerySignatureArgs = {
   chainId: Scalars['BigInt'];
   messageHash: Scalars['String'];
-  validatorAddress: Scalars['String'];
+  validatorId: Scalars['String'];
 };
 
 
-export type QuerySignedForAffirmationsArgs = {
+export type QuerySignaturesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignedForAffirmationFilter>;
-};
-
-
-export type QuerySignedForUserRequestArgs = {
-  bridgeAddress: Scalars['String'];
-  chainId: Scalars['BigInt'];
-  messageHash: Scalars['String'];
-  validatorAddress: Scalars['String'];
-};
-
-
-export type QuerySignedForUserRequestsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  limit?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Scalars['String']>;
-  orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignedForUserRequestFilter>;
+  where?: InputMaybe<SignatureFilter>;
 };
 
 
@@ -778,33 +996,39 @@ export type QueryTransactionsArgs = {
 };
 
 
-export type QueryUserRequestForAffirmationArgs = {
-  messageId: Scalars['String'];
+export type QueryUserRequestArgs = {
+  messageHash: Scalars['String'];
 };
 
 
-export type QueryUserRequestForAffirmationsArgs = {
+export type QueryUserRequestsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<UserRequestForAffirmationFilter>;
+  where?: InputMaybe<UserRequestFilter>;
 };
 
 
-export type QueryUserRequestForSignatureArgs = {
-  messageId: Scalars['String'];
+export type QueryValidatorArgs = {
+  validatorId: Scalars['String'];
 };
 
 
-export type QueryUserRequestForSignaturesArgs = {
+export type QueryValidatorContractArgs = {
+  address: Scalars['String'];
+  chainId: Scalars['BigInt'];
+};
+
+
+export type QueryValidatorContractsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<UserRequestForSignatureFilter>;
+  where?: InputMaybe<ValidatorContractFilter>;
 };
 
 
@@ -822,193 +1046,27 @@ export type QueryValidatorStatusUpdatesArgs = {
   where?: InputMaybe<ValidatorStatusUpdateFilter>;
 };
 
-export type RelayedMessage = {
-  __typename?: 'RelayedMessage';
-  block?: Maybe<Block>;
-  blockHash: Scalars['String'];
-  chainId: Scalars['BigInt'];
-  deliverer: Scalars['String'];
-  destinationToken?: Maybe<Token>;
-  destinationTokenAddress?: Maybe<Scalars['String']>;
-  destinationTokenAmbAddress?: Maybe<Scalars['String']>;
-  destinationTokenChainId?: Maybe<Scalars['BigInt']>;
-  logIndex: Scalars['Float'];
-  messageHash: Scalars['String'];
-  orderId: Scalars['BigInt'];
-  originationToken?: Maybe<Token>;
-  originationTokenAddress?: Maybe<Scalars['String']>;
-  originationTokenAmbAddress?: Maybe<Scalars['String']>;
-  originationTokenChainId?: Maybe<Scalars['BigInt']>;
-  signature?: Maybe<SignedForUserRequestPage>;
-  transaction?: Maybe<Transaction>;
-  transactionHash: Scalars['String'];
-  userRequest?: Maybe<UserRequestForSignature>;
-  userRequestId: Scalars['String'];
-};
 
-
-export type RelayedMessageSignatureArgs = {
+export type QueryValidatorsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignedForUserRequestFilter>;
-};
-
-export type RelayedMessageFilter = {
-  AND?: InputMaybe<Array<InputMaybe<RelayedMessageFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<RelayedMessageFilter>>>;
-  blockHash?: InputMaybe<Scalars['String']>;
-  blockHash_contains?: InputMaybe<Scalars['String']>;
-  blockHash_ends_with?: InputMaybe<Scalars['String']>;
-  blockHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  blockHash_not?: InputMaybe<Scalars['String']>;
-  blockHash_not_contains?: InputMaybe<Scalars['String']>;
-  blockHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  blockHash_starts_with?: InputMaybe<Scalars['String']>;
-  chainId?: InputMaybe<Scalars['BigInt']>;
-  chainId_gt?: InputMaybe<Scalars['BigInt']>;
-  chainId_gte?: InputMaybe<Scalars['BigInt']>;
-  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  chainId_lt?: InputMaybe<Scalars['BigInt']>;
-  chainId_lte?: InputMaybe<Scalars['BigInt']>;
-  chainId_not?: InputMaybe<Scalars['BigInt']>;
-  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  deliverer?: InputMaybe<Scalars['String']>;
-  deliverer_contains?: InputMaybe<Scalars['String']>;
-  deliverer_ends_with?: InputMaybe<Scalars['String']>;
-  deliverer_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  deliverer_not?: InputMaybe<Scalars['String']>;
-  deliverer_not_contains?: InputMaybe<Scalars['String']>;
-  deliverer_not_ends_with?: InputMaybe<Scalars['String']>;
-  deliverer_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  deliverer_not_starts_with?: InputMaybe<Scalars['String']>;
-  deliverer_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAddress_not?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_not_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAmbAddress_not?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenChainId?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_gt?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_gte?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  destinationTokenChainId_lt?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_lte?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_not?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  logIndex?: InputMaybe<Scalars['Float']>;
-  logIndex_gt?: InputMaybe<Scalars['Float']>;
-  logIndex_gte?: InputMaybe<Scalars['Float']>;
-  logIndex_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
-  logIndex_lt?: InputMaybe<Scalars['Float']>;
-  logIndex_lte?: InputMaybe<Scalars['Float']>;
-  logIndex_not?: InputMaybe<Scalars['Float']>;
-  logIndex_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
-  messageHash?: InputMaybe<Scalars['String']>;
-  messageHash_contains?: InputMaybe<Scalars['String']>;
-  messageHash_ends_with?: InputMaybe<Scalars['String']>;
-  messageHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageHash_not?: InputMaybe<Scalars['String']>;
-  messageHash_not_contains?: InputMaybe<Scalars['String']>;
-  messageHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  messageHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  messageHash_starts_with?: InputMaybe<Scalars['String']>;
-  orderId?: InputMaybe<Scalars['BigInt']>;
-  orderId_gt?: InputMaybe<Scalars['BigInt']>;
-  orderId_gte?: InputMaybe<Scalars['BigInt']>;
-  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  orderId_lt?: InputMaybe<Scalars['BigInt']>;
-  orderId_lte?: InputMaybe<Scalars['BigInt']>;
-  orderId_not?: InputMaybe<Scalars['BigInt']>;
-  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  originationTokenAddress?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAddress_not?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_not_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAmbAddress_not?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenChainId?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_gt?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_gte?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  originationTokenChainId_lt?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_lte?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_not?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  transactionHash?: InputMaybe<Scalars['String']>;
-  transactionHash_contains?: InputMaybe<Scalars['String']>;
-  transactionHash_ends_with?: InputMaybe<Scalars['String']>;
-  transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  transactionHash_not?: InputMaybe<Scalars['String']>;
-  transactionHash_not_contains?: InputMaybe<Scalars['String']>;
-  transactionHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  transactionHash_starts_with?: InputMaybe<Scalars['String']>;
-  userRequestId?: InputMaybe<Scalars['String']>;
-  userRequestId_contains?: InputMaybe<Scalars['String']>;
-  userRequestId_ends_with?: InputMaybe<Scalars['String']>;
-  userRequestId_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  userRequestId_not?: InputMaybe<Scalars['String']>;
-  userRequestId_not_contains?: InputMaybe<Scalars['String']>;
-  userRequestId_not_ends_with?: InputMaybe<Scalars['String']>;
-  userRequestId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  userRequestId_not_starts_with?: InputMaybe<Scalars['String']>;
-  userRequestId_starts_with?: InputMaybe<Scalars['String']>;
-};
-
-export type RelayedMessagePage = {
-  __typename?: 'RelayedMessagePage';
-  items: Array<RelayedMessage>;
-  pageInfo: PageInfo;
-  totalCount: Scalars['Int'];
+  where?: InputMaybe<ValidatorFilter>;
 };
 
 export type RequiredSignaturesChanged = {
   __typename?: 'RequiredSignaturesChanged';
   block?: Maybe<Block>;
   blockHash: Scalars['String'];
-  bridge?: Maybe<BridgeSide>;
-  bridgeAddress: Scalars['String'];
   chainId: Scalars['BigInt'];
   logIndex: Scalars['Float'];
   orderId: Scalars['BigInt'];
   transaction?: Maybe<Transaction>;
   transactionHash: Scalars['String'];
+  validatorContract?: Maybe<ValidatorContract>;
+  validatorContractAddress: Scalars['String'];
   value: Scalars['BigInt'];
 };
 
@@ -1025,16 +1083,6 @@ export type RequiredSignaturesChangedFilter = {
   blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
   blockHash_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress?: InputMaybe<Scalars['String']>;
-  bridgeAddress_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
   chainId?: InputMaybe<Scalars['BigInt']>;
   chainId_gt?: InputMaybe<Scalars['BigInt']>;
   chainId_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1069,6 +1117,16 @@ export type RequiredSignaturesChangedFilter = {
   transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
   transactionHash_starts_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_contains?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_ends_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorContractAddress_not?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_contains?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorContractAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_starts_with?: InputMaybe<Scalars['String']>;
   value?: InputMaybe<Scalars['BigInt']>;
   value_gt?: InputMaybe<Scalars['BigInt']>;
   value_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1090,6 +1148,7 @@ export type ReverseMessageHashBinding = {
   __typename?: 'ReverseMessageHashBinding';
   messageHash: Scalars['String'];
   messageId: Scalars['String'];
+  userRequest?: Maybe<UserRequest>;
 };
 
 export type ReverseMessageHashBindingFilter = {
@@ -1124,28 +1183,37 @@ export type ReverseMessageHashBindingPage = {
   totalCount: Scalars['Int'];
 };
 
-export type SignedForAffirmation = {
-  __typename?: 'SignedForAffirmation';
+export type Signature = {
+  __typename?: 'Signature';
+  ambAddress: Scalars['String'];
+  ambBridge?: Maybe<AmbBridge>;
   block?: Maybe<Block>;
   blockHash: Scalars['String'];
-  bridge?: Maybe<BridgeSide>;
-  bridgeAddress: Scalars['String'];
   chainId: Scalars['BigInt'];
-  completion?: Maybe<AffirmationCompleted>;
-  delivery?: Maybe<AffirmationCompleted>;
+  completion?: Maybe<Completion>;
   logIndex: Scalars['Float'];
   messageHash: Scalars['String'];
   orderId: Scalars['BigInt'];
   transaction?: Maybe<Transaction>;
   transactionHash: Scalars['String'];
-  userRequest?: Maybe<UserRequestForAffirmation>;
-  userRequestId: Scalars['String'];
-  validatorAddress: Scalars['String'];
+  userRequest?: Maybe<UserRequest>;
+  validator?: Maybe<Validator>;
+  validatorId: Scalars['String'];
 };
 
-export type SignedForAffirmationFilter = {
-  AND?: InputMaybe<Array<InputMaybe<SignedForAffirmationFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<SignedForAffirmationFilter>>>;
+export type SignatureFilter = {
+  AND?: InputMaybe<Array<InputMaybe<SignatureFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<SignatureFilter>>>;
+  ambAddress?: InputMaybe<Scalars['String']>;
+  ambAddress_contains?: InputMaybe<Scalars['String']>;
+  ambAddress_ends_with?: InputMaybe<Scalars['String']>;
+  ambAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  ambAddress_not?: InputMaybe<Scalars['String']>;
+  ambAddress_not_contains?: InputMaybe<Scalars['String']>;
+  ambAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  ambAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  ambAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  ambAddress_starts_with?: InputMaybe<Scalars['String']>;
   blockHash?: InputMaybe<Scalars['String']>;
   blockHash_contains?: InputMaybe<Scalars['String']>;
   blockHash_ends_with?: InputMaybe<Scalars['String']>;
@@ -1156,16 +1224,6 @@ export type SignedForAffirmationFilter = {
   blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
   blockHash_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress?: InputMaybe<Scalars['String']>;
-  bridgeAddress_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
   chainId?: InputMaybe<Scalars['BigInt']>;
   chainId_gt?: InputMaybe<Scalars['BigInt']>;
   chainId_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1210,144 +1268,21 @@ export type SignedForAffirmationFilter = {
   transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
   transactionHash_starts_with?: InputMaybe<Scalars['String']>;
-  userRequestId?: InputMaybe<Scalars['String']>;
-  userRequestId_contains?: InputMaybe<Scalars['String']>;
-  userRequestId_ends_with?: InputMaybe<Scalars['String']>;
-  userRequestId_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  userRequestId_not?: InputMaybe<Scalars['String']>;
-  userRequestId_not_contains?: InputMaybe<Scalars['String']>;
-  userRequestId_not_ends_with?: InputMaybe<Scalars['String']>;
-  userRequestId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  userRequestId_not_starts_with?: InputMaybe<Scalars['String']>;
-  userRequestId_starts_with?: InputMaybe<Scalars['String']>;
-  validatorAddress?: InputMaybe<Scalars['String']>;
-  validatorAddress_contains?: InputMaybe<Scalars['String']>;
-  validatorAddress_ends_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  validatorAddress_not?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_contains?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  validatorAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_starts_with?: InputMaybe<Scalars['String']>;
+  validatorId?: InputMaybe<Scalars['String']>;
+  validatorId_contains?: InputMaybe<Scalars['String']>;
+  validatorId_ends_with?: InputMaybe<Scalars['String']>;
+  validatorId_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorId_not?: InputMaybe<Scalars['String']>;
+  validatorId_not_contains?: InputMaybe<Scalars['String']>;
+  validatorId_not_ends_with?: InputMaybe<Scalars['String']>;
+  validatorId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorId_not_starts_with?: InputMaybe<Scalars['String']>;
+  validatorId_starts_with?: InputMaybe<Scalars['String']>;
 };
 
-export type SignedForAffirmationPage = {
-  __typename?: 'SignedForAffirmationPage';
-  items: Array<SignedForAffirmation>;
-  pageInfo: PageInfo;
-  totalCount: Scalars['Int'];
-};
-
-export type SignedForUserRequest = {
-  __typename?: 'SignedForUserRequest';
-  block?: Maybe<Block>;
-  blockHash: Scalars['String'];
-  bridgeAddress: Scalars['String'];
-  chainId: Scalars['BigInt'];
-  delivery?: Maybe<RelayedMessage>;
-  logIndex: Scalars['Float'];
-  messageHash: Scalars['String'];
-  orderId: Scalars['BigInt'];
-  transaction?: Maybe<Transaction>;
-  transactionHash: Scalars['String'];
-  userRequest?: Maybe<UserRequestForSignature>;
-  userRequestId: Scalars['String'];
-  validatorAddress: Scalars['String'];
-};
-
-export type SignedForUserRequestFilter = {
-  AND?: InputMaybe<Array<InputMaybe<SignedForUserRequestFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<SignedForUserRequestFilter>>>;
-  blockHash?: InputMaybe<Scalars['String']>;
-  blockHash_contains?: InputMaybe<Scalars['String']>;
-  blockHash_ends_with?: InputMaybe<Scalars['String']>;
-  blockHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  blockHash_not?: InputMaybe<Scalars['String']>;
-  blockHash_not_contains?: InputMaybe<Scalars['String']>;
-  blockHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  blockHash_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress?: InputMaybe<Scalars['String']>;
-  bridgeAddress_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
-  chainId?: InputMaybe<Scalars['BigInt']>;
-  chainId_gt?: InputMaybe<Scalars['BigInt']>;
-  chainId_gte?: InputMaybe<Scalars['BigInt']>;
-  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  chainId_lt?: InputMaybe<Scalars['BigInt']>;
-  chainId_lte?: InputMaybe<Scalars['BigInt']>;
-  chainId_not?: InputMaybe<Scalars['BigInt']>;
-  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  logIndex?: InputMaybe<Scalars['Float']>;
-  logIndex_gt?: InputMaybe<Scalars['Float']>;
-  logIndex_gte?: InputMaybe<Scalars['Float']>;
-  logIndex_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
-  logIndex_lt?: InputMaybe<Scalars['Float']>;
-  logIndex_lte?: InputMaybe<Scalars['Float']>;
-  logIndex_not?: InputMaybe<Scalars['Float']>;
-  logIndex_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
-  messageHash?: InputMaybe<Scalars['String']>;
-  messageHash_contains?: InputMaybe<Scalars['String']>;
-  messageHash_ends_with?: InputMaybe<Scalars['String']>;
-  messageHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageHash_not?: InputMaybe<Scalars['String']>;
-  messageHash_not_contains?: InputMaybe<Scalars['String']>;
-  messageHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  messageHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  messageHash_starts_with?: InputMaybe<Scalars['String']>;
-  orderId?: InputMaybe<Scalars['BigInt']>;
-  orderId_gt?: InputMaybe<Scalars['BigInt']>;
-  orderId_gte?: InputMaybe<Scalars['BigInt']>;
-  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  orderId_lt?: InputMaybe<Scalars['BigInt']>;
-  orderId_lte?: InputMaybe<Scalars['BigInt']>;
-  orderId_not?: InputMaybe<Scalars['BigInt']>;
-  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  transactionHash?: InputMaybe<Scalars['String']>;
-  transactionHash_contains?: InputMaybe<Scalars['String']>;
-  transactionHash_ends_with?: InputMaybe<Scalars['String']>;
-  transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  transactionHash_not?: InputMaybe<Scalars['String']>;
-  transactionHash_not_contains?: InputMaybe<Scalars['String']>;
-  transactionHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  transactionHash_starts_with?: InputMaybe<Scalars['String']>;
-  userRequestId?: InputMaybe<Scalars['String']>;
-  userRequestId_contains?: InputMaybe<Scalars['String']>;
-  userRequestId_ends_with?: InputMaybe<Scalars['String']>;
-  userRequestId_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  userRequestId_not?: InputMaybe<Scalars['String']>;
-  userRequestId_not_contains?: InputMaybe<Scalars['String']>;
-  userRequestId_not_ends_with?: InputMaybe<Scalars['String']>;
-  userRequestId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  userRequestId_not_starts_with?: InputMaybe<Scalars['String']>;
-  userRequestId_starts_with?: InputMaybe<Scalars['String']>;
-  validatorAddress?: InputMaybe<Scalars['String']>;
-  validatorAddress_contains?: InputMaybe<Scalars['String']>;
-  validatorAddress_ends_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  validatorAddress_not?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_contains?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  validatorAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_starts_with?: InputMaybe<Scalars['String']>;
-};
-
-export type SignedForUserRequestPage = {
-  __typename?: 'SignedForUserRequestPage';
-  items: Array<SignedForUserRequest>;
+export type SignaturePage = {
+  __typename?: 'SignaturePage';
+  items: Array<Signature>;
   pageInfo: PageInfo;
   totalCount: Scalars['Int'];
 };
@@ -1357,22 +1292,25 @@ export type Token = {
   address: Scalars['String'];
   ambAddress: Scalars['String'];
   chainId: Scalars['BigInt'];
-  derivatives?: Maybe<TokenPage>;
   destination?: Maybe<Token>;
   destinationAddress?: Maybe<Scalars['String']>;
   destinationAmbAddress?: Maybe<Scalars['String']>;
   destinationChainId?: Maybe<Scalars['BigInt']>;
+  destinationOmnibridge?: Maybe<Omnibridge>;
+  destinationOmnibridgeAddress?: Maybe<Scalars['String']>;
+  destinations?: Maybe<TokenPage>;
   orderId: Scalars['BigInt'];
   origination?: Maybe<Token>;
-  originationAddress?: Maybe<Scalars['String']>;
-  originationAmbAddress?: Maybe<Scalars['String']>;
-  originationChainId?: Maybe<Scalars['BigInt']>;
-  userRequestForAffirmations?: Maybe<UserRequestForAffirmationPage>;
-  userRequestForSignatures?: Maybe<UserRequestForSignaturePage>;
+  originationAddress: Scalars['String'];
+  originationAmbAddress: Scalars['String'];
+  originationChainId: Scalars['BigInt'];
+  originationOmnibridge?: Maybe<Omnibridge>;
+  originationOmnibridgeAddress: Scalars['String'];
+  userRequest?: Maybe<UserRequestPage>;
 };
 
 
-export type TokenDerivativesArgs = {
+export type TokenDestinationsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
@@ -1382,23 +1320,13 @@ export type TokenDerivativesArgs = {
 };
 
 
-export type TokenUserRequestForAffirmationsArgs = {
+export type TokenUserRequestArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<UserRequestForAffirmationFilter>;
-};
-
-
-export type TokenUserRequestForSignaturesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  limit?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Scalars['String']>;
-  orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<UserRequestForSignatureFilter>;
+  where?: InputMaybe<UserRequestFilter>;
 };
 
 export type TokenFilter = {
@@ -1460,6 +1388,16 @@ export type TokenFilter = {
   destinationChainId_lte?: InputMaybe<Scalars['BigInt']>;
   destinationChainId_not?: InputMaybe<Scalars['BigInt']>;
   destinationChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  destinationOmnibridgeAddress?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_contains?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationOmnibridgeAddress_not?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationOmnibridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
   orderId?: InputMaybe<Scalars['BigInt']>;
   orderId_gt?: InputMaybe<Scalars['BigInt']>;
   orderId_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1496,6 +1434,16 @@ export type TokenFilter = {
   originationChainId_lte?: InputMaybe<Scalars['BigInt']>;
   originationChainId_not?: InputMaybe<Scalars['BigInt']>;
   originationChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  originationOmnibridgeAddress?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_contains?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationOmnibridgeAddress_not?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationOmnibridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
 };
 
 export type TokenPage = {
@@ -1507,10 +1455,11 @@ export type TokenPage = {
 
 export type Transaction = {
   __typename?: 'Transaction';
-  AffirmationCompleted?: Maybe<AffirmationCompletedPage>;
   block?: Maybe<Block>;
   blockHash: Scalars['String'];
   chainId: Scalars['BigInt'];
+  completions?: Maybe<CompletionPage>;
+  deliveries?: Maybe<DeliveryPage>;
   from: Scalars['String'];
   gas: Scalars['BigInt'];
   gasPrice?: Maybe<Scalars['BigInt']>;
@@ -1519,74 +1468,73 @@ export type Transaction = {
   maxFeePerGas?: Maybe<Scalars['BigInt']>;
   maxPriorityFeePerGas?: Maybe<Scalars['BigInt']>;
   nonce: Scalars['BigInt'];
-  relayedMessage?: Maybe<RelayedMessagePage>;
-  signedForAffirmation?: Maybe<SignedForAffirmationPage>;
-  signedForUserRequest?: Maybe<SignedForUserRequestPage>;
+  requiredSignaturesChanged?: Maybe<RequiredSignaturesChangedPage>;
+  signatures?: Maybe<SignaturePage>;
   to: Scalars['String'];
   type: Scalars['String'];
-  userRequestForAffirmation?: Maybe<UserRequestForAffirmationPage>;
-  userRequestForSignature?: Maybe<UserRequestForSignaturePage>;
+  userRequests?: Maybe<UserRequestPage>;
+  validatorStatusUpdates?: Maybe<ValidatorStatusUpdatePage>;
   value: Scalars['BigInt'];
 };
 
 
-export type TransactionAffirmationCompletedArgs = {
+export type TransactionCompletionsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<AffirmationCompletedFilter>;
+  where?: InputMaybe<CompletionFilter>;
 };
 
 
-export type TransactionRelayedMessageArgs = {
+export type TransactionDeliveriesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<RelayedMessageFilter>;
+  where?: InputMaybe<DeliveryFilter>;
 };
 
 
-export type TransactionSignedForAffirmationArgs = {
+export type TransactionRequiredSignaturesChangedArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignedForAffirmationFilter>;
+  where?: InputMaybe<RequiredSignaturesChangedFilter>;
 };
 
 
-export type TransactionSignedForUserRequestArgs = {
+export type TransactionSignaturesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignedForUserRequestFilter>;
+  where?: InputMaybe<SignatureFilter>;
 };
 
 
-export type TransactionUserRequestForAffirmationArgs = {
+export type TransactionUserRequestsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<UserRequestForAffirmationFilter>;
+  where?: InputMaybe<UserRequestFilter>;
 };
 
 
-export type TransactionUserRequestForSignatureArgs = {
+export type TransactionValidatorStatusUpdatesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<UserRequestForSignatureFilter>;
+  where?: InputMaybe<ValidatorStatusUpdateFilter>;
 };
 
 export type TransactionFilter = {
@@ -1717,21 +1665,23 @@ export type TransactionPage = {
   totalCount: Scalars['Int'];
 };
 
-export type UserRequestForAffirmation = {
-  __typename?: 'UserRequestForAffirmation';
+export type UserRequest = {
+  __typename?: 'UserRequest';
   amount: Scalars['BigInt'];
   block?: Maybe<Block>;
   blockHash: Scalars['String'];
-  bridge?: Maybe<BridgeSide>;
-  bridgeAddress: Scalars['String'];
   chainId: Scalars['BigInt'];
+  completion?: Maybe<Completion>;
   confirmedSignatures: Scalars['BigInt'];
   deliveringNative: Scalars['Boolean'];
-  delivery?: Maybe<AffirmationCompleted>;
+  delivery?: Maybe<Delivery>;
+  destinationAMBBridge?: Maybe<AmbBridge>;
+  destinationAmbAddress: Scalars['String'];
+  destinationChainId: Scalars['BigInt'];
+  destinationOmnibridge?: Maybe<Omnibridge>;
+  destinationOmnibridgeAddress?: Maybe<Scalars['String']>;
   destinationToken?: Maybe<Token>;
   destinationTokenAddress?: Maybe<Scalars['String']>;
-  destinationTokenAmbAddress: Scalars['String'];
-  destinationTokenChainId: Scalars['BigInt'];
   encodedData: Scalars['String'];
   finishedSigning: Scalars['Boolean'];
   from: Scalars['String'];
@@ -1740,31 +1690,35 @@ export type UserRequestForAffirmation = {
   messageHash: Scalars['String'];
   messageId: Scalars['String'];
   orderId: Scalars['BigInt'];
+  originationAMBBridge?: Maybe<AmbBridge>;
+  originationAmbAddress: Scalars['String'];
+  originationChainId: Scalars['BigInt'];
+  originationOmnibridge?: Maybe<Omnibridge>;
+  originationOmnibridgeAddress?: Maybe<Scalars['String']>;
   originationToken?: Maybe<Token>;
   originationTokenAddress?: Maybe<Scalars['String']>;
-  originationTokenAmbAddress: Scalars['String'];
-  originationTokenChainId: Scalars['BigInt'];
   requiredSignatureOrderId?: Maybe<Scalars['BigInt']>;
   requiredSignatures?: Maybe<RequiredSignaturesChanged>;
-  signatures?: Maybe<SignedForAffirmationPage>;
+  signatures?: Maybe<SignaturePage>;
   to: Scalars['String'];
   transaction?: Maybe<Transaction>;
   transactionHash: Scalars['String'];
+  type: UserRequestType;
 };
 
 
-export type UserRequestForAffirmationSignaturesArgs = {
+export type UserRequestSignaturesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignedForAffirmationFilter>;
+  where?: InputMaybe<SignatureFilter>;
 };
 
-export type UserRequestForAffirmationFilter = {
-  AND?: InputMaybe<Array<InputMaybe<UserRequestForAffirmationFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<UserRequestForAffirmationFilter>>>;
+export type UserRequestFilter = {
+  AND?: InputMaybe<Array<InputMaybe<UserRequestFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<UserRequestFilter>>>;
   amount?: InputMaybe<Scalars['BigInt']>;
   amount_gt?: InputMaybe<Scalars['BigInt']>;
   amount_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1783,16 +1737,6 @@ export type UserRequestForAffirmationFilter = {
   blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
   blockHash_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress?: InputMaybe<Scalars['String']>;
-  bridgeAddress_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
   chainId?: InputMaybe<Scalars['BigInt']>;
   chainId_gt?: InputMaybe<Scalars['BigInt']>;
   chainId_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1813,6 +1757,34 @@ export type UserRequestForAffirmationFilter = {
   deliveringNative_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
   deliveringNative_not?: InputMaybe<Scalars['Boolean']>;
   deliveringNative_not_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
+  destinationAmbAddress?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_contains?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationAmbAddress_not?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  destinationAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
+  destinationChainId?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_gt?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_gte?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  destinationChainId_lt?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_lte?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_not?: InputMaybe<Scalars['BigInt']>;
+  destinationChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  destinationOmnibridgeAddress?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_contains?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationOmnibridgeAddress_not?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  destinationOmnibridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  destinationOmnibridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
   destinationTokenAddress?: InputMaybe<Scalars['String']>;
   destinationTokenAddress_contains?: InputMaybe<Scalars['String']>;
   destinationTokenAddress_ends_with?: InputMaybe<Scalars['String']>;
@@ -1823,24 +1795,6 @@ export type UserRequestForAffirmationFilter = {
   destinationTokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   destinationTokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
   destinationTokenAddress_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAmbAddress_not?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenChainId?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_gt?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_gte?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  destinationTokenChainId_lt?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_lte?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_not?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
   encodedData?: InputMaybe<Scalars['String']>;
   encodedData_contains?: InputMaybe<Scalars['String']>;
   encodedData_ends_with?: InputMaybe<Scalars['String']>;
@@ -1905,6 +1859,34 @@ export type UserRequestForAffirmationFilter = {
   orderId_lte?: InputMaybe<Scalars['BigInt']>;
   orderId_not?: InputMaybe<Scalars['BigInt']>;
   orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  originationAmbAddress?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_contains?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationAmbAddress_not?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  originationAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
+  originationChainId?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_gt?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_gte?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  originationChainId_lt?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_lte?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_not?: InputMaybe<Scalars['BigInt']>;
+  originationChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  originationOmnibridgeAddress?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_contains?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationOmnibridgeAddress_not?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  originationOmnibridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  originationOmnibridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
   originationTokenAddress?: InputMaybe<Scalars['String']>;
   originationTokenAddress_contains?: InputMaybe<Scalars['String']>;
   originationTokenAddress_ends_with?: InputMaybe<Scalars['String']>;
@@ -1915,24 +1897,6 @@ export type UserRequestForAffirmationFilter = {
   originationTokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   originationTokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
   originationTokenAddress_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAmbAddress_not?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenChainId?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_gt?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_gte?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  originationTokenChainId_lt?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_lte?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_not?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
   requiredSignatureOrderId?: InputMaybe<Scalars['BigInt']>;
   requiredSignatureOrderId_gt?: InputMaybe<Scalars['BigInt']>;
   requiredSignatureOrderId_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1961,377 +1925,89 @@ export type UserRequestForAffirmationFilter = {
   transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
   transactionHash_starts_with?: InputMaybe<Scalars['String']>;
+  type?: InputMaybe<UserRequestType>;
+  type_in?: InputMaybe<Array<InputMaybe<UserRequestType>>>;
+  type_not?: InputMaybe<UserRequestType>;
+  type_not_in?: InputMaybe<Array<InputMaybe<UserRequestType>>>;
 };
 
-export type UserRequestForAffirmationPage = {
-  __typename?: 'UserRequestForAffirmationPage';
-  items: Array<UserRequestForAffirmation>;
+export type UserRequestPage = {
+  __typename?: 'UserRequestPage';
+  items: Array<UserRequest>;
   pageInfo: PageInfo;
   totalCount: Scalars['Int'];
 };
 
-export type UserRequestForSignature = {
-  __typename?: 'UserRequestForSignature';
-  amount: Scalars['BigInt'];
-  block?: Maybe<Block>;
-  blockHash: Scalars['String'];
-  bridge?: Maybe<BridgeSide>;
-  bridgeAddress: Scalars['String'];
+export type UserRequestType =
+  | 'affirmation'
+  | 'signature'
+  | '%future added value';
+
+export type Validator = {
+  __typename?: 'Validator';
+  address: Scalars['String'];
+  ambAddress: Scalars['String'];
   chainId: Scalars['BigInt'];
-  confirmedSignatures: Scalars['BigInt'];
-  deliveringNative: Scalars['Boolean'];
-  delivery?: Maybe<RelayedMessage>;
-  destinationToken?: Maybe<Token>;
-  destinationTokenAddress?: Maybe<Scalars['String']>;
-  destinationTokenAmbAddress: Scalars['String'];
-  destinationTokenChainId: Scalars['BigInt'];
-  encodedData: Scalars['String'];
-  feeDirector?: Maybe<FeeDirector>;
-  finishedSigning: Scalars['Boolean'];
-  from: Scalars['String'];
-  handlingNative: Scalars['Boolean'];
-  logIndex: Scalars['Float'];
-  messageHash: Scalars['String'];
-  messageId: Scalars['String'];
-  orderId: Scalars['BigInt'];
-  originationToken?: Maybe<Token>;
-  originationTokenAddress?: Maybe<Scalars['String']>;
-  originationTokenAmbAddress: Scalars['String'];
-  originationTokenChainId: Scalars['BigInt'];
-  requiredSignatureOrderId?: Maybe<Scalars['BigInt']>;
-  requiredSignatures?: Maybe<RequiredSignaturesChanged>;
-  signatures?: Maybe<SignedForUserRequestPage>;
-  to: Scalars['String'];
-  transaction?: Maybe<Transaction>;
-  transactionHash: Scalars['String'];
+  signatures?: Maybe<SignaturePage>;
+  validatorContract?: Maybe<ValidatorContract>;
+  validatorContractAddress: Scalars['String'];
+  validatorId: Scalars['String'];
+  validatorStatusUpdates?: Maybe<ValidatorStatusUpdatePage>;
 };
 
 
-export type UserRequestForSignatureSignaturesArgs = {
+export type ValidatorSignaturesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignedForUserRequestFilter>;
+  where?: InputMaybe<SignatureFilter>;
 };
 
-export type UserRequestForSignatureFilter = {
-  AND?: InputMaybe<Array<InputMaybe<UserRequestForSignatureFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<UserRequestForSignatureFilter>>>;
-  amount?: InputMaybe<Scalars['BigInt']>;
-  amount_gt?: InputMaybe<Scalars['BigInt']>;
-  amount_gte?: InputMaybe<Scalars['BigInt']>;
-  amount_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  amount_lt?: InputMaybe<Scalars['BigInt']>;
-  amount_lte?: InputMaybe<Scalars['BigInt']>;
-  amount_not?: InputMaybe<Scalars['BigInt']>;
-  amount_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  blockHash?: InputMaybe<Scalars['String']>;
-  blockHash_contains?: InputMaybe<Scalars['String']>;
-  blockHash_ends_with?: InputMaybe<Scalars['String']>;
-  blockHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  blockHash_not?: InputMaybe<Scalars['String']>;
-  blockHash_not_contains?: InputMaybe<Scalars['String']>;
-  blockHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  blockHash_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress?: InputMaybe<Scalars['String']>;
-  bridgeAddress_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
-  chainId?: InputMaybe<Scalars['BigInt']>;
-  chainId_gt?: InputMaybe<Scalars['BigInt']>;
-  chainId_gte?: InputMaybe<Scalars['BigInt']>;
-  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  chainId_lt?: InputMaybe<Scalars['BigInt']>;
-  chainId_lte?: InputMaybe<Scalars['BigInt']>;
-  chainId_not?: InputMaybe<Scalars['BigInt']>;
-  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  confirmedSignatures?: InputMaybe<Scalars['BigInt']>;
-  confirmedSignatures_gt?: InputMaybe<Scalars['BigInt']>;
-  confirmedSignatures_gte?: InputMaybe<Scalars['BigInt']>;
-  confirmedSignatures_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  confirmedSignatures_lt?: InputMaybe<Scalars['BigInt']>;
-  confirmedSignatures_lte?: InputMaybe<Scalars['BigInt']>;
-  confirmedSignatures_not?: InputMaybe<Scalars['BigInt']>;
-  confirmedSignatures_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  deliveringNative?: InputMaybe<Scalars['Boolean']>;
-  deliveringNative_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
-  deliveringNative_not?: InputMaybe<Scalars['Boolean']>;
-  deliveringNative_not_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
-  destinationTokenAddress?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAddress_not?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_not_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAddress_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAmbAddress_not?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationTokenAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
-  destinationTokenChainId?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_gt?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_gte?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  destinationTokenChainId_lt?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_lte?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_not?: InputMaybe<Scalars['BigInt']>;
-  destinationTokenChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  encodedData?: InputMaybe<Scalars['String']>;
-  encodedData_contains?: InputMaybe<Scalars['String']>;
-  encodedData_ends_with?: InputMaybe<Scalars['String']>;
-  encodedData_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  encodedData_not?: InputMaybe<Scalars['String']>;
-  encodedData_not_contains?: InputMaybe<Scalars['String']>;
-  encodedData_not_ends_with?: InputMaybe<Scalars['String']>;
-  encodedData_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  encodedData_not_starts_with?: InputMaybe<Scalars['String']>;
-  encodedData_starts_with?: InputMaybe<Scalars['String']>;
-  finishedSigning?: InputMaybe<Scalars['Boolean']>;
-  finishedSigning_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
-  finishedSigning_not?: InputMaybe<Scalars['Boolean']>;
-  finishedSigning_not_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
-  from?: InputMaybe<Scalars['String']>;
-  from_contains?: InputMaybe<Scalars['String']>;
-  from_ends_with?: InputMaybe<Scalars['String']>;
-  from_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  from_not?: InputMaybe<Scalars['String']>;
-  from_not_contains?: InputMaybe<Scalars['String']>;
-  from_not_ends_with?: InputMaybe<Scalars['String']>;
-  from_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  from_not_starts_with?: InputMaybe<Scalars['String']>;
-  from_starts_with?: InputMaybe<Scalars['String']>;
-  handlingNative?: InputMaybe<Scalars['Boolean']>;
-  handlingNative_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
-  handlingNative_not?: InputMaybe<Scalars['Boolean']>;
-  handlingNative_not_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
-  logIndex?: InputMaybe<Scalars['Float']>;
-  logIndex_gt?: InputMaybe<Scalars['Float']>;
-  logIndex_gte?: InputMaybe<Scalars['Float']>;
-  logIndex_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
-  logIndex_lt?: InputMaybe<Scalars['Float']>;
-  logIndex_lte?: InputMaybe<Scalars['Float']>;
-  logIndex_not?: InputMaybe<Scalars['Float']>;
-  logIndex_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
-  messageHash?: InputMaybe<Scalars['String']>;
-  messageHash_contains?: InputMaybe<Scalars['String']>;
-  messageHash_ends_with?: InputMaybe<Scalars['String']>;
-  messageHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageHash_not?: InputMaybe<Scalars['String']>;
-  messageHash_not_contains?: InputMaybe<Scalars['String']>;
-  messageHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  messageHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  messageHash_starts_with?: InputMaybe<Scalars['String']>;
-  messageId?: InputMaybe<Scalars['String']>;
-  messageId_contains?: InputMaybe<Scalars['String']>;
-  messageId_ends_with?: InputMaybe<Scalars['String']>;
-  messageId_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageId_not?: InputMaybe<Scalars['String']>;
-  messageId_not_contains?: InputMaybe<Scalars['String']>;
-  messageId_not_ends_with?: InputMaybe<Scalars['String']>;
-  messageId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageId_not_starts_with?: InputMaybe<Scalars['String']>;
-  messageId_starts_with?: InputMaybe<Scalars['String']>;
-  orderId?: InputMaybe<Scalars['BigInt']>;
-  orderId_gt?: InputMaybe<Scalars['BigInt']>;
-  orderId_gte?: InputMaybe<Scalars['BigInt']>;
-  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  orderId_lt?: InputMaybe<Scalars['BigInt']>;
-  orderId_lte?: InputMaybe<Scalars['BigInt']>;
-  orderId_not?: InputMaybe<Scalars['BigInt']>;
-  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  originationTokenAddress?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAddress_not?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_not_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenAddress_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAmbAddress_not?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_contains?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  originationTokenAmbAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenAmbAddress_starts_with?: InputMaybe<Scalars['String']>;
-  originationTokenChainId?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_gt?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_gte?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  originationTokenChainId_lt?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_lte?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_not?: InputMaybe<Scalars['BigInt']>;
-  originationTokenChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  requiredSignatureOrderId?: InputMaybe<Scalars['BigInt']>;
-  requiredSignatureOrderId_gt?: InputMaybe<Scalars['BigInt']>;
-  requiredSignatureOrderId_gte?: InputMaybe<Scalars['BigInt']>;
-  requiredSignatureOrderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  requiredSignatureOrderId_lt?: InputMaybe<Scalars['BigInt']>;
-  requiredSignatureOrderId_lte?: InputMaybe<Scalars['BigInt']>;
-  requiredSignatureOrderId_not?: InputMaybe<Scalars['BigInt']>;
-  requiredSignatureOrderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  to?: InputMaybe<Scalars['String']>;
-  to_contains?: InputMaybe<Scalars['String']>;
-  to_ends_with?: InputMaybe<Scalars['String']>;
-  to_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  to_not?: InputMaybe<Scalars['String']>;
-  to_not_contains?: InputMaybe<Scalars['String']>;
-  to_not_ends_with?: InputMaybe<Scalars['String']>;
-  to_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  to_not_starts_with?: InputMaybe<Scalars['String']>;
-  to_starts_with?: InputMaybe<Scalars['String']>;
-  transactionHash?: InputMaybe<Scalars['String']>;
-  transactionHash_contains?: InputMaybe<Scalars['String']>;
-  transactionHash_ends_with?: InputMaybe<Scalars['String']>;
-  transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  transactionHash_not?: InputMaybe<Scalars['String']>;
-  transactionHash_not_contains?: InputMaybe<Scalars['String']>;
-  transactionHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  transactionHash_starts_with?: InputMaybe<Scalars['String']>;
+
+export type ValidatorValidatorStatusUpdatesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<ValidatorStatusUpdateFilter>;
 };
 
-export type UserRequestForSignaturePage = {
-  __typename?: 'UserRequestForSignaturePage';
-  items: Array<UserRequestForSignature>;
-  pageInfo: PageInfo;
-  totalCount: Scalars['Int'];
-};
-
-export type ValidatorStatusUpdate = {
-  __typename?: 'ValidatorStatusUpdate';
-  block?: Maybe<Block>;
-  blockHash: Scalars['String'];
-  bridge?: Maybe<BridgeSide>;
-  bridgeAddress: Scalars['String'];
-  chainId: Scalars['BigInt'];
-  logIndex: Scalars['Float'];
-  orderId: Scalars['BigInt'];
-  transaction?: Maybe<Transaction>;
-  transactionHash: Scalars['String'];
-  validatorAddress: Scalars['String'];
-  value: Scalars['Boolean'];
-};
-
-export type ValidatorStatusUpdateFilter = {
-  AND?: InputMaybe<Array<InputMaybe<ValidatorStatusUpdateFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<ValidatorStatusUpdateFilter>>>;
-  blockHash?: InputMaybe<Scalars['String']>;
-  blockHash_contains?: InputMaybe<Scalars['String']>;
-  blockHash_ends_with?: InputMaybe<Scalars['String']>;
-  blockHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  blockHash_not?: InputMaybe<Scalars['String']>;
-  blockHash_not_contains?: InputMaybe<Scalars['String']>;
-  blockHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  blockHash_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress?: InputMaybe<Scalars['String']>;
-  bridgeAddress_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  bridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  bridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
-  chainId?: InputMaybe<Scalars['BigInt']>;
-  chainId_gt?: InputMaybe<Scalars['BigInt']>;
-  chainId_gte?: InputMaybe<Scalars['BigInt']>;
-  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  chainId_lt?: InputMaybe<Scalars['BigInt']>;
-  chainId_lte?: InputMaybe<Scalars['BigInt']>;
-  chainId_not?: InputMaybe<Scalars['BigInt']>;
-  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  logIndex?: InputMaybe<Scalars['Float']>;
-  logIndex_gt?: InputMaybe<Scalars['Float']>;
-  logIndex_gte?: InputMaybe<Scalars['Float']>;
-  logIndex_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
-  logIndex_lt?: InputMaybe<Scalars['Float']>;
-  logIndex_lte?: InputMaybe<Scalars['Float']>;
-  logIndex_not?: InputMaybe<Scalars['Float']>;
-  logIndex_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
-  orderId?: InputMaybe<Scalars['BigInt']>;
-  orderId_gt?: InputMaybe<Scalars['BigInt']>;
-  orderId_gte?: InputMaybe<Scalars['BigInt']>;
-  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  orderId_lt?: InputMaybe<Scalars['BigInt']>;
-  orderId_lte?: InputMaybe<Scalars['BigInt']>;
-  orderId_not?: InputMaybe<Scalars['BigInt']>;
-  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  transactionHash?: InputMaybe<Scalars['String']>;
-  transactionHash_contains?: InputMaybe<Scalars['String']>;
-  transactionHash_ends_with?: InputMaybe<Scalars['String']>;
-  transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  transactionHash_not?: InputMaybe<Scalars['String']>;
-  transactionHash_not_contains?: InputMaybe<Scalars['String']>;
-  transactionHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  transactionHash_starts_with?: InputMaybe<Scalars['String']>;
-  validatorAddress?: InputMaybe<Scalars['String']>;
-  validatorAddress_contains?: InputMaybe<Scalars['String']>;
-  validatorAddress_ends_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  validatorAddress_not?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_contains?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  validatorAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  validatorAddress_starts_with?: InputMaybe<Scalars['String']>;
-  value?: InputMaybe<Scalars['Boolean']>;
-  value_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
-  value_not?: InputMaybe<Scalars['Boolean']>;
-  value_not_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
-};
-
-export type ValidatorStatusUpdatePage = {
-  __typename?: 'ValidatorStatusUpdatePage';
-  items: Array<ValidatorStatusUpdate>;
-  pageInfo: PageInfo;
-  totalCount: Scalars['Int'];
-};
-
-export type InternalTokenReverseLookup = {
-  __typename?: 'internalTokenReverseLookup';
+export type ValidatorContract = {
+  __typename?: 'ValidatorContract';
   address: Scalars['String'];
   chainId: Scalars['BigInt'];
-  destination?: Maybe<Token>;
-  destinationAddress: Scalars['String'];
-  destinationChainId: Scalars['BigInt'];
-  omnibridgeAddress: Scalars['String'];
+  latestRequiredSignaturesOrderId: Scalars['BigInt'];
+  requiredSiganturesChangedEvents?: Maybe<RequiredSignaturesChangedPage>;
+  requiredSignaturesChanged?: Maybe<RequiredSignaturesChanged>;
+  validators?: Maybe<ValidatorPage>;
 };
 
-export type InternalTokenReverseLookupFilter = {
-  AND?: InputMaybe<Array<InputMaybe<InternalTokenReverseLookupFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<InternalTokenReverseLookupFilter>>>;
+
+export type ValidatorContractRequiredSiganturesChangedEventsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<RequiredSignaturesChangedFilter>;
+};
+
+
+export type ValidatorContractValidatorsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<ValidatorFilter>;
+};
+
+export type ValidatorContractFilter = {
+  AND?: InputMaybe<Array<InputMaybe<ValidatorContractFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<ValidatorContractFilter>>>;
   address?: InputMaybe<Scalars['String']>;
   address_contains?: InputMaybe<Scalars['String']>;
   address_ends_with?: InputMaybe<Scalars['String']>;
@@ -2350,39 +2026,187 @@ export type InternalTokenReverseLookupFilter = {
   chainId_lte?: InputMaybe<Scalars['BigInt']>;
   chainId_not?: InputMaybe<Scalars['BigInt']>;
   chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  destinationAddress?: InputMaybe<Scalars['String']>;
-  destinationAddress_contains?: InputMaybe<Scalars['String']>;
-  destinationAddress_ends_with?: InputMaybe<Scalars['String']>;
-  destinationAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationAddress_not?: InputMaybe<Scalars['String']>;
-  destinationAddress_not_contains?: InputMaybe<Scalars['String']>;
-  destinationAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  destinationAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  destinationAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  destinationAddress_starts_with?: InputMaybe<Scalars['String']>;
-  destinationChainId?: InputMaybe<Scalars['BigInt']>;
-  destinationChainId_gt?: InputMaybe<Scalars['BigInt']>;
-  destinationChainId_gte?: InputMaybe<Scalars['BigInt']>;
-  destinationChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  destinationChainId_lt?: InputMaybe<Scalars['BigInt']>;
-  destinationChainId_lte?: InputMaybe<Scalars['BigInt']>;
-  destinationChainId_not?: InputMaybe<Scalars['BigInt']>;
-  destinationChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  omnibridgeAddress?: InputMaybe<Scalars['String']>;
-  omnibridgeAddress_contains?: InputMaybe<Scalars['String']>;
-  omnibridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
-  omnibridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  omnibridgeAddress_not?: InputMaybe<Scalars['String']>;
-  omnibridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
-  omnibridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
-  omnibridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  omnibridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
-  omnibridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
+  latestRequiredSignaturesOrderId?: InputMaybe<Scalars['BigInt']>;
+  latestRequiredSignaturesOrderId_gt?: InputMaybe<Scalars['BigInt']>;
+  latestRequiredSignaturesOrderId_gte?: InputMaybe<Scalars['BigInt']>;
+  latestRequiredSignaturesOrderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  latestRequiredSignaturesOrderId_lt?: InputMaybe<Scalars['BigInt']>;
+  latestRequiredSignaturesOrderId_lte?: InputMaybe<Scalars['BigInt']>;
+  latestRequiredSignaturesOrderId_not?: InputMaybe<Scalars['BigInt']>;
+  latestRequiredSignaturesOrderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
 };
 
-export type InternalTokenReverseLookupPage = {
-  __typename?: 'internalTokenReverseLookupPage';
-  items: Array<InternalTokenReverseLookup>;
+export type ValidatorContractPage = {
+  __typename?: 'ValidatorContractPage';
+  items: Array<ValidatorContract>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int'];
+};
+
+export type ValidatorFilter = {
+  AND?: InputMaybe<Array<InputMaybe<ValidatorFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<ValidatorFilter>>>;
+  address?: InputMaybe<Scalars['String']>;
+  address_contains?: InputMaybe<Scalars['String']>;
+  address_ends_with?: InputMaybe<Scalars['String']>;
+  address_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  address_not?: InputMaybe<Scalars['String']>;
+  address_not_contains?: InputMaybe<Scalars['String']>;
+  address_not_ends_with?: InputMaybe<Scalars['String']>;
+  address_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  address_not_starts_with?: InputMaybe<Scalars['String']>;
+  address_starts_with?: InputMaybe<Scalars['String']>;
+  ambAddress?: InputMaybe<Scalars['String']>;
+  ambAddress_contains?: InputMaybe<Scalars['String']>;
+  ambAddress_ends_with?: InputMaybe<Scalars['String']>;
+  ambAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  ambAddress_not?: InputMaybe<Scalars['String']>;
+  ambAddress_not_contains?: InputMaybe<Scalars['String']>;
+  ambAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  ambAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  ambAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  ambAddress_starts_with?: InputMaybe<Scalars['String']>;
+  chainId?: InputMaybe<Scalars['BigInt']>;
+  chainId_gt?: InputMaybe<Scalars['BigInt']>;
+  chainId_gte?: InputMaybe<Scalars['BigInt']>;
+  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  chainId_lt?: InputMaybe<Scalars['BigInt']>;
+  chainId_lte?: InputMaybe<Scalars['BigInt']>;
+  chainId_not?: InputMaybe<Scalars['BigInt']>;
+  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  validatorContractAddress?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_contains?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_ends_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorContractAddress_not?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_contains?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorContractAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_starts_with?: InputMaybe<Scalars['String']>;
+  validatorId?: InputMaybe<Scalars['String']>;
+  validatorId_contains?: InputMaybe<Scalars['String']>;
+  validatorId_ends_with?: InputMaybe<Scalars['String']>;
+  validatorId_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorId_not?: InputMaybe<Scalars['String']>;
+  validatorId_not_contains?: InputMaybe<Scalars['String']>;
+  validatorId_not_ends_with?: InputMaybe<Scalars['String']>;
+  validatorId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorId_not_starts_with?: InputMaybe<Scalars['String']>;
+  validatorId_starts_with?: InputMaybe<Scalars['String']>;
+};
+
+export type ValidatorPage = {
+  __typename?: 'ValidatorPage';
+  items: Array<Validator>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int'];
+};
+
+export type ValidatorStatusUpdate = {
+  __typename?: 'ValidatorStatusUpdate';
+  ambAddress: Scalars['String'];
+  block?: Maybe<Block>;
+  blockHash: Scalars['String'];
+  bridge?: Maybe<Omnibridge>;
+  chainId: Scalars['BigInt'];
+  logIndex: Scalars['Float'];
+  orderId: Scalars['BigInt'];
+  transaction?: Maybe<Transaction>;
+  transactionHash: Scalars['String'];
+  validator?: Maybe<Validator>;
+  validatorContract?: Maybe<ValidatorContract>;
+  validatorContractAddress: Scalars['String'];
+  validatorId: Scalars['String'];
+  value: Scalars['Boolean'];
+};
+
+export type ValidatorStatusUpdateFilter = {
+  AND?: InputMaybe<Array<InputMaybe<ValidatorStatusUpdateFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<ValidatorStatusUpdateFilter>>>;
+  ambAddress?: InputMaybe<Scalars['String']>;
+  ambAddress_contains?: InputMaybe<Scalars['String']>;
+  ambAddress_ends_with?: InputMaybe<Scalars['String']>;
+  ambAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  ambAddress_not?: InputMaybe<Scalars['String']>;
+  ambAddress_not_contains?: InputMaybe<Scalars['String']>;
+  ambAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  ambAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  ambAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  ambAddress_starts_with?: InputMaybe<Scalars['String']>;
+  blockHash?: InputMaybe<Scalars['String']>;
+  blockHash_contains?: InputMaybe<Scalars['String']>;
+  blockHash_ends_with?: InputMaybe<Scalars['String']>;
+  blockHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  blockHash_not?: InputMaybe<Scalars['String']>;
+  blockHash_not_contains?: InputMaybe<Scalars['String']>;
+  blockHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  blockHash_starts_with?: InputMaybe<Scalars['String']>;
+  chainId?: InputMaybe<Scalars['BigInt']>;
+  chainId_gt?: InputMaybe<Scalars['BigInt']>;
+  chainId_gte?: InputMaybe<Scalars['BigInt']>;
+  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  chainId_lt?: InputMaybe<Scalars['BigInt']>;
+  chainId_lte?: InputMaybe<Scalars['BigInt']>;
+  chainId_not?: InputMaybe<Scalars['BigInt']>;
+  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  logIndex?: InputMaybe<Scalars['Float']>;
+  logIndex_gt?: InputMaybe<Scalars['Float']>;
+  logIndex_gte?: InputMaybe<Scalars['Float']>;
+  logIndex_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
+  logIndex_lt?: InputMaybe<Scalars['Float']>;
+  logIndex_lte?: InputMaybe<Scalars['Float']>;
+  logIndex_not?: InputMaybe<Scalars['Float']>;
+  logIndex_not_in?: InputMaybe<Array<InputMaybe<Scalars['Float']>>>;
+  orderId?: InputMaybe<Scalars['BigInt']>;
+  orderId_gt?: InputMaybe<Scalars['BigInt']>;
+  orderId_gte?: InputMaybe<Scalars['BigInt']>;
+  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  orderId_lt?: InputMaybe<Scalars['BigInt']>;
+  orderId_lte?: InputMaybe<Scalars['BigInt']>;
+  orderId_not?: InputMaybe<Scalars['BigInt']>;
+  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  transactionHash?: InputMaybe<Scalars['String']>;
+  transactionHash_contains?: InputMaybe<Scalars['String']>;
+  transactionHash_ends_with?: InputMaybe<Scalars['String']>;
+  transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  transactionHash_not?: InputMaybe<Scalars['String']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['String']>;
+  transactionHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  transactionHash_starts_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_contains?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_ends_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorContractAddress_not?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_contains?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorContractAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  validatorContractAddress_starts_with?: InputMaybe<Scalars['String']>;
+  validatorId?: InputMaybe<Scalars['String']>;
+  validatorId_contains?: InputMaybe<Scalars['String']>;
+  validatorId_ends_with?: InputMaybe<Scalars['String']>;
+  validatorId_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorId_not?: InputMaybe<Scalars['String']>;
+  validatorId_not_contains?: InputMaybe<Scalars['String']>;
+  validatorId_not_ends_with?: InputMaybe<Scalars['String']>;
+  validatorId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  validatorId_not_starts_with?: InputMaybe<Scalars['String']>;
+  validatorId_starts_with?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['Boolean']>;
+  value_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
+  value_not?: InputMaybe<Scalars['Boolean']>;
+  value_not_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
+};
+
+export type ValidatorStatusUpdatePage = {
+  __typename?: 'ValidatorStatusUpdatePage';
+  items: Array<ValidatorStatusUpdate>;
   pageInfo: PageInfo;
   totalCount: Scalars['Int'];
 };
@@ -2392,11 +2216,11 @@ export type SingleUserRequestQueryVariables = Exact<{
 }>;
 
 
-export type SingleUserRequestQuery = { __typename?: 'Query', userRequestForSignatures: { __typename?: 'UserRequestForSignaturePage', items: Array<{ __typename?: 'UserRequestForSignature', messageId: string, signatures?: { __typename?: 'SignedForUserRequestPage', items: Array<{ __typename?: 'SignedForUserRequest', messageHash: string }> } | null }> } };
+export type SingleUserRequestQuery = { __typename?: 'Query', userRequests: { __typename?: 'UserRequestPage', items: Array<{ __typename?: 'UserRequest', messageId: string, signatures?: { __typename?: 'SignaturePage', items: Array<{ __typename?: 'Signature', messageHash: string }> } | null }> } };
 
 export type SingleExecutionQueryVariables = Exact<{
-  messageId: Scalars['String'];
+  messageHash: Scalars['String'];
 }>;
 
 
-export type SingleExecutionQuery = { __typename?: 'Query', relayedMessages: { __typename?: 'RelayedMessagePage', items: Array<{ __typename?: 'RelayedMessage', transactionHash: string }> } };
+export type SingleExecutionQuery = { __typename?: 'Query', deliverys: { __typename?: 'DeliveryPage', items: Array<{ __typename?: 'Delivery', transactionHash: string }> } };

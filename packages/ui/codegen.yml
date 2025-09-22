@@ -1,5 +1,5 @@
 overwrite: true
-schema: '${PUBLIC_INDEXER:http://localhost:42069}/graphql'
+schema: 'https://staging.indexer.gibs.finance/graphql'
 documents: 'src/**/*.{ts,tsx,js,jsx,svelte}'
 generates:
   src/lib/gql/graphql.ts:

@@ -78,7 +78,7 @@ export const Validator = onchainTable('validator', (t) => ({
 
 export const ValidatorRelations = relations(Validator, (t) => ({
   validatorStatusUpdates: t.many(ValidatorStatusUpdate),
-  signatures: t.many(Signature),
+  signFors: t.many(SignFor),
   validatorContract: t.one(ValidatorContract, {
     fields: [Validator.validatorContractAddress, Validator.chainId],
     references: [ValidatorContract.address, ValidatorContract.chainId],
@@ -98,7 +98,7 @@ export const Block = onchainTable('block', (t) => ({
 export const BlockRelations = relations(Block, (t) => ({
   transactions: t.many(Transaction),
   userRequests: t.many(UserRequest),
-  signatures: t.many(Signature),
+  signFors: t.many(SignFor),
   deliveries: t.many(Delivery),
   completions: t.many(Completion),
   requiredSignaturesChanged: t.many(RequiredSignaturesChanged),
@@ -129,7 +129,7 @@ export const TransactionRelations = relations(Transaction, (t) => ({
     references: [Block.chainId, Block.hash],
   }),
   userRequests: t.many(UserRequest),
-  signatures: t.many(Signature),
+  signFors: t.many(SignFor),
   deliveries: t.many(Delivery),
   completions: t.many(Completion),
   requiredSignaturesChanged: t.many(RequiredSignaturesChanged),
@@ -305,7 +305,7 @@ export const UserRequestRelations = relations(UserRequest, (t) => ({
     fields: [UserRequest.chainId, UserRequest.transactionHash],
     references: [Transaction.chainId, Transaction.hash],
   }),
-  signatures: t.many(Signature),
+  signFors: t.many(SignFor),
   completion: t.one(Completion, {
     fields: [UserRequest.messageHash],
     references: [Completion.messageHash],
@@ -375,7 +375,7 @@ export const ReverseMessageHashBindingRelations = relations(ReverseMessageHashBi
   }),
 }))
 
-export const Signature = onchainTable('signature', (t) => ({
+export const SignFor = onchainTable('sign_for', (t) => ({
   messageHash: t.hex().notNull(),
   ambAddress: t.hex().notNull(),
   validatorId: t.hex().notNull(),
@@ -388,29 +388,29 @@ export const Signature = onchainTable('signature', (t) => ({
   pk: primaryKey({ columns: [table.messageHash, table.chainId, table.validatorId] }),
 }))
 
-export const SignatureRelations = relations(Signature, (t) => ({
+export const SignForRelations = relations(SignFor, (t) => ({
   block: t.one(Block, {
-    fields: [Signature.chainId, Signature.blockHash],
+    fields: [SignFor.chainId, SignFor.blockHash],
     references: [Block.chainId, Block.hash],
   }),
   transaction: t.one(Transaction, {
-    fields: [Signature.chainId, Signature.transactionHash],
+    fields: [SignFor.chainId, SignFor.transactionHash],
     references: [Transaction.chainId, Transaction.hash],
   }),
   validator: t.one(Validator, {
-    fields: [Signature.validatorId],
+    fields: [SignFor.validatorId],
     references: [Validator.validatorId],
   }),
   userRequest: t.one(UserRequest, {
-    fields: [Signature.messageHash],
+    fields: [SignFor.messageHash],
     references: [UserRequest.messageHash],
   }),
   ambBridge: t.one(AMBBridge, {
-    fields: [Signature.chainId, Signature.ambAddress],
+    fields: [SignFor.chainId, SignFor.ambAddress],
     references: [AMBBridge.chainId, AMBBridge.address],
   }),
   completion: t.one(Completion, {
-    fields: [Signature.messageHash],
+    fields: [SignFor.messageHash],
     references: [Completion.messageHash],
   }),
 }))

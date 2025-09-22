@@ -6,7 +6,7 @@
   import Loader from './Loader.svelte'
   import { loadBridgeTransactions, loadRecentBridgeTransactions, type Bridge, type BridgeData, type TokenMetadata } from '../stores/history'
   import { accountState, connect } from '../stores/auth/AuthProvider.svelte'
-  import { getTokenAddressFromBridge } from '../stores/token-metadata-cache.svelte'
+  import { getTokenAddressFromBridge } from '../stores/token-metadata-cache'
   import { uri } from '../stores/toast'
   import { toChain } from '@gibs/bridge-sdk/config'
   import type { Token } from '@gibs/bridge-sdk/types'
@@ -87,9 +87,9 @@
     if (bridge.originationToken?.address && bridge.originationToken?.chainId) {
       originationAddress = bridge.originationToken.address
       originationChainId = Number(bridge.originationToken.chainId)
-    } else if (bridge.originationTokenAddress && bridge.originationTokenChainId) {
+    } else if (bridge.originationTokenAddress && bridge.originationChainId) {
       originationAddress = bridge.originationTokenAddress
-      originationChainId = Number(bridge.originationTokenChainId)
+      originationChainId = Number(bridge.originationChainId)
     }
 
     if (originationAddress && originationChainId) {
@@ -105,9 +105,9 @@
     if (bridge.destinationToken?.address && bridge.destinationToken?.chainId) {
       destinationAddress = bridge.destinationToken.address
       destinationChainId = Number(bridge.destinationToken.chainId)
-    } else if (bridge.destinationTokenAddress && bridge.destinationTokenChainId) {
+    } else if (bridge.destinationTokenAddress && bridge.destinationChainId) {
       destinationAddress = bridge.destinationTokenAddress
-      destinationChainId = Number(bridge.destinationTokenChainId)
+      destinationChainId = Number(bridge.destinationChainId)
     }
 
     if (destinationAddress && destinationChainId) {
@@ -133,8 +133,8 @@
     return Number(
       bridge.originationToken?.chainId ||
       bridge.destinationToken?.chainId ||
-      bridge.originationTokenChainId ||
-      bridge.destinationTokenChainId ||
+      bridge.originationChainId ||
+      bridge.destinationChainId ||
       1
     )
   }
@@ -251,10 +251,10 @@ map out the progress of each bridge and display it to the user
           }
         </p>
       </div>
-    {:else if bridgeData && (bridgeData.signatures.length > 0 || bridgeData.affirmations.length > 0)}
+    {:else if bridgeData && bridgeData.userRequests.length > 0}
       {#snippet mergedTransactions()}
-        <!-- Merge and sort all transactions by orderId -->
-        {@const allTransactions = [...(bridgeData?.signatures || []).map(tx => ({...tx, type: 'signature'})), ...(bridgeData?.affirmations || []).map(tx => ({...tx, type: 'affirmation'}))].sort((a, b) => Number(b.orderId) - Number(a.orderId))}
+        <!-- Use userRequests directly, already sorted by orderId -->
+        {@const allTransactions = bridgeData?.userRequests || []}
 
         <div class="space-y-4">
           <!-- Summary Stats -->
@@ -263,7 +263,6 @@ map out the progress of each bridge and display it to the user
               <div class="w-2 h-2 bg-green-500 rounded-full"></div>
               <span class="text-sm font-medium text-gray-700">
                 {allTransactions.length} transaction{allTransactions.length !== 1 ? 's' : ''} found
-                ({(bridgeData?.signatures || []).length} signatures, {(bridgeData?.affirmations || []).length} affirmations)
               </span>
             </div>
           </div>
@@ -272,9 +271,9 @@ map out the progress of each bridge and display it to the user
           <div class="space-y-2 px-4">
             {#each allTransactions as bridge (bridge.orderId)}
               {@const metadata = getTokenMetadata(bridge, bridgeData?.tokenMetadata)}
-              {@const originChainId = bridge.originationTokenChainId || 'Unknown'}
-              {@const destChainId = bridge.destinationTokenChainId || 'Unknown'}
-              {@const provider = bridge.bridge?.provider || 'Bridge'}
+              {@const originChainId = bridge.originationChainId || 'Unknown'}
+              {@const destChainId = bridge.destinationChainId || 'Unknown'}
+              {@const provider = bridge.originationAMBBridge?.provider || bridge.destinationAMBBridge?.provider || 'Bridge'}
               {@const tokenImage = `https://gib.show/image/${originChainId}/${getTokenAddress(bridge)}`}
               {@const inputToken = createTokenFromBridge(bridge, metadata)}
               <!-- {@const outputToken = createTokenFromBridge(bridge, metadata)} -->

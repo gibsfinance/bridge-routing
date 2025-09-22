@@ -336,11 +336,11 @@ const searchChainsForRpcUrls = (chainId: number) => {
     throw new Error('chainId is required')
   }
   const chain = chainList.find((c) => c.id === chainId)!
-  const { http, webSocket = [] } = chain.rpcUrls.default as unknown as {
+  const { http } = chain.rpcUrls.default as unknown as {
     http?: string[]
-    webSocket?: string[]
+    // webSocket?: string[]
   }
-  return [...(http ?? []), ...(webSocket ?? [])]
+  return [...(http ?? [])]
 }
 
 export const clientFromChain = (chainId: number): PublicClient => {
