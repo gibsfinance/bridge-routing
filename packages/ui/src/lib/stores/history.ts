@@ -26,6 +26,13 @@ export interface TokenMetadata {
 export interface BridgeData {
   userRequests: UserRequest[]
   tokenMetadata: Map<string, TokenMetadata> // Key: chainId:tokenAddress
+  pageInfo?: {
+    hasNextPage: boolean
+    hasPreviousPage: boolean
+    startCursor?: string | null
+    endCursor?: string | null
+  }
+  totalCount?: number
 }
 
 const client = new GraphQLClient(indexer)
@@ -151,23 +158,10 @@ pageInfo {
   endCursor
 }`
 
-// Query to get bridge transactions for a user account
+// Query to get bridge transactions (optionally filtered by user account)
 const GET_BRIDGES_QUERY = gql`
-  query GetBridgesUnderAccount($where: UserRequestFilter) {
-    userRequests(where: $where, limit: 1000, orderBy: "orderId", orderDirection: "desc") {
-      items {
-        ...BridgeCore
-      }
-      ${PAGE_INFO_FRAGMENT}
-    }
-  }
-  ${BRIDGE_CORE_FRAGMENT}
-`
-
-// Query to get recent bridge transactions without requiring an address
-const GET_RECENT_BRIDGES_QUERY = gql`
-  query GetRecentBridges($limit: Int = 50) {
-    userRequests(limit: $limit, orderBy: "orderId", orderDirection: "desc") {
+  query GetBridges($where: UserRequestFilter, $limit: Int = 10, $after: String) {
+    userRequests(where: $where, limit: $limit, after: $after, orderBy: "orderId", orderDirection: "desc") {
       items {
         ...BridgeCore
       }
@@ -184,7 +178,9 @@ const connectedAddress = (accountState: UseAppKitAccountReturn): string | undefi
 
 // Type for the query variables
 interface GetBridgesQueryVariables {
-  where: UserRequestFilter
+  where?: UserRequestFilter
+  limit?: number
+  after?: string
 }
 
 // Type for the query result
@@ -199,11 +195,6 @@ interface GetBridgesQueryResult {
     }
     totalCount: number
   }
-}
-
-// Type for recent bridges query variables
-interface GetRecentBridgesQueryVariables {
-  limit?: number
 }
 
 /**
@@ -284,31 +275,37 @@ async function loadTokenMetadata(bridges: Bridge[]): Promise<Map<string, TokenMe
   return tokenMetadata
 }
 
+export type LoadBridgesParams = {
+  address: Hex | null | undefined
+  limit?: number
+  after?: string
+}
+
 /**
- * Reactive store that loads bridge transactions for the connected account (returns separate data)
- * @param account - The connected wallet account address
- * @returns A loading store containing bridge transactions separated by type
+ * Reactive store that loads bridge transactions with optional filtering and pagination
+ * @param params - Parameters including address (optional), limit, and cursor for pagination
+ * @returns A loading store containing bridge transactions with pagination info
  */
-export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, string | null | undefined>(
+export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, LoadBridgesParams>(
   'bridges',
   async (
-    account: Hex | null | undefined,
+    params: LoadBridgesParams,
     controller: AbortController
   ): Promise<BridgeData | null> => {
-    if (!account) {
-      return null
-    }
+    const { address, limit = 10, after } = params || {}
 
-    // Create filter for user requests
-    const filter: UserRequestFilter = {
+    // Create filter for user requests if address is provided
+    const filter: UserRequestFilter | undefined = address ? {
       OR: [
-        { from: account },
-        { to: account }
+        { from: address as Hex },
+        { to: address as Hex }
       ]
-    }
+    } : undefined
 
     const variables: GetBridgesQueryVariables = {
-      where: filter
+      where: filter,
+      limit,
+      after
     }
 
     try {
@@ -325,62 +322,16 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
       // Load token metadata for all bridges
       const tokenMetadata = await loadTokenMetadata(sortedUserRequests)
 
-      // Return unified array with metadata
+      // Return unified array with metadata and pagination info
       return {
         userRequests: sortedUserRequests,
-        tokenMetadata
+        tokenMetadata,
+        pageInfo: data.userRequests.pageInfo,
+        totalCount: data.userRequests.totalCount
       }
 
     } catch (error) {
       console.error('Failed to fetch bridge transactions:', error)
-
-      // Check if the request was aborted before throwing
-      if (controller.signal.aborted) {
-        return null
-      }
-
-      throw error
-    }
-  }
-)
-
-/**
- * Reactive store that loads recent bridge transactions without requiring an account
- * @returns A loading store containing recent bridge transactions separated by type
- */
-export const loadRecentBridgeTransactions = loading.loadsAfterTick<BridgeData | null, number | undefined>(
-  'recent-bridges',
-  async (
-    limit: number = 100,
-    controller: AbortController
-  ): Promise<BridgeData | null> => {
-    const variables: GetRecentBridgesQueryVariables = {
-      limit
-    }
-
-    try {
-      const data = await client.request<GetBridgesQueryResult>(GET_RECENT_BRIDGES_QUERY, variables)
-
-      // Check if the request was aborted
-      if (controller.signal.aborted) {
-        return null
-      }
-
-      // Sort the array
-      const sortedUserRequests = sortBy(data.userRequests.items, [(bridge) => -BigInt(bridge.orderId)])
-
-      // Load token metadata for all bridges
-      const tokenMetadata = await loadTokenMetadata(sortedUserRequests)
-
-      console.log(tokenMetadata)
-      // Return unified array with metadata
-      return {
-        userRequests: sortedUserRequests,
-        tokenMetadata
-      }
-
-    } catch (error) {
-      console.error('Failed to fetch recent bridge transactions:', error)
 
       // Check if the request was aborted before throwing
       if (controller.signal.aborted) {

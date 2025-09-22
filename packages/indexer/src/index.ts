@@ -11,10 +11,12 @@ import {
   SignFor,
   ValidatorStatusUpdate,
   LatestValidatorStatusUpdate,
+  FeeUpdate,
+  LatestFeeUpdate,
 } from 'ponder:schema'
 import { decodeFunctionData, parseAbi, type Hex } from 'viem'
 import { parseAMBMessage } from './message'
-import { getInfoBy, createOrderId } from './utils'
+import { getInfoBy, createOrderId, MinimalInfo, ChainId } from './utils'
 import {
   getLatestRequiredSignatures,
   upsertOmniBridge,
@@ -24,6 +26,7 @@ import {
   upsertAmbBridge,
   upsertValidator,
   toValidatorId,
+  getLatestFeeUpdate,
 } from './cache'
 
 ponder.on('ValidatorContract:ValidatorAdded', async ({ event, context }) => {
@@ -285,6 +288,20 @@ const loadToken = async (inputs: {
 //   return _.isString(symbolResult.result) && _.isString(nameResult.result) && _.isNumber(decimalsResult.result)
 // }
 
+// const computeAmounts = ({ info, parsed, event }: {
+//   info: MinimalInfo,
+//   parsed: ReturnType<typeof parseAMBMessage>,
+//   event: Event<'ForeignAMB:UserRequestForAffirmation' | 'HomeAMB:UserRequestForSignature'>,
+// }) => {
+//   const amountInEvent = parsed.nestedData.amount
+//   const amountIn = info.side === 'home' ?  : parsed.nestedData.amount
+//   const amountOut = info.side === 'home' ? parsed.nestedData.amount : null
+//   return {
+//     amountIn,
+//     amountOut,
+//   }
+// }
+
 const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event, context }: {
   event: Event<'ForeignAMB:UserRequestForAffirmation' | 'HomeAMB:UserRequestForSignature'>,
   context: Context,
@@ -316,9 +333,11 @@ const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event,
       })
       : null,
     upsertAmbBridge(context, info.target.amb).then(async () => {
-      return await getLatestRequiredSignatures(context, info.target.amb)
+      return await Promise.all([
+        getLatestRequiredSignatures(context, info.target.amb),
+      ])
     })
-      .then(async (requiredSignatures) => {
+      .then(async ([requiredSignatures]) => {
         return context.db.insert(UserRequest).values({
           type: type,
           messageId: event.args.messageId,
@@ -329,7 +348,6 @@ const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event,
           messageHash: parsed.messageHash,
           from: parsed.from.toLowerCase() as Hex,
           to: parsed.to.toLowerCase() as Hex,
-          amount: parsed.nestedData.amount,
           encodedData: event.args.encodedData,
           logIndex: event.log.logIndex,
           originationChainId: parsed.originationChainId,
@@ -338,6 +356,8 @@ const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event,
           destinationAmbAddress: parsed.executor,
           originationOmnibridgeAddress: info.target.omni.toLowerCase() as Hex,
           destinationOmnibridgeAddress: info.partner.omni.toLowerCase() as Hex,
+          amountIn: info.side === 'foreign' ? parsed.nestedData.amount : null,
+          amountOut: info.side === 'home' ? parsed.nestedData.amount : null,
           originationTokenAddress: null,
           destinationTokenAddress: null,
           requiredSignatureOrderId: requiredSignatures.orderId,
@@ -346,6 +366,7 @@ const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event,
           handlingNative: parsed.handlingNative,
           deliveringNative: parsed.deliveringNative,
           signatures: type === 'signature' ? [] : null,
+          feeUpdateOrderId: null,
         })
       }),
   ])
@@ -615,6 +636,78 @@ ponder.on('BasicOmnibridge:TokensBridgingInitiated', async ({ event, context }) 
       orderId,
       ambAddress: await info.target.amb,
       omnibridgeAddress: info.target.omni.toLowerCase() as Hex,
+    }),
+  ])
+})
+
+ponder.on('FeeManager:FeeUpdated', async ({ event, context }) => {
+  const info = await getInfoBy({ key: 'feeManager', address: event.log.address, chainId: context.chain.id })
+  if (!info) {
+    throw new Error(`No bridge info found for address ${event.log.address}`)
+  }
+  const orderId = createOrderId(context, event)
+  await Promise.all([
+    upsertBlock(context, event.block),
+    upsertTransaction(context, event.block, event.transaction),
+    context.db.insert(LatestFeeUpdate).values({
+      chainId: BigInt(context.chain.id),
+      feeManagerContractAddress: event.log.address,
+      tokenAddress: event.args.token,
+      orderId,
+      feeType: event.args.feeType,
+    }).onConflictDoUpdate(() => ({
+      orderId,
+    })),
+    context.db.insert(FeeUpdate).values({
+      orderId,
+      chainId: BigInt(context.chain.id),
+      transactionHash: event.transaction.hash,
+      blockHash: event.block.hash,
+      feeType: event.args.feeType,
+      feeManagerContractAddress: event.log.address,
+      tokenAddress: event.args.token,
+      fee: event.args.fee,
+    })
+  ])
+})
+
+ponder.on('BasicOmnibridge:FeeDistributed', async ({ event, context }) => {
+  const reverseLookup = await context.db.find(ReverseMessageHashBinding, {
+    messageId: event.args.messageId,
+  })
+  const userRequest = await context.db.find(UserRequest, {
+    messageHash: reverseLookup!.messageHash,
+  })
+  const originationInfo = await getInfoBy({
+    key: 'omni',
+    address: userRequest!.originationOmnibridgeAddress!,
+    chainId: Number(userRequest!.originationChainId!) as ChainId,
+  })
+  const fee = event.args.fee
+  const originationFromHome = originationInfo.side === 'home'
+  const userRequestUpdates = originationInfo.side === 'home' ? {
+    // amount in was always more than amount out
+    amountIn: userRequest!.amountOut! + fee,
+  } : {
+    // amount out is always less than amount in
+    amountOut: userRequest!.amountIn! - fee,
+  }
+  const feeUpdate = await getLatestFeeUpdate({
+    context,
+    feeManagerContractAddress: event.log.address,
+    tokenAddress: event.args.token,
+    originationFromHome,
+  })
+  await Promise.all([
+    upsertBlock(context, event.block),
+    upsertTransaction(context, event.block, event.transaction),
+    context.db.update(UserRequest, {
+      messageHash: userRequest!.messageHash,
+    }).set({
+      ...userRequestUpdates,
+      feeUpdateOrderId: feeUpdate.orderId,
+      feeManagerContractChainId: feeUpdate.chainId ? BigInt(feeUpdate.chainId) : null,
+      feeManagerContractAddress: feeUpdate.feeManagerContractAddress,
     }),
   ])
 })

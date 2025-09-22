@@ -25,7 +25,7 @@
 
 <div class="flex flex-row">
   <ModalWrapper
-    triggerClasses="border-2 rounded-full h-8 w-8 mr-2 flex justify-center items-center hover:text-slate-500">
+    triggerClasses="border-2 border-slate-800 dark:border-slate-200 rounded-full h-8 w-8 mr-2 flex justify-center items-center hover:text-slate-500">
     {#snippet button()}
       <Icon icon="entypo:info" />
     {/snippet}
@@ -40,7 +40,7 @@
     target="_blank"
     class="mr-2">
     <Button
-      class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
+      class="border-2 border-slate-800 dark:border-slate-200 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="fe:github-alt" height="1.5em" width="1.5em" />
     </Button>
   </a>
@@ -50,13 +50,13 @@
     target="_blank"
     class="mr-2">
     <Button
-      class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
+      class="border-2 border-slate-800 dark:border-slate-200 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon {icon} height="1.5em" width="1.5em" />
     </Button>
   </a>
   <a aria-label="x.com profile" href="https://x.com/gibsfinance" target="_blank" class="mr-2">
     <Button
-      class="border-2 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
+      class="border-2 border-slate-800 dark:border-slate-200 rounded-full h-8 w-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="mingcute:social-x-line" height="1.25em" width="1.25em" />
     </Button>
   </a>
@@ -66,17 +66,17 @@
     class="mr-2"
     aria-label="a link to the telegram channel">
     <Button
-      class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500">
+      class="border-2 border-slate-800 dark:border-slate-200 rounded-full size-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="line-md:telegram" height="1.25em" width="1.25em" />
     </Button>
   </a>
   <a href={`#${page.value}?mode=simple`} target="_blank" class="mr-2" aria-label="embed page">
     <Button
-      class="border-2 rounded-full size-8 flex justify-center items-center text-white hover:text-slate-500">
+      class="border-2 border-slate-800 dark:border-slate-200 rounded-full size-8 flex justify-center items-center hover:text-slate-500">
       <Icon icon="icomoon-free:embed" />
     </Button>
   </a>
-  <!-- <Button class="border-2 rounded-full size-8 flex justify-center items-center hover:text-slate-500" onclick={() => {
+  <!-- <Button class="border-2 border-slate-800 dark:border-slate-200 rounded-full size-8 flex justify-center items-center hover:text-slate-500" onclick={() => {
     toasts.confirmed('abc')
   }}>
     <Icon icon="material-symbols:toast-outline" height="1.25em" width="1.25em" />

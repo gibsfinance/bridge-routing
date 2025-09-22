@@ -5,6 +5,8 @@ import {
   getAddress,
   getContract,
   http,
+  keccak256,
+  stringToHex,
   webSocket,
   type Hex,
 } from 'viem'
@@ -133,6 +135,7 @@ export type PathPairing = {
   omni: Hex
   amb: Promise<Hex>
   validator: Promise<Hex>
+  feeManager: null | Promise<Hex>
 }
 
 export type MinimalInfo = {
@@ -168,11 +171,13 @@ Object.entries(pathways).forEach(([provider, entries]) => {
           transport: toTransport(common.foreignChainId),
         })
         // fetch the amb contract that the omni contract points to
-        const homeAmb = getContract({
+        const homeOmniContract = getContract({
           address: info.home,
           abi: BasicOmnibridge,
           client: homeClient,
-        }).read.bridgeContract().then(normalize)
+        })
+        const homeAmb = homeOmniContract.read.bridgeContract().then(normalize)
+        const homeFeeManager = homeOmniContract.read.feeManager().then(normalize)
         const foreignAmb = getContract({
           address: info.foreign,
           abi: BasicOmnibridge,
@@ -188,9 +193,13 @@ Object.entries(pathways).forEach(([provider, entries]) => {
           abi: HomeAMBAbi,
           client: foreignClient,
         }).read.validatorContract()).then(normalize)
-        Promise.all([homeValidator, foreignValidator, homeAmb, foreignAmb]).then(([homeValidator, foreignValidator, homeAmb, foreignAmb]) => {
-          console.log('omni=%o amb=%o validator=%o side=%o', info.home, homeAmb, homeValidator, 'home')
-          console.log('omni=%o amb=%o validator=%o side=%o', info.foreign, foreignAmb, foreignValidator, 'foreign')
+        Promise.all([homeValidator, foreignValidator, homeAmb, foreignAmb, homeFeeManager]).then(([homeValidator, foreignValidator, homeAmb, foreignAmb, homeFeeManager]) => {
+          console.log('pair=%o side=%o', info.pair, 'home')
+          console.log('  amb=%o validator=%o', homeAmb, homeValidator)
+          console.log('  omni=%o fee_manager=%o', info.home, homeFeeManager)
+          console.log('pair=%o side=%o', info.pair, 'foreign')
+          console.log('  amb=%o validator=%o', foreignAmb, foreignValidator)
+          console.log('  omni=%o', info.foreign)
         }).catch((err) => {
           console.log(err)
           throw err
@@ -200,12 +209,14 @@ Object.entries(pathways).forEach(([provider, entries]) => {
           omni: normalize(info.home),
           amb: homeAmb,
           validator: homeValidator,
+          feeManager: homeFeeManager,
         }
         const foreign = {
           chainId: common.foreignChainId,
           omni: normalize(info.foreign),
           amb: foreignAmb,
           validator: foreignValidator,
+          feeManager: null,
         }
         minimalEntries.push(
           [
@@ -250,12 +261,14 @@ export const createOrderId = (context: Context, event: Event): bigint => {
   return (timestamp << 32n) | (txIndex << 16n) | (logIndex << 8n) | chainId
 }
 
+export type InfoSelectionOption = 'omni' | 'amb' | 'validator' | 'feeManager'
+
 export type ContractsAccessInputs = {
   provider: Provider,
   from: ChainId,
   to: ChainId,
   side: Side,
-  type: 'validator' | 'amb' | 'omni',
+  type: InfoSelectionOption,
 }
 
 export const accessContract = async (i: ContractsAccessInputs & {
@@ -273,15 +286,19 @@ export const accessContract = async (i: ContractsAccessInputs & {
 }
 
 export const accessContracts = async (i: ContractsAccessInputs) => {
-  return await Promise.all(pathways[i.provider]![i.from]![i.to]!.map((_p, index) => (
+  const results = await Promise.all(pathways[i.provider]![i.from]![i.to]!.map((_p, index) => (
     accessContract({
       ...i,
       index,
     })
   )))
+  return _(results).map((r) => {
+    if (!r) {
+      console.log('no result for provider=%o from=%o to=%o side=%o type=%o', i.provider, i.from, i.to, i.side, i.type)
+    }
+    return r
+  }).compact().value()
 }
-
-type InfoSelectionOption = 'omni' | 'amb' | 'validator'
 
 export const getInfoBy = _.memoize(async ({ key, address, chainId }: {
   key: InfoSelectionOption,
@@ -290,28 +307,15 @@ export const getInfoBy = _.memoize(async ({ key, address, chainId }: {
 }) => {
   for (const info of minimalInfo.values()) {
     // console.log('key=%o info=%o', key, await info.target[key])
-    if ((await info.target[key])!.toLowerCase() === address.toLowerCase() && info.target.chainId === chainId) {
+    if ((await info.target[key])?.toLowerCase() === address.toLowerCase() && info.target.chainId === chainId) {
       // return the amb value from the target
       return info
     }
   }
   throw new Error('No key found')
 })
-// export const getOmniFromAmb = _.memoize(async (chainId: ChainId, ambAddress: Hex) => {
-//   const entries = [...minimalInfo.entries()]
-//   for (const [key, info] of entries) {
-//     const ambContract = await info.target.amb
-//     if (info.target.chainId === chainId && getAddress(ambContract) === getAddress(ambAddress)) {
-//       // return the amb value from the target
-//       return info.target.omni
-//     }
-//   }
-//   throw new Error('No key found')
-// })
 
-// export const bridgeInfo = _.memoize((chainId: ChainId, omnibridgeAddress: Hex) => {
-//   return [...minimalInfo.values()].find((info) => {
-//     return info.target.chainId === chainId
-//       && getAddress(info.target.omni) === getAddress(omnibridgeAddress)
-//   })
-// }, (chainId, omnibridgeAddress) => `${chainId}-${omnibridgeAddress}`.toLowerCase())
+export const HOME_TO_FOREIGN_FEE = keccak256(stringToHex("homeToForeignFee"))
+export const FOREIGN_TO_HOME_FEE = keccak256(stringToHex("foreignToHomeFee"))
+
+console.log('fee keys h2f=%o f2h=%o', HOME_TO_FOREIGN_FEE, FOREIGN_TO_HOME_FEE)

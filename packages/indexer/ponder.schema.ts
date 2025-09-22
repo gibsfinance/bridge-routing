@@ -27,6 +27,19 @@ export const AMBBridgeRelations = relations(AMBBridge, (t) => ({
   bridges: t.many(Omnibridge),
 }))
 
+export const FeeManagerContract = onchainTable('fee_manager_contract', (t) => ({
+  chainId: t.bigint().notNull(),
+  address: t.hex().notNull(),
+}), (t) => ({
+  pk: primaryKey({ columns: [t.chainId, t.address] }),
+}))
+
+export const FeeManagerContractRelations = relations(FeeManagerContract, (t) => ({
+  feeUpdates: t.many(FeeUpdate),
+  // one per token
+  latestFeeUpdate: t.many(LatestFeeUpdate),
+}))
+
 export const ValidatorContract = onchainTable('validator_contract', (t) => ({
   chainId: t.bigint().notNull(),
   address: t.hex().notNull(),
@@ -48,6 +61,7 @@ export const Omnibridge = onchainTable('omnibridge_side', (t) => ({
   chainId: t.bigint().notNull(),
   address: t.hex().notNull(),
   ambAddress: t.hex().notNull(),
+  feeManagerContractAddress: t.hex(),
 }), (table) => ({
   pk: primaryKey({ columns: [table.chainId, table.address] }),
 }))
@@ -62,6 +76,10 @@ export const OmnibridgeRelations = relations(Omnibridge, (t) => ({
   validatorContract: t.one(ValidatorContract, {
     fields: [Omnibridge.chainId, Omnibridge.address],
     references: [ValidatorContract.chainId, ValidatorContract.address],
+  }),
+  feeManagerContract: t.one(FeeManagerContract, {
+    fields: [Omnibridge.chainId, Omnibridge.feeManagerContractAddress],
+    references: [FeeManagerContract.chainId, FeeManagerContract.address],
   }),
 }))
 
@@ -111,7 +129,7 @@ export const Transaction = onchainTable('transaction', (t) => ({
   blockHash: t.hex().notNull(),
   index: t.numeric().notNull(),
   from: t.hex().notNull(),
-  to: t.hex().notNull(),
+  to: t.hex(),
   value: t.bigint().notNull(),
   maxFeePerGas: t.bigint(),
   maxPriorityFeePerGas: t.bigint(),
@@ -274,7 +292,8 @@ export const UserRequest = onchainTable('user_request', (t) => ({
   // parsed from encoded data - could be wrong!
   from: t.hex().notNull(),
   to: t.hex().notNull(),
-  amount: t.bigint().notNull(),
+  amountIn: t.bigint(),
+  amountOut: t.bigint(),
   encodedData: t.hex().notNull(),
   logIndex: t.smallint().notNull(),
   // might not be set
@@ -294,6 +313,9 @@ export const UserRequest = onchainTable('user_request', (t) => ({
   handlingNative: t.boolean().notNull(),
   deliveringNative: t.boolean().notNull(),
   signatures: t.jsonb(),
+  feeUpdateOrderId: t.bigint(),
+  feeManagerContractChainId: t.bigint(),
+  feeManagerContractAddress: t.hex(),
 }))
 
 export const UserRequestRelations = relations(UserRequest, (t) => ({
@@ -341,6 +363,14 @@ export const UserRequestRelations = relations(UserRequest, (t) => ({
   destinationToken: t.one(Token, {
     fields: [UserRequest.destinationTokenAddress, UserRequest.destinationChainId, UserRequest.destinationAmbAddress],
     references: [Token.address, Token.chainId, Token.ambAddress],
+  }),
+  feeUpdate: t.one(FeeUpdate, {
+    fields: [UserRequest.feeUpdateOrderId],
+    references: [FeeUpdate.orderId],
+  }),
+  feeManagerContract: t.one(FeeManagerContract, {
+    fields: [UserRequest.feeManagerContractChainId, UserRequest.feeManagerContractAddress],
+    references: [FeeManagerContract.chainId, FeeManagerContract.address],
   }),
 }))
 
@@ -518,5 +548,62 @@ export const DeliveryRelations = relations(Delivery, (t) => ({
   destinationToken: t.one(Token, {
     fields: [Delivery.destinationTokenAddress, Delivery.destinationChainId, Delivery.destinationAmbAddress],
     references: [Token.address, Token.chainId, Token.ambAddress],
+  }),
+}))
+
+export const LatestFeeUpdate = onchainTable('latest_fee_update', (t) => ({
+  chainId: t.bigint().notNull(),
+  // encodes the fee type implicitly
+  feeManagerContractAddress: t.hex().notNull(),
+  tokenAddress: t.hex().notNull(),
+  feeType: t.hex().notNull(), // h2f or f2f
+  orderId: t.bigint().notNull(),
+}), (t) => ({
+  pk: primaryKey({ columns: [t.chainId, t.feeManagerContractAddress, t.tokenAddress, t.feeType] }),
+}))
+
+export const LatestFeeUpdateRelations = relations(LatestFeeUpdate, (t) => ({
+  feeManagerContract: t.one(FeeManagerContract, {
+    fields: [LatestFeeUpdate.chainId, LatestFeeUpdate.feeManagerContractAddress],
+    references: [FeeManagerContract.chainId, FeeManagerContract.address],
+  }),
+  token: t.one(Token, {
+    fields: [LatestFeeUpdate.chainId, LatestFeeUpdate.tokenAddress],
+    references: [Token.chainId, Token.address],
+  }),
+  feeUpdate: t.one(FeeUpdate, {
+    fields: [LatestFeeUpdate.orderId],
+    references: [FeeUpdate.orderId],
+  }),
+}))
+
+export const FeeUpdate = onchainTable('fee_update', (t) => ({
+  orderId: t.bigint().primaryKey(),
+  chainId: t.bigint().notNull(),
+  transactionHash: t.hex().notNull(),
+  blockHash: t.hex().notNull(),
+  feeType: t.text().notNull(),
+  feeManagerContractAddress: t.hex().notNull(),
+  // zero address for default value
+  tokenAddress: t.hex().notNull(),
+  fee: t.bigint().notNull(),
+}))
+
+export const FeeUpdateRelations = relations(FeeUpdate, (t) => ({
+  block: t.one(Block, {
+    fields: [FeeUpdate.chainId, FeeUpdate.blockHash],
+    references: [Block.chainId, Block.hash],
+  }),
+  transaction: t.one(Transaction, {
+    fields: [FeeUpdate.chainId, FeeUpdate.transactionHash],
+    references: [Transaction.chainId, Transaction.hash],
+  }),
+  feeManagerContract: t.one(FeeManagerContract, {
+    fields: [FeeUpdate.chainId, FeeUpdate.feeManagerContractAddress],
+    references: [FeeManagerContract.chainId, FeeManagerContract.address],
+  }),
+  token: t.one(Token, {
+    fields: [FeeUpdate.chainId, FeeUpdate.tokenAddress],
+    references: [Token.chainId, Token.address],
   }),
 }))

@@ -1,7 +1,7 @@
-import { AMBBridge, Omnibridge, RequiredSignaturesChanged, ValidatorContract, Block, Transaction, Validator } from 'ponder:schema'
+import { AMBBridge, Omnibridge, RequiredSignaturesChanged, ValidatorContract, Block, Transaction, Validator, LatestFeeUpdate, FeeUpdate } from 'ponder:schema'
 import { Context } from 'ponder:registry'
-import { concatHex, keccak256, numberToHex, type Hex } from 'viem'
-import { getInfoBy, MinimalInfo } from './utils'
+import { concatHex, keccak256, numberToHex, zeroAddress, type Hex } from 'viem'
+import { FOREIGN_TO_HOME_FEE, getInfoBy, HOME_TO_FOREIGN_FEE, MinimalInfo } from './utils'
 import * as PonderCore from 'ponder'
 
 export const upsertBlock = async (
@@ -29,7 +29,7 @@ export const upsertTransaction = async (
     blockHash: block.hash,
     index: transaction.transactionIndex.toString(),
     from: transaction.from.toLowerCase() as Hex,
-    to: transaction.to!.toLowerCase() as Hex,
+    to: (transaction.to?.toLowerCase() ?? null) as Hex | null,
     value: transaction.value,
     maxFeePerGas: transaction.maxFeePerGas,
     maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
@@ -155,5 +155,56 @@ export const getLatestRequiredSignatures = async (
   return {
     orderId: requiredSignatures.orderId,
     value: requiredSignatures.value,
+  }
+}
+
+export const getLatestFeeUpdate = async ({
+  context,
+  feeManagerContractAddress: feeManagerContractAddr,
+  tokenAddress: tokenAddr,
+  originationFromHome,
+}: {
+  context: Context,
+  feeManagerContractAddress: Hex | Promise<Hex>,
+  tokenAddress: Hex,
+  originationFromHome: boolean,
+}) => {
+  const chainId = BigInt(context.chain.id)
+  const feeManagerContractAddress = (await feeManagerContractAddr).toLowerCase() as Hex
+  const tokenAddress = tokenAddr.toLowerCase() as Hex
+  const feeType = originationFromHome ? HOME_TO_FOREIGN_FEE : FOREIGN_TO_HOME_FEE
+  const latestFeeUpdate = await context.db.find(LatestFeeUpdate, {
+    chainId,
+    feeManagerContractAddress,
+    tokenAddress,
+    feeType,
+  })
+  if (latestFeeUpdate) {
+    const feeUpdate = await context.db.find(FeeUpdate, {
+      orderId: latestFeeUpdate.orderId,
+    })
+    if (feeUpdate && feeUpdate.fee !== 0n) {
+      return feeUpdate
+    }
+  }
+  const latestDefaultFeeUpdate = await context.db.find(LatestFeeUpdate, {
+    chainId,
+    feeManagerContractAddress,
+    tokenAddress: zeroAddress,
+    feeType,
+  })
+  if (latestDefaultFeeUpdate) {
+    const feeUpdate = await context.db.find(FeeUpdate, {
+      orderId: latestDefaultFeeUpdate.orderId,
+    })
+    if (feeUpdate) {
+      return feeUpdate
+    }
+  }
+  return {
+    value: 0n,
+    orderId: null,
+    feeManagerContractAddress: null,
+    chainId: null,
   }
 }

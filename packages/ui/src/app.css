@@ -28,7 +28,17 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    border-color: var(--color-surface-300, currentColor);
+  }
+
+  @media (prefers-color-scheme: light) {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+      border-color: var(--color-surface-400, currentColor);
+    }
   }
 }
 

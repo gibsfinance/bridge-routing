@@ -7,6 +7,8 @@ export default [
   ...parseAbi([
     'event NewTokenRegistered(address indexed native, address indexed bridged)',
     'event TokensBridged(address indexed token, address indexed recipient, uint256 value, bytes32 indexed messageId)',
+    'event FeeDistributed(uint256 fee, address indexed token, bytes32 indexed messageId)',
+    'function feeManager() external view returns(address)',
   ]),
   {
     inputs: [

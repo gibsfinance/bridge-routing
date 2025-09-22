@@ -4,6 +4,7 @@ import ForeignAMBAbi from './abis/ForeignAMB'
 import BaseBridgeValidatorsAbi from './abis/BaseBridgeValidators'
 import { chains, Providers, toTransport, accessContracts } from './src/utils'
 import BasicOmnibridge from './abis/BasicOmnibridge'
+import { FeeManagerAbi } from './abis/FeeManager'
 
 Error.stackTraceLimit = Infinity
 
@@ -226,6 +227,10 @@ export default createConfig({
           event: 'TokensBridged',
           args: {},
         },
+        {
+          event: 'FeeDistributed',
+          args: {},
+        },
       ],
       chain: {
         pulsechain: {
@@ -285,6 +290,47 @@ export default createConfig({
             to: chains.bsc,
             side: 'foreign',
             type: 'omni',
+          }),
+        },
+      },
+    },
+    FeeManager: {
+      abi: FeeManagerAbi,
+      includeTransactionReceipts: true,
+      filter: [
+        {
+          event: 'FeeUpdated',
+          args: {},
+        },
+      ],
+      chain: {
+        pulsechain: {
+          startBlock: startBlocks.pulsechain,
+          address: [
+            ...await accessContracts({
+              provider: Providers.PULSECHAIN,
+              from: chains.pulsechain,
+              to: chains.ethereum,
+              side: 'home',
+              type: 'feeManager',
+            }),
+            ...await accessContracts({
+              provider: Providers.TOKENSEX,
+              from: chains.pulsechain,
+              to: chains.bsc,
+              side: 'home',
+              type: 'feeManager',
+            }),
+          ],
+        },
+        pulsechainV4: {
+          startBlock: startBlocks.pulsechainV4,
+          address: await accessContracts({
+            provider: Providers.PULSECHAIN,
+            from: chains.pulsechainV4,
+            to: chains.sepolia,
+            side: 'home',
+            type: 'feeManager',
           }),
         },
       },
