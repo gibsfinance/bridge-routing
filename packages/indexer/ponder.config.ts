@@ -125,10 +125,10 @@ export default createConfig({
           event: 'AffirmationCompleted', // foreign -> home complete
           args: {},
         },
-        // {
-        //   event: 'CollectedSignatures', // foreign -> home complete
-        //   args: {},
-        // },
+        {
+          event: 'CollectedSignatures', // foreign -> home complete
+          args: {},
+        },
       ],
       chain: {
         pulsechain: {

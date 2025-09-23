@@ -302,6 +302,7 @@ export const UserRequest = onchainTable('user_request', (t) => ({
   requiredSignatureOrderId: t.bigint(),
   confirmedSignatures: t.bigint().notNull(),
   finishedSigning: t.boolean().notNull(),
+  delivered: t.boolean().notNull(),
   originationChainId: t.bigint().notNull(),
   originationAmbAddress: t.hex().notNull(),
   destinationChainId: t.bigint().notNull(),
@@ -318,6 +319,7 @@ export const UserRequest = onchainTable('user_request', (t) => ({
   feeUpdateOrderId: t.bigint(),
   feeManagerContractChainId: t.bigint(),
   feeManagerContractAddress: t.hex(),
+  authorityResponsibleForRelay: t.hex(),
 }))
 
 export const UserRequestRelations = relations(UserRequest, (t) => ({

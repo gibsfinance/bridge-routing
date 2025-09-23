@@ -332,7 +332,7 @@ map out the progress of each bridge and display it to the user
 <div class="w-full flex flex-col dark:bg-surface-950 bg-gray-50">
 <div class="max-w-5xl w-full mx-auto py-8">
   <div class="bg-white dark:bg-slate-950 lg:rounded-3xl shadow-lg border-y md:border border-surface-200 dark:border-surface-800 p-0 text-surface-contrast-50 dark:text-surface-contrast-950">
-    <div class="flex items-center justify-between px-2 md:px-4 pt-4">
+    <div class="flex items-center justify-between px-2 md:px-4 pt-4 md:pb-2">
       <div class="flex gap-4 w-full">
         <div class="flex md:static absolute gap-2 items-baseline">
           <h2 class="text-4xl font-bold font-italiana">History</h2>
@@ -474,7 +474,7 @@ map out the progress of each bridge and display it to the user
                     <!-- Input Token and chain -->
                     <div class="flex items-center gap-2 flex-grow md:flex-grow-0 self-start">
                       <!-- <div class="flex flex-col min-w-0 flex-1 w-48 text-right"> -->
-                      <div class="flex items-center space-x-1 truncate justify-end leading-5 flex-grow w-35 lg:w-40">
+                      <div class="flex items-center space-x-1 truncate justify-end leading-5 flex-grow w-35 lg:w-48">
                         <span class="text-lg text-gray-900 dark:text-white truncate">
                           {metadata && bridge.amountIn ? formatTokenAmount(bridge.amountIn, {decimals: metadata.decimals}) : bridge.amountIn}
                         </span>
@@ -761,7 +761,7 @@ map out the progress of each bridge and display it to the user
             <div class="flex justify-center mb-4 text-gray-700 dark:text-gray-300">
               <Loader class="size-8" />
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Loading Bridge Transactions</h3>
+            <h3 class="text-lg font-semibold text-gray-900 text-shadow-sm dark:text-white dark:text-shadow-sm dark:text-shadow-black mb-2">Loading Bridge Transactions</h3>
             <p class="text-gray-600 dark:text-gray-300">
               {activeAddress
                 ? `Fetching bridge history for ${activeAddress.slice(0, (2+6))}...${activeAddress.slice(-6)}`
@@ -780,10 +780,9 @@ map out the progress of each bridge and display it to the user
         <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
           <span>Showing</span>
           <select
-            class="pl-2 pr-8 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring focus:ring-surface-500 focus:border-surface-500 appearance-none bg-white hover:bg-surface-50 dark:bg-surface-900 dark:text-white hover:dark:bg-surface-800 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            class="pl-2 pr-8 py-1 text-sm rounded-md ring ring-surface-200 dark:ring-surface-700 border-none bg-white hover:bg-surface-50 dark:bg-surface-900 hover:dark:bg-surface-800 dark:text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             value={limit}
             onchange={(e) => changePageSize(Number((e.target as HTMLSelectElement).value))}
-            disabled={isLoading}
           >
             {#each pageSizeOptions as option}
               <option value={option}>{option}</option>

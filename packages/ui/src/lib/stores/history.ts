@@ -235,6 +235,7 @@ async function loadTokenMetadata(bridges: UserRequest[]): Promise<Map<string, To
   const uniqueTokens: Array<{ chainId: number; address: string }> = []
   const uniqueTokenKeys = new Set<string>()
 
+  console.log(bridges)
   bridges.forEach(bridge => {
     // Try to use token relations first, fallback to individual fields
     // Add origination token
@@ -254,6 +255,9 @@ async function loadTokenMetadata(bridges: UserRequest[]): Promise<Map<string, To
       if (!uniqueTokenKeys.has(key)) {
         uniqueTokenKeys.add(key)
         uniqueTokens.push({ chainId: originationChainId, address: originationAddress })
+        if (originationChainId === 56) { // BSC chain ID
+          console.log(`Found BSC origination token:`, { address: originationAddress, chainId: originationChainId, key })
+        }
       }
     }
 
@@ -275,6 +279,9 @@ async function loadTokenMetadata(bridges: UserRequest[]): Promise<Map<string, To
       if (!uniqueTokenKeys.has(key)) {
         uniqueTokenKeys.add(key)
         uniqueTokens.push({ chainId: destinationChainId, address: destinationAddress })
+        if (destinationChainId === 56) { // BSC chain ID
+          console.log(`Found BSC destination token:`, { address: destinationAddress, chainId: destinationChainId, key })
+        }
       }
     }
   })

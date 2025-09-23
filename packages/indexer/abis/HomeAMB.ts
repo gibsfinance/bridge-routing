@@ -1,4 +1,9 @@
+import { parseAbi } from "viem";
+
 export default [
+  ...parseAbi([
+    'event CollectedSignatures(address authorityResponsibleForRelay, bytes32 messageHash, uint256 NumberOfCollectedSignatures)',
+  ]),
   {
     constant: true,
     inputs: [],

@@ -226,7 +226,6 @@ const loadToken = async (inputs: {
     address: tokenAddress.toLowerCase() as Hex,
     chainId: tokenChainId,
     ambAddress,
-    // ...metadata,
     originationChainId: tokenChainId,
     originationAddress: tokenAddress.toLowerCase() as Hex,
     originationAmbAddress: ambAddress,
@@ -356,8 +355,8 @@ const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event,
           logIndex: event.log.logIndex,
           originationChainId: parsed.originationChainId,
           destinationChainId: parsed.destinationChainId,
-          originationAmbAddress: parsed.sender,
-          destinationAmbAddress: parsed.executor,
+          originationAmbAddress: await info.target.amb,
+          destinationAmbAddress: await info.partner.amb,
           originationOmnibridgeAddress: info.target.omni.toLowerCase() as Hex,
           destinationOmnibridgeAddress: info.partner.omni.toLowerCase() as Hex,
           amountIn: info.side === 'foreign' ? parsed.nestedData.amount : null,
@@ -371,6 +370,7 @@ const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event,
           deliveringNative: parsed.deliveringNative,
           signatures: type === 'signature' ? [] : null,
           feeUpdateOrderId: null,
+          delivered: false,
         })
       }),
   ])
@@ -436,7 +436,7 @@ const handleSignedFor = async ({ event, context }: {
           .set((row) => ({
             confirmedSignatures: row.confirmedSignatures + 1n,
             requiredSignatureOrderId: requiredSignatures.orderId,
-            signatures: parsedSignature ? [row.signatures ?? [], parsedSignature] : row.signatures,
+            signatures: parsedSignature ? [...(row.signatures as Hex[] ?? []), parsedSignature.signature] : row.signatures,
           })),
         context.db.insert(SignFor).values({
           messageHash,
@@ -512,6 +512,17 @@ ponder.on('BasicOmnibridge:NewTokenRegistered', async ({ event, context }) => {
   ])
 })
 
+ponder.on('HomeAMB:CollectedSignatures', async ({ event, context }) => {
+  await Promise.all([
+    context.db.update(UserRequest, {
+      messageHash: event.args.messageHash,
+    }).set({
+      authorityResponsibleForRelay: event.args.authorityResponsibleForRelay.toLowerCase() as Hex,
+      finishedSigning: true,
+    }),
+  ])
+})
+
 const deliverTokens = async ({ event, context }: {
   event: Event<'HomeAMB:AffirmationCompleted' | 'ForeignAMB:RelayedMessage'>,
   context: Context,
@@ -530,8 +541,11 @@ const deliverTokens = async ({ event, context }: {
     })
       .then(async (reverseLookup) => {
         return await context.db
-          .find(UserRequest, {
+          .update(UserRequest, {
             messageHash: reverseLookup!.messageHash,
+          }).set({
+            finishedSigning: true,
+            delivered: true,
           })
       })
       .then(async (userRequest) => {
@@ -611,7 +625,7 @@ ponder.on('BasicOmnibridge:TokensBridged', async ({ event, context }) => {
       return await context.db.update(UserRequest, {
         messageHash: reverseLookup!.messageHash,
       }).set({
-        finishedSigning: true,
+        delivered: true,
       })
     }),
   ])

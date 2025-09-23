@@ -129,8 +129,10 @@ async function batchFetchTokenMetadata(
 
   // Handle ERC20 tokens with batch multicall
   if (erc20Tokens.length === 0) {
+    console.log(`No ERC20 tokens to process for chain ${chainId}`)
     return results
   }
+  console.log(`Processing ${erc20Tokens.length} ERC20 tokens for chain ${chainId}:`, erc20Tokens)
   const addressChunks = _.chunk(erc20Tokens, 100)
 
   const methods = ['symbol', 'name', 'decimals'] as const
@@ -151,51 +153,73 @@ async function batchFetchTokenMetadata(
   )
   const fallback: Hex[] = []
   for (const chunk of chunkedCalls) {
-    const batchResults = await client.multicall({
-      allowFailure: true,
-      contracts: _.flatten(chunk),
-    })
-    _.chunk(batchResults, 3).forEach((batch, index) => {
-      const tokenAddress = erc20Tokens[index] as Hex
-      const symbol = batch[0].result as string
-      const name = batch[1].result as string
-      const decimals = Number(batch[2].result)
+    console.log(`Executing multicall for chain ${chainId} with ${_.flatten(chunk).length} contracts`)
+    try {
+      const batchResults = await client.multicall({
+        allowFailure: true,
+        contracts: _.flatten(chunk),
+      })
+      console.log(`Multicall results for chain ${chainId}:`, batchResults.length, 'results')
 
-      if (name && symbol && !isNaN(decimals)) {
-        results.set(tokenAddress.toLowerCase() as Hex, { name, symbol, decimals })
-      } else {
-        fallback.push(tokenAddress)
-      }
-    })
+      _.chunk(batchResults, 3).forEach((batch, index) => {
+        const tokenAddress = erc20Tokens[index] as Hex
+        const symbol = batch[0].result as string
+        const name = batch[1].result as string
+        const decimals = Number(batch[2].result)
+
+        console.log(`Token ${tokenAddress} results:`, { symbol, name, decimals, errors: [batch[0].error, batch[1].error, batch[2].error] })
+
+        if (name && symbol && !isNaN(decimals)) {
+          results.set(tokenAddress.toLowerCase() as Hex, { name, symbol, decimals })
+        } else {
+          console.log(`Adding ${tokenAddress} to fallback due to missing data`)
+          fallback.push(tokenAddress)
+        }
+      })
+    } catch (error) {
+      console.error(`Multicall failed for chain ${chainId}:`, error)
+      // Add all tokens to fallback if multicall fails completely
+      fallback.push(...erc20Tokens)
+    }
   }
   if (fallback.length === 0) {
     return results
   }
 
+  console.log(`Processing ${fallback.length} tokens in fallback with bytes32 ABI for chain ${chainId}:`, fallback)
   const fallbackAddressChunks = _.chunk(fallback, 100)
   const fallbackChunkedCalls = addressChunksToCallChunks(fallbackAddressChunks, () => erc20Abi_bytes32)
   for (const chunk of fallbackChunkedCalls) {
-    const batchResults = await client.multicall({
-      allowFailure: false,
-      contracts: _.flatten(chunk),
-    })
-    _.chunk(batchResults, 3).forEach((batch, index) => {
-      const tokenAddress = fallback[index] as Hex
-      const symbol = batch[0] as Hex
-      const name = batch[1] as Hex
-      const decimals = Number(batch[2])
-      const symbolString = hexToString(symbol)
-      const nameString = hexToString(name)
-
-      results.set(tokenAddress.toLowerCase() as Hex, {
-        name: nameString,
-        symbol: symbolString,
-        decimals,
+    try {
+      console.log(`Executing fallback multicall for chain ${chainId} with ${_.flatten(chunk).length} contracts`)
+      const batchResults = await client.multicall({
+        allowFailure: false,
+        contracts: _.flatten(chunk),
       })
+      console.log(`Fallback multicall results for chain ${chainId}:`, batchResults.length, 'results')
 
-      // Add to bytes32 whitelist for future optimization
-      bytes32Whitelist.add(getStoreKey(chainId, tokenAddress))
-    })
+      _.chunk(batchResults, 3).forEach((batch, index) => {
+        const tokenAddress = fallback[index] as Hex
+        const symbol = batch[0] as Hex
+        const name = batch[1] as Hex
+        const decimals = Number(batch[2])
+        const symbolString = hexToString(symbol)
+        const nameString = hexToString(name)
+
+        console.log(`Fallback token ${tokenAddress} results:`, { symbolString, nameString, decimals })
+
+        results.set(tokenAddress.toLowerCase() as Hex, {
+          name: nameString,
+          symbol: symbolString,
+          decimals,
+        })
+
+        // Add to bytes32 whitelist for future optimization
+        bytes32Whitelist.add(getStoreKey(chainId, tokenAddress))
+      })
+    } catch (error) {
+      console.error(`Fallback multicall failed for chain ${chainId}:`, error)
+    }
   }
   return results
 }
@@ -211,7 +235,6 @@ export function getTokenMetadata(chainId: number, tokenAddress: string): TokenMe
 export async function loadTokenMetadata(tokens: Array<{ chainId: number; address: Hex }>): Promise<void> {
   // Group tokens by chain ID for batching
   const tokensByChain = new Map<number, Hex[]>()
-
   tokens.forEach(({ chainId, address }) => {
     if (!tokensByChain.has(chainId)) {
       tokensByChain.set(chainId, [])
@@ -222,13 +245,18 @@ export async function loadTokenMetadata(tokens: Array<{ chainId: number; address
   // Batch fetch for each chain
   const batchPromises = Array.from(tokensByChain.entries()).map(async ([chainId, addresses]) => {
     try {
+      console.log(`Loading token metadata for chain ${chainId} (${addresses.length} tokens):`, addresses)
       const results = await batchFetchTokenMetadata(chainId, addresses)
+      console.log(`Loaded ${results.size} token metadata results for chain ${chainId}:`, Array.from(results.entries()))
 
       // Store the results
       results.forEach((metadata, address) => {
         if (metadata) {
           const storeKey = getStoreKey(chainId, address)
           tokenMetadataStore.set(storeKey, metadata)
+          console.log(`Stored metadata for ${storeKey}:`, metadata)
+        } else {
+          console.warn(`No metadata found for ${chainId}:${address}`)
         }
       })
     } catch (error) {
