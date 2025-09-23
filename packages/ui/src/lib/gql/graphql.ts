@@ -374,7 +374,6 @@ export type Delivery = {
   transaction?: Maybe<Transaction>;
   transactionHash: Scalars['String'];
   userRequest?: Maybe<UserRequest>;
-  userRequestHash: Scalars['String'];
 };
 
 export type DeliveryFilter = {
@@ -520,16 +519,6 @@ export type DeliveryFilter = {
   transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
   transactionHash_starts_with?: InputMaybe<Scalars['String']>;
-  userRequestHash?: InputMaybe<Scalars['String']>;
-  userRequestHash_contains?: InputMaybe<Scalars['String']>;
-  userRequestHash_ends_with?: InputMaybe<Scalars['String']>;
-  userRequestHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  userRequestHash_not?: InputMaybe<Scalars['String']>;
-  userRequestHash_not_contains?: InputMaybe<Scalars['String']>;
-  userRequestHash_not_ends_with?: InputMaybe<Scalars['String']>;
-  userRequestHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  userRequestHash_not_starts_with?: InputMaybe<Scalars['String']>;
-  userRequestHash_starts_with?: InputMaybe<Scalars['String']>;
 };
 
 export type DeliveryPage = {
