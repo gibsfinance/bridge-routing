@@ -21,7 +21,7 @@
     if (explorer) addDomain(explorer)
   })
   const classes = $derived(['flex items-center', className])
-  const linkClassNames = $derived(['flex', className, `w-${size} h-${size}`])
+  const linkClassNames = $derived(['flex', className])
   const href = $derived(`${d || explorer}${d ? '#' : ''}${path}`)
 </script>
 

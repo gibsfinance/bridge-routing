@@ -521,21 +521,19 @@ map out the progress of each bridge and display it to the user
                     <div class="flex items-center gap-2 flex-grow self-end h-full w-full md:w-auto pl-4 md:pl-0">
                       <!-- Transaction link to block explorer -->
                       {#if bridge.transaction?.hash && bridge.transaction?.chainId}
-                      <div class="rounded-full border-surface-200 dark:border-surface-700 border p-0.5">
                         <DirectLink
                           path="/tx/{bridge.transaction.hash}"
                           chain={Number(bridge.transaction.chainId)}
-                          class="text-surface-500 dark:text-surface-500 hover:text-surface-600 transition-colors"
-                          size={4}
+                          class="text-surface-500 dark:text-surface-500 hover:text-surface-600 transition-colors rounded-full border-surface-200 dark:border-surface-700 border size-6 p-0.5 items-center"
+                          size={5}
                         />
-                      </div>
                       {/if}
                       <!-- Origin Chain -->
                        <div class="flex gap-1 flex-row">
                       <div class="flex items-center mx-0">
                         <StaticNetworkImage
                           network={Number(originChainId)}
-                          sizeClasses="w-5 h-5"
+                          sizeClasses="w-6 h-6"
                         />
                       </div>
                       <Icon icon="jam:chevron-right" class="w-4 h-4 text-gray-400 mx-0" />
@@ -543,7 +541,7 @@ map out the progress of each bridge and display it to the user
                       <div class="flex items-center mx-0">
                         <StaticNetworkImage
                           network={Number(destChainId)}
-                          sizeClasses="w-5 h-5"
+                          sizeClasses="w-6 h-6"
                         />
                         <!-- <span class="text-xs text-gray-500">{destChainId}</span> -->
                       </div>
@@ -551,14 +549,12 @@ map out the progress of each bridge and display it to the user
                       <div class="flex items-center gap-2 flex-grow h-full">
                         <!-- Completion transaction link -->
                         {#if bridge.completion?.transactionHash && bridge.completion?.chainId}
-                        <div class="rounded-full border-surface-200 dark:border-surface-700 border p-0.5">
                           <DirectLink
                             path="/tx/{bridge.completion.transactionHash}"
                             chain={Number(bridge.completion.chainId)}
-                            class="text-surface-500 dark:text-surface-500 hover:text-surface-600 transition-colors"
-                            size={4}
+                            class="text-surface-500 dark:text-surface-500 hover:text-surface-600 transition-colors rounded-full border-surface-200 dark:border-surface-700 border size-6 p-0.5 items-center"
+                            size={5}
                           />
-                          </div>
                         {:else}
                           <!-- Transparent placeholder for completion -->
                           <div class="w-5 h-5 opacity-0 pointer-events-none"></div>
@@ -595,14 +591,12 @@ map out the progress of each bridge and display it to the user
 
                         <!-- Delivery transaction link -->
                         {#if bridge.delivery?.transactionHash && bridge.delivery?.chainId}
-                        <div class="rounded-full border-surface-200 dark:border-surface-700 border p-0.5">
                           <DirectLink
                             path="/tx/{bridge.delivery.transactionHash}"
                             chain={Number(bridge.delivery.chainId)}
-                            class="text-surface-500 dark:text-surface-500 hover:text-surface-600 transition-colors"
-                            size={4}
+                            class="text-surface-500 dark:text-surface-500 hover:text-surface-600 transition-colors rounded-full border-surface-200 dark:border-surface-700 border size-6 p-0.5 items-center"
+                            size={5}
                           />
-                          </div>
                         {:else}
                           <!-- Transparent placeholder for delivery -->
                           <div class="w-5 h-5 opacity-0 pointer-events-none"></div>
