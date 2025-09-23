@@ -103,7 +103,7 @@ export type Block = {
   hash: Scalars['String'];
   number: Scalars['BigInt'];
   requiredSignaturesChanged?: Maybe<RequiredSignaturesChangedPage>;
-  signatures?: Maybe<SignaturePage>;
+  signFors?: Maybe<SignForPage>;
   timestamp: Scalars['BigInt'];
   transactions?: Maybe<TransactionPage>;
   userRequests?: Maybe<UserRequestPage>;
@@ -141,13 +141,13 @@ export type BlockRequiredSignaturesChangedArgs = {
 };
 
 
-export type BlockSignaturesArgs = {
+export type BlockSignForsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignatureFilter>;
+  where?: InputMaybe<SignForFilter>;
 };
 
 
@@ -631,6 +631,236 @@ export type FeeDirectorPage = {
   totalCount: Scalars['Int'];
 };
 
+export type FeeManagerContract = {
+  __typename?: 'FeeManagerContract';
+  address: Scalars['String'];
+  chainId: Scalars['BigInt'];
+  feeUpdates?: Maybe<FeeUpdatePage>;
+  latestFeeUpdate?: Maybe<LatestFeeUpdatePage>;
+};
+
+
+export type FeeManagerContractFeeUpdatesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<FeeUpdateFilter>;
+};
+
+
+export type FeeManagerContractLatestFeeUpdateArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<LatestFeeUpdateFilter>;
+};
+
+export type FeeManagerContractFilter = {
+  AND?: InputMaybe<Array<InputMaybe<FeeManagerContractFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<FeeManagerContractFilter>>>;
+  address?: InputMaybe<Scalars['String']>;
+  address_contains?: InputMaybe<Scalars['String']>;
+  address_ends_with?: InputMaybe<Scalars['String']>;
+  address_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  address_not?: InputMaybe<Scalars['String']>;
+  address_not_contains?: InputMaybe<Scalars['String']>;
+  address_not_ends_with?: InputMaybe<Scalars['String']>;
+  address_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  address_not_starts_with?: InputMaybe<Scalars['String']>;
+  address_starts_with?: InputMaybe<Scalars['String']>;
+  chainId?: InputMaybe<Scalars['BigInt']>;
+  chainId_gt?: InputMaybe<Scalars['BigInt']>;
+  chainId_gte?: InputMaybe<Scalars['BigInt']>;
+  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  chainId_lt?: InputMaybe<Scalars['BigInt']>;
+  chainId_lte?: InputMaybe<Scalars['BigInt']>;
+  chainId_not?: InputMaybe<Scalars['BigInt']>;
+  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+};
+
+export type FeeManagerContractPage = {
+  __typename?: 'FeeManagerContractPage';
+  items: Array<FeeManagerContract>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int'];
+};
+
+export type FeeUpdate = {
+  __typename?: 'FeeUpdate';
+  block?: Maybe<Block>;
+  blockHash: Scalars['String'];
+  chainId: Scalars['BigInt'];
+  fee: Scalars['BigInt'];
+  feeManagerContract?: Maybe<FeeManagerContract>;
+  feeManagerContractAddress: Scalars['String'];
+  feeType: Scalars['String'];
+  orderId: Scalars['BigInt'];
+  token?: Maybe<Token>;
+  tokenAddress: Scalars['String'];
+  transaction?: Maybe<Transaction>;
+  transactionHash: Scalars['String'];
+};
+
+export type FeeUpdateFilter = {
+  AND?: InputMaybe<Array<InputMaybe<FeeUpdateFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<FeeUpdateFilter>>>;
+  blockHash?: InputMaybe<Scalars['String']>;
+  blockHash_contains?: InputMaybe<Scalars['String']>;
+  blockHash_ends_with?: InputMaybe<Scalars['String']>;
+  blockHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  blockHash_not?: InputMaybe<Scalars['String']>;
+  blockHash_not_contains?: InputMaybe<Scalars['String']>;
+  blockHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  blockHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  blockHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  blockHash_starts_with?: InputMaybe<Scalars['String']>;
+  chainId?: InputMaybe<Scalars['BigInt']>;
+  chainId_gt?: InputMaybe<Scalars['BigInt']>;
+  chainId_gte?: InputMaybe<Scalars['BigInt']>;
+  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  chainId_lt?: InputMaybe<Scalars['BigInt']>;
+  chainId_lte?: InputMaybe<Scalars['BigInt']>;
+  chainId_not?: InputMaybe<Scalars['BigInt']>;
+  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  fee?: InputMaybe<Scalars['BigInt']>;
+  feeManagerContractAddress?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_contains?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_ends_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeManagerContractAddress_not?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_contains?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeManagerContractAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_starts_with?: InputMaybe<Scalars['String']>;
+  feeType?: InputMaybe<Scalars['String']>;
+  feeType_contains?: InputMaybe<Scalars['String']>;
+  feeType_ends_with?: InputMaybe<Scalars['String']>;
+  feeType_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeType_not?: InputMaybe<Scalars['String']>;
+  feeType_not_contains?: InputMaybe<Scalars['String']>;
+  feeType_not_ends_with?: InputMaybe<Scalars['String']>;
+  feeType_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeType_not_starts_with?: InputMaybe<Scalars['String']>;
+  feeType_starts_with?: InputMaybe<Scalars['String']>;
+  fee_gt?: InputMaybe<Scalars['BigInt']>;
+  fee_gte?: InputMaybe<Scalars['BigInt']>;
+  fee_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  fee_lt?: InputMaybe<Scalars['BigInt']>;
+  fee_lte?: InputMaybe<Scalars['BigInt']>;
+  fee_not?: InputMaybe<Scalars['BigInt']>;
+  fee_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  orderId?: InputMaybe<Scalars['BigInt']>;
+  orderId_gt?: InputMaybe<Scalars['BigInt']>;
+  orderId_gte?: InputMaybe<Scalars['BigInt']>;
+  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  orderId_lt?: InputMaybe<Scalars['BigInt']>;
+  orderId_lte?: InputMaybe<Scalars['BigInt']>;
+  orderId_not?: InputMaybe<Scalars['BigInt']>;
+  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  tokenAddress?: InputMaybe<Scalars['String']>;
+  tokenAddress_contains?: InputMaybe<Scalars['String']>;
+  tokenAddress_ends_with?: InputMaybe<Scalars['String']>;
+  tokenAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tokenAddress_not?: InputMaybe<Scalars['String']>;
+  tokenAddress_not_contains?: InputMaybe<Scalars['String']>;
+  tokenAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  tokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  tokenAddress_starts_with?: InputMaybe<Scalars['String']>;
+  transactionHash?: InputMaybe<Scalars['String']>;
+  transactionHash_contains?: InputMaybe<Scalars['String']>;
+  transactionHash_ends_with?: InputMaybe<Scalars['String']>;
+  transactionHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  transactionHash_not?: InputMaybe<Scalars['String']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['String']>;
+  transactionHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  transactionHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  transactionHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  transactionHash_starts_with?: InputMaybe<Scalars['String']>;
+};
+
+export type FeeUpdatePage = {
+  __typename?: 'FeeUpdatePage';
+  items: Array<FeeUpdate>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int'];
+};
+
+export type LatestFeeUpdate = {
+  __typename?: 'LatestFeeUpdate';
+  chainId: Scalars['BigInt'];
+  feeManagerContract?: Maybe<FeeManagerContract>;
+  feeManagerContractAddress: Scalars['String'];
+  feeType: Scalars['String'];
+  feeUpdate?: Maybe<FeeUpdate>;
+  orderId: Scalars['BigInt'];
+  token?: Maybe<Token>;
+  tokenAddress: Scalars['String'];
+};
+
+export type LatestFeeUpdateFilter = {
+  AND?: InputMaybe<Array<InputMaybe<LatestFeeUpdateFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<LatestFeeUpdateFilter>>>;
+  chainId?: InputMaybe<Scalars['BigInt']>;
+  chainId_gt?: InputMaybe<Scalars['BigInt']>;
+  chainId_gte?: InputMaybe<Scalars['BigInt']>;
+  chainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  chainId_lt?: InputMaybe<Scalars['BigInt']>;
+  chainId_lte?: InputMaybe<Scalars['BigInt']>;
+  chainId_not?: InputMaybe<Scalars['BigInt']>;
+  chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  feeManagerContractAddress?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_contains?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_ends_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeManagerContractAddress_not?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_contains?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeManagerContractAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_starts_with?: InputMaybe<Scalars['String']>;
+  feeType?: InputMaybe<Scalars['String']>;
+  feeType_contains?: InputMaybe<Scalars['String']>;
+  feeType_ends_with?: InputMaybe<Scalars['String']>;
+  feeType_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeType_not?: InputMaybe<Scalars['String']>;
+  feeType_not_contains?: InputMaybe<Scalars['String']>;
+  feeType_not_ends_with?: InputMaybe<Scalars['String']>;
+  feeType_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeType_not_starts_with?: InputMaybe<Scalars['String']>;
+  feeType_starts_with?: InputMaybe<Scalars['String']>;
+  orderId?: InputMaybe<Scalars['BigInt']>;
+  orderId_gt?: InputMaybe<Scalars['BigInt']>;
+  orderId_gte?: InputMaybe<Scalars['BigInt']>;
+  orderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  orderId_lt?: InputMaybe<Scalars['BigInt']>;
+  orderId_lte?: InputMaybe<Scalars['BigInt']>;
+  orderId_not?: InputMaybe<Scalars['BigInt']>;
+  orderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  tokenAddress?: InputMaybe<Scalars['String']>;
+  tokenAddress_contains?: InputMaybe<Scalars['String']>;
+  tokenAddress_ends_with?: InputMaybe<Scalars['String']>;
+  tokenAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tokenAddress_not?: InputMaybe<Scalars['String']>;
+  tokenAddress_not_contains?: InputMaybe<Scalars['String']>;
+  tokenAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  tokenAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tokenAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  tokenAddress_starts_with?: InputMaybe<Scalars['String']>;
+};
+
+export type LatestFeeUpdatePage = {
+  __typename?: 'LatestFeeUpdatePage';
+  items: Array<LatestFeeUpdate>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int'];
+};
+
 export type LatestValidatorStatusUpdate = {
   __typename?: 'LatestValidatorStatusUpdate';
   ambAddress: Scalars['String'];
@@ -712,6 +942,8 @@ export type Omnibridge = {
   ambAddress: Scalars['String'];
   ambBridge?: Maybe<AmbBridge>;
   chainId: Scalars['BigInt'];
+  feeManagerContract?: Maybe<FeeManagerContract>;
+  feeManagerContractAddress?: Maybe<Scalars['String']>;
   validatorContract?: Maybe<ValidatorContract>;
 };
 
@@ -746,6 +978,16 @@ export type OmnibridgeFilter = {
   chainId_lte?: InputMaybe<Scalars['BigInt']>;
   chainId_not?: InputMaybe<Scalars['BigInt']>;
   chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  feeManagerContractAddress?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_contains?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_ends_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeManagerContractAddress_not?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_contains?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeManagerContractAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_starts_with?: InputMaybe<Scalars['String']>;
 };
 
 export type OmnibridgePage = {
@@ -781,6 +1023,12 @@ export type Query = {
   deliverys: DeliveryPage;
   feeDirector?: Maybe<FeeDirector>;
   feeDirectors: FeeDirectorPage;
+  feeManagerContract?: Maybe<FeeManagerContract>;
+  feeManagerContracts: FeeManagerContractPage;
+  feeUpdate?: Maybe<FeeUpdate>;
+  feeUpdates: FeeUpdatePage;
+  latestFeeUpdate?: Maybe<LatestFeeUpdate>;
+  latestFeeUpdates: LatestFeeUpdatePage;
   latestValidatorStatusUpdate?: Maybe<LatestValidatorStatusUpdate>;
   latestValidatorStatusUpdates: LatestValidatorStatusUpdatePage;
   omnibridge?: Maybe<Omnibridge>;
@@ -789,8 +1037,8 @@ export type Query = {
   requiredSignaturesChangeds: RequiredSignaturesChangedPage;
   reverseMessageHashBinding?: Maybe<ReverseMessageHashBinding>;
   reverseMessageHashBindings: ReverseMessageHashBindingPage;
-  signature?: Maybe<Signature>;
-  signatures: SignaturePage;
+  signFor?: Maybe<SignFor>;
+  signFors: SignForPage;
   token?: Maybe<Token>;
   tokens: TokenPage;
   transaction?: Maybe<Transaction>;
@@ -883,6 +1131,55 @@ export type QueryFeeDirectorsArgs = {
 };
 
 
+export type QueryFeeManagerContractArgs = {
+  address: Scalars['String'];
+  chainId: Scalars['BigInt'];
+};
+
+
+export type QueryFeeManagerContractsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<FeeManagerContractFilter>;
+};
+
+
+export type QueryFeeUpdateArgs = {
+  orderId: Scalars['BigInt'];
+};
+
+
+export type QueryFeeUpdatesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<FeeUpdateFilter>;
+};
+
+
+export type QueryLatestFeeUpdateArgs = {
+  chainId: Scalars['BigInt'];
+  feeManagerContractAddress: Scalars['String'];
+  feeType: Scalars['String'];
+  tokenAddress: Scalars['String'];
+};
+
+
+export type QueryLatestFeeUpdatesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<LatestFeeUpdateFilter>;
+};
+
+
 export type QueryLatestValidatorStatusUpdateArgs = {
   ambAddress: Scalars['String'];
   chainId: Scalars['BigInt'];
@@ -946,20 +1243,20 @@ export type QueryReverseMessageHashBindingsArgs = {
 };
 
 
-export type QuerySignatureArgs = {
+export type QuerySignForArgs = {
   chainId: Scalars['BigInt'];
   messageHash: Scalars['String'];
   validatorId: Scalars['String'];
 };
 
 
-export type QuerySignaturesArgs = {
+export type QuerySignForsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignatureFilter>;
+  where?: InputMaybe<SignForFilter>;
 };
 
 
@@ -1183,8 +1480,8 @@ export type ReverseMessageHashBindingPage = {
   totalCount: Scalars['Int'];
 };
 
-export type Signature = {
-  __typename?: 'Signature';
+export type SignFor = {
+  __typename?: 'SignFor';
   ambAddress: Scalars['String'];
   ambBridge?: Maybe<AmbBridge>;
   block?: Maybe<Block>;
@@ -1201,9 +1498,9 @@ export type Signature = {
   validatorId: Scalars['String'];
 };
 
-export type SignatureFilter = {
-  AND?: InputMaybe<Array<InputMaybe<SignatureFilter>>>;
-  OR?: InputMaybe<Array<InputMaybe<SignatureFilter>>>;
+export type SignForFilter = {
+  AND?: InputMaybe<Array<InputMaybe<SignForFilter>>>;
+  OR?: InputMaybe<Array<InputMaybe<SignForFilter>>>;
   ambAddress?: InputMaybe<Scalars['String']>;
   ambAddress_contains?: InputMaybe<Scalars['String']>;
   ambAddress_ends_with?: InputMaybe<Scalars['String']>;
@@ -1280,9 +1577,9 @@ export type SignatureFilter = {
   validatorId_starts_with?: InputMaybe<Scalars['String']>;
 };
 
-export type SignaturePage = {
-  __typename?: 'SignaturePage';
-  items: Array<Signature>;
+export type SignForPage = {
+  __typename?: 'SignForPage';
+  items: Array<SignFor>;
   pageInfo: PageInfo;
   totalCount: Scalars['Int'];
 };
@@ -1469,8 +1766,8 @@ export type Transaction = {
   maxPriorityFeePerGas?: Maybe<Scalars['BigInt']>;
   nonce: Scalars['BigInt'];
   requiredSignaturesChanged?: Maybe<RequiredSignaturesChangedPage>;
-  signatures?: Maybe<SignaturePage>;
-  to: Scalars['String'];
+  signFors?: Maybe<SignForPage>;
+  to?: Maybe<Scalars['String']>;
   type: Scalars['String'];
   userRequests?: Maybe<UserRequestPage>;
   validatorStatusUpdates?: Maybe<ValidatorStatusUpdatePage>;
@@ -1508,13 +1805,13 @@ export type TransactionRequiredSignaturesChangedArgs = {
 };
 
 
-export type TransactionSignaturesArgs = {
+export type TransactionSignForsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignatureFilter>;
+  where?: InputMaybe<SignForFilter>;
 };
 
 
@@ -1667,7 +1964,8 @@ export type TransactionPage = {
 
 export type UserRequest = {
   __typename?: 'UserRequest';
-  amount: Scalars['BigInt'];
+  amountIn?: Maybe<Scalars['BigInt']>;
+  amountOut?: Maybe<Scalars['BigInt']>;
   block?: Maybe<Block>;
   blockHash: Scalars['String'];
   chainId: Scalars['BigInt'];
@@ -1683,6 +1981,11 @@ export type UserRequest = {
   destinationToken?: Maybe<Token>;
   destinationTokenAddress?: Maybe<Scalars['String']>;
   encodedData: Scalars['String'];
+  feeManagerContract?: Maybe<FeeManagerContract>;
+  feeManagerContractAddress?: Maybe<Scalars['String']>;
+  feeManagerContractChainId?: Maybe<Scalars['BigInt']>;
+  feeUpdate?: Maybe<FeeUpdate>;
+  feeUpdateOrderId?: Maybe<Scalars['BigInt']>;
   finishedSigning: Scalars['Boolean'];
   from: Scalars['String'];
   handlingNative: Scalars['Boolean'];
@@ -1699,7 +2002,8 @@ export type UserRequest = {
   originationTokenAddress?: Maybe<Scalars['String']>;
   requiredSignatureOrderId?: Maybe<Scalars['BigInt']>;
   requiredSignatures?: Maybe<RequiredSignaturesChanged>;
-  signatures?: Maybe<SignaturePage>;
+  signFors?: Maybe<SignForPage>;
+  signatures?: Maybe<Scalars['JSON']>;
   to: Scalars['String'];
   transaction?: Maybe<Transaction>;
   transactionHash: Scalars['String'];
@@ -1707,26 +2011,34 @@ export type UserRequest = {
 };
 
 
-export type UserRequestSignaturesArgs = {
+export type UserRequestSignForsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignatureFilter>;
+  where?: InputMaybe<SignForFilter>;
 };
 
 export type UserRequestFilter = {
   AND?: InputMaybe<Array<InputMaybe<UserRequestFilter>>>;
   OR?: InputMaybe<Array<InputMaybe<UserRequestFilter>>>;
-  amount?: InputMaybe<Scalars['BigInt']>;
-  amount_gt?: InputMaybe<Scalars['BigInt']>;
-  amount_gte?: InputMaybe<Scalars['BigInt']>;
-  amount_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  amount_lt?: InputMaybe<Scalars['BigInt']>;
-  amount_lte?: InputMaybe<Scalars['BigInt']>;
-  amount_not?: InputMaybe<Scalars['BigInt']>;
-  amount_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  amountIn?: InputMaybe<Scalars['BigInt']>;
+  amountIn_gt?: InputMaybe<Scalars['BigInt']>;
+  amountIn_gte?: InputMaybe<Scalars['BigInt']>;
+  amountIn_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  amountIn_lt?: InputMaybe<Scalars['BigInt']>;
+  amountIn_lte?: InputMaybe<Scalars['BigInt']>;
+  amountIn_not?: InputMaybe<Scalars['BigInt']>;
+  amountIn_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  amountOut?: InputMaybe<Scalars['BigInt']>;
+  amountOut_gt?: InputMaybe<Scalars['BigInt']>;
+  amountOut_gte?: InputMaybe<Scalars['BigInt']>;
+  amountOut_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  amountOut_lt?: InputMaybe<Scalars['BigInt']>;
+  amountOut_lte?: InputMaybe<Scalars['BigInt']>;
+  amountOut_not?: InputMaybe<Scalars['BigInt']>;
+  amountOut_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
   blockHash?: InputMaybe<Scalars['String']>;
   blockHash_contains?: InputMaybe<Scalars['String']>;
   blockHash_ends_with?: InputMaybe<Scalars['String']>;
@@ -1805,6 +2117,32 @@ export type UserRequestFilter = {
   encodedData_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   encodedData_not_starts_with?: InputMaybe<Scalars['String']>;
   encodedData_starts_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_contains?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_ends_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeManagerContractAddress_not?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_contains?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  feeManagerContractAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractAddress_starts_with?: InputMaybe<Scalars['String']>;
+  feeManagerContractChainId?: InputMaybe<Scalars['BigInt']>;
+  feeManagerContractChainId_gt?: InputMaybe<Scalars['BigInt']>;
+  feeManagerContractChainId_gte?: InputMaybe<Scalars['BigInt']>;
+  feeManagerContractChainId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  feeManagerContractChainId_lt?: InputMaybe<Scalars['BigInt']>;
+  feeManagerContractChainId_lte?: InputMaybe<Scalars['BigInt']>;
+  feeManagerContractChainId_not?: InputMaybe<Scalars['BigInt']>;
+  feeManagerContractChainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  feeUpdateOrderId?: InputMaybe<Scalars['BigInt']>;
+  feeUpdateOrderId_gt?: InputMaybe<Scalars['BigInt']>;
+  feeUpdateOrderId_gte?: InputMaybe<Scalars['BigInt']>;
+  feeUpdateOrderId_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  feeUpdateOrderId_lt?: InputMaybe<Scalars['BigInt']>;
+  feeUpdateOrderId_lte?: InputMaybe<Scalars['BigInt']>;
+  feeUpdateOrderId_not?: InputMaybe<Scalars['BigInt']>;
+  feeUpdateOrderId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
   finishedSigning?: InputMaybe<Scalars['Boolean']>;
   finishedSigning_in?: InputMaybe<Array<InputMaybe<Scalars['Boolean']>>>;
   finishedSigning_not?: InputMaybe<Scalars['Boolean']>;
@@ -1948,7 +2286,7 @@ export type Validator = {
   address: Scalars['String'];
   ambAddress: Scalars['String'];
   chainId: Scalars['BigInt'];
-  signatures?: Maybe<SignaturePage>;
+  signFors?: Maybe<SignForPage>;
   validatorContract?: Maybe<ValidatorContract>;
   validatorContractAddress: Scalars['String'];
   validatorId: Scalars['String'];
@@ -1956,13 +2294,13 @@ export type Validator = {
 };
 
 
-export type ValidatorSignaturesArgs = {
+export type ValidatorSignForsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   limit?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Scalars['String']>;
   orderDirection?: InputMaybe<Scalars['String']>;
-  where?: InputMaybe<SignatureFilter>;
+  where?: InputMaybe<SignForFilter>;
 };
 
 
@@ -2216,7 +2554,7 @@ export type SingleUserRequestQueryVariables = Exact<{
 }>;
 
 
-export type SingleUserRequestQuery = { __typename?: 'Query', userRequests: { __typename?: 'UserRequestPage', items: Array<{ __typename?: 'UserRequest', messageId: string, signatures?: { __typename?: 'SignaturePage', items: Array<{ __typename?: 'Signature', messageHash: string }> } | null }> } };
+export type SingleUserRequestQuery = { __typename?: 'Query', userRequests: { __typename?: 'UserRequestPage', items: Array<{ __typename?: 'UserRequest', messageId: string, signatures?: any | null }> } };
 
 export type SingleExecutionQueryVariables = Exact<{
   messageHash: Scalars['String'];

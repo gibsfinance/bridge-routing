@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import { Chains, Provider } from '@gibs/bridge-sdk/config'
+  import { Chains, type Provider, Providers } from '@gibs/bridge-sdk/config'
   import type { ClassValue } from 'svelte/elements'
   import { clsx } from 'clsx'
 
@@ -28,7 +28,7 @@
   <Button class="flex flex-row items-center gap-0 justify-center {disabled ? 'cursor-not-allowed' : ''}" onclick={onclick} disabled={disabled} {id}>
     <StaticNetworkImage network={fromChain} sizeClasses={sizeClasses} />
     <Icon icon="jam:chevron-right" class={sizeClasses} />
-    {#if showProvider || provider !== Provider.PULSECHAIN}
+    {#if showProvider || provider !== Providers.PULSECHAIN}
       <ProviderIcon provider={provider} {sizeClasses} />
       <Icon icon="jam:chevron-right" class={sizeClasses} />
     {/if}

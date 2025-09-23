@@ -16,7 +16,8 @@ import {
 } from 'ponder:schema'
 import { decodeFunctionData, parseAbi, type Hex } from 'viem'
 import { parseAMBMessage } from './message'
-import { getInfoBy, createOrderId, MinimalInfo, ChainId } from './utils'
+import { getInfoBy, createOrderId } from './utils'
+import { ChainId } from '@gibs/bridge-sdk'
 import {
   getLatestRequiredSignatures,
   upsertOmniBridge,
@@ -25,6 +26,7 @@ import {
   upsertValidatorContract,
   upsertAmbBridge,
   upsertValidator,
+  upsertFeeManagerContract,
   toValidatorId,
   getLatestFeeUpdate,
 } from './cache'
@@ -53,6 +55,7 @@ ponder.on('ValidatorContract:ValidatorAdded', async ({ event, context }) => {
     upsertBlock(context, event.block),
     upsertValidator(context, event.args.validator, info),
     upsertTransaction(context, event.block, event.transaction),
+    upsertFeeManagerContract(context, info.target),
     context.db
       .insert(LatestValidatorStatusUpdate)
       .values({
@@ -148,6 +151,7 @@ ponder.on(
       upsertOmniBridge(context, bridgeAddress),
       upsertBlock(context, event.block),
       upsertTransaction(context, event.block, event.transaction),
+      upsertFeeManagerContract(context, info.target),
       upsertValidatorContract(context, event.log.address, {
         latestRequiredSignaturesOrderId: orderId,
       }),
@@ -473,7 +477,7 @@ ponder.on('BasicOmnibridge:NewTokenRegistered', async ({ event, context }) => {
     ambAddress: await info.partner.amb,
     omnibridgeAddress: info.partner.omni.toLowerCase() as Hex,
   }
-  console.log(`${nativeToken.chainId}/${nativeToken.address.toLowerCase()}@${nativeToken.ambAddress.toLowerCase()}->${bridgedToken.chainId}/${bridgedToken.address.toLowerCase()}@${bridgedToken.ambAddress.toLowerCase()}`)
+  console.log(`${nativeToken.chainId}/${nativeToken.address.toLowerCase()}->${bridgedToken.chainId}/${bridgedToken.address.toLowerCase()}@${info.key}`)
   if (
     (nativeToken.address === '0x70499adebb11efd915e3b69e700c331778628707' && nativeToken.chainId === 11155111n)
     || (nativeToken.address === '0xa1077a294dde1b09bb078844df40758a5d0f9a27' && nativeToken.chainId === 1n)
@@ -620,14 +624,26 @@ ponder.on('BasicOmnibridge:TokensBridgingInitiated', async ({ event, context }) 
   }
   const orderId = createOrderId(context, event)
   // console.log(`init: msg=${context.chain.id}/${event.args.messageId}=>${info.partner.chainId} token=${event.args.token} order=${orderId} side=${info.side}`)
-  const reverseLookup = await context.db.find(ReverseMessageHashBinding, {
-    messageId: event.args.messageId,
-  })
-  const [urfs] = await Promise.all([
+  const [reverseLookup, token] = await Promise.all([
+    context.db.find(ReverseMessageHashBinding, {
+      messageId: event.args.messageId,
+    }),
+    context.db.find(Token, {
+      address: event.args.token,
+      chainId: BigInt(info.target.chainId),
+      ambAddress: await info.target.amb,
+    }),
+  ])
+  const destinationTokenAddress = !token ? null
+    : token.originationAddress && event.args.token.toLowerCase() === token.originationAddress?.toLowerCase()
+      ? token.destinationAddress
+      : token.originationAddress
+  await Promise.all([
     context.db.update(UserRequest, {
       messageHash: reverseLookup!.messageHash,
     }).set({
       originationTokenAddress: event.args.token,
+      destinationTokenAddress,
     }),
     loadToken({
       context,
@@ -649,15 +665,18 @@ ponder.on('FeeManager:FeeUpdated', async ({ event, context }) => {
   await Promise.all([
     upsertBlock(context, event.block),
     upsertTransaction(context, event.block, event.transaction),
+    upsertFeeManagerContract(context, info.target),
     context.db.insert(LatestFeeUpdate).values({
       chainId: BigInt(context.chain.id),
       feeManagerContractAddress: event.log.address,
       tokenAddress: event.args.token,
       orderId,
       feeType: event.args.feeType,
+      omnibridgeAddress: info.target.omni.toLowerCase() as Hex,
     }).onConflictDoUpdate(() => ({
       orderId,
     })),
+    // should fail if a duplicate order id is found
     context.db.insert(FeeUpdate).values({
       orderId,
       chainId: BigInt(context.chain.id),
@@ -667,6 +686,7 @@ ponder.on('FeeManager:FeeUpdated', async ({ event, context }) => {
       feeManagerContractAddress: event.log.address,
       tokenAddress: event.args.token,
       fee: event.args.fee,
+      omnibridgeAddress: info.target.omni.toLowerCase() as Hex,
     })
   ])
 })
@@ -678,14 +698,19 @@ ponder.on('BasicOmnibridge:FeeDistributed', async ({ event, context }) => {
   const userRequest = await context.db.find(UserRequest, {
     messageHash: reverseLookup!.messageHash,
   })
+  const feeCollectionSideInfo = await getInfoBy({
+    key: 'omni',
+    address: event.log.address,
+    chainId: context.chain.id,
+  })
+  const fee = event.args.fee
   const originationInfo = await getInfoBy({
     key: 'omni',
     address: userRequest!.originationOmnibridgeAddress!,
     chainId: Number(userRequest!.originationChainId!) as ChainId,
   })
-  const fee = event.args.fee
   const originationFromHome = originationInfo.side === 'home'
-  const userRequestUpdates = originationInfo.side === 'home' ? {
+  const userRequestUpdates = originationFromHome ? {
     // amount in was always more than amount out
     amountIn: userRequest!.amountOut! + fee,
   } : {
@@ -697,6 +722,7 @@ ponder.on('BasicOmnibridge:FeeDistributed', async ({ event, context }) => {
     feeManagerContractAddress: event.log.address,
     tokenAddress: event.args.token,
     originationFromHome,
+    omnibridgeAddress: feeCollectionSideInfo.target.omni.toLowerCase() as Hex,
   })
   await Promise.all([
     upsertBlock(context, event.block),

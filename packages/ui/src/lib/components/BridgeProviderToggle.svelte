@@ -1,6 +1,6 @@
 <script lang="ts">
   import { zeroAddress } from 'viem'
-  import { Provider, inferBridgeKey } from '@gibs/bridge-sdk/config'
+  import { Providers, inferBridgeKey } from '@gibs/bridge-sdk/config'
 
   import * as input from '../stores/input.svelte'
   import * as nav from '../stores/nav.svelte'
@@ -8,7 +8,7 @@
   import BridgeProviderDirection from './BridgeProviderDirection.svelte'
   const toggleProvider = () => {
     const nextProvider =
-      input.bridgeKey.provider === Provider.PULSECHAIN ? Provider.TOKENSEX : Provider.PULSECHAIN
+      input.bridgeKey.provider === Providers.PULSECHAIN ? Providers.TOKENSEX : Providers.PULSECHAIN
     const nextKey = inferBridgeKey({
       currentKey: input.bridgeKey.value,
       provider: nextProvider,

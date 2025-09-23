@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Token } from '@gibs/bridge-sdk/types'
-  import { Chains, Provider } from '@gibs/bridge-sdk/config'
+  import { Chains, Providers } from '@gibs/bridge-sdk/config'
   import { SvelteMap } from 'svelte/reactivity'
 
   import { bridgeSettings } from '../stores/bridge-settings.svelte'
@@ -12,7 +12,7 @@
   const bridgedToken = $derived(bridgeSettings.assetOut as Token | null)
   $effect(() => {
     // while on the onboarding page, we only care about eth -> pls
-    bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
+    bridgeKey.value = [Providers.PULSECHAIN, Chains.ETH, Chains.PLS]
   })
   const wplsTokenPrice = new SvelteMap<string, bigint | null>()
   const key = $derived(`${bridgeKey.toChain}-${bridgedToken?.address}`.toLowerCase())

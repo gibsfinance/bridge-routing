@@ -1,8 +1,9 @@
-import { AMBBridge, Omnibridge, RequiredSignaturesChanged, ValidatorContract, Block, Transaction, Validator, LatestFeeUpdate, FeeUpdate } from 'ponder:schema'
+import { AMBBridge, Omnibridge, RequiredSignaturesChanged, ValidatorContract, Block, Transaction, Validator, LatestFeeUpdate, FeeUpdate, FeeManagerContract } from 'ponder:schema'
 import { Context } from 'ponder:registry'
 import { concatHex, keccak256, numberToHex, zeroAddress, type Hex } from 'viem'
-import { FOREIGN_TO_HOME_FEE, getInfoBy, HOME_TO_FOREIGN_FEE, MinimalInfo } from './utils'
+import { getInfoBy, MinimalInfo, PathPairing } from './utils'
 import * as PonderCore from 'ponder'
+import { FOREIGN_TO_HOME_FEE, HOME_TO_FOREIGN_FEE} from '@gibs/bridge-sdk/config'
 
 export const upsertBlock = async (
   context: Context,
@@ -104,6 +105,17 @@ export const upsertValidator = async (context: Context, validator: Hex, info: Mi
   }).onConflictDoNothing()
 }
 
+export const upsertFeeManagerContract = async (context: Context, pairing: PathPairing) => {
+  const addr = await pairing.feeManager
+  if (!addr) return
+  const omnibridgeAddress = pairing.omni
+  return await context.db.insert(FeeManagerContract).values({
+    chainId: BigInt(context.chain.id),
+    address: addr.toLowerCase() as Hex,
+    omnibridgeAddress: omnibridgeAddress.toLowerCase() as Hex,
+  }).onConflictDoNothing()
+}
+
 
 type RequiredSigs = {
   orderId: bigint | null
@@ -163,10 +175,12 @@ export const getLatestFeeUpdate = async ({
   feeManagerContractAddress: feeManagerContractAddr,
   tokenAddress: tokenAddr,
   originationFromHome,
+  omnibridgeAddress,
 }: {
   context: Context,
   feeManagerContractAddress: Hex | Promise<Hex>,
   tokenAddress: Hex,
+  omnibridgeAddress: Hex,
   originationFromHome: boolean,
 }) => {
   const chainId = BigInt(context.chain.id)
@@ -178,6 +192,7 @@ export const getLatestFeeUpdate = async ({
     feeManagerContractAddress,
     tokenAddress,
     feeType,
+    omnibridgeAddress,
   })
   if (latestFeeUpdate) {
     const feeUpdate = await context.db.find(FeeUpdate, {
@@ -192,6 +207,7 @@ export const getLatestFeeUpdate = async ({
     feeManagerContractAddress,
     tokenAddress: zeroAddress,
     feeType,
+    omnibridgeAddress,
   })
   if (latestDefaultFeeUpdate) {
     const feeUpdate = await context.db.find(FeeUpdate, {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { toChain, Chains, Provider, nativeAssetOut } from '@gibs/bridge-sdk/config'
+  import { toChain, Chains, Providers, nativeAssetOut } from '@gibs/bridge-sdk/config'
   import type { BridgeKey, Token } from '@gibs/bridge-sdk/types'
   import { chainsMetadata } from '@gibs/bridge-sdk/chains'
   import { formatUnits, getAddress, maxUint256, zeroAddress, type Hex } from 'viem'
@@ -60,7 +60,7 @@
   const bridgeTokenInAddress = $derived((page.queryParams.get('bridgeTokenIn') ?? zeroAddress) as Hex)
 
   const bridgeableTokensSettings = {
-    provider: Provider.PULSECHAIN,
+    provider: Providers.PULSECHAIN,
     chain: Number(Chains.ETH),
     partnerChain: Number(Chains.PLS),
   }
@@ -91,7 +91,7 @@
 
   const possiblePulsexTokens = $derived(
     bridgableTokens.bridgeableTokensUnder({
-      provider: Provider.PULSECHAIN,
+      provider: Providers.PULSECHAIN,
       chain: Number(Chains.PLS),
       partnerChain: null,
     }),
@@ -128,11 +128,11 @@
   $effect(() => {
     if (!bridgeTokenIn) return
     const settingsMatch =
-      bridgeKey.provider === Provider.PULSECHAIN &&
+      bridgeKey.provider === Providers.PULSECHAIN &&
       bridgeKey.fromChain === Chains.ETH &&
       bridgeKey.toChain === Chains.PLS
     if (!settingsMatch) {
-      bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
+      bridgeKey.value = [Providers.PULSECHAIN, Chains.ETH, Chains.PLS]
     }
     bridgeKey.assetInAddress = bridgeTokenInAddress
   })
@@ -186,7 +186,7 @@
       address: bridgeTokenIn.address === zeroAddress ? nativeAssetOut[toChain(bridgeTokenIn.chainId)] : bridgeTokenIn.address,
     }
     const tokensUnderReversedBridgeKey = bridgableTokens.bridgeableTokensUnder({
-      provider: Provider.PULSECHAIN,
+      provider: Providers.PULSECHAIN,
       chain: Number(bridgeKey.toChain),
       partnerChain: Number(bridgeKey.fromChain),
     })

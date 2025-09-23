@@ -1,6 +1,5 @@
-import { getAddress, zeroAddress, type Hex } from "viem";
+import { getAddress, keccak256, stringToHex, zeroAddress, type Hex } from "viem";
 import _ from 'lodash'
-import * as imageLinks from '@gibs/bridge-sdk/image-links'
 import type { BridgeKey, Token, TokenOut } from "./types.js";
 
 /**
@@ -38,11 +37,19 @@ export const toChain = (chainId: number | string) => `0x${Number(chainId).toStri
  */
 export const toChainKey = (chainId: number | string) => chainIdToKey.get(toChain(chainId))
 
-/** The provider of an omnibridge */
-export enum Provider {
-  PULSECHAIN = 'pulsechain',
-  TOKENSEX = 'tokensex',
-}
+// /** The provider of an omnibridge */
+// export enum Provider {
+//   PULSECHAIN = 'pulsechain',
+//   TOKENSEX = 'tokensex',
+// }
+
+
+export const Providers = {
+  PULSECHAIN: 'pulsechain',
+  TOKENSEX: 'tokensex',
+} as const
+
+export type Provider = typeof Providers[keyof typeof Providers]
 
 /** A map of chains to native asset out addresses */
 export const nativeAssetOut = {
@@ -122,7 +129,7 @@ const pulsechainPLSETHSettings = {
 }
 
 export const pathways = {
-  [Provider.PULSECHAIN]: {
+  [Providers.PULSECHAIN]: {
     [Chains.PLS]: {
       [Chains.ETH]: {
         from: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
@@ -166,7 +173,7 @@ export const pathways = {
       },
     },
   },
-  [Provider.TOKENSEX]: {
+  [Providers.TOKENSEX]: {
     [Chains.PLS]: {
       [Chains.BNB]: {
         from: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
@@ -201,7 +208,7 @@ export const pathways = {
 } as DeepPathwayConfig
 
 export const testnetPathways = {
-  [Provider.TOKENSEX]: {
+  [Providers.TOKENSEX]: {
     // plsv4 to bnb home omnibridge: 0xfd0c07C376D27EA0E9fA64Ac5D2481439e36CF9C
     // [Chains.BNB]: {
     //   [Chains.V4PLS]: {
@@ -224,7 +231,7 @@ export const testnetPathways = {
     //   },
     // },
   },
-  [Provider.PULSECHAIN]: {
+  [Providers.PULSECHAIN]: {
     [Chains.V4PLS]: {
       [Chains.SEP]: {
         from: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
@@ -258,16 +265,16 @@ export const testnetPathways = {
 
 /** The mainnet bridge keys */
 const mainnetBridgeKeys = [
-  [Provider.PULSECHAIN, Chains.PLS, Chains.ETH],
-  [Provider.PULSECHAIN, Chains.ETH, Chains.PLS],
-  [Provider.TOKENSEX, Chains.PLS, Chains.BNB],
-  [Provider.TOKENSEX, Chains.BNB, Chains.PLS],
+  [Providers.PULSECHAIN, Chains.PLS, Chains.ETH],
+  [Providers.PULSECHAIN, Chains.ETH, Chains.PLS],
+  [Providers.TOKENSEX, Chains.PLS, Chains.BNB],
+  [Providers.TOKENSEX, Chains.BNB, Chains.PLS],
 ] as BridgeKey[]
 
 /** The testnet bridge keys */
 const testnetBridgeKeys = [
-  [Provider.PULSECHAIN, Chains.SEP, Chains.V4PLS],
-  [Provider.PULSECHAIN, Chains.V4PLS, Chains.SEP],
+  [Providers.PULSECHAIN, Chains.SEP, Chains.V4PLS],
+  [Providers.PULSECHAIN, Chains.V4PLS, Chains.SEP],
 ] as BridgeKey[]
 
 /** Returns the valid bridge keys for the given is prod */
@@ -391,3 +398,83 @@ export const isUnwrappable = (
 export const canChangeUnwrap = (bridgeKey: BridgeKey, assetIn: Token | null) => {
   return !!assetIn && isUnwrappable(bridgeKey, assetIn)
 }
+
+export const chains = {
+  ethereum: 1,
+  bsc: 56,
+  pulsechain: 369,
+  pulsechainV4: 943,
+  sepolia: 11155111,
+} as const
+
+export const chainIds = Object.values(chains)
+
+export type ChainId = (typeof chainIds)[number]
+
+export type Side = 'home' | 'foreign'
+
+export type MinimalKey = `${ChainId}-${Hex}`
+
+// export const Providers = {
+//   PULSECHAIN: 'pulsechain',
+//   TOKENSEX: 'tokensex',
+// } as const
+
+export type PathwayInfo = {
+  pair: string
+  key: string
+  home: Hex
+  foreign: Hex
+}
+
+export type ProviderHomeChainEntry = Partial<Record<ChainId, PathwayInfo[]>>
+
+export type ProviderEntries = Partial<Record<ChainId, ProviderHomeChainEntry>>
+
+export type BridgeConfig = Record<Provider, ProviderEntries>
+
+// provider -> home -> foreign
+export const bridgeConfigs = {
+  [Providers.PULSECHAIN]: {
+    [chains.pulsechain]: {
+      [chains.ethereum]: [{
+        pair: 'mainnet',
+        key: 'erc20',
+        home: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
+        foreign: '0x1715a3e4a142d8b698131108995174f37aeba10d',
+      }, {
+        pair: 'mainnet',
+        key: 'native',
+        home: '0x0e18d0d556b652794EF12Bf68B2dC857EF5f3996',
+        foreign: '0xe20E337DB2a00b1C37139c873B92a0AAd3F468bF',
+      }],
+    },
+    [chains.pulsechainV4]: {
+      [chains.sepolia]: [{
+        pair: 'v4',
+        key: 'erc20',
+        home: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
+        foreign: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
+      }, {
+        pair: 'v4',
+        key: 'native',
+        home: '0x81c10846F40fA2B173FC47958D0a892529983F50',
+        foreign: '0x5e238ef968467cf443ef5ecb683b76c5a04a0421',
+      }],
+    },
+  },
+  [Providers.TOKENSEX]: {
+    [chains.pulsechain]: {
+      [chains.bsc]: [{
+        pair: 'bsctokensex',
+        key: 'erc20',
+        home: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
+        foreign: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
+      }],
+    },
+  },
+} as BridgeConfig
+
+
+export const HOME_TO_FOREIGN_FEE = keccak256(stringToHex("homeToForeignFee"))
+export const FOREIGN_TO_HOME_FEE = keccak256(stringToHex("foreignToHomeFee"))

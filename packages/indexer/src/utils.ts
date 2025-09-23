@@ -2,11 +2,8 @@ import type { Context, Event } from 'ponder:registry'
 import {
   createPublicClient,
   fallback,
-  getAddress,
   getContract,
   http,
-  keccak256,
-  stringToHex,
   webSocket,
   type Hex,
 } from 'viem'
@@ -14,25 +11,26 @@ import HomeAMBAbi from '../abis/HomeAMB'
 import _ from 'lodash'
 import { rateLimit } from 'ponder'
 import BasicOmnibridge from '../abis/BasicOmnibridge'
+import { bridgeConfigs, ChainId, Provider } from '@gibs/bridge-sdk/config'
 
-export const chains = {
-  ethereum: 1,
-  bsc: 56,
-  pulsechain: 369,
-  pulsechainV4: 943,
-  sepolia: 11155111,
-} as const
+// export const chains = {
+//   ethereum: 1,
+//   bsc: 56,
+//   pulsechain: 369,
+//   pulsechainV4: 943,
+//   sepolia: 11155111,
+// } as const
 
-export const chainIds = Object.values(chains)
+// export const chainIds = Object.values(chains)
 
-export type ChainId = (typeof chainIds)[number]
+// export type ChainId = (typeof chainIds)[number]
 
-export const Providers = {
-  PULSECHAIN: 'pulsechain',
-  TOKENSEX: 'tokensex',
-} as const
+// export const Providers = {
+//   PULSECHAIN: 'pulsechain',
+//   TOKENSEX: 'tokensex',
+// } as const
 
-export type Provider = (typeof Providers)[keyof typeof Providers]
+// export type Provider = (typeof Providers)[keyof typeof Providers]
 
 export type PathwayInfo = {
   pair: string
@@ -46,42 +44,46 @@ export type ProviderEntries = Partial<Record<ChainId, ProviderHomeChainEntry>>
 
 export type Pathway = Record<Provider, ProviderEntries>
 
-// provider -> home -> foreign
-export const pathways = {
-  [Providers.PULSECHAIN]: {
-    [chains.pulsechain]: {
-      [chains.ethereum]: [{
-        pair: 'mainnet',
-        home: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
-        foreign: '0x1715a3e4a142d8b698131108995174f37aeba10d',
-      }, {
-        pair: 'mainnet-native',
-        home: '0x0e18d0d556b652794EF12Bf68B2dC857EF5f3996',
-        foreign: '0xe20E337DB2a00b1C37139c873B92a0AAd3F468bF',
-      }],
-    },
-    [chains.pulsechainV4]: {
-      [chains.sepolia]: [{
-        pair: 'v4',
-        home: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
-        foreign: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
-      }, {
-        pair: 'v4-native',
-        home: '0x81c10846F40fA2B173FC47958D0a892529983F50',
-        foreign: '0x5e238ef968467cf443ef5ecb683b76c5a04a0421',
-      }],
-    },
-  },
-  [Providers.TOKENSEX]: {
-    [chains.pulsechain]: {
-      [chains.bsc]: [{
-        pair: 'bsctokensex',
-        home: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
-        foreign: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
-      }],
-    },
-  },
-} as Pathway
+// // provider -> home -> foreign
+// export const pathways = {
+//   [Providers.PULSECHAIN]: {
+//     [chains.pulsechain]: {
+//       [chains.ethereum]: [{
+//         pair: 'mainnet',
+//         key: 'erc20',
+//         home: '0x4fD0aaa7506f3d9cB8274bdB946Ec42A1b8751Ef',
+//         foreign: '0x1715a3e4a142d8b698131108995174f37aeba10d',
+//       }, {
+//         pair: 'mainnet',
+//         key: 'native',
+//         home: '0x0e18d0d556b652794EF12Bf68B2dC857EF5f3996',
+//         foreign: '0xe20E337DB2a00b1C37139c873B92a0AAd3F468bF',
+//       }],
+//     },
+//     [chains.pulsechainV4]: {
+//       [chains.sepolia]: [{
+//         pair: 'v4',
+//         key: 'erc20',
+//         home: '0x6B08a50865aDeCe6e3869D9AfbB316d0a0436B6c',
+//         foreign: '0x546e37DAA15cdb82fd1a717E5dEEa4AF08D4349A',
+//       }, {
+//         pair: 'v4',
+//         key: 'native',
+//         home: '0x81c10846F40fA2B173FC47958D0a892529983F50',
+//         foreign: '0x5e238ef968467cf443ef5ecb683b76c5a04a0421',
+//       }],
+//     },
+//   },
+//   [Providers.TOKENSEX]: {
+//     [chains.pulsechain]: {
+//       [chains.bsc]: [{
+//         pair: 'bsctokensex',
+//         home: '0xf1DFc63e10fF01b8c3d307529b47AefaD2154C0e',
+//         foreign: '0xb4005881e81a6ecd2c1f75d58e8e41f28d59c6b1',
+//       }],
+//     },
+//   },
+// } as Pathway
 
 export const gatherTransportList = (chainId: ChainId) => {
   let index = 0
@@ -140,6 +142,7 @@ export type PathPairing = {
 
 export type MinimalInfo = {
   pair: string
+  key: string
   provider: Provider
   side: Side
   homeChainId: ChainId
@@ -153,12 +156,14 @@ type MinimalEntry = [MinimalKey, MinimalInfo]
 const minimalEntries: MinimalEntry[] = []
 
 const normalize = (c: Hex) => c.toLowerCase() as Hex
-Object.entries(pathways).forEach(([provider, entries]) => {
+Object.entries(bridgeConfigs).forEach(([provider, entries]) => {
   Object.entries(entries).forEach(([homeChainId, pathwayToForeignChain]) => {
     Object.entries(pathwayToForeignChain).forEach(([foreignChainId, infos]) => {
       for (let i = 0; i < infos.length; i++) {
         const info = infos[i]!
         const common = {
+          pair: info.pair,
+          key: info.key,
           provider: provider as Provider,
           homeChainId: +homeChainId as ChainId,
           foreignChainId: +foreignChainId as ChainId,
@@ -194,10 +199,10 @@ Object.entries(pathways).forEach(([provider, entries]) => {
           client: foreignClient,
         }).read.validatorContract()).then(normalize)
         Promise.all([homeValidator, foreignValidator, homeAmb, foreignAmb, homeFeeManager]).then(([homeValidator, foreignValidator, homeAmb, foreignAmb, homeFeeManager]) => {
-          console.log('pair=%o side=%o', info.pair, 'home')
+          console.log('pair=%o side=%o key=%o', info.pair, 'home', info.key)
           console.log('  amb=%o validator=%o', homeAmb, homeValidator)
           console.log('  omni=%o fee_manager=%o', info.home, homeFeeManager)
-          console.log('pair=%o side=%o', info.pair, 'foreign')
+          console.log('pair=%o side=%o key=%o', info.pair, 'foreign', info.key)
           console.log('  amb=%o validator=%o', foreignAmb, foreignValidator)
           console.log('  omni=%o', info.foreign)
         }).catch((err) => {
@@ -274,7 +279,7 @@ export type ContractsAccessInputs = {
 export const accessContract = async (i: ContractsAccessInputs & {
   index: number,
 }) => {
-  const address = pathways[i.provider]![i.from]![i.to]![i.index]![i.side]!
+  const address = bridgeConfigs[i.provider]![i.from]![i.to]![i.index]![i.side]!
   // look up by omni contract address
   const scope = i.side === 'home' ? i.from : i.to
   const pair = minimalInfo.get(`${scope}-${address.toLowerCase() as Hex}`)
@@ -286,7 +291,7 @@ export const accessContract = async (i: ContractsAccessInputs & {
 }
 
 export const accessContracts = async (i: ContractsAccessInputs) => {
-  const results = await Promise.all(pathways[i.provider]![i.from]![i.to]!.map((_p, index) => (
+  const results = await Promise.all(bridgeConfigs[i.provider]![i.from]![i.to]!.map((_p, index) => (
     accessContract({
       ...i,
       index,
@@ -314,8 +319,3 @@ export const getInfoBy = _.memoize(async ({ key, address, chainId }: {
   }
   throw new Error('No key found')
 })
-
-export const HOME_TO_FOREIGN_FEE = keccak256(stringToHex("homeToForeignFee"))
-export const FOREIGN_TO_HOME_FEE = keccak256(stringToHex("foreignToHomeFee"))
-
-console.log('fee keys h2f=%o f2h=%o', HOME_TO_FOREIGN_FEE, FOREIGN_TO_HOME_FEE)

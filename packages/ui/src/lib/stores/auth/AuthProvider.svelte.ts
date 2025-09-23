@@ -180,6 +180,7 @@ class AccountState {
 export const accountState = new AccountState()
 
 modal.subscribeEvents((event) => {
+  console.log('event', event)
   const { event: e } = event.data
   if (e === 'MODAL_OPEN') {
     accountState.modalOpen = true

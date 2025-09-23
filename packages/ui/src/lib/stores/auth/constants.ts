@@ -1,4 +1,4 @@
-import { Chains, Provider } from '@gibs/bridge-sdk/config'
+import { Chains, Providers } from '@gibs/bridge-sdk/config'
 
 const PULSECHAIN_MAINNET_BRIDGE_GRAPHQL_URLS = {
   foreign: 'https://graph.ethereum.pulsechain.com/subgraphs/name/ethereum/bridge',
@@ -6,7 +6,7 @@ const PULSECHAIN_MAINNET_BRIDGE_GRAPHQL_URLS = {
 }
 
 export const bridgeGraphqlUrl = {
-  [Provider.PULSECHAIN]: {
+  [Providers.PULSECHAIN]: {
     [Chains.PLS]: {
       [Chains.ETH]: PULSECHAIN_MAINNET_BRIDGE_GRAPHQL_URLS,
     },

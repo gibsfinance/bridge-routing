@@ -23,9 +23,23 @@ export interface TokenMetadata {
   decimals: number
 }
 
+export interface FeeData {
+  tokenAddress: Hex
+  feeManagerContract: {
+    chainId: string
+    address: Hex
+    omnibridgeAddress: Hex
+  }
+  feeUpdate: {
+    feeType: Hex
+    fee: string
+  }
+}
+
 export interface BridgeData {
   userRequests: UserRequest[]
   tokenMetadata: Map<string, TokenMetadata> // Key: chainId:tokenAddress
+  feeData: FeeData[] // Latest fee updates for cross-referencing amount out calculations
   pageInfo?: {
     hasNextPage: boolean
     hasPreviousPage: boolean
@@ -47,7 +61,8 @@ const fragment = gql`{
     transactionHash
     from
     to
-    amount
+    amountIn
+    amountOut
     encodedData
     logIndex
     requiredSignatureOrderId
@@ -158,7 +173,7 @@ pageInfo {
   endCursor
 }`
 
-// Query to get bridge transactions (optionally filtered by user account)
+// Query to get bridge transactions and fee data (optionally filtered by user account)
 const GET_BRIDGES_QUERY = gql`
   query GetBridges($where: UserRequestFilter, $limit: Int = 10, $after: String) {
     userRequests(where: $where, limit: $limit, after: $after, orderBy: "orderId", orderDirection: "desc") {
@@ -166,6 +181,20 @@ const GET_BRIDGES_QUERY = gql`
         ...BridgeCore
       }
       ${PAGE_INFO_FRAGMENT}
+    }
+    latestFeeUpdates(limit: 1000) {
+      items {
+        tokenAddress
+        feeManagerContract {
+          chainId
+          address
+          omnibridgeAddress
+        }
+        feeUpdate {
+          feeType
+          fee
+        }
+      }
     }
   }
   ${BRIDGE_CORE_FRAGMENT}
@@ -194,6 +223,9 @@ interface GetBridgesQueryResult {
       endCursor?: string | null
     }
     totalCount: number
+  }
+  latestFeeUpdates: {
+    items: FeeData[]
   }
 }
 
@@ -322,10 +354,15 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
       // Load token metadata for all bridges
       const tokenMetadata = await loadTokenMetadata(sortedUserRequests)
 
-      // Return unified array with metadata and pagination info
+      if (data.latestFeeUpdates.items.length >= 1000) {
+        console.warn('Latest fee updates limit reached, some fee updates may be missing')
+      }
+
+      // Return unified array with metadata, fee data, and pagination info
       return {
         userRequests: sortedUserRequests,
         tokenMetadata,
+        feeData: data.latestFeeUpdates.items,
         pageInfo: data.userRequests.pageInfo,
         totalCount: data.userRequests.totalCount
       }

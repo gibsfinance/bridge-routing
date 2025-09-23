@@ -1,7 +1,7 @@
 import { chainKey, clientCache, clientFromChain as clientFromChainSDK } from '@gibs/common/client'
 import { loadBridgeFees } from '@gibs/bridge-sdk/chain-info'
 import { chainsMetadata } from '@gibs/bridge-sdk/chains'
-import { chainIdToKey, Chains, Provider, toChain, pathway, pathways, validBridgeKeys, defaultAssetIn, nativeAssetOut, nativeTokenName, nativeTokenSymbol } from '@gibs/bridge-sdk/config'
+import { chainIdToKey, Chains, Providers, type Provider, toChain, pathway, pathways, validBridgeKeys, defaultAssetIn, nativeAssetOut, nativeTokenName, nativeTokenSymbol } from '@gibs/bridge-sdk/config'
 import type { Token, TokenList, BridgeKey } from '@gibs/bridge-sdk/types'
 import * as imageLinks from '@gibs/bridge-sdk/image-links'
 import {
@@ -67,7 +67,7 @@ export const recipient = new NullableProxyStore<Hex>()
 
 export const recipientLockedToAccount = new ProxyStore<boolean>(true)
 
-export const defaultBridgeKey = [Provider.PULSECHAIN, Chains.PLS, Chains.ETH] as BridgeKey
+export const defaultBridgeKey = [Providers.PULSECHAIN, Chains.PLS, Chains.ETH] as BridgeKey
 
 const getDefaultAssetInAddress = () => {
   const assetInAddress =

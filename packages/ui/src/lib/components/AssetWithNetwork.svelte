@@ -40,7 +40,7 @@
   ])
   const finishedLoading = $derived(chain && loading.isResolved('token'))
   const nativeToken = $derived(zeroAddress === asset?.address)
-  const showWarning = $derived(asset?.chainId === Number(Chains.ETH) && deprecatedNativeAssetOut[Chains.PLS]!.has(getAddress(asset?.address)))
+  const showWarning = $derived(!!asset && networkChain.id === Number(Chains.ETH) && deprecatedNativeAssetOut[Chains.PLS]!.has(getAddress(asset?.address)))
 </script>
 
 <span class={classes} title={asset?.symbol ?? ''}>

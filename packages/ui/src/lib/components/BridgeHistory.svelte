@@ -6,21 +6,49 @@
   import Loader from './Loader.svelte'
   import { loadBridgeTransactions, type Bridge, type BridgeData, type TokenMetadata } from '../stores/history'
   import { accountState, connect } from '../stores/auth/AuthProvider.svelte'
-  import { getTokenAddressFromBridge } from '../stores/token-metadata-cache'
-  import { uri } from '../stores/toast'
-  import { toChain } from '@gibs/bridge-sdk/config'
   import type { Token } from '@gibs/bridge-sdk/types'
   import DirectLink from './DirectLink.svelte'
-  import ProviderIcon from './ProviderIcon.svelte'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
-    import { numberWithCommas } from '../stores/utils'
-    import type { Hex } from 'viem'
+  import InfoTooltip from './InfoTooltip.svelte'
+  import Tooltip from './Tooltip.svelte'
+  import { numberWithCommas } from '../stores/utils'
+  import { zeroAddress, type Hex, isAddress } from 'viem'
+  import ConnectButton from './ConnectButton.svelte'
+  import * as imageLinks from '@gibs/bridge-sdk/image-links'
+  import { HOME_TO_FOREIGN_FEE, FOREIGN_TO_HOME_FEE, Chains } from '@gibs/bridge-sdk/config'
+  import { oneEther } from '@gibs/bridge-sdk/settings'
+    import { chainsMetadata } from '@gibs/bridge-sdk/chains'
 
+  // const walletAccount = $derived(accountState.address)
   const walletAccount = $derived(accountState.address)
+  $inspect(walletAccount)
+
+  // Manual address input state
+  let manualAddressInput = $state('')
+  let manualAddress = $state<string | null>(null)
+  let addressInputRef = $state<HTMLInputElement>()
+
+  // Track previous wallet account to detect changes
+  let previousWalletAccount = $state<string | null>(null)
+
+  // Effect to detect wallet address changes and override manual address
+  $effect(() => {
+    if (walletAccount !== previousWalletAccount) {
+      // Wallet address changed - override manual address if wallet is connected
+      if (walletAccount) {
+        manualAddress = walletAccount
+      }
+      previousWalletAccount = walletAccount
+    }
+  })
+
+  // Derived address - use manual address as primary, fallback to wallet if no manual address
+  const activeAddress = $derived(manualAddress || walletAccount)
 
   // State for bridge data and pagination
   let bridgeData: BridgeData | null = $state(null)
+  $inspect(bridgeData)
   let isLoading = $state(false)
   let error: string | null = $state(null)
   let currentPage = $state(1)
@@ -50,7 +78,7 @@
 
     try {
       const params = {
-        address: accountState.address as Hex | null | undefined,
+        address: activeAddress as Hex | null | undefined,
         limit: limit,
         after: undefined // We'll implement cursor navigation for specific pages later
       }
@@ -112,6 +140,30 @@
 
   // Retry function
   function retryLoad() {
+    loadPageData()
+  }
+
+  // Address input handling functions
+  function handleAddressInput() {
+    const trimmedInput = manualAddressInput.trim()
+    if (trimmedInput && isAddress(trimmedInput)) {
+      manualAddress = trimmedInput
+      manualAddressInput = ''
+      currentPage = 1 // Reset to first page when address changes
+      loadPageData()
+    }
+  }
+
+  function handleAddressKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      handleAddressInput()
+    }
+  }
+
+  function clearManualAddress() {
+    manualAddress = null
+    currentPage = 1 // Reset to first page when address is cleared
     loadPageData()
   }
 
@@ -183,16 +235,16 @@
     try {
       const amountBigInt = BigInt(amount)
       const divisor = BigInt(10 ** decimals)
-      const wholePart = amountBigInt / divisor
+      const wholePartInt = amountBigInt / divisor
       const fractionalPart = amountBigInt % divisor
-
+      const wholePart = numberWithCommas(wholePartInt.toString())
       if (fractionalPart === 0n) {
-        return wholePart.toString()
+        return wholePart
       }
 
       const fractionalStr = fractionalPart.toString().padStart(decimals, '0')
       const trimmed = fractionalStr.replace(/0+$/, '')
-      return trimmed ? `${numberWithCommas(wholePart.toString())}.${trimmed}` : numberWithCommas(wholePart.toString())
+      return trimmed ? `${wholePart}.${trimmed}` : wholePart
     } catch (err) {
       console.log('failed to format token amount', err)
       return amount
@@ -206,14 +258,59 @@
 
     if (!address || !chainId) return null
 
+    const images = [`${chainId}/${address}`]
+    const otherSide = bridge.destinationTokenAddress
+    if (otherSide) {
+      images.push(`${bridge.destinationChainId}/${otherSide}`)
+    }
+    if (chainId === 943 && (address === '0x70499adEBB11Efd915E3b69E700c331778628707' || address === zeroAddress)) {
+      return {
+        address,
+        chainId,
+        ...chainsMetadata[Chains.V4PLS]!.nativeCurrency,
+        logoURI: chainsMetadata[Chains.V4PLS]!.logoURI,
+      }
+    }
+
     return {
       address,
       chainId: chainId,
       symbol: metadata?.symbol || '',
       name: metadata?.name || '',
       decimals: metadata?.decimals || 18,
-      logoURI: `https://gib.show/image/${chainId}/${address}`
+      logoURI: imageLinks.images(images),
     }
+  }
+
+  // Helper function to calculate amount out using fee data
+  function calculateAmountOut(bridge: Bridge, feeData: any[] | undefined): bigint | null {
+    if (!bridge.amountIn || !feeData) return null
+
+    const tokenAddress = getTokenAddress(bridge)
+
+    // Determine if this is home to foreign or foreign to home
+    // Based on the pathway config, we need to check the bridge direction
+    const isHomeToForeign = bridge.originationAMBBridge?.side === 'home' ||
+                           bridge.destinationAMBBridge?.side === 'foreign'
+
+    const feeTypeToMatch = isHomeToForeign ? HOME_TO_FOREIGN_FEE : FOREIGN_TO_HOME_FEE
+
+    // Find matching fee data
+    const matchingFee = feeData.find(fee =>
+      fee.tokenAddress.toLowerCase() === tokenAddress.toLowerCase() &&
+      fee.feeManagerContract.chainId === (isHomeToForeign ? bridge.originationChainId : bridge.destinationChainId) &&
+      fee.feeUpdate.feeType === feeTypeToMatch
+    )
+
+    if (!matchingFee) return null
+
+    const amountInBigInt = BigInt(bridge.amountIn)
+    const feeBigInt = BigInt(matchingFee.feeUpdate.fee)
+
+    // Fee is typically in basis points (10000 = 100%)
+    const amountOutBigInt = amountInBigInt - (amountInBigInt * feeBigInt / oneEther)
+
+    return amountOutBigInt
   }
 </script>
 
@@ -223,40 +320,132 @@ go to the bridge history api endpoint and get the bridges for the provided addre
 map out the progress of each bridge and display it to the user
 -->
 
-<div class="w-full flex flex-col dark:bg-gray-900 bg-gray-50">
+<div class="w-full flex flex-col dark:bg-surface-950 bg-gray-50">
 <div class="max-w-5xl w-full mx-auto py-8">
-  <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-700 p-0">
+  <div class="bg-white dark:bg-slate-950 lg:rounded-3xl shadow-lg border border-gray-200 dark:border-gray-700 p-0 text-surface-contrast-50 dark:text-surface-contrast-950">
     <div class="p-4">
-       <div class="flex items-center justify-between">
-         <div class="flex items-center space-x-3 w-full">
-           <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Bridge History</h2>
-           {#if !walletAccount}
-            <div class="flex items-center space-x-2 ml-auto">
-              <div class="relative group">
-                <svg class="w-5 h-5 text-blue-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 dark:bg-gray-700 text-white text-sm rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                  Connect your wallet to see your personal bridge history
-                  <div class="absolute top-full left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-800 dark:bg-gray-700 rotate-45"></div>
-                </div>
-              </div>
-              <button
-                class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                onclick={connect}
-              >
-                Connect Wallet
-              </button>
+      <div class="flex items-center justify-between">
+        <div class="flex gap-4 w-full">
+          <div class="flex gap-2 items-baseline">
+            <h2 class="text-4xl font-bold font-italiana">History</h2>
+            <InfoTooltip
+              text={activeAddress
+                ? 'Recent bridge transactions and their status for the specified address'
+                : 'View recent bridge transactions from all users'
+              }
+              iconSize={5}
+              iconColor="text-surface-500"
+              placement="top"
+            />
+          </div>
+          <!-- {#if !walletAccount} -->
+          <!-- Large screens: inline layout -->
+          <div class="flex flex-col lg:flex-row-reverse justify-end flex-grow items-center gap-2">
+            <div class="flex items-center gap-2 ml-auto lg:ml-0">
+              <InfoTooltip
+                text="Connect your wallet to see your personal bridge history, or enter any address to view its transactions"
+                placement="top"
+                iconSize={5}
+                maxWidth="max-w-96"
+                iconColor="text-surface-500"
+              />
+              <ConnectButton />
             </div>
-          {/if}
+            <div class="items-center gap-2 ml-auto flex">
+              <!-- Manual address badge (shown when address is set) -->
+              {#if manualAddress}
+                <div class="flex items-center bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300 px-3 py-1 rounded-full text-sm">
+                  <span class="mr-2">
+                    {manualAddress.slice(0, 2+4)}...{manualAddress.slice(-4)}
+                  </span>
+                  <button
+                    onclick={clearManualAddress}
+                    class="text-surface-500 hover:text-surface-700 dark:hover:text-surface-200 transition-colors"
+                    aria-label="Clear address"
+                  >
+                    <Icon icon="lucide:x" class="w-4 h-4" />
+                  </button>
+                </div>
+              {/if}
+
+               <!-- Address input field -->
+               <div class="relative flex flex-grow justify-end h-10">
+                 <input
+                   bind:this={addressInputRef}
+                   bind:value={manualAddressInput}
+                   onkeydown={handleAddressKeydown}
+                   placeholder="Enter address..."
+                   class="pl-3 pr-10 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-full focus:ring focus:ring-surface-500 focus:border-surface-500 bg-white dark:bg-surface-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 w-fit min-w-60 h-full"
+                   type="text"
+                 />
+{#if manualAddressInput.trim() && !isAddress(manualAddressInput.trim())}
+                  <Tooltip placement="top" positionerClassName="z-50">
+                    {#snippet trigger()}
+                      <button
+                        onclick={handleAddressInput}
+                        disabled={true}
+                        class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
+                        aria-label="Invalid address"
+                      >
+                        <Icon icon="lucide:help-circle" class="w-5 h-5" />
+                      </button>
+                    {/snippet}
+                    {#snippet content()}
+                      Invalid address
+                    {/snippet}
+                  </Tooltip>
+                {:else}
+                  <button
+                    onclick={handleAddressInput}
+                    disabled={!manualAddressInput.trim()}
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full dark:bg-surface-600 bg-surface-500 hover:bg-surface-600 dark:hover:bg-surface-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
+                    aria-label="Submit address"
+                  >
+                    <Icon icon="lucide:arrow-up" class="w-5 h-5" />
+                  </button>
+                {/if}
+               </div>
+            </div>
+          </div>
         </div>
       </div>
-      <p class="text-gray-600 dark:text-gray-300 text-xs">
-        {walletAccount
-          ? 'Recent bridge transactions and their status for the connected wallet'
-          : 'View recent bridge transactions from all users'
-        }
-      </p>
+
+      <!-- Address input section for small screens (below header) -->
+      <!-- {#if !walletAccount}
+        <div class="lg:hidden px-4 pb-4 border-b border-gray-200 dark:border-gray-700 gap-2 flex flex-col">
+          <div class="flex flex-col space-y-3">
+            {#if manualAddress}
+              <div class="flex items-center justify-between bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300 px-3 py-2 rounded-lg text-sm">
+                <span>
+                  Viewing: {manualAddress.slice(0, 6)}...{manualAddress.slice(-4)}
+                </span>
+                <button
+                  onclick={clearManualAddress}
+                  class="text-surface-500 hover:text-surface-700 dark:hover:text-surface-200 transition-colors"
+                  aria-label="Clear address"
+                >
+                  <Icon icon="lucide:x" class="w-4 h-4" />
+                </button>
+              </div>
+            {/if}
+
+            <div class="relative flex justify-end">
+              <input
+                bind:value={manualAddressInput}
+                onkeydown={handleAddressKeydown}
+                placeholder="Enter address to view its bridge history..."
+                class="min-w-80 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-surface-500 focus:border-surface-500 bg-white dark:bg-surface-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                type="text"
+              />
+              {#if manualAddressInput.trim() && !isAddress(manualAddressInput.trim())}
+                <div class="absolute -bottom-5 left-0 text-xs text-red-500">
+                  Invalid address
+                </div>
+              {/if}
+            </div>
+          </div>
+        </div>
+      {/if} -->
     </div>
 
     {#if error}
@@ -269,7 +458,7 @@ map out the progress of each bridge and display it to the user
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error Loading Bridge History</h3>
         <p class="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
         <button
-          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          class="inline-flex items-center px-4 py-2 bg-surface-600 text-white hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 rounded-full"
           onclick={retryLoad}
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,14 +468,14 @@ map out the progress of each bridge and display it to the user
         </button>
       </div>
     {:else if isLoading}
-      <div class="text-center py-12">
+      <div class="text-center py-12 h-120">
         <div class="flex justify-center mb-4 text-gray-700">
           <Loader class="size-8" />
         </div>
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Loading Bridge Transactions</h3>
         <p class="text-gray-600 dark:text-gray-300">
-          {walletAccount
-            ? 'Fetching your bridge history...'
+          {activeAddress
+            ? `Fetching bridge history for ${activeAddress.slice(0, 6)}...${activeAddress.slice(-4)}...`
             : 'Fetching recent bridge transactions...'
           }
         </p>
@@ -296,7 +485,7 @@ map out the progress of each bridge and display it to the user
         <!-- Use userRequests directly, already sorted by orderId -->
         {@const allTransactions = bridgeData?.userRequests || []}
 
-        <div class="space-y-4">
+        <div class="flex flex-col gap-2 h-120">
 
           <!-- Transaction Cards -->
           <div class="gap-2 px-4 flex flex-col">
@@ -304,64 +493,54 @@ map out the progress of each bridge and display it to the user
               {@const metadata = getTokenMetadata(bridge, bridgeData?.tokenMetadata)}
               {@const originChainId = bridge.originationChainId || 'Unknown'}
               {@const destChainId = bridge.destinationChainId || 'Unknown'}
-              {@const provider = bridge.originationAMBBridge?.provider || bridge.destinationAMBBridge?.provider || 'Bridge'}
-              {@const tokenImage = `https://gib.show/image/${originChainId}/${getTokenAddress(bridge)}`}
+              <!-- {@const provider = bridge.originationAMBBridge?.provider || bridge.destinationAMBBridge?.provider || 'Bridge'}
+              {@const tokenImage = `https://gib.show/image/${originChainId}/${getTokenAddress(bridge)}`} -->
               {@const inputToken = createTokenFromBridge(bridge, metadata)}
               <!-- {@const outputToken = createTokenFromBridge(bridge, metadata)} -->
 
-              <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full hover:shadow-xs transition-shadow">
+              <div class="bg-white dark:bg-surface-950 ring ring-surface-200 dark:ring-surface-700 rounded-full hover:shadow-xs transition-shadow lg:h-10">
                 <!-- Section 1: Summary -->
-                <div class="flex flex-row gap-2 justify-between">
+                <div class="flex flex-row justify-between h-full">
                   <!-- <h3 class="text-sm font-medium text-gray-500 mb-3">Bridge Summary</h3> -->
-                  <div class="flex items-center justify-between gap-2 py-1 px-2">
-                    <!-- Input Token -->
-                    <div class="flex items-center gap-2">
-                      <div class="flex flex-col min-w-0 flex-1 w-48 text-right">
-                        <div class="flex items-center space-x-1 truncate justify-end leading-5">
-                          <span class="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                            {metadata ? formatTokenAmount(bridge.amount, {decimals: metadata.decimals}) : bridge.amount}
-                          </span>
-                        </div>
+                  <div class="flex items-center justify-between lg:gap-2 gap-0 py-1 px-4 flex-grow flex-col lg:flex-row flex-grow align-center">
+                    <!-- Input Token and chain -->
+                    <div class="flex items-center gap-2 flex-grow lg:flex-grow-0 self-start">
+                      <!-- <div class="flex flex-col min-w-0 flex-1 w-48 text-right"> -->
+                      <div class="flex items-center space-x-1 truncate justify-end leading-5 flex-grow w-40">
+                        <span class="text-lg text-gray-900 dark:text-white truncate">
+                          {metadata && bridge.amountIn ? formatTokenAmount(bridge.amountIn, {decimals: metadata.decimals}) : bridge.amountIn}
+                        </span>
                       </div>
-                      <span class="text-sm text-gray-600 dark:text-gray-300 truncate w-16">
-                        {metadata?.symbol}
-                      </span>
                       <AssetWithNetwork
                         asset={inputToken}
                         network={Number(originChainId)}
                         tokenSizeClasses="w-6 h-6"
                         networkSizeClasses="w-3 h-3"
                       />
+                      <span class="text-sm text-gray-600 dark:text-gray-300 truncate w-24">
+                        {metadata?.symbol}
+                      </span>
                       <!-- Transaction link to block explorer -->
                       {#if bridge.transaction?.hash && bridge.transaction?.chainId}
+                      <div class="rounded-full border-surface-500 border p-0.5">
                         <DirectLink
                           path="/tx/{bridge.transaction.hash}"
                           chain={Number(bridge.transaction.chainId)}
-                          class="text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors"
-                          size={5}
+                          class="text-surface-500 dark:text-surface-500 hover:text-surface-600 transition-colors"
+                          size={4}
                         />
+                      </div>
                       {/if}
-                    </div>
-
-                    <!-- Arrow and Chain Flow -->
-                    <div class="flex items-center space-x-3 justify-center">
-                      <!-- <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg> -->
-
                       <!-- Origin Chain -->
                       <div class="flex items-center space-x-1 mx-0">
                         <StaticNetworkImage
                           network={Number(originChainId)}
                           sizeClasses="w-5 h-5"
                         />
-                        <!-- <span class="text-xs text-gray-500">{originChainId}</span> -->
                       </div>
-
-                      <!-- Provider -->
-                      <!-- <div class="px-2 py-1 bg-blue-50 flex items-center justify-center"> -->
-                        <!-- <ProviderIcon provider={provider.toLowerCase()} sizeClasses="w-5 h-5" /> -->
-                      <!-- </div> -->
+                    </div>
+                    <!-- output chain, amount, and token with links -->
+                    <div class="flex items-center gap-2 flex-grow self-end h-full">
                       <Icon icon="jam:chevron-right" class="w-4 h-4 text-gray-400 mx-0" />
                       <!-- Destination Chain -->
                       <div class="flex items-center space-x-1 mx-0">
@@ -371,32 +550,83 @@ map out the progress of each bridge and display it to the user
                         />
                         <!-- <span class="text-xs text-gray-500">{destChainId}</span> -->
                       </div>
+                      <div class="flex items-center gap-2 flex-grow">
+                        <!-- Completion transaction link -->
+                        {#if bridge.completion?.transactionHash && bridge.completion?.chainId}
+                        <div class="rounded-full border-surface-500 border p-0.5">
+                          <DirectLink
+                            path="/tx/{bridge.completion.transactionHash}"
+                            chain={Number(bridge.completion.chainId)}
+                            class="text-surface-500 dark:text-surface-500 hover:text-surface-600 transition-colors"
+                            size={4}
+                          />
+                          </div>
+                        {:else}
+                          <!-- Transparent placeholder for completion -->
+                          <div class="w-5 h-5 opacity-0 pointer-events-none"></div>
+                        {/if}
 
-                      <!-- <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg> -->
-                    </div>
+                        <div class="flex items-center space-x-1 truncate justify-end leading-3 flex-grow">
+                          <span class="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">
+                            <!-- amount out from the bridge -->
+                            {(() => {
+                              // If we have actual amountOut, use it
+                              if (bridge.amountOut && metadata) {
+                                return formatTokenAmount(bridge.amountOut, {decimals: metadata.decimals})
+                              }
 
-                    <div class="flex items-center space-x-1 truncate justify-end leading-3">
-                      <span class="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">
-                        <!-- amount out from the bridge -->
-                        {metadata ? formatTokenAmount(bridge.amount, {decimals: metadata.decimals}) : bridge.amount}
-                      </span>
+                              // If no amountOut but we have amountIn, calculate using fee data
+                              if (bridge.amountIn && metadata) {
+                                const calculatedAmountOut = calculateAmountOut(bridge, bridgeData?.feeData)
+                                if (calculatedAmountOut !== null) {
+                                  return formatTokenAmount(calculatedAmountOut.toString(), {decimals: metadata.decimals})
+                                }
+                                // Fallback to amountIn if calculation fails
+                                return formatTokenAmount(bridge.amountIn, {decimals: metadata.decimals})
+                              }
+
+                              // Final fallback
+                              return bridge.amountOut || bridge.amountIn || ''
+                            })()}
+                          </span>
+                          <AssetWithNetwork
+                            asset={inputToken}
+                            network={Number(destChainId)}
+                            tokenSizeClasses="w-6 h-6"
+                            networkSizeClasses="w-3 h-3"
+                          />
+                        </div>
+
+                        <!-- Delivery transaction link -->
+                        {#if bridge.delivery?.transactionHash && bridge.delivery?.chainId}
+                        <div class="rounded-full border-surface-500 border p-0.5">
+                          <DirectLink
+                            path="/tx/{bridge.delivery.transactionHash}"
+                            chain={Number(bridge.delivery.chainId)}
+                            class="text-surface-500 dark:text-surface-500 hover:text-surface-600 transition-colors"
+                            size={4}
+                          />
+                          </div>
+                        {:else}
+                          <!-- Transparent placeholder for delivery -->
+                          <div class="w-5 h-5 opacity-0 pointer-events-none"></div>
+                        {/if}
+                      </div>
                     </div>
                   </div>
 
-                   <!-- Button group justified to the right -->
-                   <div class="flex justify-end">
-                     <div class="inline-flex shadow-sm rounded-r-full" role="group">
+                  <!-- Button group justified to the right -->
+                  <div class="flex justify-end">
+                     <div class="inline-flex shadow-sm rounded-r-full gap-0.5" role="group">
                        <button
-                         class="px-3 py-1 bg-blue-600 text-white text-sm hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:z-10 h-full"
+                         class="px-3 py-1 bg-surface-500 hover:bg-surface-600 dark:bg-surface-600 text-white text-sm dark:hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 focus:z-10 h-full"
                          onclick={() => console.log('clicked')}
                        >
                          Release
                        </button>
                        <div class="relative">
                          <button
-                           class="px-2 py-1 bg-blue-600 text-white text-sm rounded-r-full border-l border-blue-500 hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:z-10 h-full w-10"
+                           class="px-2 py-1 bg-surface-500 dark:bg-surface-600 text-white text-sm rounded-r-full border-l border-surface-500 hover:bg-surface-500 dark:hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 focus:z-10 h-full w-10"
                            onclick={(event) => {
                              // Toggle dropdown visibility
                              const target = event.currentTarget as HTMLElement;
@@ -409,45 +639,45 @@ map out the progress of each bridge and display it to the user
                            <Icon icon="lucide:chevron-down" class="w-4 h-4" />
                          </button>
                          <div class="hidden absolute right-0 mt-1 w-48 bg-white shadow-lg border border-gray-200 z-50 rounded-xl">
-                             <button
-                               class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded-xl"
-                               onclick={(event) => {
-                                 console.log('Option 1 clicked');
-                                 const target = event.currentTarget as HTMLElement;
-                                 const dropdown = target.closest('.absolute') as HTMLElement;
-                                 if (dropdown) {
-                                   dropdown.classList.add('hidden');
-                                 }
-                               }}
-                             >
-                               Release without Tip
-                             </button>
-                             <!-- <button
-                               class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                               onclick={(event) => {
-                                 console.log('Option 2 clicked');
-                                 const target = event.currentTarget as HTMLElement;
-                                 const dropdown = target.closest('.absolute') as HTMLElement;
-                                 if (dropdown) {
-                                   dropdown.classList.add('hidden');
-                                 }
-                               }}
-                             >
-                               Option 2
-                             </button>
-                             <button
-                               class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                               onclick={(event) => {
-                                 console.log('Option 3 clicked');
-                                 const target = event.currentTarget as HTMLElement;
-                                 const dropdown = target.closest('.absolute') as HTMLElement;
-                                 if (dropdown) {
-                                   dropdown.classList.add('hidden');
-                                 }
-                               }}
-                             >
-                               Option 3
-                             </button> -->
+                            <button
+                              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded-xl"
+                              onclick={(event) => {
+                                console.log('Option 1 clicked');
+                                const target = event.currentTarget as HTMLElement;
+                                const dropdown = target.closest('.absolute') as HTMLElement;
+                                if (dropdown) {
+                                  dropdown.classList.add('hidden');
+                                }
+                              }}
+                            >
+                              Release without Tip
+                            </button>
+                            <!-- <button
+                              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onclick={(event) => {
+                                console.log('Option 2 clicked');
+                                const target = event.currentTarget as HTMLElement;
+                                const dropdown = target.closest('.absolute') as HTMLElement;
+                                if (dropdown) {
+                                  dropdown.classList.add('hidden');
+                                }
+                              }}
+                            >
+                              Option 2
+                            </button>
+                            <button
+                              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                              onclick={(event) => {
+                                console.log('Option 3 clicked');
+                                const target = event.currentTarget as HTMLElement;
+                                const dropdown = target.closest('.absolute') as HTMLElement;
+                                if (dropdown) {
+                                  dropdown.classList.add('hidden');
+                                }
+                              }}
+                            >
+                              Option 3
+                            </button> -->
                          </div>
                        </div>
                      </div>
@@ -467,7 +697,7 @@ map out the progress of each bridge and display it to the user
                             <DirectLink
                               path="/address/{bridge.from}"
                               chain={Number(bridge.transaction.chainId)}
-                              class="w-3 h-3 text-gray-400 hover:text-blue-600 transition-colors"
+                              class="w-3 h-3 text-gray-400 hover:text-surface-600 transition-colors"
                             />
                           {/if}
                         </div>
@@ -477,7 +707,7 @@ map out the progress of each bridge and display it to the user
                             <DirectLink
                               path="/address/{bridge.to}"
                               chain={Number(bridge.transaction.chainId)}
-                              class="w-3 h-3 text-gray-400 hover:text-blue-600 transition-colors"
+                              class="w-3 h-3 text-gray-400 hover:text-surface-600 transition-colors"
                             />
                           {/if}
                         </div>
@@ -508,7 +738,7 @@ map out the progress of each bridge and display it to the user
                           <DirectLink
                             path="/tx/{bridge.transaction.hash}"
                             chain={Number(bridge.transaction.chainId)}
-                            class="w-4 h-4 text-gray-400 hover:text-blue-600 transition-colors"
+                            class="w-4 h-4 text-gray-400 hover:text-surface-600 transition-colors"
                           />
                         </div>
                       {:else}
@@ -519,8 +749,8 @@ map out the progress of each bridge and display it to the user
 
                   <div class="mt-3 pt-3 border-t border-gray-100">
                     <div class="flex items-center space-x-2">
-                      <div class="w-2 h-2 rounded-full {bridge.type === 'signature' ? 'bg-blue-500' : 'bg-green-500'}"></div>
-                      <span class="text-xs font-medium {bridge.type === 'signature' ? 'text-blue-600' : 'text-green-600'}">
+                      <div class="w-2 h-2 rounded-full {bridge.type === 'signature' ? 'bg-surface-500' : 'bg-green-500'}"></div>
+                      <span class="text-xs font-medium {bridge.type === 'signature' ? 'text-surface-600' : 'text-green-600'}">
                         {bridge.type === 'signature' ? 'Signature Request' : 'Affirmation Request'}
                       </span>
                       <span class="text-xs text-gray-500">#{bridge.orderId}</span>
@@ -531,91 +761,6 @@ map out the progress of each bridge and display it to the user
             {/each}
           </div>
 
-          <!-- Pagination Controls and Page Size Selector -->
-          <div class="border-t border-gray-100 dark:border-gray-600 py-4 px-4">
-            <div class="flex items-center justify-between flex-wrap gap-4">
-              <!-- Page Size Selector (left side) -->
-              <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                <span>Showing</span>
-                <select
-                  class="pl-2 pr-8 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white dark:bg-gray-700 dark:text-white"
-                  value={limit}
-                  onchange={(e) => changePageSize(Number((e.target as HTMLSelectElement).value))}
-                >
-                  {#each pageSizeOptions as option}
-                    <option value={option}>{option}</option>
-                  {/each}
-                </select>
-                <span>of</span>
-                {#if bridgeData?.totalCount}
-                  <span class="font-medium">{bridgeData.totalCount}</span>
-                  <span>bridge{bridgeData.totalCount !== 1 ? 's' : ''}</span>
-                {/if}
-              </div>
-
-              <!-- Pagination Navigation (right side) -->
-              {#if totalPages > 1}
-                <div class="flex items-center space-x-1">
-                  <!-- First Page (double chevron left) -->
-                  <button
-                    class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
-                    onclick={goToFirstPage}
-                    disabled={currentPage === 1 || isLoading}
-                    aria-label="First page"
-                    title="First page"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                    </svg>
-                  </button>
-
-                  <!-- Previous Page (single chevron left) -->
-                  <button
-                    class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
-                    onclick={goToPreviousPage}
-                    disabled={currentPage === 1 || isLoading}
-                    aria-label="Previous page"
-                    title="Previous page"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-
-                  <!-- Page Info -->
-                  <div class="px-3 py-1 text-sm text-gray-700 dark:text-gray-300 font-medium">
-                    {currentPage} of {totalPages}
-                  </div>
-
-                  <!-- Next Page (single chevron right) -->
-                  <button
-                    class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
-                    onclick={goToNextPage}
-                    disabled={currentPage === totalPages || isLoading}
-                    aria-label="Next page"
-                    title="Next page"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-
-                  <!-- Last Page (double chevron right) -->
-                  <button
-                    class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
-                    onclick={goToLastPage}
-                    disabled={currentPage === totalPages || isLoading}
-                    aria-label="Last page"
-                    title="Last page"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              {/if}
-            </div>
-          </div>
         </div>
       {/snippet}
 
@@ -629,13 +774,108 @@ map out the progress of each bridge and display it to the user
         </div>
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Bridge Transactions</h3>
         <p class="text-gray-600 dark:text-gray-300">
-          {walletAccount
-            ? 'No bridge transactions found for this address. Try making a bridge transaction or check a different address.'
+          {activeAddress
+            ? `No bridge transactions found for ${activeAddress.slice(0, 6)}...${activeAddress.slice(-4)}. Try making a bridge transaction or check a different address.`
             : 'No recent bridge transactions found. Try refreshing or check back later.'
           }
         </p>
       </div>
     {/if}
+
+    <!-- Pagination Controls and Page Size Selector (always visible) -->
+    <div class="border-t border-gray-100 dark:border-gray-600 py-4 px-4">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <!-- Page Size Selector (left side) -->
+        <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+          <span>Showing</span>
+          <select
+            class="pl-2 pr-8 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring focus:ring-surface-500 focus:border-surface-500 appearance-none bg-white hover:bg-surface-50 dark:bg-surface-900 dark:text-white hover:dark:bg-surface-800 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            value={limit}
+            onchange={(e) => changePageSize(Number((e.target as HTMLSelectElement).value))}
+            disabled={isLoading}
+          >
+            {#each pageSizeOptions as option}
+              <option value={option}>{option}</option>
+            {/each}
+          </select>
+          <span>of</span>
+          {#if bridgeData?.totalCount}
+            <span class="font-medium">{bridgeData.totalCount}</span>
+            <span>bridge{bridgeData.totalCount !== 1 ? 's' : ''}</span>
+          {:else if isLoading}
+            <span class="font-medium animate-pulse">...</span>
+            <span>bridges</span>
+          {:else}
+            <span class="font-medium">0</span>
+            <span>bridges</span>
+          {/if}
+        </div>
+
+        <!-- Pagination Navigation (right side) -->
+        <div class="flex items-center space-x-1">
+          <!-- First Page (double chevron left) -->
+          <button
+            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
+            onclick={goToFirstPage}
+            disabled={currentPage === 1 || isLoading || totalPages <= 1}
+            aria-label="First page"
+            title="First page"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <!-- Previous Page (single chevron left) -->
+          <button
+            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
+            onclick={goToPreviousPage}
+            disabled={currentPage === 1 || isLoading || totalPages <= 1}
+            aria-label="Previous page"
+            title="Previous page"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <!-- Page Info -->
+          <div class="px-3 py-1 text-sm text-gray-700 dark:text-gray-300 font-medium">
+            {#if isLoading}
+              <span class="animate-pulse">... of ...</span>
+            {:else}
+              {currentPage} of {totalPages}
+            {/if}
+          </div>
+
+          <!-- Next Page (single chevron right) -->
+          <button
+            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
+            onclick={goToNextPage}
+            disabled={currentPage === totalPages || isLoading || totalPages <= 1}
+            aria-label="Next page"
+            title="Next page"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          <!-- Last Page (double chevron right) -->
+          <button
+            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
+            onclick={goToLastPage}
+            disabled={currentPage === totalPages || isLoading || totalPages <= 1}
+            aria-label="Last page"
+            title="Last page"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 </div>

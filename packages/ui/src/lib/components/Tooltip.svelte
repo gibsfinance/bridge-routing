@@ -11,6 +11,7 @@
       gutter?: number
     }
     maxWidth?: string
+    zIndex?: string
     tooltip?: string
     content?: Snippet
     class?: ClassValue
@@ -36,6 +37,7 @@
     contentClasses: contentClassNames,
     interactive = false,
     gutter = 4,
+    zIndex = '50',
     onOpenChange,
     trigger: triggerSnippet,
     content: contentSnippet,
@@ -47,7 +49,7 @@
   const triggerClasses = $derived(clsx(['flex', triggerClassNames]))
   const contentBase = $derived(
     clsx([
-      'card bg-white border text-surface-contrast-50 text-sm px-2 py-1',
+      'card bg-white dark:bg-surface-950 border border-surface-200 dark:border-surface-700 text-surface-contrast-50 dark:text-gray-500 text-sm px-2 py-1',
       maxWidth,
       contentClassNames,
     ]),
@@ -65,6 +67,7 @@
   {positionerClasses}
   {openDelay}
   {onclick}
+  {zIndex}
   onOpenChange={({ open: openProp }) => {
     open = openProp
     onOpenChange?.({ open: openProp })

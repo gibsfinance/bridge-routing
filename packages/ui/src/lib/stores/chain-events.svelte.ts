@@ -523,11 +523,8 @@ type SingleUserRequest = {
   userRequests: {
     items: {
       messageId: Hex
-      signatures: {
-        items: {
-          messageHash: Hex
-        }[]
-      }
+      messageHash: Hex
+      signatures: Hex[] | null
     }[]
   }
 }
@@ -537,11 +534,7 @@ const singleUserRequest = gql`
     userRequests(where: { transactionHash: $hash, type: signature }) {
       items {
         messageId
-        signatures {
-          items {
-            messageHash
-          }
-        }
+        signatures
       }
     }
   }
@@ -668,7 +661,7 @@ export const liveBridgeStatus = loading.loadsAfterTick<
     if (!finalizedBlock || !userRequest?.messageId) {
       return params
     }
-    const count = !userRequest ? 0 : userRequest.signatures?.items?.length ?? 0
+    const count = !userRequest ? 0 : userRequest.signatures?.length ?? 0
     return {
       ...params,
       messageId: userRequest.messageId,

@@ -2,8 +2,9 @@ import { createConfig, mergeAbis } from 'ponder'
 import HomeAMBAbi from './abis/HomeAMB'
 import ForeignAMBAbi from './abis/ForeignAMB'
 import BaseBridgeValidatorsAbi from './abis/BaseBridgeValidators'
-import { chains, Providers, toTransport, accessContracts } from './src/utils'
+import { toTransport, accessContracts } from './src/utils'
 import BasicOmnibridge from './abis/BasicOmnibridge'
+import { chains, Providers } from '@gibs/bridge-sdk/config'
 import { FeeManagerAbi } from './abis/FeeManager'
 
 Error.stackTraceLimit = Infinity

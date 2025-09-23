@@ -15,9 +15,9 @@
   onclick={() => {
     page.setParam('details', showingDetails ? details.CLOSED : details.SHOW)
   }}>
-  <div class="border-2 transition-all duration-100 rounded-full" class:border-transparent={!showingDetails} class:rotate-45={showingDetails}>
+  <div class="border-2 transition-border duration-100 rounded-full" class:border-transparent={!showingDetails} class:rotate-45={showingDetails}>
     <Icon
       icon="material-symbols:settings-outline-rounded"
-      class="transition-all duration-100 {showingDetails ? 'size-7' : 'size-8'}" />
+      class="transition-height transition-width duration-100 {showingDetails ? 'size-7' : 'size-8'}" />
   </div>
 </Button>

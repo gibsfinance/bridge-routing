@@ -1,7 +1,7 @@
 import * as PonderCore from "ponder";
 import { Chain, Hex, Prettify } from "viem";
 import { bsc, mainnet, pulsechain, pulsechainV4, sepolia } from "viem/chains";
-import { ChainId, Provider, Providers } from "./utils";
+import { ChainId, Provider, Providers } from "@gibs/bridge-sdk/config";
 
 export const foreignPairing = new Map<Provider, Map<ChainId, Chain>>([
   [

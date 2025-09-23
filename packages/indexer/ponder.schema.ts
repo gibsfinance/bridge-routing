@@ -30,14 +30,19 @@ export const AMBBridgeRelations = relations(AMBBridge, (t) => ({
 export const FeeManagerContract = onchainTable('fee_manager_contract', (t) => ({
   chainId: t.bigint().notNull(),
   address: t.hex().notNull(),
+  omnibridgeAddress: t.hex().notNull(),
 }), (t) => ({
-  pk: primaryKey({ columns: [t.chainId, t.address] }),
+  pk: primaryKey({ columns: [t.chainId, t.address, t.omnibridgeAddress] }),
 }))
 
 export const FeeManagerContractRelations = relations(FeeManagerContract, (t) => ({
   feeUpdates: t.many(FeeUpdate),
   // one per token
   latestFeeUpdate: t.many(LatestFeeUpdate),
+  omnibridge: t.one(Omnibridge, {
+    fields: [FeeManagerContract.chainId, FeeManagerContract.omnibridgeAddress],
+    references: [Omnibridge.chainId, Omnibridge.address],
+  }),
 }))
 
 export const ValidatorContract = onchainTable('validator_contract', (t) => ({
@@ -77,10 +82,7 @@ export const OmnibridgeRelations = relations(Omnibridge, (t) => ({
     fields: [Omnibridge.chainId, Omnibridge.address],
     references: [ValidatorContract.chainId, ValidatorContract.address],
   }),
-  feeManagerContract: t.one(FeeManagerContract, {
-    fields: [Omnibridge.chainId, Omnibridge.feeManagerContractAddress],
-    references: [FeeManagerContract.chainId, FeeManagerContract.address],
-  }),
+  feeManagerContract: t.many(FeeManagerContract),
 }))
 
 export const Validator = onchainTable('validator', (t) => ({
@@ -555,11 +557,12 @@ export const LatestFeeUpdate = onchainTable('latest_fee_update', (t) => ({
   chainId: t.bigint().notNull(),
   // encodes the fee type implicitly
   feeManagerContractAddress: t.hex().notNull(),
+  omnibridgeAddress: t.hex().notNull(),
   tokenAddress: t.hex().notNull(),
   feeType: t.hex().notNull(), // h2f or f2f
   orderId: t.bigint().notNull(),
 }), (t) => ({
-  pk: primaryKey({ columns: [t.chainId, t.feeManagerContractAddress, t.tokenAddress, t.feeType] }),
+  pk: primaryKey({ columns: [t.chainId, t.feeManagerContractAddress, t.omnibridgeAddress, t.tokenAddress, t.feeType] }),
 }))
 
 export const LatestFeeUpdateRelations = relations(LatestFeeUpdate, (t) => ({
@@ -584,6 +587,7 @@ export const FeeUpdate = onchainTable('fee_update', (t) => ({
   blockHash: t.hex().notNull(),
   feeType: t.text().notNull(),
   feeManagerContractAddress: t.hex().notNull(),
+  omnibridgeAddress: t.hex().notNull(),
   // zero address for default value
   tokenAddress: t.hex().notNull(),
   fee: t.bigint().notNull(),

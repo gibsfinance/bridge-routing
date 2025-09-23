@@ -1,7 +1,7 @@
 <script lang="ts">
   import { zeroAddress, type Hex } from 'viem'
   import Icon from '@iconify/svelte'
-  import { Chains, Provider } from '@gibs/bridge-sdk/config'
+  import { Chains, Providers } from '@gibs/bridge-sdk/config'
   import { assetOutKey } from '@gibs/bridge-sdk/settings'
 
   import Button from './Button.svelte'
@@ -20,7 +20,7 @@
   }
   const tokenInput = $derived(bridgeSettings.assetIn.value)
   $effect(() => {
-    bridgeKey.value = [Provider.PULSECHAIN, Chains.ETH, Chains.PLS]
+    bridgeKey.value = [Providers.PULSECHAIN, Chains.ETH, Chains.PLS]
   })
   $effect(() => {
     const assetInAddress = tokenInput?.address

@@ -28,7 +28,7 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-surface-300, currentColor);
+    border-color: var(--color-surface-200, currentColor);
   }
 
   @media (prefers-color-scheme: light) {
@@ -37,7 +37,7 @@
     ::before,
     ::backdrop,
     ::file-selector-button {
-      border-color: var(--color-surface-400, currentColor);
+      border-color: var(--color-surface-200, currentColor);
     }
   }
 }

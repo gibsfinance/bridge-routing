@@ -32,7 +32,6 @@
   const gotoOnboard = async () => {
     nav.onboard.shallow()
   }
-  const destinationBridgeKey = $derived(bridgeKey.provider)
   const isBridgeRoute = $derived(page.route.id?.includes('/bridge'))
   const isOnboardRoute = $derived(page.route.id?.includes('/onboard'))
   const isSmall = $derived(innerWidth.current && innerWidth.current < 768)
@@ -41,7 +40,7 @@
 
 <div class="fixed z-20 -mb-14 flex h-14 transition-all duration-200" style="width: {settingsClosed ? '100vw' : 'calc(100vw - 16rem)'};">
   <nav
-    class="grow flex h-14 flex-row bg-white p-2 leading-8 shadow text-surface-contrast-50">
+    class="grow flex h-14 flex-row bg-white dark:bg-slate-950 p-2 leading-8 shadow text-surface-contrast-50 dark:text-surface-contrast-950">
     <div class="m-auto flex w-full max-w-5xl justify-between">
       <button
         type="button"
@@ -56,7 +55,7 @@
         <Loading />
       </button>
       <div class="flex grow content-end items-center">
-        <ul class="flex grow flex-row items-center justify-end text-surface-contrast-50">
+        <ul class="flex grow flex-row items-center justify-end">
           <!-- {#if isBridgeRoute}
             <li class="flex flex-row">
               <a

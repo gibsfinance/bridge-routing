@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
-  import { pathways, testnetPathways, Chains, Provider } from '@gibs/bridge-sdk/config'
+  import { pathways, testnetPathways, Chains, type Provider, Providers } from '@gibs/bridge-sdk/config'
   import type { BridgeKey } from '@gibs/bridge-sdk/types'
   import { Accordion } from '@skeletonlabs/skeleton-svelte'
   import { zeroAddress, type Hex } from 'viem'
@@ -133,7 +133,7 @@
   })
   const bridgeTokensIn = $derived(bridgableTokens.bridgeableTokensUnder(bridgeTokenInSettings))
   const plsxTokens = $derived(bridgableTokens.bridgeableTokensUnder({
-    provider: Provider.PULSECHAIN,
+    provider: Providers.PULSECHAIN,
     chain: 369,
     partnerChain: 1,
   }))
