@@ -496,17 +496,17 @@ const deliverTokens = async ({ event, context }: {
               originationChainId: userRequest.originationChainId,
               destinationChainId: userRequest.destinationChainId,
             }),
-          context.db.insert(Delivery).values({
-            messageHash: userRequest!.messageHash,
-            orderId,
-            chainId: BigInt(context.chain.id),
-            blockHash: event.block.hash,
-            transactionHash: event.transaction.hash,
-            userRequestHash: userRequest!.messageHash,
-            deliverer: event.transaction.from,
-            logIndex: event.log.logIndex,
-            ...tokenData,
-          }),
+          // context.db.insert(Delivery).values({
+          //   messageHash: userRequest!.messageHash,
+          //   orderId,
+          //   chainId: BigInt(context.chain.id),
+          //   blockHash: event.block.hash,
+          //   transactionHash: event.transaction.hash,
+          //   userRequestHash: userRequest!.messageHash,
+          //   deliverer: event.transaction.from,
+          //   logIndex: event.log.logIndex,
+          //   ...tokenData,
+          // }),
         ])
       }),
   ])
