@@ -637,6 +637,8 @@ export type FeeManagerContract = {
   chainId: Scalars['BigInt'];
   feeUpdates?: Maybe<FeeUpdatePage>;
   latestFeeUpdate?: Maybe<LatestFeeUpdatePage>;
+  omnibridge?: Maybe<Omnibridge>;
+  omnibridgeAddress: Scalars['String'];
 };
 
 
@@ -680,6 +682,16 @@ export type FeeManagerContractFilter = {
   chainId_lte?: InputMaybe<Scalars['BigInt']>;
   chainId_not?: InputMaybe<Scalars['BigInt']>;
   chainId_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  omnibridgeAddress?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_contains?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  omnibridgeAddress_not?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  omnibridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
 };
 
 export type FeeManagerContractPage = {
@@ -698,6 +710,7 @@ export type FeeUpdate = {
   feeManagerContract?: Maybe<FeeManagerContract>;
   feeManagerContractAddress: Scalars['String'];
   feeType: Scalars['String'];
+  omnibridgeAddress: Scalars['String'];
   orderId: Scalars['BigInt'];
   token?: Maybe<Token>;
   tokenAddress: Scalars['String'];
@@ -754,6 +767,16 @@ export type FeeUpdateFilter = {
   fee_lte?: InputMaybe<Scalars['BigInt']>;
   fee_not?: InputMaybe<Scalars['BigInt']>;
   fee_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
+  omnibridgeAddress?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_contains?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  omnibridgeAddress_not?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  omnibridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
   orderId?: InputMaybe<Scalars['BigInt']>;
   orderId_gt?: InputMaybe<Scalars['BigInt']>;
   orderId_gte?: InputMaybe<Scalars['BigInt']>;
@@ -798,6 +821,7 @@ export type LatestFeeUpdate = {
   feeManagerContractAddress: Scalars['String'];
   feeType: Scalars['String'];
   feeUpdate?: Maybe<FeeUpdate>;
+  omnibridgeAddress: Scalars['String'];
   orderId: Scalars['BigInt'];
   token?: Maybe<Token>;
   tokenAddress: Scalars['String'];
@@ -834,6 +858,16 @@ export type LatestFeeUpdateFilter = {
   feeType_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   feeType_not_starts_with?: InputMaybe<Scalars['String']>;
   feeType_starts_with?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_contains?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_ends_with?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  omnibridgeAddress_not?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_not_contains?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_not_ends_with?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  omnibridgeAddress_not_starts_with?: InputMaybe<Scalars['String']>;
+  omnibridgeAddress_starts_with?: InputMaybe<Scalars['String']>;
   orderId?: InputMaybe<Scalars['BigInt']>;
   orderId_gt?: InputMaybe<Scalars['BigInt']>;
   orderId_gte?: InputMaybe<Scalars['BigInt']>;
@@ -942,9 +976,19 @@ export type Omnibridge = {
   ambAddress: Scalars['String'];
   ambBridge?: Maybe<AmbBridge>;
   chainId: Scalars['BigInt'];
-  feeManagerContract?: Maybe<FeeManagerContract>;
+  feeManagerContract?: Maybe<FeeManagerContractPage>;
   feeManagerContractAddress?: Maybe<Scalars['String']>;
   validatorContract?: Maybe<ValidatorContract>;
+};
+
+
+export type OmnibridgeFeeManagerContractArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Scalars['String']>;
+  orderDirection?: InputMaybe<Scalars['String']>;
+  where?: InputMaybe<FeeManagerContractFilter>;
 };
 
 export type OmnibridgeFilter = {
@@ -1134,6 +1178,7 @@ export type QueryFeeDirectorsArgs = {
 export type QueryFeeManagerContractArgs = {
   address: Scalars['String'];
   chainId: Scalars['BigInt'];
+  omnibridgeAddress: Scalars['String'];
 };
 
 
@@ -1166,6 +1211,7 @@ export type QueryLatestFeeUpdateArgs = {
   chainId: Scalars['BigInt'];
   feeManagerContractAddress: Scalars['String'];
   feeType: Scalars['String'];
+  omnibridgeAddress: Scalars['String'];
   tokenAddress: Scalars['String'];
 };
 

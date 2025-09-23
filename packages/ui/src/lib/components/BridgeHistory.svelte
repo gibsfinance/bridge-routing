@@ -20,6 +20,7 @@
   import { HOME_TO_FOREIGN_FEE, FOREIGN_TO_HOME_FEE, Chains } from '@gibs/bridge-sdk/config'
   import { oneEther } from '@gibs/bridge-sdk/settings'
     import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+    const payMe = 'images/pay-me-isolated.png'
 
   // const walletAccount = $derived(accountState.address)
   const walletAccount = $derived(accountState.address)
@@ -60,6 +61,9 @@
   let currentPage = $state(1)
   // let totalPages = $state(1)
   let retryCounter = $state(0)
+
+  // Toggle state for filtering between "all" and "pending"
+  let filterMode: 'all' | 'pending' = $state('all')
 
   // Load bridge transactions when account changes
   $effect(() => {
@@ -321,6 +325,14 @@
 
     return amountOutBigInt
   }
+
+  // Helper function to determine if a bridge transaction is finished
+  function isBridgeFinished(bridge: UserRequest): boolean {
+    // A bridge is considered finished if it has both completion and delivery transactions
+    // or if the signing process is finished
+    return bridge.finishedSigning ||
+           (bridge.completion?.transactionHash != null && bridge.delivery?.transactionHash != null)
+  }
 </script>
 
 
@@ -334,7 +346,7 @@ map out the progress of each bridge and display it to the user
   <div class="bg-white dark:bg-slate-950 lg:rounded-3xl shadow-lg border-y md:border border-surface-200 dark:border-surface-800 p-0 text-surface-contrast-50 dark:text-surface-contrast-950">
     <div class="flex items-center justify-between px-2 md:px-4 pt-4 md:pb-2">
       <div class="flex gap-4 w-full">
-        <div class="flex md:static absolute gap-2 items-baseline">
+        <div class="flex md:static absolute gap-2 items-center">
           <h2 class="text-4xl font-bold font-italiana">History</h2>
           <InfoTooltip
             text={activeAddress
@@ -345,6 +357,19 @@ map out the progress of each bridge and display it to the user
             iconColor="text-surface-500"
             placement="top"
           />
+          <!-- Filter Toggle Switch -->
+          <button
+            class="relative inline-flex h-8 w-14 items-center rounded-full bg-surface-200 dark:bg-surface-700 transition-colors focus:outline-none focus:ring focus:ring-surface-500 {filterMode === 'pending' ? 'bg-surface-500 dark:bg-surface-600' : ''}"
+            onclick={() => filterMode = filterMode === 'all' ? 'pending' : 'all'}
+            title={filterMode === 'all' ? 'Switch to pending transactions' : 'Switch to all transactions'}
+          >
+            <span class="sr-only">Toggle filter mode</span>
+            <span
+              class="h-6 w-6 transform rounded-full bg-white dark:bg-surface-100 shadow-lg transition-transform duration-200 ease-in-out flex items-center justify-center {filterMode === 'pending' ? 'translate-x-7' : 'translate-x-1'}"
+            >
+              <Icon icon={filterMode === 'all' ? 'lucide:list' : 'lucide:clock'} class="w-4 h-4 text-surface-600" />
+            </span>
+          </button>
         </div>
         <!-- {#if !walletAccount} -->
         <!-- Large screens: inline layout -->
@@ -401,7 +426,7 @@ map out the progress of each bridge and display it to the user
                   <button
                     onclick={handleAddressInput}
                     disabled={true}
-                    class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full disabled:border-gray-300 dark:disabled:border-gray-600 disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
                     aria-label="Invalid address"
                   >
                     <Icon icon="lucide:help-circle" class="w-5 h-5" />
@@ -415,7 +440,7 @@ map out the progress of each bridge and display it to the user
               <button
                 onclick={handleAddressInput}
                 disabled={!manualAddressInput.trim()}
-                class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full dark:bg-surface-600 bg-surface-500 hover:bg-surface-600 dark:hover:bg-surface-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
+                class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border-2 dark:border-surface-600 border-surface-500 hover:border-surface-600 dark:hover:border-surface-600 disabled:border-gray-300 dark:disabled:border-gray-600 text-white disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
                 aria-label="Submit address"
               >
                 <Icon icon="lucide:arrow-up" class="w-5 h-5" />
@@ -452,12 +477,15 @@ map out the progress of each bridge and display it to the user
       {#snippet mergedTransactions()}
         <!-- Use userRequests directly, already sorted by orderId -->
         {@const allTransactions = bridgeData?.userRequests || []}
+        {@const filteredTransactions = filterMode === 'pending'
+          ? allTransactions.filter(bridge => !isBridgeFinished(bridge))
+          : allTransactions}
 
-        <div class="flex flex-col gap-2 h-124 py-2 overflow-y-auto custom-scrollbar">
-
-          <!-- Transaction Cards -->
-          <div class="gap-2 md:px-4 px-0 flex flex-col">
-            {#each allTransactions as bridge (bridge.orderId)}
+        {#if filteredTransactions.length > 0}
+          <div class="flex flex-col gap-2 h-124 py-2 overflow-y-auto custom-scrollbar">
+            <!-- Transaction Cards -->
+            <div class="gap-2 md:px-4 px-0 flex flex-col">
+              {#each filteredTransactions as bridge (bridge.orderId)}
               {@const metadata = getTokenMetadata(bridge, bridgeData?.tokenMetadata)}
               {@const originChainId = bridge.originationChainId || 'Unknown'}
               {@const destChainId = bridge.destinationChainId || 'Unknown'}
@@ -587,7 +615,8 @@ map out the progress of each bridge and display it to the user
                   <div class="flex justify-end">
                      <div class="inline-flex shadow-sm md:rounded-r-full gap-0.5" role="group">
                        <button
-                         class="px-3 py-1 bg-surface-500 hover:bg-surface-600 dark:bg-surface-600 text-white text-sm dark:hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 focus:z-10 h-full"
+                         class="px-4 py-1 bg-surface-500 hover:bg-surface-600 dark:bg-surface-600 text-white text-sm dark:hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 focus:z-10 h-full bg-position-[-55px_6px] hover:bg-position-[-4px_6px]"
+                         style="background-image: url({payMe}); background-size: 46px 35px; background-repeat: no-repeat; transition: background-position 200ms ease-in-out;"
                          onclick={() => console.log('clicked')}
                        >
                          Release
@@ -606,7 +635,7 @@ map out the progress of each bridge and display it to the user
                          >
                            <Icon icon="lucide:chevron-down" class="w-4 h-4" />
                          </button>
-                         <div class="hidden absolute right-0 mt-1 w-48 bg-white shadow-lg border border-gray-200 z-50 rounded-xl">
+                         <div class="hidden absolute right-0 mt-0 w-48 bg-white shadow-lg border border-gray-200 z-50 rounded-xl">
                             <button
                               class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded-xl"
                               onclick={(event) => {
@@ -726,10 +755,27 @@ map out the progress of each bridge and display it to the user
                   </div>
                 </div> -->
               </div>
-            {/each}
+              {/each}
+            </div>
           </div>
-
-        </div>
+        {:else}
+          <!-- No filtered transactions state -->
+          <div class="text-center py-12 h-124">
+            <div class="text-gray-400 dark:text-gray-500 mb-4">
+              <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No {filterMode === 'pending' ? 'Pending' : ''} Bridge Transactions</h3>
+            <p class="text-gray-600 dark:text-gray-300">
+              {#if filterMode === 'pending'}
+                No pending bridge transactions found. All transactions appear to be completed.
+              {:else}
+                No bridge transactions found.
+              {/if}
+            </p>
+          </div>
+        {/if}
       {/snippet}
 
         {@render mergedTransactions()}
