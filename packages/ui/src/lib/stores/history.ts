@@ -2,10 +2,8 @@ import { loading } from './loading.svelte'
 import { getAddress, type Hex } from 'viem'
 import * as networks from 'viem/chains'
 import type {
-  Query,
   UserRequest,
   UserRequestFilter,
-  UserRequestType
 } from '../gql/graphql'
 import { gql, GraphQLClient } from 'graphql-request'
 import { indexer } from '../config'
@@ -14,8 +12,6 @@ import type { UseAppKitAccountReturn } from '@reown/appkit'
 import { multicallErc20, type Erc20Metadata } from '@gibs/common'
 import { clientFromChain } from './input.svelte'
 import { getStoreKey, getTokenMetadata, parseTokenKey, loadTokenMetadata as loadTokenMetadataFromCache } from './token-metadata-cache'
-
-export type Bridge = UserRequest
 
 export interface TokenMetadata {
   name: string
@@ -232,7 +228,7 @@ interface GetBridgesQueryResult {
 /**
  * Helper function to load token metadata for unique tokens across chains
  */
-async function loadTokenMetadata(bridges: Bridge[]): Promise<Map<string, TokenMetadata>> {
+async function loadTokenMetadata(bridges: UserRequest[]): Promise<Map<string, TokenMetadata>> {
   const tokenMetadata = new Map<string, TokenMetadata>()
 
   // Extract unique token/chain combinations
