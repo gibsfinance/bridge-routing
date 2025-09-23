@@ -1,5 +1,8 @@
-import { concatHex, formatUnits, getAddress, keccak256, parseUnits, type Hex } from 'viem'
+import { concatHex, formatUnits, getAddress, keccak256, parseUnits, type Hex, type BlockTag } from 'viem'
 import _ from 'lodash'
+import { bridgeStatuses, type ContinuedLiveBridgeStatusParams } from './chain-events.svelte'
+import type { Block } from 'viem'
+import type { SvelteMap } from 'svelte/reactivity'
 
 export const ellipsis = (v: string, { length = 8, prefixLength = 0 } = {}) =>
   length === (v.length - prefixLength) / 2
@@ -104,4 +107,92 @@ export const usd = {
       ? humanReadableNumber(usdValueTokenAmount, { maxDecimals: 2 })
       : this.zeroUsdValue
   },
+}
+
+/**
+ * Bridge ETA calculation utilities
+ */
+export const bridgeETA = {
+  /**
+   * Calculate estimated time for a bridge transaction based on its status
+   */
+  calculateETA({
+    bridgeStatus,
+    fromChainLatestBlock
+  }: {
+    bridgeStatus: ContinuedLiveBridgeStatusParams | null
+    fromChainLatestBlock: SvelteMap<BlockTag, { watcher: any; count: number; block: Block | null }> | undefined
+  }): string | null {
+    const slotCount = 32n
+    const blockTime = 12n
+
+    if (!bridgeStatus) return null
+
+    if (bridgeStatus.status === bridgeStatuses.SUBMITTED) {
+      return 'This transaction is still being validated by the network.'
+    } else if (bridgeStatus.status === bridgeStatuses.MINED) {
+      const currentlyFinalizedBlock = bridgeStatus.finalizedBlock?.number
+      const currentBlock = fromChainLatestBlock?.get('latest')?.block?.number
+      let estimatedFutureFinalizedBlock = currentlyFinalizedBlock
+      const minedBlock = bridgeStatus.receipt?.blockNumber
+
+      if (
+        !currentlyFinalizedBlock ||
+        !estimatedFutureFinalizedBlock ||
+        !minedBlock ||
+        !currentBlock
+      )
+        return 'mined'
+
+      let delta = minedBlock - currentBlock + 96n + 6n
+      if (delta < 0n) {
+        return '<20s'
+      }
+      delta += 3n
+
+      while (estimatedFutureFinalizedBlock < minedBlock) {
+        estimatedFutureFinalizedBlock += slotCount
+      }
+
+      if (estimatedFutureFinalizedBlock === currentlyFinalizedBlock) {
+        return '<20s'
+      }
+
+      const totalSeconds = delta * blockTime
+      const seconds = totalSeconds % 60n
+      const minutes = (totalSeconds - seconds) / 60n
+
+      if (minutes > 3n) {
+        return `<${minutes}m`
+      } else if (!minutes) {
+        return `<${seconds}s`
+      }
+      return `<${minutes}m ${seconds}s`
+    } else if (bridgeStatus.status === bridgeStatuses.FINALIZED) {
+      return '<20s'
+    } else if (bridgeStatus.status === bridgeStatuses.VALIDATING) {
+      return '<10s'
+    }
+
+    return null
+  },
+
+  /**
+   * Calculate ETA for pending bridges from history data
+   * This is a simplified version for bridges that don't have live status tracking
+   */
+  calculatePendingETA({
+    finishedSigning,
+    delivered
+  }: {
+    finishedSigning: boolean
+    delivered: boolean
+  }): string | null {
+    if (!finishedSigning) {
+      return 'Waiting for signatures...'
+    } else if (finishedSigning && !delivered) {
+      return '<10s'
+    }
+    return null
+  }
 }

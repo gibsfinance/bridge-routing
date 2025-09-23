@@ -23,6 +23,7 @@
   import Tooltip from './Tooltip.svelte'
   import Loader from './Loader.svelte'
     import { isProd } from '../stores/config.svelte'
+  import { bridgeETA } from '../stores/utils'
 
   type BridgeProgressProps = {
     oncomplete?: () => void
@@ -96,48 +97,10 @@
   })
   const fromChainLatestBlock = $derived(blocks.get(Number(bridgeKey.fromChain)))
   const bridgeStatusETATooltip = $derived.by(() => {
-    const slotCount = 32n
-    const blockTime = 12n
-    if (bridgeStatus?.status === bridgeStatuses.SUBMITTED) {
-      return 'This transaction is still being validated by the network.'
-    } else if (bridgeStatus?.status === bridgeStatuses.MINED) {
-      const currentlyFinalizedBlock = bridgeStatus?.finalizedBlock?.number
-      const currentBlock = fromChainLatestBlock?.get('latest')?.block?.number
-      let estimatedFutureFinalizedBlock = currentlyFinalizedBlock
-      const minedBlock = bridgeStatus.receipt?.blockNumber
-      if (
-        !currentlyFinalizedBlock ||
-        !estimatedFutureFinalizedBlock ||
-        !minedBlock ||
-        !currentBlock
-      )
-        return 'mined'
-      let delta = minedBlock - currentBlock + 96n + 6n
-      if (delta < 0n) {
-        return '<20s'
-      }
-      delta += 3n
-      while (estimatedFutureFinalizedBlock < minedBlock) {
-        estimatedFutureFinalizedBlock += slotCount
-      }
-      if (estimatedFutureFinalizedBlock === currentlyFinalizedBlock) {
-        return '<20s'
-      }
-      const totalSeconds = delta * blockTime
-      const seconds = totalSeconds % 60n
-      const minutes = (totalSeconds - seconds) / 60n
-      if (minutes > 3n) {
-        return `<${minutes}m`
-      } else if (!minutes) {
-        return `<${seconds}s`
-      }
-      return `<${minutes}m ${seconds}s`
-    } else if (bridgeStatus?.status === bridgeStatuses.FINALIZED) {
-      return '<20s'
-    } else if (bridgeStatus?.status === bridgeStatuses.VALIDATING) {
-      return '<10s'
-    }
-    return null
+    return bridgeETA.calculateETA({
+      bridgeStatus,
+      fromChainLatestBlock
+    })
   })
   $effect(() => {
     if (bridgeStatus?.status === bridgeStatuses.AFFIRMED) {

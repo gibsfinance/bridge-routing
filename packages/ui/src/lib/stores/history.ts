@@ -75,6 +75,8 @@ const fragment = gql`{
     handlingNative
     deliveringNative
     signatures
+    finishedSigning
+    delivered
     block {
       chainId
       hash
@@ -133,7 +135,9 @@ const fragment = gql`{
       chainId
       ambAddress
       originationAddress
+      originationChainId
       destinationAddress
+      destinationChainId
     }
     destinationToken {
       address
@@ -314,6 +318,7 @@ export type LoadBridgesParams = {
   address: Hex | null | undefined
   limit?: number
   after?: string
+  filterMode?: 'all' | 'pending'
 }
 
 /**
@@ -327,15 +332,39 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
     params: LoadBridgesParams,
     controller: AbortController
   ): Promise<BridgeData | null> => {
-    const { address, limit = 10, after } = params || {}
+    const { address, limit = 10, after, filterMode = 'all' } = params || {}
 
-    // Create filter for user requests if address is provided
-    const filter: UserRequestFilter | undefined = address ? {
-      OR: [
-        { from: address as Hex },
-        { to: address as Hex }
-      ]
-    } : undefined
+    // Create filter for user requests
+    let filter: UserRequestFilter | undefined = undefined
+
+    // Start with address filter if provided
+    if (address) {
+      filter = {
+        OR: [
+          { from: address as Hex },
+          { to: address as Hex }
+        ]
+      }
+    }
+
+    // Add status filter based on filterMode
+    if (filterMode === 'pending') {
+      const statusFilter: UserRequestFilter = {
+        AND: [
+          // { finishedSigning: true },
+          { delivered: false }
+        ]
+      }
+
+      if (filter) {
+        // Combine address filter with status filter
+        filter = {
+          AND: [filter, statusFilter]
+        }
+      } else {
+        filter = statusFilter
+      }
+    }
 
     const variables: GetBridgesQueryVariables = {
       where: filter,

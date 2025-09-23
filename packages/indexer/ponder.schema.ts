@@ -497,7 +497,6 @@ export const Delivery = onchainTable('delivery', (t) => ({
   chainId: t.bigint().notNull(),
   transactionHash: t.hex().notNull(),
   blockHash: t.hex().notNull(),
-  userRequestHash: t.hex().notNull(),
   deliverer: t.hex().notNull(),
   logIndex: t.smallint().notNull(),
   // amb entries

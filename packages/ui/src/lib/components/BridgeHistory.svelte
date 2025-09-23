@@ -6,21 +6,22 @@
   import Loader from './Loader.svelte'
   import { loadBridgeTransactions, type BridgeData, type TokenMetadata } from '../stores/history'
   import type { UserRequest } from '../gql/graphql'
-  import { accountState, connect } from '../stores/auth/AuthProvider.svelte'
+  import { accountState } from '../stores/auth/AuthProvider.svelte'
   import type { Token } from '@gibs/bridge-sdk/types'
   import DirectLink from './DirectLink.svelte'
   import AssetWithNetwork from './AssetWithNetwork.svelte'
   import StaticNetworkImage from './StaticNetworkImage.svelte'
   import InfoTooltip from './InfoTooltip.svelte'
   import Tooltip from './Tooltip.svelte'
-  import { numberWithCommas } from '../stores/utils'
+  import { numberWithCommas, bridgeETA } from '../stores/utils'
   import { zeroAddress, type Hex, isAddress } from 'viem'
   import ConnectButton from './ConnectButton.svelte'
   import * as imageLinks from '@gibs/bridge-sdk/image-links'
   import { HOME_TO_FOREIGN_FEE, FOREIGN_TO_HOME_FEE, Chains } from '@gibs/bridge-sdk/config'
   import { oneEther } from '@gibs/bridge-sdk/settings'
-    import { chainsMetadata } from '@gibs/bridge-sdk/chains'
-    const payMe = 'images/pay-me-isolated.png'
+  import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+
+  const payMe = 'images/pay-me-isolated.png'
 
   // const walletAccount = $derived(accountState.address)
   const walletAccount = $derived(accountState.address)
@@ -53,9 +54,16 @@
     manualAddressCleared ? null : (manualAddress || walletAccount)
   )
 
+  const doReleaseToRouter = $derived.by(() => () => {
+    console.log('doReleaseToRouter')
+  })
+  const doReleaseWithoutTip = $derived.by(() => () => {
+    console.log('doReleaseWithoutTip')
+  })
+
   // State for bridge data and pagination
   let bridgeData: BridgeData | null = $state(null)
-  // $inspect(bridgeData)
+  $inspect(bridgeData)
   let isLoading = $state(false)
   let error: string | null = $state(null)
   let currentPage = $state(1)
@@ -84,11 +92,12 @@
 
 
   $effect(() => {
-    // Track reactive dependencies: activeAddress, limit, currentPage, retryCounter
+    // Track reactive dependencies: activeAddress, limit, currentPage, retryCounter, filterMode
     const currentActiveAddress = activeAddress
     const currentLimit = limit
     const currentCurrentPage = currentPage
     const currentRetryCounter = retryCounter
+    const currentFilterMode = filterMode
 
     isLoading = true
     error = null
@@ -96,7 +105,8 @@
     const params = {
       address: currentActiveAddress as Hex | null | undefined,
       limit: currentLimit,
-      after: undefined // We'll implement cursor navigation for specific pages later
+      after: undefined, // We'll implement cursor navigation for specific pages later
+      filterMode: currentFilterMode
     }
 
     const { promise, cleanup } = loadBridgeTransactions(params)
@@ -264,15 +274,14 @@
 
   // Helper function to create Token object from bridge data
   function createTokenFromBridge(bridge: UserRequest, metadata: TokenMetadata | null): Token | null {
-    // const address = getTokenAddress(bridge)
-    const address = bridge.originationToken?.originationAddress ?? bridge.originationToken?.address ?? bridge.originationToken?.destinationAddress ??
-    bridge.originationTokenAddress
-    const chainId = Number(bridge.originationChainId)
+    console.log('bridge', bridge)
+    const address = bridge.originationToken?.originationAddress
+    const chainId = Number(bridge.originationToken?.originationChainId)
 
     if (!address || !chainId) return null
 
     const images = [`${chainId}/${address}`]
-    const otherSide = bridge.destinationTokenAddress
+    const otherSide = bridge.originationToken?.destinationAddress
     if (otherSide) {
       images.push(`${bridge.destinationChainId}/${otherSide}`)
     }
@@ -326,13 +335,6 @@
     return amountOutBigInt
   }
 
-  // Helper function to determine if a bridge transaction is finished
-  function isBridgeFinished(bridge: UserRequest): boolean {
-    // A bridge is considered finished if it has both completion and delivery transactions
-    // or if the signing process is finished
-    return bridge.finishedSigning ||
-           (bridge.completion?.transactionHash != null && bridge.delivery?.transactionHash != null)
-  }
 </script>
 
 
@@ -475,17 +477,14 @@ map out the progress of each bridge and display it to the user
       </div>
     {:else if bridgeData && bridgeData.userRequests.length > 0}
       {#snippet mergedTransactions()}
-        <!-- Use userRequests directly, already sorted by orderId -->
+        <!-- Use userRequests directly, already sorted by orderId and filtered by backend -->
         {@const allTransactions = bridgeData?.userRequests || []}
-        {@const filteredTransactions = filterMode === 'pending'
-          ? allTransactions.filter(bridge => !isBridgeFinished(bridge))
-          : allTransactions}
 
-        {#if filteredTransactions.length > 0}
+        {#if allTransactions.length > 0}
           <div class="flex flex-col gap-2 h-124 py-2 overflow-y-auto custom-scrollbar">
             <!-- Transaction Cards -->
             <div class="gap-2 md:px-4 px-0 flex flex-col">
-              {#each filteredTransactions as bridge (bridge.orderId)}
+              {#each allTransactions as bridge (bridge.orderId)}
               {@const metadata = getTokenMetadata(bridge, bridgeData?.tokenMetadata)}
               {@const originChainId = bridge.originationChainId || 'Unknown'}
               {@const destChainId = bridge.destinationChainId || 'Unknown'}
@@ -605,13 +604,31 @@ map out the progress of each bridge and display it to the user
                     </div>
                   </div>
 
-                  <!-- Button group justified to the right -->
-                  <div class="flex justify-end">
+                  <!-- Button group or status display to maintain horizontal space -->
+                   {#if !bridge.finishedSigning}
+                    <!-- Show pending status with ETA tooltip -->
+                    <div class="flex justify-end w-32">
+                      <div class="flex shadow-sm md:rounded-r-full gap-0.5 w-full">
+                        <span class="px-4 py-1 bg-surface-100 dark:bg-surface-900 text-surface-800 dark:text-surface-200 text-sm md:rounded-r-full h-full flex items-center w-full justify-between">
+                          <span>Pending</span>
+                          <Tooltip placement="top" gutter={3}>
+                            {#snippet trigger()}
+                              <Icon icon="mdi:clock" class="w-4 h-4 text-surface-500 dark:text-surface-400" />
+                            {/snippet}
+                            {#snippet content()}
+                              <span>{bridgeETA.calculatePendingETA({ finishedSigning: bridge.finishedSigning, delivered: bridge.delivered })}</span>
+                            {/snippet}
+                          </Tooltip>
+                        </span>
+                      </div>
+                    </div>
+                  {:else if bridge.finishedSigning && !bridge.delivered}
+                  <div class="flex justify-end w-32">
                      <div class="inline-flex shadow-sm md:rounded-r-full gap-0.5" role="group">
                        <button
                          class="px-4 py-1 bg-surface-500 hover:bg-surface-600 dark:bg-surface-600 text-white text-sm dark:hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 focus:z-10 h-full bg-position-[-55px_6px] hover:bg-position-[-4px_6px]"
                          style="background-image: url({payMe}); background-size: 46px 35px; background-repeat: no-repeat; transition: background-position 200ms ease-in-out;"
-                         onclick={() => console.log('clicked')}
+                         onclick={doReleaseToRouter}
                        >
                          Release
                        </button>
@@ -633,12 +650,12 @@ map out the progress of each bridge and display it to the user
                             <button
                               class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded-xl"
                               onclick={(event) => {
-                                console.log('Option 1 clicked');
                                 const target = event.currentTarget as HTMLElement;
                                 const dropdown = target.closest('.absolute') as HTMLElement;
                                 if (dropdown) {
                                   dropdown.classList.add('hidden');
                                 }
+                                doReleaseWithoutTip()
                               }}
                             >
                               Release without Tip
@@ -673,6 +690,16 @@ map out the progress of each bridge and display it to the user
                        </div>
                      </div>
                    </div>
+                   {:else}
+                   <!-- Show delivered status to maintain horizontal space -->
+                   <div class="flex justify-end w-32">
+                     <div class="flex shadow-sm md:rounded-r-full gap-0.5 w-full">
+                       <span class="px-4 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-sm md:rounded-r-full h-full flex items-center w-full">
+                         Delivered
+                       </span>
+                     </div>
+                   </div>
+                   {/if}
                 </div>
 
                 <!-- Section 2: Details -->

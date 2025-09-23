@@ -132,6 +132,7 @@ export default createConfig({
       ],
       chain: {
         pulsechain: {
+          startBlock: startBlocks.pulsechain,
           address: [
             ...(await accessContracts({
               provider: Providers.PULSECHAIN,
@@ -147,12 +148,7 @@ export default createConfig({
               side: 'home',
               type: 'amb',
             })),
-            // ...pathways.pulsechain[chains.pulsechain]![chains.ethereum]!.map((p) => p.home),
-            // ...pathways.tokensex[chains.pulsechain]![chains.bsc]!.map((p) => p.home),
           ],
-          // bsc is deployed at 17_494_240
-          // startBlock: 20427991,
-          startBlock: startBlocks.pulsechain,
         },
         pulsechainV4: {
           startBlock: startBlocks.pulsechainV4,

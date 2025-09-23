@@ -513,12 +513,26 @@ ponder.on('BasicOmnibridge:NewTokenRegistered', async ({ event, context }) => {
 })
 
 ponder.on('HomeAMB:CollectedSignatures', async ({ event, context }) => {
+  const orderId = createOrderId(context, event)
+  const info = await getInfoBy({ key: 'amb', address: event.log.address, chainId: context.chain.id })
   await Promise.all([
     context.db.update(UserRequest, {
       messageHash: event.args.messageHash,
     }).set({
       authorityResponsibleForRelay: event.args.authorityResponsibleForRelay.toLowerCase() as Hex,
       finishedSigning: true,
+    }).then(async (userRequest) => {
+      return context.db.insert(Completion).values({
+        messageHash: event.args.messageHash,
+        orderId,
+        chainId: BigInt(context.chain.id),
+        blockHash: event.block.hash,
+        transactionHash: event.transaction.hash,
+        originationAmbAddress: userRequest.originationAmbAddress,
+        destinationAmbAddress: userRequest.destinationAmbAddress,
+        originationChainId: userRequest.originationChainId,
+        destinationChainId: userRequest.destinationChainId,
+      })
     }),
   ])
 })
@@ -578,17 +592,32 @@ const deliverTokens = async ({ event, context }: {
           }
         }
 
-        return context.db.insert(Delivery).values({
-          messageHash: userRequest!.messageHash,
-          orderId,
-          chainId: BigInt(context.chain.id),
-          blockHash: event.block.hash,
-          transactionHash: event.transaction.hash,
-          userRequestHash: userRequest!.messageHash,
-          deliverer: event.transaction.from,
-          logIndex: event.log.logIndex,
-          ...tokenData,
-        })
+        return await Promise.all([
+          info.side === 'foreign'
+            ? null // h2f is captured by CollectedSignatures
+            : context.db.insert(Completion).values({
+            messageHash: userRequest!.messageHash,
+            orderId,
+            chainId: BigInt(context.chain.id),
+            blockHash: event.block.hash,
+            transactionHash: event.transaction.hash,
+            originationAmbAddress: userRequest.originationAmbAddress,
+            destinationAmbAddress: userRequest.destinationAmbAddress,
+            originationChainId: userRequest.originationChainId,
+            destinationChainId: userRequest.destinationChainId,
+          }),
+          context.db.insert(Delivery).values({
+            messageHash: userRequest!.messageHash,
+            orderId,
+            chainId: BigInt(context.chain.id),
+            blockHash: event.block.hash,
+            transactionHash: event.transaction.hash,
+            userRequestHash: userRequest!.messageHash,
+            deliverer: event.transaction.from,
+            logIndex: event.log.logIndex,
+            ...tokenData,
+          }),
+        ])
       }),
   ])
 }
@@ -605,28 +634,45 @@ ponder.on('BasicOmnibridge:TokensBridged', async ({ event, context }) => {
     messageId: event.args.messageId,
   })
   const orderId = createOrderId(context, event)
+  const [userRequest, token] = await Promise.all([
+    context.db.find(UserRequest, {
+      messageHash: reverseLookup!.messageHash,
+    }),
+    context.db.find(Token, {
+      address: event.args.token,
+      chainId: BigInt(info.target.chainId),
+      ambAddress: await info.target.amb,
+    }),
+  ])
+  if (!userRequest) {
+    throw new Error(`No user request found for message hash ${reverseLookup!.messageHash}`)
+  }
+  if (!token?.destinationAddress) {
+    throw new Error(`No destination token found for address ${event.args.token}`)
+  }
   await Promise.all([
     upsertBlock(context, event.block),
     upsertTransaction(context, event.block, event.transaction),
-    context.db.insert(Completion).values({
+    context.db.update(UserRequest, {
       messageHash: reverseLookup!.messageHash,
+    }).set({
+      delivered: true,
+    }),
+    context.db.insert(Delivery).values({
+      logIndex: event.log.logIndex,
+      deliverer: event.transaction.from,
       orderId,
       chainId: BigInt(context.chain.id),
       blockHash: event.block.hash,
       transactionHash: event.transaction.hash,
-      originationAmbAddress: await info.partner.amb,
-      destinationAmbAddress: await info.target.amb,
-      originationChainId: BigInt(info.partner.chainId),
-      destinationChainId: BigInt(info.target.chainId),
-    }),
-    context.db.find(ReverseMessageHashBinding, {
-      messageId: event.args.messageId,
-    }).then(async (reverseLookup) => {
-      return await context.db.update(UserRequest, {
-        messageHash: reverseLookup!.messageHash,
-      }).set({
-        delivered: true,
-      })
+      messageHash: userRequest!.messageHash,
+      originationAmbAddress: userRequest!.originationAmbAddress,
+      destinationAmbAddress: userRequest!.destinationAmbAddress,
+      originationChainId: userRequest!.originationChainId,
+      destinationChainId: userRequest!.destinationChainId,
+      originationTokenAddress: userRequest!.originationTokenAddress,
+      destinationTokenAddress: token!.destinationAddress,
+      userRequestHash: userRequest!.messageHash,
     }),
   ])
 })
