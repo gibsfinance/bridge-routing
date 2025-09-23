@@ -140,12 +140,6 @@ ponder.on(
     const orderId = createOrderId(context, event)
     console.log('required signatures changed address=%o required=%o',
       bridgeAddress, event.args.requiredSignatures)
-    // const validatorId = await toValidatorId({
-    //   validator: event.args.validator,
-    //   amb: info.target.amb,
-    //   contract: event.log.address,
-    //   chainId: context.chain.id,
-    // })
     await Promise.all([
       upsertAmbBridge(context, info.target.amb),
       upsertOmniBridge(context, bridgeAddress),
@@ -155,20 +149,6 @@ ponder.on(
       upsertValidatorContract(context, event.log.address, {
         latestRequiredSignaturesOrderId: orderId,
       }),
-      // context.db.update(ValidatorContract).set({
-      //   latestRequiredSignaturesOrderId: orderId,
-      // }).where(eq(ValidatorContract.chainId, BigInt(context.chain.id)).and(eq(ValidatorContract.address, event.log.address)))
-      // context.db
-      //   .insert(LatestRequiredSignaturesChanged)
-      //   .values({
-      //     chainId: BigInt(context.chain.id),
-      //     latestRequiredSignaturesOrderId: orderId,
-      //     validatorContractAddress: event.log.address,
-      //     orderId,
-      //   })
-      //   .onConflictDoUpdate(() => ({
-      //     orderId,
-      //   })),
       context.db.insert(RequiredSignaturesChanged).values({
         orderId,
         validatorContractAddress: event.log.address,
@@ -181,21 +161,6 @@ ponder.on(
     ])
   },
 )
-
-// const getOutstandingMessageIdByHash = async (
-//   context: Context,
-//   hash: Hex,
-// ): Promise<Hex | null> => {
-//   const messageHash = hash
-//   const binding = await context.db.find(ReverseMessageHashBinding, {
-//     messageHash,
-//   })
-//   if (!binding) {
-//     console.warn('reverse message hash binding not found', messageHash)
-//     return null
-//   }
-//   return binding!.messageId
-// }
 
 const loadToken = async (inputs: {
   context: Context,
@@ -218,10 +183,6 @@ const loadToken = async (inputs: {
   if (requireExisting) {
     throw new Error(`Token not found for address ${tokenAddress} on chain ${tokenChainId} and amb address ${ambAddress}`)
   }
-  // if (tokenAddress.toLowerCase() === '0x95b303987a60c71504d99aa1b13b4da07b0790ab' && tokenChainId === 1n) {
-  //   console.trace('loading token', tokenAddress, tokenChainId, ambAddress)
-  // }
-  // console.log('loading token=%o chain=%o amb=%o', tokenAddress, tokenChainId, ambAddress)
   return await context.db.insert(Token).values({
     address: tokenAddress.toLowerCase() as Hex,
     chainId: tokenChainId,
@@ -237,73 +198,6 @@ const loadToken = async (inputs: {
     orderId,
   }).onConflictDoNothing()
 }
-// const call = <T extends 'symbol' | 'name' | 'decimals'>(tokenAddress: Hex, functionName: T, abi: typeof erc20Abi | typeof erc20Abi_bytes32 = erc20Abi) => ({
-//   abi,
-//   functionName,
-//   args: [],
-//   address: tokenAddress as Hex,
-//   allowFailure: false,
-// } as const)
-
-// const loadTokenMetadata = async ({ context, tokenAddress }: {
-//   context: Context,
-//   tokenAddress: Hex,
-// }) => {
-//   const address = tokenAddress as Hex
-//   try {
-//     const [symbolResult, nameResult, decimalsResult] = await context.client.multicall({
-//       contracts: [
-//         call(address, 'symbol'),
-//         call(address, 'name'),
-//         call(address, 'decimals'),
-//       ],
-//     })
-//     if (isValidMetadataResult(symbolResult, nameResult, decimalsResult)) {
-//       return {
-//         symbol: symbolResult.result!,
-//         name: nameResult.result!,
-//         decimals: BigInt(decimalsResult.result!),
-//       }
-//     }
-//   } catch (err) {
-//     console.log(err)
-//   }
-
-//   const [symbolResult, nameResult, decimalsResult] = await context.client.multicall({
-//     contracts: [
-//       call(address, 'symbol', erc20Abi_bytes32),
-//       call(address, 'name', erc20Abi_bytes32),
-//       call(address, 'decimals', erc20Abi_bytes32),
-//     ],
-//   })
-//   if (isValidMetadataResult(symbolResult, nameResult, decimalsResult)) {
-//     return {
-//       symbol: symbolResult.result!,
-//       name: nameResult.result!,
-//       decimals: BigInt(decimalsResult.result!),
-//     }
-//   }
-//   console.log('unable to load metadata', { chainId: context.chain.id, tokenAddress })
-//   throw new Error('Invalid metadata result')
-// }
-
-// const isValidMetadataResult = (symbolResult: { result?: string }, nameResult: { result?: string }, decimalsResult: { result?: number }) => {
-//   return _.isString(symbolResult.result) && _.isString(nameResult.result) && _.isNumber(decimalsResult.result)
-// }
-
-// const computeAmounts = ({ info, parsed, event }: {
-//   info: MinimalInfo,
-//   parsed: ReturnType<typeof parseAMBMessage>,
-//   event: Event<'ForeignAMB:UserRequestForAffirmation' | 'HomeAMB:UserRequestForSignature'>,
-// }) => {
-//   const amountInEvent = parsed.nestedData.amount
-//   const amountIn = info.side === 'home' ?  : parsed.nestedData.amount
-//   const amountOut = info.side === 'home' ? parsed.nestedData.amount : null
-//   return {
-//     amountIn,
-//     amountOut,
-//   }
-// }
 
 const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event, context }: {
   event: Event<'ForeignAMB:UserRequestForAffirmation' | 'HomeAMB:UserRequestForSignature'>,
@@ -400,10 +294,6 @@ const parseSignature = (event: Event<'HomeAMB:SignedForAffirmation' | 'HomeAMB:S
   } catch (err) {
     return null
   }
-  // return {
-  //   messageHash: event.args.messageHash,
-  //   signature: event.args.signature,
-  // }
 }
 
 const handleSignedFor = async ({ event, context }: {
@@ -596,16 +486,16 @@ const deliverTokens = async ({ event, context }: {
           info.side === 'foreign'
             ? null // h2f is captured by CollectedSignatures
             : context.db.insert(Completion).values({
-            messageHash: userRequest!.messageHash,
-            orderId,
-            chainId: BigInt(context.chain.id),
-            blockHash: event.block.hash,
-            transactionHash: event.transaction.hash,
-            originationAmbAddress: userRequest.originationAmbAddress,
-            destinationAmbAddress: userRequest.destinationAmbAddress,
-            originationChainId: userRequest.originationChainId,
-            destinationChainId: userRequest.destinationChainId,
-          }),
+              messageHash: userRequest!.messageHash,
+              orderId,
+              chainId: BigInt(context.chain.id),
+              blockHash: event.block.hash,
+              transactionHash: event.transaction.hash,
+              originationAmbAddress: userRequest.originationAmbAddress,
+              destinationAmbAddress: userRequest.destinationAmbAddress,
+              originationChainId: userRequest.originationChainId,
+              destinationChainId: userRequest.destinationChainId,
+            }),
           context.db.insert(Delivery).values({
             messageHash: userRequest!.messageHash,
             orderId,

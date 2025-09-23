@@ -14,7 +14,7 @@ const startBlocks = {
   pulsechainV4: 16_564_237,
   ethereum: 17_264_119,
   sepolia: 3_331_901,
-  bsc: 28_987_322,
+  bsc: 28_987_313,
 }
 
 const chain = (chain: keyof typeof chains) => {
