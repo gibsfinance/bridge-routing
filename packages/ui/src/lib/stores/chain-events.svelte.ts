@@ -96,6 +96,7 @@ export const blockWatcher = (blockTag: BlockTag) => (chain: number) => {
   const cleanup = () => {
     decrement?.()
     if (cancelled) return
+    console.log('cleanup', chain, blockTag)
     const tracker = untrack(() => blocks.get(chain)?.get(blockTag))
     tracker!.count--
     if (tracker!.count === 0) {
@@ -493,6 +494,7 @@ export const bridgeStatuses = {
   FINALIZED: 'FINALIZED',
   VALIDATING: 'VALIDATING',
   AFFIRMED: 'AFFIRMED',
+  DELIVERED: 'DELIVERED',
 } as const
 
 export type BridgeStatus = keyof typeof bridgeStatuses
@@ -504,8 +506,14 @@ export type LiveBridgeStatusParams = {
 export type ContinuedLiveBridgeStatusParams = LiveBridgeStatusParams & {
   status: BridgeStatus
   statusIndex: number
-  receipt?: TransactionReceipt
-  finalizedBlock?: Block
+  receipt?: {
+    blockNumber: bigint
+    transactionHash: Hex
+  }
+  // finalizedBlock?: Block
+  finalizedBlock: {
+    number: bigint
+  },
   messageId?: Hex
   deliveredHash?: Hex
   count?: number

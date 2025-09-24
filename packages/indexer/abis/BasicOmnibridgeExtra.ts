@@ -1,6 +1,9 @@
 import { parseAbi } from 'viem'
 
 export default [
+  ...parseAbi([
+    'event TokensBridgingInitiated(address indexed token, address sender, uint256 value, bytes32 indexed messageId, address indexed senderOrigin)',
+  ]),
   {
     inputs: [
       {

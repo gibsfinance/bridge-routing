@@ -2,14 +2,9 @@ import { clientFromChain } from './input.svelte'
 import type { Hex, Chain } from 'viem'
 import { zeroAddress, erc20Abi, erc20Abi_bytes32, hexToString } from 'viem'
 import * as networks from 'viem/chains'
-import { nativeTokenName, nativeTokenSymbol, Chains, toChain } from '@gibs/bridge-sdk/config'
+import { nativeTokenName, nativeTokenSymbol, toChain } from '@gibs/bridge-sdk/config'
 import _ from 'lodash'
-
-export interface TokenMetadata {
-  name: string
-  symbol: string
-  decimals: number
-}
+import type { TokenMetadata } from '@gibs/bridge-sdk/types'
 
 export type ChainScopedAddress = `${number}:${Hex}`
 
@@ -129,10 +124,10 @@ async function batchFetchTokenMetadata(
 
   // Handle ERC20 tokens with batch multicall
   if (erc20Tokens.length === 0) {
-    console.log(`No ERC20 tokens to process for chain ${chainId}`)
+    // console.log(`No ERC20 tokens to process for chain ${chainId}`)
     return results
   }
-  console.log(`Processing ${erc20Tokens.length} ERC20 tokens for chain ${chainId}:`, erc20Tokens)
+  // console.log(`Processing ${erc20Tokens.length} ERC20 tokens for chain ${chainId}:`, erc20Tokens)
   const addressChunks = _.chunk(erc20Tokens, 100)
 
   const methods = ['symbol', 'name', 'decimals'] as const
@@ -153,13 +148,13 @@ async function batchFetchTokenMetadata(
   )
   const fallback: Hex[] = []
   for (const chunk of chunkedCalls) {
-    console.log(`Executing multicall for chain ${chainId} with ${_.flatten(chunk).length} contracts`)
+    // console.log(`Executing multicall for chain ${chainId} with ${_.flatten(chunk).length} contracts`)
     try {
       const batchResults = await client.multicall({
         allowFailure: true,
         contracts: _.flatten(chunk),
       })
-      console.log(`Multicall results for chain ${chainId}:`, batchResults.length, 'results')
+      // console.log(`Multicall results for chain ${chainId}:`, batchResults.length, 'results')
 
       _.chunk(batchResults, 3).forEach((batch, index) => {
         const tokenAddress = erc20Tokens[index] as Hex
@@ -167,7 +162,7 @@ async function batchFetchTokenMetadata(
         const name = batch[1].result as string
         const decimals = Number(batch[2].result)
 
-        console.log(`Token ${tokenAddress} results:`, { symbol, name, decimals, errors: [batch[0].error, batch[1].error, batch[2].error] })
+        // console.log(`Token ${tokenAddress} results:`, { symbol, name, decimals, errors: [batch[0].error, batch[1].error, batch[2].error] })
 
         if (name && symbol && !isNaN(decimals)) {
           results.set(tokenAddress.toLowerCase() as Hex, { name, symbol, decimals })
@@ -245,16 +240,16 @@ export async function loadTokenMetadata(tokens: Array<{ chainId: number; address
   // Batch fetch for each chain
   const batchPromises = Array.from(tokensByChain.entries()).map(async ([chainId, addresses]) => {
     try {
-      console.log(`Loading token metadata for chain ${chainId} (${addresses.length} tokens):`, addresses)
+      // console.log(`Loading token metadata for chain ${chainId} (${addresses.length} tokens):`, addresses)
       const results = await batchFetchTokenMetadata(chainId, addresses)
-      console.log(`Loaded ${results.size} token metadata results for chain ${chainId}:`, Array.from(results.entries()))
+      // console.log(`Loaded ${results.size} token metadata results for chain ${chainId}:`, Array.from(results.entries()))
 
       // Store the results
       results.forEach((metadata, address) => {
         if (metadata) {
           const storeKey = getStoreKey(chainId, address)
           tokenMetadataStore.set(storeKey, metadata)
-          console.log(`Stored metadata for ${storeKey}:`, metadata)
+          // console.log(`Stored metadata for ${storeKey}:`, metadata)
         } else {
           console.warn(`No metadata found for ${chainId}:${address}`)
         }

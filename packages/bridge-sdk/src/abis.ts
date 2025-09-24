@@ -29,6 +29,7 @@ export const outputRouter = parseAbi([
   'function onTokenBridged(address _token, uint256 _value, bytes memory _data) external payable',
   'function WETH() external view returns(address)',
   'function bridge() external view returns(address)',
+  'function safeExecuteSignaturesWithAutoGasLimit(address runner,bytes calldata _data,bytes calldata _signatures) external payable',
 ])
 /** the abi for the output bridge */
 export const outputBridge = parseAbi(['function bridgeContract() external view returns(address)'])

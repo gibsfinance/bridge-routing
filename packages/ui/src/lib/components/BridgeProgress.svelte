@@ -95,11 +95,11 @@
     })
     return result.cleanup
   })
-  const fromChainLatestBlock = $derived(blocks.get(Number(bridgeKey.fromChain)))
+  const fromChainLatestBlocks = $derived(blocks.get(Number(bridgeKey.fromChain)))
   const bridgeStatusETATooltip = $derived.by(() => {
     return bridgeETA.calculateETA({
       bridgeStatus,
-      fromChainLatestBlock
+      fromChainBlocks: fromChainLatestBlocks,
     })
   })
   $effect(() => {

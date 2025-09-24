@@ -12,12 +12,7 @@ import type { UseAppKitAccountReturn } from '@reown/appkit'
 import { multicallErc20, type Erc20Metadata } from '@gibs/common'
 import { clientFromChain } from './input.svelte'
 import { getStoreKey, getTokenMetadata, parseTokenKey, loadTokenMetadata as loadTokenMetadataFromCache } from './token-metadata-cache'
-
-export interface TokenMetadata {
-  name: string
-  symbol: string
-  decimals: number
-}
+import type { TokenMetadata } from '@gibs/bridge-sdk/types'
 
 export interface FeeData {
   tokenAddress: Hex
@@ -175,8 +170,8 @@ pageInfo {
 
 // Query to get bridge transactions and fee data (optionally filtered by user account)
 const GET_BRIDGES_QUERY = gql`
-  query GetBridges($where: UserRequestFilter, $limit: Int = 10, $after: String) {
-    userRequests(where: $where, limit: $limit, after: $after, orderBy: "orderId", orderDirection: "desc") {
+  query GetBridges($where: UserRequestFilter, $limit: Int = 10, $after: String, $before: String) {
+    userRequests(where: $where, limit: $limit, after: $after, before: $before, orderBy: "orderId", orderDirection: "desc") {
       items {
         ...BridgeCore
       }
@@ -210,6 +205,7 @@ interface GetBridgesQueryVariables {
   where?: UserRequestFilter
   limit?: number
   after?: string
+  before?: string
 }
 
 // Type for the query result
@@ -239,7 +235,6 @@ async function loadTokenMetadata(bridges: UserRequest[]): Promise<Map<string, To
   const uniqueTokens: Array<{ chainId: number; address: string }> = []
   const uniqueTokenKeys = new Set<string>()
 
-  console.log(bridges)
   bridges.forEach(bridge => {
     // Try to use token relations first, fallback to individual fields
     // Add origination token
@@ -318,8 +313,13 @@ export type LoadBridgesParams = {
   address: Hex | null | undefined
   limit?: number
   after?: string
+  before?: string
   filterMode?: 'all' | 'pending'
 }
+
+// Cache for bridge transactions with 5-second invalidation
+const bridgeCache = new Map<string, { timestamp: number, result: Promise<BridgeData | null> }>()
+const BRIDGE_CACHE_TTL = 5 * 1000 // 5 seconds
 
 /**
  * Reactive store that loads bridge transactions with optional filtering and pagination
@@ -332,7 +332,29 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
     params: LoadBridgesParams,
     controller: AbortController
   ): Promise<BridgeData | null> => {
-    const { address, limit = 10, after, filterMode = 'all' } = params || {}
+    const { address, limit = 10, after, before, filterMode = 'all' } = params || {}
+    console.log('loading bridge transactions', params)
+
+    // Create cache key from actual data parameters
+    const cacheKey = JSON.stringify({ address, limit, after, before, filterMode })
+
+    // Clean up stale cache entries
+    const now = Date.now()
+    for (const [key, value] of bridgeCache) {
+      if (value.timestamp < now - BRIDGE_CACHE_TTL) {
+        bridgeCache.delete(key)
+      }
+    }
+
+    // Check cache
+    const cached = bridgeCache.get(cacheKey)
+    if (cached && cached.timestamp > now - BRIDGE_CACHE_TTL) {
+      const result = await cached.result
+      if (result) {
+        console.log('returning cached bridge data', cached)
+        return cached.result
+      }
+    }
 
     // Create filter for user requests
     let filter: UserRequestFilter | undefined = undefined
@@ -369,45 +391,58 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
     const variables: GetBridgesQueryVariables = {
       where: filter,
       limit,
-      after
+      after,
+      before
     }
 
-    try {
-      const data = await client.request<GetBridgesQueryResult>(GET_BRIDGES_QUERY, variables)
+    // Create and cache the promise for the actual data fetching
+    const dataPromise = (async (): Promise<BridgeData | null> => {
+      try {
+        const data = await client.request<GetBridgesQueryResult>(GET_BRIDGES_QUERY, variables)
 
-      // Check if the request was aborted
-      if (controller.signal.aborted) {
-        return null
+        // Check if the request was aborted
+        if (controller.signal.aborted) {
+          return null
+        }
+
+        // Sort the array
+        const sortedUserRequests = sortBy(data.userRequests.items, [(bridge) => -BigInt(bridge.orderId)])
+        console.log('sortedUserRequests', sortedUserRequests)
+
+        // Load token metadata for all bridges
+        const tokenMetadata = await loadTokenMetadata(sortedUserRequests)
+
+        if (data.latestFeeUpdates.items.length >= 1000) {
+          console.warn('Latest fee updates limit reached, some fee updates may be missing')
+        }
+
+        // Return unified array with metadata, fee data, and pagination info
+        return {
+          userRequests: sortedUserRequests,
+          tokenMetadata,
+          feeData: data.latestFeeUpdates.items,
+          pageInfo: data.userRequests.pageInfo,
+          totalCount: data.userRequests.totalCount
+        }
+
+      } catch (error) {
+        console.error('Failed to fetch bridge transactions:', error)
+
+        // Check if the request was aborted before throwing
+        if (controller.signal.aborted) {
+          return null
+        }
+
+        throw error
       }
+    })()
 
-      // Sort the array
-      const sortedUserRequests = sortBy(data.userRequests.items, [(bridge) => -BigInt(bridge.orderId)])
+    // Cache the promise (even if it fails, to prevent duplicate requests)
+    bridgeCache.set(cacheKey, {
+      timestamp: now,
+      result: dataPromise
+    })
 
-      // Load token metadata for all bridges
-      const tokenMetadata = await loadTokenMetadata(sortedUserRequests)
-
-      if (data.latestFeeUpdates.items.length >= 1000) {
-        console.warn('Latest fee updates limit reached, some fee updates may be missing')
-      }
-
-      // Return unified array with metadata, fee data, and pagination info
-      return {
-        userRequests: sortedUserRequests,
-        tokenMetadata,
-        feeData: data.latestFeeUpdates.items,
-        pageInfo: data.userRequests.pageInfo,
-        totalCount: data.userRequests.totalCount
-      }
-
-    } catch (error) {
-      console.error('Failed to fetch bridge transactions:', error)
-
-      // Check if the request was aborted before throwing
-      if (controller.signal.aborted) {
-        return null
-      }
-
-      throw error
-    }
+    return dataPromise
   }
 )

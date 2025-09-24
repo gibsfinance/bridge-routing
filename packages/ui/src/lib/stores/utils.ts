@@ -2,7 +2,6 @@ import { concatHex, formatUnits, getAddress, keccak256, parseUnits, type Hex, ty
 import _ from 'lodash'
 import { bridgeStatuses, type ContinuedLiveBridgeStatusParams } from './chain-events.svelte'
 import type { Block } from 'viem'
-import type { SvelteMap } from 'svelte/reactivity'
 
 export const ellipsis = (v: string, { length = 8, prefixLength = 0 } = {}) =>
   length === (v.length - prefixLength) / 2
@@ -72,6 +71,28 @@ export function numberWithCommas(x: string) {
   return parts.join('.')
 }
 
+// Helper function to format token amount with decimals
+export function formatTokenAmount(amount: string, { decimals }: { decimals: number }): string {
+  try {
+    const amountBigInt = BigInt(amount)
+    const divisor = BigInt(10 ** decimals)
+    const wholePartInt = amountBigInt / divisor
+    const fractionalPart = amountBigInt % divisor
+    const wholePart = numberWithCommas(wholePartInt.toString())
+    if (fractionalPart === 0n) {
+      return wholePart
+    }
+
+    const fractionalStr = fractionalPart.toString().padStart(decimals, '0')
+    const trimmed = fractionalStr.replace(/0+$/, '')
+    return trimmed ? `${wholePart}.${trimmed}` : wholePart
+  } catch (err) {
+    console.log('failed to format token amount', err)
+    return amount
+  }
+}
+
+
 export const decimalValidation = (v: string, decimals = 18) => {
   if (!v) {
     return v
@@ -118,21 +139,24 @@ export const bridgeETA = {
    */
   calculateETA({
     bridgeStatus,
-    fromChainLatestBlock
+    fromChainBlocks
   }: {
     bridgeStatus: ContinuedLiveBridgeStatusParams | null
-    fromChainLatestBlock: SvelteMap<BlockTag, { watcher: any; count: number; block: Block | null }> | undefined
+    fromChainBlocks: Map<BlockTag, { watcher: any; count: number; block: Block | null }> | undefined
   }): string | null {
     const slotCount = 32n
     const blockTime = 12n
+    const latestBlock = fromChainBlocks?.get('latest')?.block
+    const finalizedBlock = fromChainBlocks?.get('finalized')?.block
+    if (!latestBlock || !finalizedBlock) return null
 
     if (!bridgeStatus) return null
 
     if (bridgeStatus.status === bridgeStatuses.SUBMITTED) {
       return 'This transaction is still being validated by the network.'
     } else if (bridgeStatus.status === bridgeStatuses.MINED) {
-      const currentlyFinalizedBlock = bridgeStatus.finalizedBlock?.number
-      const currentBlock = fromChainLatestBlock?.get('latest')?.block?.number
+      const currentlyFinalizedBlock = finalizedBlock.number
+      const currentBlock = latestBlock.number
       let estimatedFutureFinalizedBlock = currentlyFinalizedBlock
       const minedBlock = bridgeStatus.receipt?.blockNumber
 
@@ -176,23 +200,4 @@ export const bridgeETA = {
 
     return null
   },
-
-  /**
-   * Calculate ETA for pending bridges from history data
-   * This is a simplified version for bridges that don't have live status tracking
-   */
-  calculatePendingETA({
-    finishedSigning,
-    delivered
-  }: {
-    finishedSigning: boolean
-    delivered: boolean
-  }): string | null {
-    if (!finishedSigning) {
-      return 'Waiting for signatures...'
-    } else if (finishedSigning && !delivered) {
-      return '<10s'
-    }
-    return null
-  }
 }

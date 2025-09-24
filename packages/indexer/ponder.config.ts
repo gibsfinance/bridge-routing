@@ -6,6 +6,7 @@ import { toTransport, accessContracts } from './src/utils'
 import BasicOmnibridge from './abis/BasicOmnibridge'
 import { chains, Providers } from '@gibs/bridge-sdk/config'
 import { FeeManagerAbi } from './abis/FeeManager'
+import BasicOmnibridgeExtra from './abis/BasicOmnibridgeExtra'
 
 Error.stackTraceLimit = Infinity
 
@@ -204,6 +205,38 @@ export default createConfig({
             to: chains.sepolia,
             side: 'foreign',
             type: 'amb',
+          }),
+        },
+      },
+    },
+    BasicOmnibridgeExtra: {
+      includeTransactionReceipts: true,
+      abi: BasicOmnibridgeExtra,
+      filter: [
+        {
+          event: 'TokensBridgingInitiated',
+          args: {},
+        },
+      ],
+      chain: {
+        pulsechain: {
+          startBlock: startBlocks.pulsechain,
+          address: await accessContracts({
+            provider: Providers.TOKENSEX,
+            from: chains.pulsechain,
+            to: chains.bsc,
+            side: 'home',
+            type: 'omni',
+          }),
+        },
+        bsc: {
+          startBlock: startBlocks.bsc,
+          address: await accessContracts({
+            provider: Providers.TOKENSEX,
+            from: chains.pulsechain,
+            to: chains.bsc,
+            side: 'foreign',
+            type: 'omni',
           }),
         },
       },
