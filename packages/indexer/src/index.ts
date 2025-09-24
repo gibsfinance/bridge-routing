@@ -219,7 +219,7 @@ const handleUserRequest = (type: 'signature' | 'affirmation') => async ({ event,
     }),
     parsed.feeDirector
       ? context.db.insert(FeeDirector).values({
-        messageId: event.args.messageId,
+        messageHash: parsed.messageHash,
         recipient: parsed.feeDirector.recipient.toLowerCase() as Hex,
         settings: parsed.feeDirector.settings,
         limit: parsed.feeDirector.limit,

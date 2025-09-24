@@ -85,7 +85,7 @@
     if (otherSide) {
       images.push(`${bridge.destinationChainId}/${otherSide}`)
     }
-    if (chainId === 943 && (address === '0x70499adEBB11Efd915E3b69E700c331778628707' || address === zeroAddress)) {
+    if (chainId === 943 && (address.toLowerCase() === '0x70499adEBB11Efd915E3b69E700c331778628707'.toLowerCase() || address === zeroAddress)) {
       return {
         address,
         chainId,
@@ -251,7 +251,7 @@
     <!-- <h3 class="text-sm font-medium text-gray-500 mb-3">Bridge Summary</h3> -->
     <div class="flex items-center justify-between md:gap-2 gap-0 py-1 px-4 flex-grow flex-col md:flex-row flex-grow align-center">
       <!-- Input Token and chain -->
-      <div class="flex items-center gap-2 flex-grow md:flex-grow-0 self-start">
+      <div class="flex items-center gap-2 flex-grow md:flex-grow-0 self-start h-full">
         <!-- <div class="flex flex-col min-w-0 flex-1 w-48 text-right"> -->
         <div class="flex items-center space-x-1 truncate justify-end leading-5 flex-grow w-35 lg:w-48">
           <span class="text-lg text-gray-900 dark:text-white truncate">
@@ -280,7 +280,7 @@
           />
         {/if}
         <!-- Origin Chain -->
-          <div class="flex gap-1 flex-row">
+          <div class="flex gap-1 flex-row items-center h-full">
         <div class="flex items-center mx-0">
           <StaticNetworkImage
             network={Number(originChainId)}
@@ -308,7 +308,7 @@
             />
           {:else}
             <!-- Transparent placeholder for completion -->
-            <div class="w-5 h-5 opacity-0 pointer-events-none"></div>
+            <div class="w-6 h-6 opacity-0 pointer-events-none"></div>
           {/if}
 
           <span class="text-sm font-medium text-gray-600 dark:text-gray-400 truncate flex-grow hidden opacity-0 lg:opacity-100 md:flex text-[1px] lg:text-sm justify-end">
@@ -350,7 +350,7 @@
             />
           {:else}
             <!-- Transparent placeholder for delivery -->
-            <div class="w-5 h-5 opacity-0 pointer-events-none"></div>
+            <div class="w-6 h-6 opacity-0 pointer-events-none"></div>
           {/if}
         </div>
       </div>

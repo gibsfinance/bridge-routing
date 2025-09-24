@@ -141,6 +141,15 @@ const fragment = gql`{
       originationAddress
       destinationAddress
     }
+    feeDirector {
+      messageId
+      recipient
+      settings
+      limit
+      multiplier
+      feeType
+      unwrapped
+    }
   }`
 
 // GraphQL fragments for bridge data

@@ -16,6 +16,7 @@ import { SvelteMap } from 'svelte/reactivity'
 import { SolflareWalletAdapter, PhantomWalletAdapter } from '@solana/wallet-adapter-wallets'
 import type { SignerWalletAdapter } from '@solana/wallet-adapter-base'
 import { BitcoinAdapter } from '@reown/appkit-adapter-bitcoin'
+import { isHex } from 'viem'
 
 export const appkitNetworkList = [
   networks.mainnet,
@@ -58,7 +59,7 @@ export const appkitNetworkList = [
   networks.berachain,
 ] as unknown as [CaipNetwork, ...CaipNetwork[]]
 
-;(networks.bsc as unknown as { name: string }).name = 'BSC'
+  ; (networks.bsc as unknown as { name: string }).name = 'BSC'
 
 export const appkitNetworkIds = new Set(appkitNetworkList.map((n) => n.id))
 export const appkitNetworkById = new Map<string | number, CaipNetwork>(
@@ -194,8 +195,13 @@ modal.subscribeWalletInfo((walletInfo) => {
 })
 
 modal.subscribeAccount((account) => {
+  console.log('account', account)
   if (account.status === 'connected') {
-    accountState.value = account ?? null
+    if (isHex(account.address)) {
+      accountState.value = account ?? null
+    } else {
+      accountState.value = null
+    }
   } else if (account.status === 'disconnected') {
     accountState.value = null
   }

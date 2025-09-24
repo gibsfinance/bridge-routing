@@ -376,11 +376,15 @@ export const UserRequestRelations = relations(UserRequest, (t) => ({
     fields: [UserRequest.feeManagerContractChainId, UserRequest.feeManagerContractAddress],
     references: [FeeManagerContract.chainId, FeeManagerContract.address],
   }),
+  feeDirector: t.one(FeeDirector, {
+    fields: [UserRequest.messageHash],
+    references: [FeeDirector.messageHash],
+  }),
 }))
 
 /** parsed from calldata */
 export const FeeDirector = onchainTable('fee_director', (t) => ({
-  messageId: t.hex().primaryKey(),
+  messageHash: t.hex().primaryKey(),
   recipient: t.hex().notNull(),
   settings: t.bigint().notNull(),
   limit: t.bigint().notNull(),
@@ -392,8 +396,8 @@ export const FeeDirector = onchainTable('fee_director', (t) => ({
 
 export const FeeDirectorRelations = relations(FeeDirector, (t) => ({
   userRequest: t.one(UserRequest, {
-    fields: [FeeDirector.messageId],
-    references: [UserRequest.messageId],
+    fields: [FeeDirector.messageHash],
+    references: [UserRequest.messageHash],
   }),
 }))
 /** allows us to get to the message (and the id) from the message hash */
