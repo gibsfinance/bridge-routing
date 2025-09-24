@@ -567,7 +567,10 @@ ponder.on('BasicOmnibridge:TokensBridged', async ({ event, context }) => {
   ])
 })
 
-ponder.on('BasicOmnibridge:TokensBridgingInitiated', async ({ event, context }) => {
+const tokensBridgingInitiated = async ({ event, context }: {
+  event: Event<'BasicOmnibridge:TokensBridgingInitiated' | 'BasicOmnibridgeExtra:TokensBridgingInitiated'>,
+  context: Context,
+}) => {
   const info = await getInfoBy({ key: 'omni', address: event.log.address, chainId: context.chain.id })
   if (!info) {
     throw new Error(`No bridge info found for address ${event.log.address}`)
@@ -604,7 +607,10 @@ ponder.on('BasicOmnibridge:TokensBridgingInitiated', async ({ event, context }) 
       omnibridgeAddress: info.target.omni.toLowerCase() as Hex,
     }),
   ])
-})
+}
+
+ponder.on('BasicOmnibridge:TokensBridgingInitiated', tokensBridgingInitiated)
+ponder.on('BasicOmnibridgeExtra:TokensBridgingInitiated', tokensBridgingInitiated)
 
 ponder.on('FeeManager:FeeUpdated', async ({ event, context }) => {
   const info = await getInfoBy({ key: 'feeManager', address: event.log.address, chainId: context.chain.id })
