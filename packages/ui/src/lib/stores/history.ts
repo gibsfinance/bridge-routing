@@ -311,6 +311,7 @@ async function loadTokenMetadata(bridges: UserRequest[]): Promise<Map<string, To
 
 export type LoadBridgesParams = {
   address: Hex | null | undefined
+  hash?: Hex | null | undefined
   limit?: number
   after?: string
   before?: string
@@ -332,11 +333,11 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
     params: LoadBridgesParams,
     controller: AbortController
   ): Promise<BridgeData | null> => {
-    const { address, limit = 10, after, before, filterMode = 'all' } = params || {}
+    const { address, hash, limit = 10, after, before, filterMode = 'all' } = params || {}
     console.log('loading bridge transactions', params)
 
     // Create cache key from actual data parameters
-    const cacheKey = JSON.stringify({ address, limit, after, before, filterMode })
+    const cacheKey = JSON.stringify({ address, hash, limit, after, before, filterMode })
 
     // Clean up stale cache entries
     const now = Date.now()
@@ -366,6 +367,27 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
           { from: address as Hex },
           { to: address as Hex }
         ]
+      }
+    }
+
+    // Add hash filter if provided (OR filter for transaction hash, message id, and message hash)
+    if (hash) {
+      const h = hash as Hex
+      const hashFilter: UserRequestFilter = {
+        OR: [
+          { transactionHash: h },
+          { messageId: h },
+          { messageHash: h }
+        ]
+      }
+
+      if (filter) {
+        // Combine address filter with hash filter using AND
+        filter = {
+          AND: [filter, hashFilter]
+        }
+      } else {
+        filter = hashFilter
       }
     }
 

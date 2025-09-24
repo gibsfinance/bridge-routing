@@ -19,7 +19,7 @@
   import InfoTooltip from './InfoTooltip.svelte'
   import Tooltip from './Tooltip.svelte'
   import { numberWithCommas, bridgeETA } from '../stores/utils'
-  import { zeroAddress, type Hex, isAddress, encodeFunctionData } from 'viem'
+  import { zeroAddress, type Hex, isAddress, encodeFunctionData, isHex } from 'viem'
   import ConnectButton from './ConnectButton.svelte'
   import { blocks, latestBlock, bridgeStatuses, type ContinuedLiveBridgeStatusParams, finalizedBlock } from '../stores/chain-events.svelte'
   import * as imageLinks from '@gibs/bridge-sdk/image-links'
@@ -41,6 +41,10 @@
   let manualAddressCleared = $state(false) // Track if user explicitly cleared the address
   let addressInputRef = $state<HTMLInputElement>()
 
+  // Manual hash input state
+  let manualHash = $state<string | null>(null)
+  let manualHashCleared = $state(false) // Track if user explicitly cleared the hash
+
   // Track previous wallet account to detect changes
   let previousWalletAccount = $state<string | null>(null)
 
@@ -51,7 +55,10 @@
       if (walletAccount) {
         // manualAddress = walletAccount
         manualAddressCleared = false // Reset cleared flag when wallet connects
+        manualHashCleared = false // Also reset hash cleared flag
         currentPage = 1
+        currentCursor = undefined // Reset cursor when flipping to page 1
+        currentDirection = 'first'
         retryCounter++ // Increment to trigger fresh data fetch
       }
       previousWalletAccount = walletAccount
@@ -64,6 +71,16 @@
   const activeAddress = $derived(
     manualAddressCleared ? null : (manualAddress || walletAccount)
   )
+
+  // Derived hash - use manual hash if provided and not cleared
+  const activeHash = $derived(
+    manualHashCleared ? null : manualHash
+  )
+
+  // Helper function to validate if input is a bytes32 hash (0x + 64 hex chars)
+  function isBytes32Hash(input: string): boolean {
+    return isHex(input) && input.length === 66 // 0x + 64 chars
+  }
 
   // State for bridge data and pagination
   let bridgeData: BridgeData | null = $state(null)
@@ -124,6 +141,7 @@
 
   const loadBridgeParams = $derived.by(() => ({
     address: (activeAddress?.toLowerCase() ?? null) as Hex | null | undefined,
+    hash: activeHash as Hex | null | undefined,
     limit,
     after: currentDirection === 'forward' ? currentCursor : undefined,
     before: currentDirection === 'backward' ? currentCursor : undefined,
@@ -148,10 +166,11 @@
 
   // Cursor navigation functions
   function goToFirstPage() {
-    if (bridgeData?.pageInfo?.hasPreviousPage && !isLoading) {
+    if (!isLoading) {
       currentCursor = undefined
       currentDirection = 'first'
       currentPage = 1 // Reset page counter for display
+      retryCounter++ // Trigger data fetch to ensure fresh data
     }
   }
 
@@ -191,7 +210,7 @@
     retryCounter++
   }
 
-  // Address input handling functions
+  // Input handling functions
   function handleAddressInput() {
     const trimmedInput = manualAddressInput.trim()
     if (trimmedInput && isAddress(trimmedInput)) {
@@ -199,6 +218,14 @@
       manualAddressCleared = false // Reset the cleared flag when setting a new address
       manualAddressInput = ''
       currentPage = 1 // Reset to first page when address changes
+      currentCursor = undefined // Reset cursor
+      currentDirection = 'first'
+      retryCounter++
+    } else if (trimmedInput && isBytes32Hash(trimmedInput)) {
+      manualHash = trimmedInput
+      manualHashCleared = false // Reset the cleared flag when setting a new hash
+      manualAddressInput = ''
+      currentPage = 1 // Reset to first page when hash changes
       currentCursor = undefined // Reset cursor
       currentDirection = 'first'
       retryCounter++
@@ -216,6 +243,15 @@
     manualAddress = null
     manualAddressCleared = true // Mark that user explicitly cleared the address
     currentPage = 1 // Reset to first page when address is cleared
+    currentCursor = undefined // Reset cursor
+    currentDirection = 'first'
+    retryCounter++
+  }
+
+  function clearManualHash() {
+    manualHash = null
+    manualHashCleared = true // Mark that user explicitly cleared the hash
+    currentPage = 1 // Reset to first page when hash is cleared
     currentCursor = undefined // Reset cursor
     currentDirection = 'first'
     retryCounter++
@@ -358,8 +394,8 @@ map out the progress of each bridge and display it to the user
 <div class="max-w-5xl w-full mx-auto py-8">
   <div class="bg-white dark:bg-slate-950 lg:rounded-3xl shadow-lg border-y md:border border-surface-200 dark:border-surface-800 p-0 text-surface-contrast-50 dark:text-surface-contrast-950">
     <div class="flex items-center justify-between px-2 md:px-4 pt-4 md:pb-2">
-      <div class="flex gap-4 w-full">
-        <div class="flex md:static absolute gap-2 items-center">
+      <div class="flex gap-4 w-full justify-start">
+        <div class="flex lg:static absolute gap-2 items-center">
           <h2 class="text-4xl font-bold font-italiana">History</h2>
           <InfoTooltip
             text={activeAddress
@@ -404,19 +440,75 @@ map out the progress of each bridge and display it to the user
             >
               <Icon icon="lucide:refresh-cw" class="w-4 h-4 text-surface-600 dark:text-surface-400" />
             </button>
-            <InfoTooltip
-              text="Connect your wallet to see your personal bridge history, or enter any address to view its transactions"
+            <!-- <InfoTooltip
+              text="Connect your wallet to see your personal bridge history, or enter any address or hash (transaction hash, message ID, or message hash) to search for specific transactions"
               placement="top"
               iconSize={5}
               maxWidth="max-w-96"
               iconColor="text-surface-500"
-            />
+            /> -->
             <ConnectButton />
           </div>
-          <div class="items-center gap-2 ml-auto flex">
+          <div class="gap-2 ml-auto flex flex-col md:flex-row-reverse items-end md:items-center">
+            <!-- Address input field -->
+            <div class="flex items-center gap-2">
+            <div class="relative flex flex-grow justify-end h-10">
+              <input
+                bind:this={addressInputRef}
+                bind:value={manualAddressInput}
+                onkeydown={handleAddressKeydown}
+                placeholder="Address or tx hash..."
+                class="pl-3 pr-10 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-full focus:ring focus:ring-surface-500 focus:border-surface-500 bg-white dark:bg-surface-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 min-w-40 h-full"
+                type="text"
+              />
+            {#if manualAddressInput.trim() && !isAddress(manualAddressInput.trim()) && !isBytes32Hash(manualAddressInput.trim())}
+              <Tooltip placement="top" positionerClassName="z-50">
+                {#snippet trigger()}
+                  <button
+                    onclick={handleAddressInput}
+                    disabled={true}
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full disabled:border-gray-300 dark:disabled:border-gray-600 disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
+                    aria-label="Invalid input"
+                  >
+                    <Icon icon="lucide:help-circle" class="w-5 h-5" />
+                  </button>
+                {/snippet}
+                {#snippet content()}
+                  Invalid address or hash
+                {/snippet}
+              </Tooltip>
+            {:else}
+              <button
+                onclick={handleAddressInput}
+                disabled={!manualAddressInput.trim()}
+                class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border-2 dark:border-surface-600 border-surface-500 hover:border-surface-600 dark:hover:border-surface-600 disabled:border-gray-300 dark:disabled:border-gray-600 text-white disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
+                aria-label="Submit input"
+              >
+                <Icon icon="lucide:arrow-up" class="w-5 h-5" />
+              </button>
+            {/if}
+            </div>
+            </div>
+            <div class="flex items-center gap-2 justify-start">
+            <!-- Manual hash badge (shown when hash is set, appears before address badge) -->
+            {#if activeHash}
+              <div class="flex items-center bg-blue-100 dark:bg-blue-700 text-blue-900 dark:text-blue-300 rounded-full text-sm overflow-hidden h-8 border border-blue-200 dark:border-blue-800">
+                <span class="px-3 py-1">
+                  ...{activeHash.slice(-8)}
+                </span>
+                <button
+                  onclick={clearManualHash}
+                  class="px-2 py-0 h-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors border-l border-blue-200 dark:border-blue-900 text-blue-500 hover:text-blue-700 dark:hover:text-blue-200"
+                  aria-label="Clear hash"
+                >
+                  <Icon icon="lucide:x" class="w-4 h-4" />
+                </button>
+              </div>
+            {/if}
+
             <!-- Manual address badge (shown when address is set) -->
             {#if activeAddress}
-              <div class="flex items-center bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300 rounded-full text-sm overflow-hidden h-8 border border-surface-200 dark:border-surface-800">
+              <div class="flex items-center bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-surface-300 rounded-full text-sm overflow-hidden h-8 border border-surface-200 dark:border-surface-800">
                 <span class="px-3 py-1">
                   {activeAddress.slice(0, 2+4)}...{activeAddress.slice(-4)}
                 </span>
@@ -428,43 +520,6 @@ map out the progress of each bridge and display it to the user
                   <Icon icon="lucide:x" class="w-4 h-4" />
                 </button>
               </div>
-            {/if}
-
-            <!-- Address input field -->
-            <div class="relative flex flex-grow justify-end h-10">
-              <input
-                bind:this={addressInputRef}
-                bind:value={manualAddressInput}
-                onkeydown={handleAddressKeydown}
-                placeholder="Enter address..."
-                class="pl-3 pr-10 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-full focus:ring focus:ring-surface-500 focus:border-surface-500 bg-white dark:bg-surface-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 w-fit min-w-60 h-full"
-                type="text"
-              />
-{#if manualAddressInput.trim() && !isAddress(manualAddressInput.trim())}
-              <Tooltip placement="top" positionerClassName="z-50">
-                {#snippet trigger()}
-                  <button
-                    onclick={handleAddressInput}
-                    disabled={true}
-                    class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full disabled:border-gray-300 dark:disabled:border-gray-600 disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
-                    aria-label="Invalid address"
-                  >
-                    <Icon icon="lucide:help-circle" class="w-5 h-5" />
-                  </button>
-                {/snippet}
-                {#snippet content()}
-                  Invalid address
-                {/snippet}
-              </Tooltip>
-            {:else}
-              <button
-                onclick={handleAddressInput}
-                disabled={!manualAddressInput.trim()}
-                class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border-2 dark:border-surface-600 border-surface-500 hover:border-surface-600 dark:hover:border-surface-600 disabled:border-gray-300 dark:disabled:border-gray-600 text-white disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
-                aria-label="Submit address"
-              >
-                <Icon icon="lucide:arrow-up" class="w-5 h-5" />
-              </button>
             {/if}
             </div>
           </div>
