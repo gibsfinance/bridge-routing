@@ -142,7 +142,7 @@ const fragment = gql`{
       destinationAddress
     }
     feeDirector {
-      messageId
+      messageHash
       recipient
       settings
       limit
