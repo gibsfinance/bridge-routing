@@ -22,6 +22,6 @@
   "description": "",
   "dependencies": {
     "lodash": "^4.17.21",
-    "viem": "^2.31.0"
+    "viem": "^2.37.8"
   }
 }
