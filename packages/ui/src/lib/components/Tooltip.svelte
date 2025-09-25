@@ -4,10 +4,11 @@
   import type { ClassValue } from 'svelte/elements'
   import { clsx } from 'clsx'
 
+  type Placement = 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
   type Props = {
-    placement?: 'top' | 'bottom' | 'left' | 'right'
+    placement?: Placement
     positioning?: {
-      placement?: 'top' | 'bottom' | 'left' | 'right'
+      placement?: Placement
       gutter?: number
     }
     maxWidth?: string

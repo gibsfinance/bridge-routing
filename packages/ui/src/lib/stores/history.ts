@@ -287,9 +287,9 @@ async function loadTokenMetadata(bridges: UserRequest[]): Promise<Map<string, To
       if (!uniqueTokenKeys.has(key)) {
         uniqueTokenKeys.add(key)
         uniqueTokens.push({ chainId: destinationChainId, address: destinationAddress })
-        if (destinationChainId === 56) { // BSC chain ID
-          console.log(`Found BSC destination token:`, { address: destinationAddress, chainId: destinationChainId, key })
-        }
+        // if (destinationChainId === 56) { // BSC chain ID
+        //   console.log(`Found BSC destination token:`, { address: destinationAddress, chainId: destinationChainId, key })
+        // }
       }
     }
   })

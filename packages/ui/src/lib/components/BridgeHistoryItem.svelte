@@ -278,11 +278,33 @@
     return !walletAccount || bridge.type !== 'signature'
   })
 </script>
-<div class="bg-white dark:bg-surface-950 ring ring-surface-200 dark:ring-surface-700 md:rounded-full hover:shadow-xs transition-shadow md:h-10">
+<div class="bg-white dark:bg-surface-950 ring ring-surface-200 dark:ring-surface-700 md:rounded-full hover:shadow-xs transition-shadow md:h-10 group relative">
+  <!-- Clock icon with timestamp tooltip - always visible -->
+
   <!-- Section 1: Summary -->
   <div class="flex flex-row justify-between h-full">
     <!-- <h3 class="text-sm font-medium text-gray-500 mb-3">Bridge Summary</h3> -->
-    <div class="flex items-center justify-between md:gap-2 gap-0 py-1 px-4 flex-grow flex-col md:flex-row flex-grow align-center">
+    <div class="flex items-center justify-between md:gap-2 gap-0 py-1 pr-4 pl-1 flex-grow flex-col md:flex-row flex-grow align-center">
+      <div class="flex items-center">
+        <Tooltip placement="top-left" gutter={8}>
+          {#snippet trigger()}
+            <div class="bg-surface-100 dark:bg-surface-800 rounded-full p-1 shadow-sm border border-surface-200 dark:border-surface-700 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors cursor-pointer">
+              <Icon icon="mdi:clock-outline" class="w-6 h-6 text-surface-600 dark:text-surface-400" />
+            </div>
+          {/snippet}
+          {#snippet content()}
+            <div class="text-sm">
+              {#if bridge.block?.timestamp}
+                <div class="text-xs text-surface-500 dark:text-surface-400 mt-1">
+                  {new Date(Number(bridge.block.timestamp) * 1000).toLocaleString()}
+                </div>
+              {:else}
+                <div>Timestamp unavailable</div>
+              {/if}
+            </div>
+          {/snippet}
+        </Tooltip>
+      </div>
       <!-- Input Token and chain -->
       <div class="flex items-center gap-2 flex-grow md:flex-grow-0 self-start h-full">
         <!-- <div class="flex flex-col min-w-0 flex-1 w-48 text-right"> -->
@@ -423,8 +445,12 @@
           class:rounded-r-full={!bridge.feeDirector}
           class:flex-grow={!bridge.feeDirector}
           class:text-left={!bridge.feeDirector}
-          onclick={walletAccount ? doReleaseToRouter : connect}
-        >
+          onclick={!walletAccount
+            ? connect
+            : (bridge.type === 'signature' && bridge.feeDirector
+              ? doReleaseToRouter
+              : doReleaseWithoutTip
+          )}>
         {#if walletAccount}
           Release
         {:else}

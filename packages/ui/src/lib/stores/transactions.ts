@@ -77,12 +77,17 @@ export const checkAndRaiseApproval = async ({
 }
 
 export const options = (chainId: number, latestBlock: Block) => {
+  console.log('latestBlock', latestBlock)
+  let baseFeePerGas = latestBlock.baseFeePerGas!
+  if (baseFeePerGas === 0n) {
+    baseFeePerGas = 100_000_000n
+  }
   const options = {
     account: accountState.address,
     type: 'eip1559',
     chainId,
-    maxFeePerGas: latestBlock.baseFeePerGas! * 2n,
-    maxPriorityFeePerGas: latestBlock.baseFeePerGas! / 5n,
+    maxFeePerGas: baseFeePerGas! * 2n,
+    maxPriorityFeePerGas: baseFeePerGas! / 5n,
   } as const
   return options
 }

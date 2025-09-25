@@ -15,6 +15,6 @@ export type Message = {
 
 export const uri = (chainId: Chains, type: 'tx' | 'address' = 'tx', suffix: string) => {
   const chain = chainsMetadata[chainId] ?? evmChainsById.get(Number(chainId))
-  const url = chain.blockExplorers?.default?.url
+  const url = chain.blockExplorers?.default?.url.replace('https://scan.pulsechain', 'https://ipfs.scan.pulsechain')
   return `${url}/${chainId === Chains.V4PLS ? '#/' : ''}${type}/${suffix}`
 }
