@@ -175,17 +175,28 @@ class AccountState {
     return this.modalIsOpen
   }
   set modalOpen(open: boolean) {
+    // const wasOpen = this.modalIsOpen
     this.modalIsOpen = open
+    // if (!open && wasOpen) {
+    //   modal.close()
+    // } else if (open && !wasOpen) {
+    //   modal.open()
+    // }
   }
 }
 export const accountState = new AccountState()
 
 modal.subscribeEvents((event) => {
-  console.log('event', event)
+  console.log('event', event.data.event)
   const { event: e } = event.data
   if (e === 'MODAL_OPEN') {
     accountState.modalOpen = true
   } else if (e === 'MODAL_CLOSE') {
+    accountState.modalOpen = false
+  } else if (e === 'CONNECT_SUCCESS') {
+    accountState.modalOpen = false
+    modal.close()
+  } else if (e === 'SELECT_WALLET') {
     accountState.modalOpen = false
   }
 })
@@ -195,7 +206,7 @@ modal.subscribeWalletInfo((walletInfo) => {
 })
 
 modal.subscribeAccount((account) => {
-  console.log('account', account)
+  console.log('account', account, account.status)
   if (account.status === 'connected') {
     if (isHex(account.address)) {
       accountState.value = account ?? null

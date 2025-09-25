@@ -16,12 +16,13 @@
   import Icon from '@iconify/svelte'
   import { oneEther } from '@gibs/bridge-sdk/settings'
   import { bridgeETA } from '../stores/utils'
-  import { accountState, appkitNetworkById, switchNetwork } from '../stores/auth/AuthProvider.svelte'
+  import { accountState, appkitNetworkById, connect, switchNetwork } from '../stores/auth/AuthProvider.svelte'
   import { blocks, bridgeStatuses, type ContinuedLiveBridgeStatusParams } from '../stores/chain-events.svelte'
   import { toChain } from '@gibs/bridge-sdk/config'
   import type { BridgeKey } from '@gibs/bridge-sdk/types'
   import type { FeeData } from '../stores/history'
-    import { transactionButtonPress } from '../stores/transaction'
+  import { uri } from '../stores/toast'
+  import { transactionButtonPress } from '../stores/transaction'
 
   const payMe = 'images/pay-me-isolated.png'
   type Props = {
@@ -207,7 +208,38 @@
   const inputToken = $derived(createTokenFromBridge(bridge, metadata))
   const key = $derived(bridgeToKey(bridge))
   const path = $derived(pathway(key, false))
-  const doReleaseWithoutTip = $derived(() => {})
+  const doReleaseWithoutTip = $derived(
+    bridge.type !== 'signature' ? null : transactionButtonPress({
+      chainId: destinationChainId,
+      steps: [
+        async () => {
+          if (Number(accountState.chainId) !== destinationChainId) {
+            await switchNetwork(appkitNetworkById.get(destinationChainId))
+          }
+          // allow testnet pathways
+          const encodedSignatures = packSignatures(bridge.signatures!.map(signatureToVRS)) as Hex
+          const tx = await transactions.sendTransaction({
+            ...transactions.options(
+              destinationChainId,
+              blocks.get(destinationChainId)!.get('latest')!.block!,
+            ),
+            account: walletAccount as Hex,
+            value: 0n,
+            to: bridge.destinationAmbAddress as Hex,
+            data: encodeFunctionData({
+              abi: abis.relayTokensDirect,
+              functionName: 'safeExecuteSignaturesWithAutoGasLimit',
+              args: [
+                bridge.encodedData! as Hex,
+                encodedSignatures,
+              ],
+            })
+          })
+          return tx
+        },
+      ],
+    })
+  )
   const doReleaseToRouter = $derived(
     bridge.type !== 'signature' ? null : transactionButtonPress({
       chainId: destinationChainId,
@@ -241,6 +273,7 @@
       ],
     })
   )
+  const releaseWithoutTipDisabled = $derived(!doReleaseWithoutTip)
   const releaseDisabled = $derived.by(() => {
     return !walletAccount || bridge.type !== 'signature'
   })
@@ -263,6 +296,7 @@
           network={Number(originChainId)}
           tokenSizeClasses="w-6 h-6"
           networkSizeClasses="w-3 h-3"
+          wrapInLink={uri(toChain(Number(originChainId)), 'address', bridge.originationToken?.address ?? '')}
         />
         <span class="text-sm text-gray-600 dark:text-gray-300 truncate md:w-24 w-12">
           {metadata?.symbol}
@@ -338,6 +372,7 @@
             network={Number(destChainId)}
             tokenSizeClasses="w-6 h-6"
             networkSizeClasses="w-3 h-3"
+            wrapInLink={uri(toChain(Number(destChainId)), 'address', bridge.destinationToken?.address ?? '')}
           />
 
           <!-- Delivery transaction link -->
@@ -379,84 +414,79 @@
       </div>
     {:else if bridge.finishedSigning && !bridge.delivered}
     <div class="flex justify-end w-32">
-        <div class="inline-flex shadow-sm md:rounded-r-full gap-0.5" role="group">
+      <!-- {#if bridge.feeDirector} -->
+      <!-- Show button group with tip options when feeDirector exists -->
+      <div class="flex flex-grow shadow-sm md:rounded-r-full gap-0.5 w-full" role="group">
+        <button
+          class="px-4 py-1 bg-surface-500 hover:bg-surface-600 dark:bg-surface-600 text-white text-sm dark:hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 focus:z-10 h-full bg-position-[-55px_6px] hover:bg-position-[-4px_6px] disabled:opacity-80 disabled:hover:bg-surface-500 disabled:dark:hover:bg-surface-600 disabled:cursor-not-allowed disabled:bg-position-[-1000px_6px]"
+          style="background-image: url({payMe}); background-size: 46px 35px; background-repeat: no-repeat; transition: background-position 200ms ease-in-out;"
+          class:rounded-r-full={!bridge.feeDirector}
+          class:flex-grow={!bridge.feeDirector}
+          class:text-left={!bridge.feeDirector}
+          onclick={walletAccount ? doReleaseToRouter : connect}
+        >
+        {#if walletAccount}
+          Release
+        {:else}
+          Connect
+        {/if}
+        </button>
+        {#if bridge.feeDirector}
+        <div class="relative">
           <button
-            class="px-4 py-1 bg-surface-500 hover:bg-surface-600 dark:bg-surface-600 text-white text-sm dark:hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 focus:z-10 h-full bg-position-[-55px_6px] hover:bg-position-[-4px_6px] disabled:opacity-80 disabled:hover:bg-surface-500 disabled:dark:hover:bg-surface-600 disabled:cursor-not-allowed disabled:bg-position-[-1000px_6px]"
-            style="background-image: url({payMe}); background-size: 46px 35px; background-repeat: no-repeat; transition: background-position 200ms ease-in-out;"
-            onclick={doReleaseToRouter}
+            class="px-2 py-1 bg-surface-500 dark:bg-surface-600 text-white text-sm md:rounded-r-full border-l border-surface-500 hover:bg-surface-500 dark:hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 focus:z-10 h-full w-10 disabled:opacity-80 disabled:hover:bg-surface-500 disabled:dark:hover:bg-surface-600 disabled:cursor-not-allowed"
             disabled={releaseDisabled}
+            onclick={(event) => {
+              // Toggle dropdown visibility
+              const target = event.currentTarget as HTMLElement;
+              const dropdown = target.nextElementSibling as HTMLElement;
+              if (dropdown) {
+                dropdown.classList.toggle('hidden');
+              }
+            }}
           >
-            Release
+            <Icon icon="lucide:chevron-down" class="w-4 h-4" />
           </button>
-          <div class="relative">
+          <div class="hidden absolute right-0 mt-0 w-48 bg-white shadow-lg border border-gray-200 z-50 rounded-xl">
             <button
-              class="px-2 py-1 bg-surface-500 dark:bg-surface-600 text-white text-sm md:rounded-r-full border-l border-surface-500 hover:bg-surface-500 dark:hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 focus:z-10 h-full w-10 disabled:opacity-80 disabled:hover:bg-surface-500 disabled:dark:hover:bg-surface-600 disabled:cursor-not-allowed"
-              disabled={releaseDisabled}
+              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded-xl"
               onclick={(event) => {
-                // Toggle dropdown visibility
                 const target = event.currentTarget as HTMLElement;
-                const dropdown = target.nextElementSibling as HTMLElement;
+                const dropdown = target.closest('.absolute') as HTMLElement;
                 if (dropdown) {
-                  dropdown.classList.toggle('hidden');
+                  dropdown.classList.add('hidden');
                 }
+                doReleaseWithoutTip?.()
               }}
             >
-              <Icon icon="lucide:chevron-down" class="w-4 h-4" />
+              Release without Tip
             </button>
-            <div class="hidden absolute right-0 mt-0 w-48 bg-white shadow-lg border border-gray-200 z-50 rounded-xl">
-              <button
-                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded-xl"
-                onclick={(event) => {
-                  const target = event.currentTarget as HTMLElement;
-                  const dropdown = target.closest('.absolute') as HTMLElement;
-                  if (dropdown) {
-                    dropdown.classList.add('hidden');
-                  }
-                  doReleaseWithoutTip()
-                }}
-              >
-                Release without Tip
-              </button>
-              <!-- <button
-                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                onclick={(event) => {
-                  console.log('Option 2 clicked');
-                  const target = event.currentTarget as HTMLElement;
-                  const dropdown = target.closest('.absolute') as HTMLElement;
-                  if (dropdown) {
-                    dropdown.classList.add('hidden');
-                  }
-                }}
-              >
-                Option 2
-              </button>
-              <button
-                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                onclick={(event) => {
-                  console.log('Option 3 clicked');
-                  const target = event.currentTarget as HTMLElement;
-                  const dropdown = target.closest('.absolute') as HTMLElement;
-                  if (dropdown) {
-                    dropdown.classList.add('hidden');
-                  }
-                }}
-              >
-                Option 3
-              </button> -->
-            </div>
           </div>
         </div>
+        {/if}
       </div>
-      {:else}
-      <!-- Show delivered status to maintain horizontal space -->
-      <div class="flex justify-end w-32">
-        <div class="flex shadow-sm md:rounded-r-full gap-0.5 w-full">
-          <span class="px-4 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-sm md:rounded-r-full h-full flex items-center w-full">
-            Delivered
-          </span>
-        </div>
+      <!-- Show single release button when no feeDirector exists (no tip available) -->
+      <!-- {:else}
+        <button
+          class="px-4 py-1 bg-surface-500 hover:bg-surface-600 dark:bg-surface-600 text-white text-sm md:rounded-r-full shadow-sm transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 focus:z-10 h-full bg-position-[-55px_6px] hover:bg-position-[-4px_6px] disabled:opacity-80 disabled:hover:bg-surface-500 disabled:dark:hover:bg-surface-600 disabled:cursor-not-allowed disabled:bg-position-[-1000px_6px]"
+          style="background-image: url({payMe}); background-size: 46px 35px; background-repeat: no-repeat; transition: background-position 200ms ease-in-out;"
+          onclick={doReleaseToRouter}
+          disabled={releaseDisabled}
+        >
+          Release
+        </button>
+      {/if} -->
+    </div>
+    {:else}
+    <!-- Show delivered status to maintain horizontal space -->
+    <div class="flex justify-end w-32">
+      <div class="flex shadow-sm md:rounded-r-full gap-0.5 w-full">
+        <span class="px-4 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-sm md:rounded-r-full h-full flex items-center w-full">
+          Delivered
+        </span>
       </div>
-      {/if}
+    </div>
+    {/if}
   </div>
 
   <!-- Section 2: Details -->

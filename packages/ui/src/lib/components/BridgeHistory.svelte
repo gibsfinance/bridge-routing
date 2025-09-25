@@ -46,7 +46,7 @@
   let manualHashCleared = $state(false) // Track if user explicitly cleared the hash
 
   // Track previous wallet account to detect changes
-  let previousWalletAccount = $state<string | null>(null)
+  let previousWalletAccount = $state<string | null>(accountState.address)
 
   // Effect to detect wallet address changes and override manual address
   $effect(() => {

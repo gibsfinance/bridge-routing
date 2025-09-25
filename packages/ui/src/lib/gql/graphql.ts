@@ -538,7 +538,7 @@ export type FeeDirector = {
   excludePriority: Scalars['Boolean'];
   feeType: Scalars['String'];
   limit: Scalars['BigInt'];
-  messageId: Scalars['String'];
+  messageHash: Scalars['String'];
   multiplier: Scalars['BigInt'];
   recipient: Scalars['String'];
   settings: Scalars['BigInt'];
@@ -571,16 +571,16 @@ export type FeeDirectorFilter = {
   limit_lte?: InputMaybe<Scalars['BigInt']>;
   limit_not?: InputMaybe<Scalars['BigInt']>;
   limit_not_in?: InputMaybe<Array<InputMaybe<Scalars['BigInt']>>>;
-  messageId?: InputMaybe<Scalars['String']>;
-  messageId_contains?: InputMaybe<Scalars['String']>;
-  messageId_ends_with?: InputMaybe<Scalars['String']>;
-  messageId_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageId_not?: InputMaybe<Scalars['String']>;
-  messageId_not_contains?: InputMaybe<Scalars['String']>;
-  messageId_not_ends_with?: InputMaybe<Scalars['String']>;
-  messageId_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  messageId_not_starts_with?: InputMaybe<Scalars['String']>;
-  messageId_starts_with?: InputMaybe<Scalars['String']>;
+  messageHash?: InputMaybe<Scalars['String']>;
+  messageHash_contains?: InputMaybe<Scalars['String']>;
+  messageHash_ends_with?: InputMaybe<Scalars['String']>;
+  messageHash_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  messageHash_not?: InputMaybe<Scalars['String']>;
+  messageHash_not_contains?: InputMaybe<Scalars['String']>;
+  messageHash_not_ends_with?: InputMaybe<Scalars['String']>;
+  messageHash_not_in?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  messageHash_not_starts_with?: InputMaybe<Scalars['String']>;
+  messageHash_starts_with?: InputMaybe<Scalars['String']>;
   multiplier?: InputMaybe<Scalars['BigInt']>;
   multiplier_gt?: InputMaybe<Scalars['BigInt']>;
   multiplier_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1150,7 +1150,7 @@ export type QueryDeliverysArgs = {
 
 
 export type QueryFeeDirectorArgs = {
-  messageId: Scalars['String'];
+  messageHash: Scalars['String'];
 };
 
 
@@ -2018,6 +2018,7 @@ export type UserRequest = {
   destinationToken?: Maybe<Token>;
   destinationTokenAddress?: Maybe<Scalars['String']>;
   encodedData: Scalars['String'];
+  feeDirector?: Maybe<FeeDirector>;
   feeManagerContract?: Maybe<FeeManagerContract>;
   feeManagerContractAddress?: Maybe<Scalars['String']>;
   feeManagerContractChainId?: Maybe<Scalars['BigInt']>;
