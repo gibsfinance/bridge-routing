@@ -20,6 +20,10 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "~5.7.2"
+  },
   "dependencies": {
     "lodash": "^4.17.21",
     "viem": "^2.37.8"
