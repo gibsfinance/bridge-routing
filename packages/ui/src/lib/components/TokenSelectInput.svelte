@@ -9,6 +9,7 @@
     borderClasses?: ClassValue
     backgroundClasses?: ClassValue
     paddingClasses?: ClassValue
+    colorClasses?: ClassValue
     oninput: (val: string) => void
     icon?: Snippet
   }
@@ -16,13 +17,14 @@
     value,
     roundedClasses = 'rounded-full',
     borderClasses = 'border border-gray-50 focus:border-gray-50',
-    backgroundClasses = 'bg-white',
+    backgroundClasses = 'bg-transparent',
     paddingClasses = `leading-8 px-4`,
+    colorClasses = 'text-surface-800 dark:text-surface-200',
     oninput,
     icon,
   }: Props = $props()
   const searchInputId = _.uniqueId('search-input')
-  const classes = $derived([paddingClasses, roundedClasses, backgroundClasses, borderClasses])
+  const classes = $derived([paddingClasses, roundedClasses, backgroundClasses, borderClasses, colorClasses])
   let inputRef: HTMLInputElement | null = $state(null)
   $effect(() => {
     if (inputRef) {
@@ -39,7 +41,7 @@
       autoFocus
       id={searchInputId}
       size="md"
-      placeholder="Search Tokens"
+      placeholder="Search"
       class={classes}
       {value}
       {oninput}

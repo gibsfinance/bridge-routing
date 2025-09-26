@@ -16,8 +16,8 @@
     onclose: () => void
   }
   const { onsubmit, onclose, data: startingData }: Props = $props()
-  const buttonClasses =
-    'rounded-2xl bg-neutral-600 px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-neutral-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 grow transition-all'
+  const restoreDefaultsButtonClass =
+    'rounded-2xl bg-neutral-500 dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-neutral-600 focus:outline-none grow transition-all'
   const data = new SvelteMap(startingData)
   const rpcs = {
     add: (chain: number) => {
@@ -49,12 +49,12 @@
   }
 </script>
 
-<div class="flex flex-col h-full gap-2">
+<div class="flex flex-col h-full gap-2 dark:text-surface-950">
   <h2 class="leading-10 text-2xl text-center flex flex-row items-center justify-center px-4 pt-4">
     <GreenBadge icon="carbon:network-4" />
     <span class="ml-2">RPCs</span>
   </h2>
-  <p class="text-center text-sm text-gray-400 max-w-md mx-auto">
+  <p class="text-center text-sm max-w-md mx-auto">
     Endpoints will be used under the same public client, and will use batching where possible.
   </p>
   <div class="overflow-y-scroll flex flex-col max-h-64 h-full px-4">
@@ -72,12 +72,12 @@
               <label for="" class="relative flex grow">
                 <Input
                   value={rpc}
-                  class="border border-neutral-500 focus:border-neutral-600 rounded-full py-0 h-10 leading-10"
+                  class="border border-surface-200 dark:border-surface-700 rounded-full py-0 h-10 leading-10 text-surface-50 bg-surface-50 dark:bg-surface-950 dark:text-surface-950 focus:ring-0 focus:border-surface-500 dark:focus:border-surface-500"
                   oninput={(val) => {
                     rpcs.update(chain, i, val)
                   }} />
                 <Button
-                  class="absolute bottom-0 right-0 top-0 justify-center flex size-10 items-center"
+                  class="absolute bottom-0 right-0 top-0 justify-center flex size-10 items-center text-surface-50 dark:text-surface-950"
                   onclick={() => rpcs.remove(chain, i)}>
                   <Icon icon="zondicons:close-outline" class="size-4" />
                 </Button>
@@ -88,7 +88,7 @@
             <li class="flex w-full grow">
               <label class="flex text-sm">
                 <Button
-                  class={buttonClasses}
+                  class={restoreDefaultsButtonClass}
                   onclick={() => {
                     rpcs.restoreDefault(chain)
                   }}>Restore Default</Button>
@@ -99,12 +99,12 @@
       </div>
     {/each}
   </div>
-  <div class="flex flex-row gap-2 p-4 border-t">
+  <div class="flex flex-row gap-2 p-4 border-t border-surface-200 dark:border-surface-700">
     <Button
-      class="flex w-1/2 text-center justify-center border border-surface-500/80 text-surface-contrast-50 leading-6 p-2 rounded-2xl font-semibold hover:border-surface-500 hover:shadow transition-all duration-100"
+      class="flex w-1/2 text-center justify-center border border-surface-200 hover:border-surface-300 dark:border-surface-700 dark:hover:border-surface-600 text-surface-50 dark:text-surface-950 leading-6 p-2 rounded-2xl font-semibold hover:shadow transition-all duration-100"
       onclick={onclose}>Close</Button>
     <Button
-      class="flex w-1/2 text-center justify-center bg-surface-500/80 text-surface-contrast-950 leading-6 p-2 rounded-2xl font-semibold hover:bg-surface-500 hover:shadow transition-all duration-100"
+      class="flex w-1/2 text-center justify-center bg-surface-500 text-surface-950 leading-6 p-2 rounded-2xl font-semibold hover:bg-surface-600 hover:shadow transition-all duration-100"
       onclick={() => onsubmit([...data.entries()])}>Reload</Button>
   </div>
 </div>

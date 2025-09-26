@@ -32,14 +32,13 @@
     clsx([
       iconWrapperSizeClasses,
       iconWrapperColorClasses,
-      'border-current text-white',
       onClick ? 'cursor-pointer' : 'cursor-auto',
     ]),
   )
   const onclick = $derived.by(() => onClick ?? (() => {}))
   const iconClasses = $derived(
     clsx([
-      'rounded-full w-full h-full ring-4 text-surface-contrast-100 ring-inset ring-white p-1.5 bg-white border',
+      'rounded-full w-full h-full ring ring-surface-500 text-surface-800 bg-white hover:bg-surface-50 dark:bg-slate-950 hover:dark:bg-surface-800 dark:text-surface-200 ring-inset p-1.5',
       onClick ? 'shadow hover:shadow-md transition-all duration-100' : '',
     ]),
   )

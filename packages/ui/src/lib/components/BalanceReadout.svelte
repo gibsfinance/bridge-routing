@@ -26,7 +26,7 @@
     hideSymbol?: boolean
     decimalLimit?: number
     showLoader?: boolean
-    currentValue: bigint | null
+    currentValue: bigint | string | null
   }
   const {
     token,
@@ -65,6 +65,7 @@
   })
   const balance = $derived(tokenBalance?.value ?? null)
   const maxBalance = $derived.by(() => {
+    if (typeof balance !== 'bigint') return 0n
     if (!token) return 0n
     if (!balance) return 0n
     if (token.address !== zeroAddress) return balance
@@ -74,7 +75,10 @@
     if (balanceMinusGasNeeds < 0n) return 0n
     return balanceMinusGasNeeds
   })
-  const disableMax = $derived(balance === 0n || maxBalance <= (currentValue ?? 0n))
+  const disableMax = $derived(
+    typeof balance !== 'bigint' || typeof currentValue !== 'bigint'
+    || (balance === 0n || maxBalance <= (currentValue ?? 0n))
+  )
   const loadingKey = $derived(
     token && tokenBalanceLoadingKey(token?.chainId ?? 0, token.address, (account as Hex) ?? '0x'),
   )
@@ -110,8 +114,8 @@
       class:bg-tertiary-400={disableMax}
       class:bg-tertiary-600={!disableMax}
       class:hover:bg-tertiary-500={!disableMax}
-      class:text-tertiary-contrast-950={disableMax}
-      class="{roundedClasses} rounded-full text-xs flex items-center justify-center text-surface-contrast-600 px-1.5"
+      class:text-tertiary-950={disableMax}
+      class="{roundedClasses} rounded-full text-xs flex items-center justify-center text-surface-600 px-1.5"
       onclick={maxOutBalance}>
       Max
     </button>

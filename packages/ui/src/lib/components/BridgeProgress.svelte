@@ -136,7 +136,7 @@
   <div class="h-6 w-full relative">
     <Button
       onclick={hideTxHashInput}
-      class="text-sm text-contrast-500 text-right absolute top-0 leading-6 flex flex-col gap-1 items-center justify-center size-6 text-surface-contrast-50">
+      class="text-sm text-contrast-500 text-right absolute top-0 leading-6 flex flex-col gap-1 items-center justify-center size-6 text-surface-50">
       <Icon icon="flowbite:close-outline" class="size-4 flex [&>path]:stroke-2" />
     </Button>
     <Input
@@ -146,7 +146,7 @@
           showEdit: false,
         })
       }}
-      class="border pl-6 pr-2 py-1 rounded-full text-xs h-full text-ellipsis text-surface-contrast-50 text-right focus:ring-0 {isValidTxHash
+      class="border pl-6 pr-2 py-1 rounded-full text-xs h-full text-ellipsis text-surface-50 text-right focus:ring-0 {isValidTxHash
         ? 'border-success-500'
         : 'border-error-200'}"
       autoFocus />

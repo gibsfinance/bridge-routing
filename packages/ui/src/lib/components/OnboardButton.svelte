@@ -41,7 +41,7 @@
   })
   const text = $derived.by(() => {
     if (!accountState.connected) {
-      return 'Connect Wallet'
+      return 'Connect'
     }
     if (!requiredChain) {
       return 'Switch Network'
@@ -71,7 +71,7 @@
 <div class="flex flex-row rounded-2xl overflow-hidden">
   <Button
     {disabled}
-    class="bg-tertiary-500 text-surface-contrast-950 h-14 grow text-xl flex flex-row items-center justify-center shrink-0 gap-2"
+    class="bg-tertiary-500 text-surface-50 dark:text-surface-950 h-14 grow text-xl flex flex-row items-center justify-center shrink-0 gap-2"
     {onclick}>
     <div class="size-6"></div>
     {text}

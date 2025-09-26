@@ -70,7 +70,7 @@
 </script>
 
 <Section id="bridge-details" focused>
-  <div class="text-surface-contrast-50 w-full text-xs sm:text-sm">
+  <div class="w-full text-xs sm:text-sm text-surface-950 dark:text-surface-200">
     <div class="flex flex-row items-center leading-7 justify-between w-full text-sm">
       <span>Bridge Fee</span>
       <Tooltip placement="top">

@@ -17,7 +17,7 @@
   const activeOption = $derived(options.find((option) => option.key === active))
 </script>
 
-<div class="isolate inline-flex text-surface-contrast-50">
+<div class="flex text-surface-950 dark:text-surface-500">
   {#each options as option, i (option.key)}
     <button
       type="button"
@@ -25,13 +25,15 @@
       class:ml-0.5={i > 0}
       class:border-surface-400={active !== option.key}
       class:border-surface-600={active === option.key}
+      class:dark:border-surface-800={active !== option.key}
+      class:dark:border-surface-600={active === option.key}
       title={option.tooltip}
       onclick={() => {
         active = option.key
         onchange?.(option)
       }}>{option.text}</button>
   {/each}
-  <Popover positioning={{ placement: 'top' }} triggerClasses="flex" contentClasses="card bg-white border text-surface-contrast-50 text-sm px-2 py-1 max-w-[280px]">
+  <Popover positioning={{ placement: 'top' }} triggerClasses="flex" contentClasses="card bg-white border text-surface-50 text-sm px-2 py-1 max-w-[280px]">
     {#snippet trigger()}
       <Icon icon="mdi:information-outline" class="w-6 h-6" />
     {/snippet}

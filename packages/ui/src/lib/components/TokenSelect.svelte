@@ -17,6 +17,7 @@
   import TokenSelectInput from './TokenSelectInput.svelte'
   import Button from './Button.svelte'
   import Loading from './Loading.svelte'
+  import Headline from './Headline.svelte'
 
   type Props = {
     onsubmit?: (token: Token | null) => void
@@ -143,13 +144,13 @@
   const headerClasses = $derived([
     'flex flex-row grow justify-between',
     paddingClassesX,
-    'pt-4 pb-2',
+    'pt-4',
   ])
 </script>
 
 <div class="flex flex-col h-full max-h-[512px] rounded-2xl overflow-hidden">
   <div class={headerClasses}>
-    <span class="flex flex-row grow">Select a Token</span>
+    <Headline class="flex flex-row grow" textSizeClasses="text-3xl" tag="h3">Select a Token</Headline>
     <Button
       class="flex flex-row"
       onclick={() => {
@@ -159,7 +160,7 @@
     </Button>
   </div>
   <TokenSelectInput
-    borderClasses="ring-0 focus:ring-0"
+    borderClasses="ring-0 focus:ring-0 border-surface-200 dark:border-surface-700 focus:border-surface-500 dark:focus:border-surface-500"
     value={searchValue}
     oninput={(val) => {
       searchValue = val
@@ -170,7 +171,7 @@
           open={chainSelectOpen}
           triggerBase="flex flex-row items-center py-1 px-2 justify-center h-full"
           zIndex="50"
-          contentClasses="flex flex-col max-h-64 border rounded-2xl bg-white text-surface-contrast-50 overflow-y-scroll relative"
+          contentClasses="flex flex-col max-h-64 border rounded-2xl bg-white text-surface-50 overflow-y-scroll relative"
           positionerClasses="pointer-events-auto"
           modal
           positioning={{
@@ -248,9 +249,9 @@
     </div>
     <ul class="flex grow flex-col overflow-y-scroll h-full">
       {#each subset as token (token.chainId + '-' + token.address.toLowerCase())}
-        <li class="flex hover:bg-surface-50 relative">
+        <li class="flex hover:bg-surface-50 dark:hover:bg-surface-900 relative">
           <Button
-            class="relative flex grow cursor-pointer flex-row py-2 pr-2 text-surface-contrast-50"
+            class="relative flex grow cursor-pointer flex-row py-2 pr-2 text-surface-950 dark:text-surface-200"
             onclick={() => selectToken(token)}>
             <TokenInfo {token} truncate={6} />
           </Button>

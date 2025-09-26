@@ -628,7 +628,7 @@
   {#snippet radio()}
     {#if stepTokensDelinked}
       <Button
-        class="flex size-5 text-surface-contrast-50"
+        class="flex size-5 text-surface-50"
         onclick={() => {
           amountInputToPulsex = 0n
           page.setParam('pulsexTokenIn', null)

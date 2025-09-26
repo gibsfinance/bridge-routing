@@ -86,7 +86,7 @@
             icon="mingcute:run-fill"
             mode="svg"
             class="size-8 -mr-1.5 {page.stage !== step
-              ? 'text-gray-300 opacity-75'
+              ? 'opacity-75'
               : ''}" />
         </Button>
       {/each}

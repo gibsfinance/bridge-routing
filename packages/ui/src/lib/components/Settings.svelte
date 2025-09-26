@@ -52,7 +52,7 @@
         name="calldata"
         id="calldata"
         disabled
-        class="bg-transparent !opacity-100 text-surface-contrast-50 border-none outline-hidden resize-none flex grow cursor-not-allowed font-mono text-xs -mr-3 pr-2 p-0 max-h-24"
+        class="bg-transparent !opacity-100 border-none outline-hidden resize-none flex grow cursor-not-allowed font-mono text-xs -mr-3 pr-2 p-0 max-h-24"
         rows={4}>{nonZeroXCalldata}</textarea>
     </div>
   {/if}

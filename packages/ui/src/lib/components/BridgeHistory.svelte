@@ -1,10 +1,5 @@
 <!-- this component shows the bridges that have been triggered by the provided address, on the provided bridge pair -->
-
-
 <script lang="ts">
-  import * as abis from '@gibs/bridge-sdk/abis'
-  import { packSignatures, signatureToVRS } from '../stores/messages'
-  import * as transactions from '../stores/transactions'
   import type { TokenMetadata } from '@gibs/bridge-sdk/types'
   import { formatTokenAmount } from '../stores/utils'
   import Icon from '@iconify/svelte'
@@ -12,26 +7,16 @@
   import { loadBridgeTransactions, type BridgeData } from '../stores/history'
   import type { UserRequest } from '../gql/graphql'
   import { accountState } from '../stores/auth/AuthProvider.svelte'
-  import type { BridgeKey, Token } from '@gibs/bridge-sdk/types'
-  import DirectLink from './DirectLink.svelte'
-  import AssetWithNetwork from './AssetWithNetwork.svelte'
-  import StaticNetworkImage from './StaticNetworkImage.svelte'
+  import type { BridgeKey } from '@gibs/bridge-sdk/types'
   import InfoTooltip from './InfoTooltip.svelte'
   import Tooltip from './Tooltip.svelte'
-  import { numberWithCommas, bridgeETA } from '../stores/utils'
-  import { zeroAddress, type Hex, isAddress, encodeFunctionData, isHex } from 'viem'
+  import { type Hex, isAddress, isHex } from 'viem'
   import ConnectButton from './ConnectButton.svelte'
-  import { blocks, latestBlock, bridgeStatuses, type ContinuedLiveBridgeStatusParams, finalizedBlock } from '../stores/chain-events.svelte'
-  import * as imageLinks from '@gibs/bridge-sdk/image-links'
-  import { HOME_TO_FOREIGN_FEE, FOREIGN_TO_HOME_FEE, Chains, pathway, toChain } from '@gibs/bridge-sdk/config'
-  import { oneEther } from '@gibs/bridge-sdk/settings'
-  import { chainsMetadata } from '@gibs/bridge-sdk/chains'
+  import { latestBlock, finalizedBlock } from '../stores/chain-events.svelte'
+  import { Chains, toChain } from '@gibs/bridge-sdk/config'
   import { loading } from '../stores/loading.svelte'
-    import BridgeHistoryItem from './BridgeHistoryItem.svelte'
+  import BridgeHistoryItem from './BridgeHistoryItem.svelte'
 
-  const payMe = 'images/pay-me-isolated.png'
-
-  // const walletAccount = $derived(accountState.address)
   const walletAccount = $derived(accountState.address)
   $inspect(walletAccount)
 
@@ -381,6 +366,7 @@
   //     1
   //   )
   // }
+  const inputIsInvalid = $derived(manualAddressInput.trim() && !isAddress(manualAddressInput.trim()) && !isBytes32Hash(manualAddressInput.trim()))
 
 </script>
 
@@ -390,9 +376,9 @@ go to the bridge history api endpoint and get the bridges for the provided addre
 map out the progress of each bridge and display it to the user
 -->
 
-<div class="w-full flex flex-col dark:bg-surface-950 bg-gray-50">
+<div class="w-full flex flex-col dark:bg-surface-950 bg-gray-50 text-surface-950 dark:text-surface-50">
 <div class="max-w-5xl w-full mx-auto py-8">
-  <div class="bg-white dark:bg-slate-950 lg:rounded-3xl shadow-lg border-y md:border border-surface-200 dark:border-surface-800 p-0 text-surface-contrast-50 dark:text-surface-contrast-950">
+  <div class="bg-white dark:bg-slate-950 lg:rounded-3xl shadow-lg border-y md:border border-surface-200 dark:border-surface-800 p-0">
     <div class="flex items-center justify-between px-2 md:px-4 pt-4 md:pb-2">
       <div class="flex gap-4 w-full justify-start">
         <div class="flex lg:static absolute gap-2 items-center">
@@ -431,7 +417,7 @@ map out the progress of each bridge and display it to the user
         <div class="flex flex-col lg:flex-row-reverse justify-end flex-grow items-center gap-2">
           <div class="flex items-center gap-2 ml-auto lg:ml-0">
             <button
-              class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 transition-colors focus:outline-none focus:ring-2 focus:ring-surface-500 focus:ring-offset-2"
+              class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 transition-colors focus:outline-none focus:ring-2 focus:ring-surface-500 focus:ring-offset-2 text-surface-600 dark:text-surface-400"
               onclick={() => {
                 isBackgroundRefresh = false // Ensure manual refresh shows overlay
                 retryCounter++
@@ -458,35 +444,40 @@ map out the progress of each bridge and display it to the user
                 bind:value={manualAddressInput}
                 onkeydown={handleAddressKeydown}
                 placeholder="Address or tx hash..."
-                class="pl-3 pr-10 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-full focus:ring focus:ring-surface-500 focus:border-surface-500 bg-white dark:bg-surface-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 min-w-40 h-full"
+                class="pl-3 pr-10 py-1.5 text-sm border border-surface-200 dark:border-surface-600 rounded-full focus:ring-0 focus:border-surface-500 bg-white dark:bg-surface-900 dark:text-white placeholder-surface-400 dark:placeholder:text-surface-600 min-w-40 h-full"
                 type="text"
               />
-            {#if manualAddressInput.trim() && !isAddress(manualAddressInput.trim()) && !isBytes32Hash(manualAddressInput.trim())}
+            <!-- {#if inputIsInvalid} -->
               <Tooltip placement="top" positionerClassName="z-50">
                 {#snippet trigger()}
                   <button
                     onclick={handleAddressInput}
-                    disabled={true}
-                    class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full disabled:border-gray-300 dark:disabled:border-gray-600 disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
+                    disabled={inputIsInvalid || !manualAddressInput.trim()}
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full text-surface-500 border-surface-500 disabled:border-surface-300 dark:disabled:border-surface-600 disabled:text-surface-500 dark:disabled:text-surface-500 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
                     aria-label="Invalid input"
+                    class:border={!inputIsInvalid || !manualAddressInput.trim()}
                   >
-                    <Icon icon="lucide:help-circle" class="w-5 h-5" />
+                  {#if !manualAddressInput.trim() || !inputIsInvalid}
+                  <Icon icon="lucide:arrow-up" class="w-5 h-5" />
+                  {:else}
+                  <Icon icon="lucide:help-circle" class="w-5 h-5" />
+                  {/if}
                   </button>
                 {/snippet}
                 {#snippet content()}
                   Invalid address or hash
                 {/snippet}
               </Tooltip>
-            {:else}
+            <!-- {:else}
               <button
                 onclick={handleAddressInput}
                 disabled={!manualAddressInput.trim()}
-                class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border-2 dark:border-surface-600 border-surface-500 hover:border-surface-600 dark:hover:border-surface-600 disabled:border-gray-300 dark:disabled:border-gray-600 text-white disabled:text-gray-500 dark:disabled:text-gray-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
+                class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border dark:border-surface-600 border-surface-500 hover:border-surface-600 dark:hover:border-surface-600 disabled:border-surface-300 dark:disabled:border-surface-600 text-white disabled:text-surface-500 dark:disabled:text-surface-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
                 aria-label="Submit input"
               >
                 <Icon icon="lucide:arrow-up" class="w-5 h-5" />
               </button>
-            {/if}
+            {/if} -->
             </div>
             </div>
             <div class="flex items-center gap-2 justify-start">
@@ -514,7 +505,7 @@ map out the progress of each bridge and display it to the user
                 </span>
                 <button
                   onclick={clearManualAddress}
-                  class="px-2 py-0 h-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors border-l border-surface-200 dark:border-surface-900 text-surface-500 hover:text-surface-700 dark:hover:text-surface-200"
+                  class="px-2 py-0 h-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors border-l border-surface-200 dark:border-surface-900"
                   aria-label="Clear address"
                 >
                   <Icon icon="lucide:x" class="w-4 h-4" />
@@ -614,7 +605,7 @@ map out the progress of each bridge and display it to the user
             <div class="flex justify-center mb-4 text-gray-700 dark:text-gray-300">
               <Loader class="size-8" />
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 text-shadow-sm dark:text-white dark:text-shadow-sm dark:text-shadow-black mb-2">Loading Bridge Transactions</h3>
+            <h3 class="text-lg font-semibold text-gray-900 text-shadow-sm text-shadow-white dark:text-white dark:text-shadow-sm dark:text-shadow-black mb-2">Loading Bridge Transactions</h3>
             <p class="text-gray-600 dark:text-gray-300">
               {activeAddress
                 ? `Fetching bridge history for ${activeAddress.slice(0, (2+6))}...${activeAddress.slice(-6)}`

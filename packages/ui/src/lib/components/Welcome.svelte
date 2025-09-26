@@ -56,7 +56,7 @@
       <p class="text-xl mb-6">The easiest way to bring assets to PulseChain.<br />Simple, secure, and user-friendly.</p>
       <Button
         onclick={handleGetStarted}
-        class="bg-white text-slate-950 hover:bg-slate-100 px-8 py-3 rounded-full text-lg font-medium flex flex-row items-center gap-2 mx-auto">
+        class="bg-white dark:bg-slate-950 text-slate-950 dark:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-800 px-8 py-3 rounded-full text-lg font-medium flex flex-row items-center gap-2 mx-auto">
         Get Started
         <Icon icon="mdi:arrow-right" />
       </Button>

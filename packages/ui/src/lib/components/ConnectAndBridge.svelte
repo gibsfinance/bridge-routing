@@ -175,9 +175,9 @@
   })
 </script>
 
-<div class="flex flex-row w-full relative">
+<div class="flex flex-row w-full relative text-xl">
   <Button
-    class="bg-tertiary-600 w-full text-surface-contrast-950 leading-10 rounded-2xl p-2"
+    class="bg-tertiary-600 w-full text-surface-50 dark:text-surface-950 leading-10 rounded-2xl p-2"
     {onclick}
     {disabled}>{text}</Button>
 </div>

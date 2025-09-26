@@ -8,7 +8,7 @@
 
   import Button from './Button.svelte'
   import Image from './Image.svelte'
-    import clsx from 'clsx'
+  import clsx from 'clsx'
 
   const targetChain = $derived.by(() => {
     const id = accountState.chainId
@@ -26,8 +26,8 @@
   const props = $props<{
     class?: string
   }>()
-  const lightClasses = 'bg-surface-white/20 border border-surface-200 text-surface-contrast-50'
-  const darkClasses = 'dark:bg-surface-900/20 dark:border-surface-500 dark:text-surface-contrast-800'
+  const lightClasses = 'border border-surface-200'
+  const darkClasses = 'dark:border-surface-500'
   const classes = $derived(clsx('p-1 shadow-inner rounded-full h-10 text-base flex flex-row items-center gap-1 bottom-2 right-2', lightClasses, darkClasses, props.class))
 </script>
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import './app.css'
   import Nav from './lib/components/Nav.svelte'
   import Footer from './lib/components/Footer.svelte'
@@ -6,9 +7,14 @@
   import { toaster } from './lib/stores/toast'
   import { page } from './lib/stores/app-page.svelte'
   import EmbedSettings from './lib/components/EmbedSettings.svelte'
+  import { theme } from './lib/stores/theme.svelte'
 
   const { children } = $props()
   const settingsOpen = $derived(!!page.settings && page.settings !== 'disabled')
+
+  onMount(() => {
+    theme.init()
+  })
 </script>
 
 <!--

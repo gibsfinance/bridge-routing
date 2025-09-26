@@ -30,20 +30,20 @@
     input.resetFeeInputs()
     nav.bridge.shallow(bridgeKey, token.address)
   }
-  const chooseTokenAndNetworkSubmit = async (token: Token, chainId: number) => {
-    const availablePaths = _.get(pathways, [bridgeKey.provider, toChain(chainId!)]) ?? {}
-    const keys = Object.keys(availablePaths)
-    const destinationChain = keys[0]
-    if (!destinationChain) {
-      throw new Error('no to chain found')
-    }
-    const options = [
-      bridgeKey.provider,
-      toChain(chainId!),
-      destinationChain as Chains,
-    ] as BridgeKey
-    nav.bridge.shallow(options, token.address)
-  }
+  // const chooseTokenAndNetworkSubmit = async (token: Token, chainId: number) => {
+  //   const availablePaths = _.get(pathways, [bridgeKey.provider, toChain(chainId!)]) ?? {}
+  //   const keys = Object.keys(availablePaths)
+  //   const destinationChain = keys[0]
+  //   if (!destinationChain) {
+  //     throw new Error('no to chain found')
+  //   }
+  //   const options = [
+  //     bridgeKey.provider,
+  //     toChain(chainId!),
+  //     destinationChain as Chains,
+  //   ] as BridgeKey
+  //   nav.bridge.shallow(options, token.address)
+  // }
   const keepBalance = (bal: bigint | null) => {
     fromTokenBalance.value = bal
   }

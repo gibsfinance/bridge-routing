@@ -15,6 +15,7 @@
   import RPC from './RPC.svelte'
   import Button from './Button.svelte'
   import ConnectButton from './ConnectButton.svelte'
+  import ThemeToggle from './ThemeToggle.svelte'
   // import in order to link appropriately
   const gibs = 'images/1FAF0.svg'
 
@@ -40,7 +41,7 @@
 
 <div class="fixed z-20 -mb-14 flex h-14 transition-all duration-200" style="width: {settingsClosed ? '100vw' : 'calc(100vw - 16rem)'};">
   <nav
-    class="grow flex h-14 flex-row bg-white dark:bg-slate-950 border-b border-surface-200 dark:border-surface-700 p-2 leading-8 shadow text-surface-contrast-50 dark:text-surface-contrast-950">
+    class="grow flex h-14 flex-row bg-white dark:bg-slate-950 border-b border-surface-200 dark:border-surface-700 p-2 leading-8 shadow text-surface-950 dark:text-surface-50">
     <div class="m-auto flex w-full max-w-5xl justify-between">
       <button
         type="button"
@@ -73,6 +74,9 @@
               </a>
             </li>
           {/if} -->
+          <li class="flex flex-row">
+            <ThemeToggle />
+          </li>
           <li class="flex flex-row">
             <ModalWrapper
               triggerClasses="flex flex-row items-center px-2 py-1 gap-1"

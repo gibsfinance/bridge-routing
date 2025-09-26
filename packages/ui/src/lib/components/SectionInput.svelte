@@ -32,7 +32,7 @@
     dashWhenCompressed?: boolean
     overrideAccount?: string | null
     oninput?: (values: InputValue) => bigint | undefined | void
-    value: bigint | null
+    value: bigint | string | null
     modal?: Snippet<[{ close: () => void }]>
     radio?: Snippet
     underinput?: Snippet
@@ -85,7 +85,7 @@
 <Section {id} {focused} disabled={sectionDisabled} {compressed} {onclick}>
   {#if !compressed}
     <div class="flex flex-row justify-between w-full h-5">
-      <span class="text-sm text-gray-500"
+      <span class="text-sm text-gray-500 dark:text-gray-400"
         >{#if !compressed}{label}{/if}</span>
       {@render radio?.()}
     </div>
@@ -100,7 +100,7 @@
       <span class="h-10 leading-10 font-inter text-[36px] tracking-tight">-</span>
     {:else if readonlyInput}
       <span
-        class="w-full input py-0 px-0 ring-0 focus:ring-0 text-surface-contrast-50 placeholder:text-surface-contrast-50 h-10 leading-10 font-inter tracking-tight"
+        class="w-full input py-0 px-0 ring-0 focus:ring-0 h-10 leading-10 font-inter tracking-tight"
         style:font-size={`${largeInputFontScaler(humanReadable?.length ?? 0)}px`}
         >{!token?.decimals ? '0' : humanReadable}</span>
     {:else}
@@ -125,7 +125,7 @@
         triggerClasses=""
         contentClasses="">
         {#snippet button()}
-          <SelectButtonContents {token} network={token?.chainId ?? 0} class="bg-white" />
+          <SelectButtonContents {token} network={token?.chainId ?? 0} />
         {/snippet}
         {#snippet contents({ close })}
           {@render modal?.({ close })}

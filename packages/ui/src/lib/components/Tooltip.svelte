@@ -3,8 +3,8 @@
   import type { Snippet } from 'svelte'
   import type { ClassValue } from 'svelte/elements'
   import { clsx } from 'clsx'
+  import type { Placement } from '@floating-ui/utils'
 
-  type Placement = 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
   type Props = {
     placement?: Placement
     positioning?: {
@@ -28,7 +28,7 @@
     onOpenChange?: (details: { open: boolean }) => void
   }
   let {
-    placement,
+    placement = 'bottom',
     maxWidth = 'max-w-[380px]',
     class: className,
     positionerClassName,
@@ -50,7 +50,7 @@
   const triggerClasses = $derived(clsx(['flex', triggerClassNames]))
   const contentBase = $derived(
     clsx([
-      'card bg-white dark:bg-surface-950 border border-surface-200 dark:border-surface-700 text-surface-contrast-50 dark:text-gray-500 text-sm px-2 py-1',
+      'card bg-white dark:bg-surface-950 border border-surface-200 dark:border-surface-700 text-surface-950 dark:text-gray-500 text-xs px-2 py-1',
       maxWidth,
       contentClassNames,
     ]),

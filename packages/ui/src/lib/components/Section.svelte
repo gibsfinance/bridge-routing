@@ -27,14 +27,20 @@
 <label
   for={id} class="w-full flex">
   <div
-    class="flex flex-col items-center justify-items-end grow gap-1 rounded-2xl shadow-inset justify-between w-full text-surface-contrast-50 border transition-all duration-100 preset-outline-surface-500 relative {className} {compressed
+    class="items-center justify-items-end grow gap-1 rounded-2xl shadow-inset justify-between w-full border transition-all duration-100 relative {className} {compressed
       ? 'px-4 py-1'
       : 'px-4 py-2.5'} {flexClass}"
     class:shadow={focused}
     class:hover:shadow-md={focused}
     class:bg-white={focused}
+    class:dark:bg-slate-950={focused}
     class:bg-surface-50={!focused}
+    class:dark:bg-transparent={!focused}
     class:cursor-not-allowed={disabled}
+    class:dark:border-surface-700={!disabled}
+    class:dark:border-transparent={disabled}
+    class:dark:border-surface-100={!disabled}
+    class:dark:text-surface-400={disabled}
     {onclick}
     onkeydown={() => {}}
     role="button" tabindex="-1">

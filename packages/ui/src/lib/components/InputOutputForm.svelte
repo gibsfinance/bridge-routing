@@ -11,14 +11,14 @@
     ondividerclick?: null | (() => void)
   }
   const { input, output, info, button, progress, divider }: Props = $props()
-  const classes = 'flex grow w-full card rounded-2xl preset-outline-surface-500 bg-surface-50'
+  const classes = 'flex grow w-full card rounded-2xl preset-outline-surface-500'
 </script>
 
 <div class="flex relative">
   <div class="w-full relative flex flex-col gap-2">
     <div class="flex flex-col relative gap-1">
       <div class="{classes} order-1">
-        {@render input()}
+        {@render input()} 
       </div>
       <div class="{classes} order-3">
         {@render output()}

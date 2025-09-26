@@ -25,7 +25,7 @@
     contentClasses,
     contentWidthClass = 'max-w-[548px] w-full',
     contentHeightClass = 'h-full max-h-[512px]',
-    contentBorderClass = 'border border-surface-200',
+    contentBorderClass = 'border border-surface-200 dark:border-surface-700',
   }: Props = $props()
   let open = $state(false)
   const classes = $derived(clsx([wrapperClasses]))
@@ -35,7 +35,7 @@
   const contentBorder = $derived(clsx([contentBorderClass]))
   const contentBase = $derived(
     clsx([
-      'card bg-white space-y-2 text-surface-contrast-50',
+      'card bg-white dark:bg-surface-950 space-y-2 text-surface-950 dark:text-surface-50',
       contentClasses,
       contentWidth,
       contentHeight,

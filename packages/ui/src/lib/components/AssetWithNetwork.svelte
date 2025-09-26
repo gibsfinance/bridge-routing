@@ -38,7 +38,7 @@
   const src = $derived(asset?.logoURI || assetSources(asset, bridgableTokens.value))
   const tokenClasses = $derived(`overflow-hidden absolute`)
   const classes = $derived([
-    'flex basis-auto relative text-surface-contrast-50',
+    'flex basis-auto relative text-surface-50',
     tokenSizeClasses,
     className,
   ])
@@ -57,7 +57,7 @@
     <TokenIcon visible sizeClasses={tokenSizeClasses} class={tokenClasses} {showWarning} {src} />
     {#if finishedLoading && !nativeToken && !hideNetwork}
       <Image
-        class="network-image absolute -left-0.5 -bottom-0.5 rounded-full bg-surface-50"
+        class="network-image absolute -left-0.5 -bottom-0.5 rounded-full"
         sizeClasses={networkSizeClasses}
         src={networkChain.logoURI}
         alt={networkChain.name} />

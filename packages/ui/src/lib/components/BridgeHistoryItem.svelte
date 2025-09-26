@@ -76,15 +76,15 @@
 
   // Helper function to create Token object from bridge data
   function createTokenFromBridge(bridge: UserRequest, metadata: TokenMetadata | null): Token | null {
-    const address = bridge.originationToken?.originationAddress
-    const chainId = Number(bridge.originationToken?.originationChainId)
+    const originationToken = bridge.originationToken
+    const address = originationToken?.originationAddress
+    const chainId = Number(originationToken?.originationChainId)
 
     if (!address || !chainId) return null
 
     const images = [`${chainId}/${address}`]
-    const otherSide = bridge.originationToken?.destinationAddress
-    if (otherSide) {
-      images.push(`${bridge.destinationChainId}/${otherSide}`)
+    if (originationToken.destinationAddress) {
+      images.push(`${originationToken.destinationChainId}/${originationToken.destinationAddress}`)
     }
     if (chainId === 943 && (address.toLowerCase() === '0x70499adEBB11Efd915E3b69E700c331778628707'.toLowerCase() || address === zeroAddress)) {
       return {
@@ -286,7 +286,7 @@
     <!-- <h3 class="text-sm font-medium text-gray-500 mb-3">Bridge Summary</h3> -->
     <div class="flex items-center justify-between md:gap-2 gap-0 py-1 pr-4 pl-1 flex-grow flex-col md:flex-row flex-grow align-center">
       <div class="flex items-center">
-        <Tooltip placement="top-left" gutter={8}>
+        <Tooltip placement="top-start" gutter={8}>
           {#snippet trigger()}
             <div class="bg-surface-100 dark:bg-surface-800 rounded-full p-1 shadow-sm border border-surface-200 dark:border-surface-700 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors cursor-pointer">
               <Icon icon="mdi:clock-outline" class="w-6 h-6 text-surface-600 dark:text-surface-400" />
@@ -295,7 +295,7 @@
           {#snippet content()}
             <div class="text-sm">
               {#if bridge.block?.timestamp}
-                <div class="text-xs text-surface-500 dark:text-surface-400 mt-1">
+                <div class="text-xs text-surface-500 dark:text-surface-500 mt-1">
                   {new Date(Number(bridge.block.timestamp) * 1000).toLocaleString()}
                 </div>
               {:else}
@@ -359,7 +359,7 @@
             <DirectLink
               path="/tx/{bridge.completion.transactionHash}"
               chain={Number(bridge.completion.chainId)}
-              class="text-surface-500 dark:text-surface-500 hover:text-surface-600 transition-colors rounded-full border-surface-200 dark:border-surface-700 border size-6 p-0.5 items-center"
+              class="text-surface-500 hover:text-surface-600 transition-colors rounded-full border-surface-200 dark:border-surface-700 border size-6 p-0.5 items-center"
               size={5}
             />
           {:else}
@@ -422,7 +422,7 @@
             <span>Pending</span>
             <Tooltip placement="top" gutter={3}>
               {#snippet trigger()}
-                <Icon icon="mdi:clock" class="w-4 h-4 text-surface-500 dark:text-surface-400" />
+                <Icon icon="mdi:clock" class="w-4 h-4 text-surface-500 dark:text-surface-500" />
               {/snippet}
               {#snippet content()}
                 <span>{bridgeETA.calculateETA({

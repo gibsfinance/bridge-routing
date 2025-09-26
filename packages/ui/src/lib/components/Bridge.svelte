@@ -52,15 +52,6 @@
     const keyAddress = bridgeKey.assetInAddress
     const tokens = input.bridgableTokens.value
     if (!keyAddress || !tokens.length) return
-    // const assetIn = bridgeSettings.assetIn.value
-    // console.log('assetIn', keyAddress, assetIn)
-    // if (keyAddress && assetIn?.address) {
-    //   if (getAddress(keyAddress) === getAddress(assetIn?.address)) {
-    //     // if we don't return here, we have an infinite loop for some reason
-    //     // console.log('assetIn already set', keyAddress, assetIn?.address)
-    //     return
-    //   }
-    // }
     const updatingAssetIn = updateAssetIn({
       bridgeKey: bridgeKey.value,
       address: keyAddress as Hex,
@@ -225,7 +216,7 @@
     <BridgeHeader />
   {/if}
   <div
-    class="flex flex-col max-w-lg mx-auto w-full p-2 bg-white card rounded-3xl relative overflow-hidden">
+    class="flex flex-col max-w-lg mx-auto w-full p-2 bg-white dark:bg-slate-950 text-surface-950 dark:text-surface-200 card rounded-3xl relative overflow-hidden">
     <InputOutputForm
       icon="mdi:swap-horizontal"
       ondividerclick={dividerDisabled ? null : ondividerclick}>

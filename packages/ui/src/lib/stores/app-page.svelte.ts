@@ -29,6 +29,9 @@ export class AppPage extends Page {
     if (!settings) return null
     return settings
   }
+  get history() {
+    return this.val.params?.get('history') ?? null
+  }
   params = $derived.by(() => {
     const [page, provider, fromChain, toChain, assetInAddress] = this.val.path.split('/').slice(1)
     if (provider && fromChain && toChain && assetInAddress) {
@@ -48,6 +51,9 @@ export class AppPage extends Page {
     return {
       id: this.val.path,
     }
+  })
+  shouldShowHistory = $derived.by(() => {
+    return (!this.mode && this.history !== 'hide') || (this.mode === 'embed' && this.history !== 'hide') || (this.mode === 'simple' && this.history === 'show')
   })
 }
 export const page = new AppPage()

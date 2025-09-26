@@ -96,7 +96,7 @@
       id="destination-address"
       value={recipientInput.value}
       placeholder="Destination Address"
-      class="border-none grow px-1 py-1 text-right focus:ring-0 {isValidRecipient ? 'text-surface-contrast-50' : 'text-red-500'}" />
+      class="border-none grow px-1 py-1 text-right focus:ring-0 bg-transparent placeholder:text-surface-300 dark:placeholder:text-surface-400 text-surface-800 dark:text-surface-200 {isValidRecipient ? 'text-surface-50' : 'text-red-500'}" />
     <Warning
       show={!isValidRecipient && !focused}
       wrapperPositionClass="-top-1 left-0 -bottom-1 m-auto h-6"

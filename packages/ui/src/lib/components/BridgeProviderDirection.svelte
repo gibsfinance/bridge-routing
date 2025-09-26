@@ -21,7 +21,7 @@
     sizeClasses?: ClassValue
   }
   const { id, provider, fromChain, toChain, showProvider = false, disabled = false, onclick = () => {}, wrapperHeightClasses = 'h-5', wrapperPaddingClasses = 'p-0.5', sizeClasses = 'size-4' }: Props = $props()
-  const wrapperClasses = $derived(clsx('flex flex-row bg-surface-50 rounded-full border', wrapperHeightClasses, wrapperPaddingClasses))
+  const wrapperClasses = $derived(clsx('flex flex-row bg-surface-50 dark:bg-surface-950 rounded-full border dark:border-surface-700', wrapperHeightClasses, wrapperPaddingClasses))
 </script>
 
 <div class={wrapperClasses}>

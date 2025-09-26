@@ -104,12 +104,12 @@
   onOpenChange={(e) => updateOnrampProviderStates(e.open)}
   closeOnInteractOutside={page.settings === settings.CLOSED}
   positioning={{ placement: 'bottom-end', gutter: -4, shift: 4 }}
-  triggerBase="flex flex-col items-center justify-items-end grow gap-1 rounded-2xl shadow-inset justify-between w-full text-surface-contrast-50 border transition-all duration-100 preset-outline-surface-500 relative shadow bg-white px-4 py-1 group"
-  contentBase="card bg-white space-y-4 max-w-[320px] shadow-lg border border-gray-200 py-1"
+  triggerBase="flex flex-col items-center justify-items-end grow gap-1 rounded-2xl shadow-inset justify-between w-full text-surface-950 dark:text-surface-200 border border-surface-200 dark:border-surface-700 transition-all duration-100 preset-outline-surface-500 relative shadow bg-white dark:bg-surface-950 px-4 py-1 group"
+  contentBase="card bg-white dark:bg-surface-950 space-y-4 max-w-[320px] shadow-lg border border-surface-200 dark:border-surface-700 py-1"
 >
   {#snippet trigger()}
-    <div class="text-gray-500 text-sm w-full text-left flex flex-row gap-1 items-center">
-      <span class="text-gray-500 text-sm w-full text-left flex flex-row justify-between">
+    <div class="text-sm w-full text-left flex flex-row gap-1 items-center">
+      <span class="text-sm w-full text-left flex flex-row justify-between">
         <span>Onramps to Ethereum</span>
         <span class="flex flex-row-reverse">
           {#each reversedProviders as provider}
@@ -128,7 +128,7 @@
       <Icon
         icon="mdi:bank"
         mode="svg"
-        class="size-7 p-1 text-white [&>path]:text-black flex transition-all duration-100 {onrampsOpen
+        class="size-7 p-1 text-surface-950 dark:text-surface-200 [&>path]:text-surface-950 [&>path]:dark:text-surface-200 flex transition-all duration-100 {onrampsOpen
           ? 'rotate-180'
           : ''}" />
     </div>
@@ -138,14 +138,16 @@
     <ul
       class="flex flex-col items-center overflow-hidden transition-all duration-200" tabindex="-1">
       {#each reversedProviders as provider}
-      <li class="hover:bg-surface-50 overflow-hidden flex px-2 py-0.5 w-full">
+      <li class="hover:bg-surface-50 dark:hover:bg-surface-900 overflow-hidden flex px-2 py-0.5 w-full">
         <Button
           tabindex={-1}
           onclick={provider.onclick ?? openProvider(provider.key)}
-          class="flex flex-row items-center text-surface-contrast-50 justify-between w-full">
+          class="flex flex-row items-center text-surface-950 dark:text-surface-200 justify-between w-full">
           <span class="h-full flex leading-8 text-base">{provider.name}</span>
           <span
-            class="size-8 items-center flex justify-center overflow-hidden scale-90 [&>svg]:w-8 translate-x-[1px]" class:rounded-full={provider.key === 'coinbase'}>
+            class={["size-8 items-center flex justify-center overflow-hidden scale-90 [&>svg]:w-8 translate-x-[1px]", {
+              ['[&>svg>path]:dark:fill-surface-200']: provider.key === 'lifi',
+            }]} class:rounded-full={provider.key === 'coinbase'}>
             {#if provider.logoHref}
               <Image src={provider.logoHref} />
             {:else}

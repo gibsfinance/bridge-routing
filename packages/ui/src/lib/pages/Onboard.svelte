@@ -14,7 +14,7 @@
 </script>
 
 <div class="flex flex-col w-full">
-  <div class="flex w-full">
+  <div class="flex w-full text-white dark:text-slate-950">
     <BlurryImage
       min_height={page.embed ? '100vh' : windowStore.large ? 'calc(100vh - 40px)' : 'auto'}
       image_url="url({onboardImageFuzzy})">
