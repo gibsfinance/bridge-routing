@@ -5,14 +5,14 @@
   "type": "module",
   "version": "1.8.0",
   "scripts": {
-    "dev": "ponder dev",
-    "start": "ponder start --schema $DEPLOYMENT_ID",
-    "db": "ponder db",
-    "codegen": "ponder codegen",
-    "serve": "ponder serve",
-    "lint": "eslint .",
-    "build": "tsc",
-    "typecheck": "tsc"
+    "dev": "npx ponder dev",
+    "start": "npx ponder start --schema $DEPLOYMENT_ID",
+    "db": "npx ponder db",
+    "codegen": "npx ponder codegen",
+    "serve": "npx ponder serve",
+    "lint": "npx eslint .",
+    "build": "npx tsc",
+    "typecheck": "npx tsc"
   },
   "dependencies": {
     "@gibs/bridge-sdk": "^1.8.0",

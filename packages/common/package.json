@@ -14,7 +14,7 @@
     "./client": "./src/client.ts"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "npx tsc"
   },
   "keywords": [],
   "author": "",
