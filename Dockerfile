@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY ./package.json /app/package.json
 COPY ./yarn.lock /app/yarn.lock
+COPY ./.yarnrc.yml /app/.yarnrc.yml
 COPY ./packages/ /app/packages/
 
 ENV YARN_VERSION=4.10.3

@@ -16084,6 +16084,7 @@ __metadata:
   dependencies:
     esbuild: "npm:0.25.10"
     pinata-upload-cli: "npm:^1.1.0"
+    typescript: "npm:~5.7.2"
   languageName: unknown
   linkType: soft
 
