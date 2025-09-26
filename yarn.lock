@@ -1912,7 +1912,9 @@ __metadata:
   resolution: "@gibs/bridge-sdk@workspace:packages/bridge-sdk"
   dependencies:
     "@gibs/common": "npm:^1.0.0"
+    "@types/node": "npm:^20.10.0"
     lodash: "npm:^4.17.21"
+    typescript: "npm:~5.7.2"
     viem: "npm:^2.37.8"
   languageName: unknown
   linkType: soft
@@ -1921,7 +1923,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@gibs/common@workspace:packages/common"
   dependencies:
+    "@types/node": "npm:^20.10.0"
     lodash: "npm:^4.17.21"
+    typescript: "npm:~5.7.2"
     viem: "npm:^2.37.8"
   languageName: unknown
   linkType: soft
@@ -4313,9 +4317,9 @@ __metadata:
   linkType: hard
 
 "@particle-network/chains@npm:*":
-  version: 1.8.3
-  resolution: "@particle-network/chains@npm:1.8.3"
-  checksum: 10c0/3fe5354da21ab47be4ec32149f01dd060b57e46a1ecf740531e5e89c607e137b6c225e53ba726326a2ac6b60511547bfb14fbd7cd94f31c713f4e2023c34991b
+  version: 1.14.15
+  resolution: "@particle-network/chains@npm:1.14.15"
+  checksum: 10c0/b5c09fb9ab7014d25f4d8d35631833a29e2c37e7f6cf3a224f03e0995428950aa6c135e50bcb5ce777e146a2cd43b38292c28404e07abb28cbe9dfb35e7e27b4
   languageName: node
   linkType: hard
 
@@ -8224,11 +8228,9 @@ __metadata:
   linkType: hard
 
 "@types/json-stable-stringify@npm:^1.0.32":
-  version: 1.2.0
-  resolution: "@types/json-stable-stringify@npm:1.2.0"
-  dependencies:
-    json-stable-stringify: "npm:*"
-  checksum: 10c0/0ef08aaa468aeac8d632cb6cf0985ae1b091d0a0d662511a5830548704d50523b9246a5b353e31efe1a3b9d72f3b7317b38e0fd3e935ef84e2608b254642a73f
+  version: 1.1.0
+  resolution: "@types/json-stable-stringify@npm:1.1.0"
+  checksum: 10c0/8f69944701510243cd3a83aa44363a8a4d366f11a659b258f69fb3ad0f94ab1e2533206a2c929ac7fd18784d201b663b3f02a45934f545c926f051d8cb4df095
   languageName: node
   linkType: hard
 
@@ -14296,7 +14298,7 @@ __metadata:
     eslint-config-ponder: "npm:^0.12.26"
     hono: "npm:^4.5.0"
     ponder: "npm:^0.12.26"
-    typescript: "npm:^5.3.2"
+    typescript: "npm:~5.7.2"
     viem: "npm:^2.37.8"
   languageName: unknown
   linkType: soft
@@ -14870,7 +14872,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json-stable-stringify@npm:*, json-stable-stringify@npm:^1.0.1, json-stable-stringify@npm:^1.1.1":
+"json-stable-stringify@npm:^1.0.1, json-stable-stringify@npm:^1.1.1":
   version: 1.3.0
   resolution: "json-stable-stringify@npm:1.3.0"
   dependencies:
@@ -19313,16 +19315,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.3.2":
-  version: 5.9.2
-  resolution: "typescript@npm:5.9.2"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10c0/cd635d50f02d6cf98ed42de2f76289701c1ec587a363369255f01ed15aaf22be0813226bff3c53e99d971f9b540e0b3cc7583dbe05faded49b1b0bed2f638a18
-  languageName: node
-  linkType: hard
-
 "typescript@npm:~5.7.2":
   version: 5.7.3
   resolution: "typescript@npm:5.7.3"
@@ -19330,16 +19322,6 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10c0/b7580d716cf1824736cc6e628ab4cd8b51877408ba2be0869d2866da35ef8366dd6ae9eb9d0851470a39be17cbd61df1126f9e211d8799d764ea7431d5435afa
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@npm%3A^5.3.2#optional!builtin<compat/typescript>":
-  version: 5.9.2
-  resolution: "typescript@patch:typescript@npm%3A5.9.2#optional!builtin<compat/typescript>::version=5.9.2&hash=5786d5"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10c0/34d2a8e23eb8e0d1875072064d5e1d9c102e0bdce56a10a25c0b917b8aa9001a9cf5c225df12497e99da107dc379360bc138163c66b55b95f5b105b50578067e
   languageName: node
   linkType: hard
 
