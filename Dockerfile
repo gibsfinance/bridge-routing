@@ -11,7 +11,7 @@ RUN corepack enable && corepack prepare yarn@${YARN_VERSION}
 
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 
-RUN yarn install --frozen-lockfile
+RUN yarn install --immutable
 
 RUN yarn run build
 
