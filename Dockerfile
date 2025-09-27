@@ -7,6 +7,7 @@ COPY ./yarn.lock /app/yarn.lock
 COPY ./.yarnrc.yml /app/.yarnrc.yml
 COPY ./packages/ /app/packages/
 
+ENV VITE_PROJECT_ID=${VITE_PROJECT_ID}
 ENV YARN_VERSION=4.10.3
 RUN corepack enable && corepack prepare yarn@${YARN_VERSION}
 
