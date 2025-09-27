@@ -30,7 +30,7 @@ export type TokenBridgeInfo = {
  */
 export const links = _.memoize(
   async ({ chainId, target, address, client }: { chainId: number; target: Hex; address: Hex, client: PublicClient }) => {
-    return multicallRead<Hex[]>({
+    return multicallRead<[Hex, Hex]>({
       client,
       chain: chainsMetadata[toChain(chainId)],
       abi: abis.inputBridge,
@@ -295,7 +295,7 @@ export const fetchPriceCorrective = ({
           return 0n
         }
         // the last element is the amount of the output token
-        const last = result[result.length - 1]
+        const last = result[result.length - 1]!
         return (last * oneToken) / amountIn
       }
       const max = (amountsOut: (bigint | undefined)[]) => {

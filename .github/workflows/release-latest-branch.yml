@@ -12,12 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set Yarn version
+        run: corepack prepare yarn@4.10.3 --activate
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v5
         with:
           cache: yarn
           node-version: '22.12.x'
+        env:
+          YARN_VERSION: 4.10.3
       - name: Install dependencies
         run: yarn
         env:
@@ -31,13 +38,13 @@ jobs:
           NODE_ENV: 'production'
           NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - name: Copy info
-        run: cp packages/frontend/package.json packages/frontend/dist/version.json
+        run: cp packages/ui/package.json packages/ui/dist/version.json
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: 'frontend-dist-${{github.sha}}'
+          name: 'ui-dist-${{github.sha}}'
           overwrite: true
-          path: packages/frontend/dist/
+          path: packages/ui/dist/
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -54,19 +61,26 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set Yarn version
+        run: corepack prepare yarn@4.10.3 --activate
+      - uses: actions/setup-node@v5
         with:
           cache: yarn
           node-version: '22.12.x'
         env:
-          NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
+          YARN_VERSION: 4.10.3
       - run: yarn
+        env:
+          NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: 'frontend-dist-${{github.sha}}'
-          path: packages/frontend/dist/
+          name: 'ui-dist-${{github.sha}}'
+          path: packages/ui/dist/
       - name: Upload build to Pinata
         run: npm run pinata:publish
         env:
@@ -78,21 +92,27 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set Yarn version
+        run: corepack prepare yarn@4.10.3 --activate
+      - uses: actions/setup-node@v5
         with:
           cache: yarn
           node-version: '22.12.x'
         env:
+          YARN_VERSION: 4.10.3
           NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: 'frontend-dist-${{github.sha}}'
-          path: packages/frontend/dist/
+          name: 'ui-dist-${{github.sha}}'
+          path: packages/ui/dist/
       - name: Read version from package.json
         id: get_version
-        run: echo "VERSION=$(node -p 'require(`./packages/frontend/package.json`).version')" >> $GITHUB_ENV
+        run: echo "VERSION=$(node -p 'require(`./packages/ui/package.json`).version')" >> $GITHUB_ENV
       - name: Create tag
         env:
           VERSION: ${{ env.VERSION }}
@@ -107,11 +127,18 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set Yarn version
+        run: corepack prepare yarn@4.10.3 --activate
+      - uses: actions/setup-node@v5
         with:
           cache: yarn
           node-version: '22.12.x'
+        env:
+          YARN_VERSION: 4.10.3
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:

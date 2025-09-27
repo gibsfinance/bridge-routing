@@ -1,0 +1,60 @@
+name: gibsfinance
+
+services:
+  postgres:
+    container_name: gibsfinance-postgres
+    image: postgres:16
+    command: postgres -c 'max_connections=500' -c work_mem=8GB -c maintenance_work_mem=8GB -c max_wal_size=2GB
+    ports:
+      - 4123:5432
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      - gibsfinance
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+    environment:
+      - POSTGRES_DB=indexer
+      - POSTGRES_USER=indexer
+      - POSTGRES_PASSWORD=password
+
+  indexer:
+    container_name: gibsfinance-indexer
+    build:
+      dockerfile: Dockerfile
+      context: .
+    networks:
+      - gibsfinance
+    command: yarn workspace indexer run dev
+    ports:
+      - 42068:42069
+    depends_on:
+      - postgres
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+    volumes:
+      - ./packages:/app/packages
+      - ./package.json:/app/package.json
+      - ./yarn.lock:/app/yarn.lock
+    environment:
+      - NODE_OPTIONS="--max-old-space-size=8192"
+      - DATABASE_URL=postgresql://indexer:password@postgres:5432/indexer
+      - PONDER_RPC_URL_943=https://rpc.v4.testnet.pulsechain.com
+      - PONDER_RPC_URL_369=https://rpc-pulsechain.g4mm4.io
+      - PONDER_RPC_URL_1=https://rpc-ethereum.g4mm4.io
+      - PONDER_RPC_URL_56=${PONDER_RPC_URL_56}
+      - PONDER_RPC_URL_11155111=${PONDER_RPC_URL_11155111}
+      - DATABASE_SCHEMA=public
+      - PONDER_LOG_LEVEL=${PONDER_LOG_LEVEL:-debug}
+
+networks:
+  gibsfinance:
+    driver: bridge
+
+# volumes:
+#   indexer:
+#     external: true

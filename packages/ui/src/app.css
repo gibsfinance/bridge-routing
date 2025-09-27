@@ -1,0 +1,89 @@
+@import 'tailwindcss';
+
+@import '@skeletonlabs/skeleton';
+@import '@skeletonlabs/skeleton/themes/nouveau';
+@import '@skeletonlabs/skeleton/optional/presets';
+
+@plugin '@tailwindcss/forms';
+
+@source '@skeletonlabs/skeleton-svelte/dist';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-inter: Inter var, Inter, sans-serif;
+  --font-italiana: Italiana, sans-serif;
+  --radius-2xl: 1.25rem;
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-surface-200, currentColor);
+  }
+
+  @media (prefers-color-scheme: light) {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+      border-color: var(--color-surface-200, currentColor);
+    }
+  }
+}
+
+.disabled,
+button:disabled {
+  @apply opacity-75;
+}
+html,
+:root {
+  @apply h-screen;
+}
+body {
+  font-family: Ariel, sans-serif;
+  @apply h-screen overscroll-y-none;
+}
+.MuiBox-root {
+  @apply max-w-none! shadow-lg;
+}
+.MuiScopedCssBaseline-root {
+  @apply !max-h-none;
+}
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-300, #d1d5db) var(--color-surface-100, #f3f4f6);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--color-surface-100, #f3f4f6);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-surface-300, #d1d5db);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-surface-400, #9ca3af);
+}
