@@ -13,15 +13,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Setup Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.10.3
       - name: Set up Node.js
         uses: actions/setup-node@v5
         with:
           cache: yarn@4.10.3
           node-version: '22.12.x'
-      - name: Setup Yarn
-        run: |
-          corepack enable
-          corepack prepare yarn@4.10.3
         env:
           YARN_VERSION: 4.10.3
       - name: Install dependencies
@@ -61,14 +61,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v5
-        with:
-          cache: yarn@4.10.3
-          node-version: '22.12.x'
       - name: Setup Yarn
         run: |
           corepack enable
           corepack prepare yarn@4.10.3
+      - uses: actions/setup-node@v5
+        with:
+          cache: yarn@4.10.3
+          node-version: '22.12.x'
         env:
           YARN_VERSION: 4.10.3
       - run: yarn
@@ -91,14 +91,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v5
-        with:
-          cache: yarn@4.10.3
-          node-version: '22.12.x'
       - name: Setup Yarn
         run: |
           corepack enable
           corepack prepare yarn@4.10.3
+      - uses: actions/setup-node@v5
+        with:
+          cache: yarn@4.10.3
+          node-version: '22.12.x'
         env:
           YARN_VERSION: 4.10.3
           NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
@@ -125,14 +125,14 @@ jobs:
     permissions: write-all
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v5
-        with:
-          cache: yarn@4.10.3
-          node-version: '22.12.x'
       - name: Setup Yarn
         run: |
           corepack enable
           corepack prepare yarn@4.10.3
+      - uses: actions/setup-node@v5
+        with:
+          cache: yarn@4.10.3
+          node-version: '22.12.x'
         env:
           YARN_VERSION: 4.10.3
       - name: Download build artifacts
