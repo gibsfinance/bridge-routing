@@ -34,7 +34,7 @@ jobs:
         env:
           PUBLIC_NODE_ENV: 'production'
           PUBLIC_IMAGE_ROOT: 'https://gib.show'
-          VITE_PROJECT_ID: '1f8a963aa1809cada8560d560360107d'
+          PUBLIC_PROJECT_ID: '1f8a963aa1809cada8560d560360107d'
           NODE_ENV: 'production'
           NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - name: Copy info
