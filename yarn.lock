@@ -1912,7 +1912,7 @@ __metadata:
   resolution: "@gibs/bridge-sdk@workspace:packages/bridge-sdk"
   dependencies:
     "@gibs/common": "npm:^1.0.0"
-    "@types/node": "npm:^20.10.0"
+    "@types/node": "npm:^22.12.0"
     lodash: "npm:^4.17.21"
     typescript: "npm:~5.7.2"
     viem: "npm:^2.37.8"
@@ -1923,7 +1923,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@gibs/common@workspace:packages/common"
   dependencies:
-    "@types/node": "npm:^20.10.0"
+    "@types/node": "npm:^22.12.0"
     lodash: "npm:^4.17.21"
     typescript: "npm:~5.7.2"
     viem: "npm:^2.37.8"
@@ -8273,16 +8273,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.10.0":
-  version: 20.19.17
-  resolution: "@types/node@npm:20.19.17"
-  dependencies:
-    undici-types: "npm:~6.21.0"
-  checksum: 10c0/ab4c5dd8bdeacb1c04c2724c75023eec0ac9469583b39032f5daaf56768a31ee6fa3a0bfcc597e4a3e74eb49744deeb9d5eb760f30e984e25088f6d895e0811d
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^22.14.0":
+"@types/node@npm:^22.12.0":
   version: 22.18.6
   resolution: "@types/node@npm:22.18.6"
   dependencies:
@@ -14293,7 +14284,7 @@ __metadata:
   resolution: "indexer@workspace:packages/indexer"
   dependencies:
     "@gibs/bridge-sdk": "npm:^1.8.0"
-    "@types/node": "npm:^20.10.0"
+    "@types/node": "npm:^22.12.0"
     eslint: "npm:^8.54.0"
     eslint-config-ponder: "npm:^0.12.26"
     hono: "npm:^4.5.0"
@@ -19417,7 +19408,7 @@ __metadata:
     "@tsconfig/svelte": "npm:^5.0.4"
     "@types/async-retry": "npm:^1.4.9"
     "@types/lodash": "npm:^4.17.16"
-    "@types/node": "npm:^22.14.0"
+    "@types/node": "npm:^22.12.0"
     "@types/react": "npm:^19.1.8"
     "@types/react-dom": "npm:^19.1.1"
     "@wagmi/core": "npm:^2.16.7"
