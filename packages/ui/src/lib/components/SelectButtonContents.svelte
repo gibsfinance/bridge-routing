@@ -21,7 +21,7 @@
     disableHover = false,
   }: Props = $props()
   const classes = $derived([
-    'flex flex-row items-center justify-center h-full p-0.5 rounded-full pl-2 border-surface-500 dark:border-surface-700',
+    'flex flex-row items-center justify-center h-full p-0.5 rounded-full pl-2 border-surface-200 dark:border-surface-700',
     hideChevron ? 'gap-2' : '',
     className,
   ])

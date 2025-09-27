@@ -190,7 +190,7 @@
       <Accordion value={value} collapsible onValueChange={(e) => {
         page.setParam('settings', e.value[0] ?? 'true') // true means that the settings are open but nothing is 'focused'
       }} classes="[&>hr] border-surface-200 dark:border-surface-500" spaceY="space-y-0">
-        <Accordion.Item value="mode" panelPadding="p-2" controlPadding="px-2 py-3" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900 hover:text-surface-50" leadClasses="mr-2">
+        <Accordion.Item value="mode" panelPadding="p-2" controlPadding="px-2 py-3" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="iconoir:scale-frame-enlarge" class="size-6" />{/snippet}
           {#snippet control()}Mode{/snippet}
           {#snippet panel()}
@@ -199,7 +199,7 @@
               {#each embedOptions as option}
                 <li>
                   <label for={`mode-${option.value}`}>
-                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border border-surface-500 dark:border-surface-500 rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 transition-bg transition-duration-100" onclick={() => {
+                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border dark:border-surface-500 rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 transition-bg transition-duration-100" onclick={() => {
                       page.setParam('mode', option.value)
                     }}>
                       <input type="radio" name="mode" id={`mode-${option.value}`} value={option.value} checked={option.value === embedOption.value} />
@@ -213,7 +213,7 @@
           {/snippet}
         </Accordion.Item>
         <hr class="hr border-surface-200 dark:border-surface-700" />
-        <Accordion.Item value="history" panelPadding="p-2" controlPadding="px-2 py-3" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900 hover:text-surface-50" leadClasses="mr-2">
+        <Accordion.Item value="history" panelPadding="p-2" controlPadding="px-2 py-3" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="material-symbols:history" class="size-6" />{/snippet}
           {#snippet control()}History{/snippet}
           {#snippet panel()}
@@ -222,7 +222,7 @@
               {#each historyOptions as option}
                 <li>
                   <label for={`history-${option.value}`}>
-                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 transition-all transition-duration-100" onclick={() => {
+                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 dark:border-surface-500 transition-all transition-duration-100" onclick={() => {
                       page.setParam('history', option.value)
                     }}>
                       <input type="radio" name="history" id={`history-${option.value}`} value={option.value} checked={option.value === (page.history ?? 'default')} />
@@ -237,7 +237,7 @@
         </Accordion.Item>
         <hr class="hr border-surface-200 dark:border-surface-700" />
         {#if page.params.page === 'bridge'}
-        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="direction" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900 hover:text-surface-50" leadClasses="mr-2">
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="direction" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="material-symbols-light:settings-outline-rounded" class="size-6" />{/snippet}
           {#snippet control()}Direction{/snippet}
           {#snippet panel()}
@@ -269,7 +269,7 @@
         <hr class="hr border-surface-200 dark:border-surface-700" />
         {/if}
         {#if page.route.id === '/onboard'}
-        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="guide" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900 hover:text-surface-50" leadClasses="mr-2">
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="guide" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="material-symbols-light:map-outline" class="size-6" />{/snippet}
           {#snippet control()}Guide{/snippet}
           {#snippet panel()}
@@ -278,7 +278,7 @@
               {#each guideOptions as option}
                 <li>
                   <label for={`guide-${option.value}`}>
-                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 transition-all transition-duration-100" onclick={() => {
+                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 dark:border-surface-500 transition-all transition-duration-100" onclick={() => {
                       page.setParam('guide', option.value)
                     }}>
                       <input type="radio" name="guide" id={`guide-${option.value}`} value={option.value} checked={option.value === guideOption.value} />
@@ -292,7 +292,7 @@
           {/snippet}
         </Accordion.Item>
         <hr class="hr border-surface-200 dark:border-surface-700" />
-        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="onramps" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900 hover:text-surface-50" leadClasses="mr-2">
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="onramps" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="healthicons:running-outline" class="size-6" />{/snippet}
           {#snippet control()}Onramps{/snippet}
           {#snippet panel()}
@@ -301,7 +301,7 @@
               {#each onrampsOptions as option}
                 <li>
                   <label for={`onramps-${option.value}`}>
-                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 transition-all transition-duration-100" onclick={() => {
+                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 dark:border-surface-500 transition-all transition-duration-100" onclick={() => {
                       page.setParam('onramps', option.value)
                     }}>
                       <input type="radio" name="onramps" id={`onramps-${option.value}`} value={option.value} checked={option.value === onrampsOption.value} />
@@ -315,7 +315,7 @@
           {/snippet}
         </Accordion.Item>
         <hr class="hr border-surface-200 dark:border-surface-700" />
-        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="stage" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900 hover:text-surface-50" leadClasses="mr-2">
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="stage" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="material-symbols-light:123-sharp" class="size-6" />{/snippet}
           {#snippet control()}Stage{/snippet}
           {#snippet panel()}
@@ -324,7 +324,7 @@
               {#each stageOptions as option}
                 <li>
                   <label for={`onramps-${option.value}`}>
-                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 transition-all transition-duration-100" onclick={() => {
+                    <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 dark:border-surface-500 transition-all transition-duration-100" onclick={() => {
                       page.setParam('stage', option.value)
                     }}>
                       <input type="radio" name="onramps" id={`onramps-${option.value}`} value={option.value} checked={option.value === stageOption.value} />
@@ -339,7 +339,7 @@
         </Accordion.Item>
         <hr class="hr border-surface-200 dark:border-surface-700" />
         {/if}
-        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="bridgeTokenIn" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900 hover:text-surface-50" leadClasses="mr-2">
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="bridgeTokenIn" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="streamline:coin-share" />{/snippet}
           {#snippet control()}Bridge Token In{/snippet}
           {#snippet panel()}
@@ -375,7 +375,7 @@
         </Accordion.Item>
         <hr class="hr border-surface-200 dark:border-surface-700" />
         {#if page.route.id === '/onboard'}
-        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="pulsexTokenIn" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900 hover:text-surface-50" leadClasses="mr-2">
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="pulsexTokenIn" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="ri:swap-3-line" />{/snippet}
           {#snippet control()}PulseX Token In{/snippet}
           {#snippet panel()}
@@ -386,7 +386,7 @@
                 triggerClasses=""
                 contentClasses="">
                 {#snippet button()}
-                  <SelectButtonContents {token} network={token?.chainId ?? 0} class="bg-white" />
+                  <SelectButtonContents {token} network={token?.chainId ?? 0} />
                 {/snippet}
                 {#snippet contents({ close })}
                   <TokenSelect
@@ -406,7 +406,7 @@
           {/snippet}
         </Accordion.Item>
         <hr class="hr border-surface-200 dark:border-surface-700" />
-        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="pulsexTokenOut" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900 hover:text-surface-50" leadClasses="mr-2">
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="pulsexTokenOut" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="ri:swap-3-line" />{/snippet}
           {#snippet control()}PulseX Token Out{/snippet}
           {#snippet panel()}
@@ -417,7 +417,7 @@
                 triggerClasses=""
                 contentClasses="">
                 {#snippet button()}
-                  <SelectButtonContents {token} network={token?.chainId ?? 0} class="bg-white" />
+                  <SelectButtonContents {token} network={token?.chainId ?? 0} />
                 {/snippet}
                 {#snippet contents({ close })}
                   <TokenSelect
@@ -439,7 +439,7 @@
         <hr class="hr border-surface-200 dark:border-surface-700" />
         {/if}
         {#if page.params.page === 'bridge'}
-        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="details" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900 hover:text-surface-50" leadClasses="mr-2">
+        <Accordion.Item panelPadding="p-2" controlPadding="px-2 py-3" value="details" controlClasses="hover:bg-surface-100 hover:dark:bg-surface-900" leadClasses="mr-2">
           {#snippet lead()}<Icon icon="mdi:magnify" class="size-6" />{/snippet}
           {#snippet control()}Details{/snippet}
           {#snippet panel()}
@@ -448,7 +448,7 @@
                 {#each detailsOptions as option}
                   <li>
                     <label for={`details-${option.value}`}>
-                      <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 border-surface-500 transition-all transition-duration-100" onclick={() => {
+                      <Button class="flex grow flex-row items-center gap-2 p-2 w-full text-surface-800 dark:text-surface-200 justify-start border rounded-lg hover:bg-surface-100 hover:dark:bg-surface-900 dark:border-surface-500 transition-all transition-duration-100" onclick={() => {
                         page.setParam('details', option.value)
                       }}>
                         <input type="radio" name="details" id={`details-${option.value}`} value={option.value} checked={option.value === detailsOption.value} />
