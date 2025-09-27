@@ -203,7 +203,6 @@ modal.subscribeWalletInfo((walletInfo) => {
 })
 
 modal.subscribeAccount((account) => {
-  console.log('account', account, account.status)
   if (account.status === 'connected') {
     if (isHex(account.address)) {
       accountState.value = account ?? null
