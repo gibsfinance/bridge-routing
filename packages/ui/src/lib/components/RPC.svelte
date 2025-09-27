@@ -49,7 +49,7 @@
   }
 </script>
 
-<div class="flex flex-col h-full gap-2 dark:text-surface-950">
+<div class="flex flex-col h-full gap-2 dark:text-surface-50">
   <h2 class="leading-10 text-2xl text-center flex flex-row items-center justify-center px-4 pt-4">
     <GreenBadge icon="carbon:network-4" />
     <span class="ml-2">RPCs</span>
@@ -72,12 +72,12 @@
               <label for="" class="relative flex grow">
                 <Input
                   value={rpc}
-                  class="border border-surface-200 dark:border-surface-700 rounded-full py-0 h-10 leading-10 text-surface-50 bg-surface-50 dark:bg-surface-950 dark:text-surface-950 focus:ring-0 focus:border-surface-500 dark:focus:border-surface-500"
+                  class="border border-surface-200 dark:border-surface-700 rounded-full py-0 h-10 leading-10 text-surface-950 bg-surface-50 dark:bg-surface-950 dark:text-surface-50 focus:ring-0 focus:border-surface-500 dark:focus:border-surface-500"
                   oninput={(val) => {
                     rpcs.update(chain, i, val)
                   }} />
                 <Button
-                  class="absolute bottom-0 right-0 top-0 justify-center flex size-10 items-center text-surface-50 dark:text-surface-950"
+                  class="absolute bottom-0 right-0 top-0 justify-center flex size-10 items-center text-surface-950 dark:text-surface-50"
                   onclick={() => rpcs.remove(chain, i)}>
                   <Icon icon="zondicons:close-outline" class="size-4" />
                 </Button>
@@ -101,10 +101,10 @@
   </div>
   <div class="flex flex-row gap-2 p-4 border-t border-surface-200 dark:border-surface-700">
     <Button
-      class="flex w-1/2 text-center justify-center border border-surface-200 hover:border-surface-300 dark:border-surface-700 dark:hover:border-surface-600 text-surface-50 dark:text-surface-950 leading-6 p-2 rounded-2xl font-semibold hover:shadow transition-all duration-100"
+      class="flex w-1/2 text-center justify-center border border-surface-200 hover:border-surface-300 dark:border-surface-700 dark:hover:border-surface-600 text-surface-950 dark:text-surface-50 leading-6 p-2 rounded-2xl font-semibold hover:shadow transition-all duration-100"
       onclick={onclose}>Close</Button>
     <Button
-      class="flex w-1/2 text-center justify-center bg-surface-500 text-surface-950 leading-6 p-2 rounded-2xl font-semibold hover:bg-surface-600 hover:shadow transition-all duration-100"
+      class="flex w-1/2 text-center justify-center bg-surface-500 text-surface-50 leading-6 p-2 rounded-2xl font-semibold hover:bg-surface-600 hover:shadow transition-all duration-100"
       onclick={() => onsubmit([...data.entries()])}>Reload</Button>
   </div>
 </div>
