@@ -13,14 +13,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Yarn
-        run: |
-          corepack enable
-          corepack prepare yarn@4.10.3
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set Yarn version
+        run: corepack prepare yarn@4.10.3 --activate
       - name: Set up Node.js
         uses: actions/setup-node@v5
         with:
-          cache: yarn@4.10.3
+          cache: yarn
           node-version: '22.12.x'
         env:
           YARN_VERSION: 4.10.3
@@ -61,13 +62,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Yarn
-        run: |
-          corepack enable
-          corepack prepare yarn@4.10.3
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set Yarn version
+        run: corepack prepare yarn@4.10.3 --activate
       - uses: actions/setup-node@v5
         with:
-          cache: yarn@4.10.3
+          cache: yarn
           node-version: '22.12.x'
         env:
           YARN_VERSION: 4.10.3
@@ -91,13 +93,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Yarn
-        run: |
-          corepack enable
-          corepack prepare yarn@4.10.3
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set Yarn version
+        run: corepack prepare yarn@4.10.3 --activate
       - uses: actions/setup-node@v5
         with:
-          cache: yarn@4.10.3
+          cache: yarn
           node-version: '22.12.x'
         env:
           YARN_VERSION: 4.10.3
@@ -125,13 +128,14 @@ jobs:
     permissions: write-all
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Yarn
-        run: |
-          corepack enable
-          corepack prepare yarn@4.10.3
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set Yarn version
+        run: corepack prepare yarn@4.10.3 --activate
       - uses: actions/setup-node@v5
         with:
-          cache: yarn@4.10.3
+          cache: yarn
           node-version: '22.12.x'
         env:
           YARN_VERSION: 4.10.3
