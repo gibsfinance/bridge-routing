@@ -10,7 +10,7 @@ import { SolanaAdapter, type BaseWalletAdapter } from '@reown/appkit-adapter-sol
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { NullableProxyStore } from '../../types.svelte'
 import * as chains from 'viem/chains'
-import { walletConnectProjectId as projectId } from '../../config'
+import { projectId } from '../../config'
 import type { GetBalanceReturnType } from '@wagmi/core'
 import { SvelteMap } from 'svelte/reactivity'
 import { SolflareWalletAdapter, PhantomWalletAdapter } from '@solana/wallet-adapter-wallets'
@@ -185,7 +185,6 @@ class AccountState {
 export const accountState = new AccountState()
 
 modal.subscribeEvents((event) => {
-  console.log('event', event.data.event)
   const { event: e } = event.data
   if (e === 'MODAL_OPEN') {
     accountState.modalOpen = true
@@ -204,7 +203,6 @@ modal.subscribeWalletInfo((walletInfo) => {
 })
 
 modal.subscribeAccount((account) => {
-  console.log('account', account, account.status)
   if (account.status === 'connected') {
     if (isHex(account.address)) {
       accountState.value = account ?? null
