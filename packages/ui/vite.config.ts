@@ -25,8 +25,8 @@ export default defineConfig({
       preventAssignment: true,
       values: {
         'process.env.PUBLIC_IMAGE_ROOT': JSON.stringify(process.env.PUBLIC_IMAGE_ROOT),
-        'process.env.PUBLIC_WALLET_CONNECT_ID': JSON.stringify(
-          process.env.PUBLIC_WALLET_CONNECT_ID,
+        'process.env.VITE_PROJECT_ID': JSON.stringify(
+          process.env.VITE_PROJECT_ID,
         ),
         'process.env.PUBLIC_NODE_ENV': JSON.stringify(process.env.PUBLIC_NODE_ENV),
         'process.env.PUBLIC_VERSION': JSON.stringify(

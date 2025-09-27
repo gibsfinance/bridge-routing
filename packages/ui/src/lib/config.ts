@@ -1,6 +1,6 @@
 export const imageRoot: string = process.env.PUBLIC_IMAGE_ROOT || 'https://gib.show'
 
-export const walletConnectProjectId: string = process.env.PUBLIC_WALLET_CONNECT_ID || ''
+export const projectId: string = process.env.VITE_PROJECT_ID || ''
 
 export const nodeEnv: string = process.env.PUBLIC_NODE_ENV || 'development'
 
