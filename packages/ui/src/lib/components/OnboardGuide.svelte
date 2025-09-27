@@ -4,7 +4,7 @@
 
   const { bridgingToPulsechain }: { bridgingToPulsechain: boolean } = $props()
 </script>
-<div class="absolute top-0 left-0 w-full h-full z-10">
+<div class="absolute top-0 left-0 w-full h-full z-10 text-surface-800 dark:text-surface-200">
   <GuideShield show={true} />
   {#if bridgingToPulsechain}
     <GuideStep step={1} triggerClass="absolute right-24 top-8">

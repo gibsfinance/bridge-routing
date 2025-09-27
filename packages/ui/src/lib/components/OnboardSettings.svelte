@@ -68,7 +68,7 @@
       <Button
         onclick={toggleHelp}
         class="flex flex-row items-center italic gap-1 pr-1 border-2 rounded-full{page.guide === settings.guide.SHOW
-          ? ''
+          ? ' border-surface-50 dark:border-surface-400'
           : ' border-transparent'}">
         <Icon icon="material-symbols:help" mode="svg" class="size-9" />
         <span class="text-sm pr-1 leading-6" class:invisible={!page.guide}>Dismiss</span>

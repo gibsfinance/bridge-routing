@@ -23,7 +23,7 @@
     contentClass,
   ])
   const triggerClasses = $derived([
-    'flex items-center justify-center bg-surface-50 border-2 border-secondary-500 rounded-full size-8 leading-6 shadow text-surface-50 text-secondary-500 pointer-events-auto',
+    'flex items-center justify-center bg-surface-50 dark:bg-surface-900 border-2 border-surface-600 dark:border-surface-400 rounded-full size-8 leading-6 shadow text-surface-600 dark:text-surface-400 pointer-events-auto',
     triggerClass,
     // { invisible: !triggerVisible },
   ])
