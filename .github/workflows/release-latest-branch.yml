@@ -12,12 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           cache: yarn
           node-version: '22.12.x'
+      - name: Setup Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.10.3
+        env:
+          YARN_VERSION: 4.10.3
       - name: Install dependencies
         run: yarn
         env:
@@ -54,14 +60,20 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           cache: yarn
           node-version: '22.12.x'
+      - name: Setup Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.10.3
+        env:
+          YARN_VERSION: 4.10.3
+      - run: yarn
         env:
           NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
-      - run: yarn
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -78,12 +90,17 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           cache: yarn
           node-version: '22.12.x'
+      - name: Setup Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.10.3
         env:
+          YARN_VERSION: 4.10.3
           NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -107,11 +124,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           cache: yarn
           node-version: '22.12.x'
+      - name: Setup Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.10.3
+        env:
+          YARN_VERSION: 4.10.3
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
