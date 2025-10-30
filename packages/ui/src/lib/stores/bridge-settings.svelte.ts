@@ -2,20 +2,14 @@ import {
   zeroAddress,
   type Hex,
   parseUnits,
-  isAddress,
-  encodeAbiParameters,
-  concatHex,
-  encodeFunctionData,
   getAddress,
   type Block,
   getContract,
   erc20Abi,
-  parseEther,
 } from 'viem'
 import { FeeType } from '@gibs/bridge-sdk/fee-type'
 import type { Token, BridgeKey } from '@gibs/bridge-sdk/types'
-import { nativeAssetOut, pathway, Chains, canChangeUnwrap, isNative, toChain } from '@gibs/bridge-sdk/config'
-import * as abis from '@gibs/bridge-sdk/abis'
+import { nativeAssetOut, Chains, canChangeUnwrap, toChain } from '@gibs/bridge-sdk/config'
 import * as imageLinks from '@gibs/bridge-sdk/image-links'
 import { chainsMetadata } from '@gibs/bridge-sdk/chains'
 import { multicallErc20 } from '@gibs/common/erc20'
@@ -35,7 +29,7 @@ import { settingKey, settings } from './fee-manager.svelte'
 import { accountState } from './auth/AuthProvider.svelte'
 
 export class BridgeSettings {
-  constructor() { }
+  constructor() {}
   // hold some basic state so that requests don't have to be re-created
   assetIn = new NullableProxyStore<Token>()
   assetOuts = new SvelteMap<string, Token>()
@@ -281,6 +275,16 @@ export class BridgeSettings {
     })
   })
 
+  isUndercompensated = $derived.by(() => {
+    return sdkSettings.isUndercompensated({
+      estimatedTokenNetworkCost: this.estimatedTokenNetworkCost,
+      feeType: this.feeType,
+      limit: this.limit,
+      amountAfterBridgeFee: this.amountAfterBridgeFee,
+      desiredExcessCompensationBasisPoints: this.desiredExcessCompensationBasisPoints,
+    })
+  })
+
   get transactionInputs() {
     return sdkSettings.transactionInputs({
       bridgePathway: this.bridgePathway ?? null,
@@ -420,10 +424,7 @@ export const updateAssetOut = ({
       address: zeroAddress,
       chainId: Number(toChain),
       ...chainsMetadata[toChain].nativeCurrency,
-      logoURI: imageLinks.images([
-        `${Number(toChain)}`,
-        `${Number(toChain)}/${assetOutAddress}`,
-      ]),
+      logoURI: imageLinks.images([`${Number(toChain)}`, `${Number(toChain)}/${assetOutAddress}`]),
     }
     // console.log('assetOut', assetOut)
     return resolved(assetOut)
@@ -666,8 +667,13 @@ export const assetSources = (
     }
   })
   const sources = sorted.map((a: MinTokenInfo) => `${a.chainId}/${a.address}`.toLowerCase())
-  return asset.logoURI ?? address === zeroAddress ? imageLinks.images(sources) : input.tokenImageLookup({
-    chainId,
-    address,
-  }, bridgableTokens) ?? imageLinks.images(sources)
+  return (asset.logoURI ?? address === zeroAddress)
+    ? imageLinks.images(sources)
+    : (input.tokenImageLookup(
+        {
+          chainId,
+          address,
+        },
+        bridgableTokens,
+      ) ?? imageLinks.images(sources))
 }

@@ -2,6 +2,12 @@
   import { LiFiWidget, type WidgetConfig } from '@lifi/widget'
   import ReactAdapter from './ReactAdapter.svelte'
 
+  interface Props {
+    close: () => void
+  }
+
+  const { close }: Props = $props()
+
   const config = {
     walletConfig: {
       partialWalletManagement: true,
@@ -10,7 +16,6 @@
     toToken: '0x0000000000000000000000000000000000000000',
     integrator: 'gibs.finance',
   } as WidgetConfig
-  const { close } = $$props
 </script>
 
 <ReactAdapter element={LiFiWidget} {config} {close} integrator={config.integrator} />

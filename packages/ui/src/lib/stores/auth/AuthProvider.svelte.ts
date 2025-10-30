@@ -74,6 +74,7 @@ export const wagmiAdapter = new WagmiAdapter({
   projectId,
   networks: appkitNetworkList,
   syncConnectedChain: false,
+  ssr: false, // Ensure client-side only
 })
 
 export const solanaAdapter = new SolanaAdapter({
@@ -97,17 +98,26 @@ const metadata = {
 
 // 3. Create the modal
 export const modal = createAppKit({
-  adapters: [wagmiAdapter as unknown as ChainAdapter, solanaAdapter as unknown as ChainAdapter, bitcoinAdapter],
+  adapters: [
+    wagmiAdapter as unknown as ChainAdapter,
+    solanaAdapter as unknown as ChainAdapter,
+    bitcoinAdapter,
+  ],
   networks: appkitNetworkList,
   metadata,
   projectId,
-  // features: {
-  //   analytics: false,
-  // },
+  features: {
+    analytics: false,
+  },
 })
 
 export const connect = async () => {
-  await modal.open()
+  try {
+    await modal.open()
+  } catch (error) {
+    console.error('Connect error:', error)
+    throw error
+  }
 }
 
 export const disconnect = async () => {
@@ -203,13 +213,18 @@ modal.subscribeWalletInfo((walletInfo) => {
 })
 
 modal.subscribeAccount((account) => {
-  if (account.status === 'connected') {
-    if (isHex(account.address)) {
-      accountState.value = account ?? null
-    } else {
+  try {
+    if (account.status === 'connected') {
+      if (isHex(account.address)) {
+        accountState.value = account ?? null
+      } else {
+        accountState.value = null
+      }
+    } else if (account.status === 'disconnected') {
       accountState.value = null
     }
-  } else if (account.status === 'disconnected') {
+  } catch (error) {
+    console.error('Account subscription error:', error)
     accountState.value = null
   }
 })

@@ -1,9 +1,12 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
 
-  let className = ''
-  export { className as class }
-  export let loaded = false
+  interface Props {
+    class?: string
+    loaded?: boolean
+  }
+
+  const { class: className = '', loaded = false }: Props = $props()
 </script>
 
 <span class="flex align-baseline">

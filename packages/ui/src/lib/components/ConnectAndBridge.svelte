@@ -19,8 +19,17 @@
   import { connect } from '../stores/auth/AuthProvider.svelte'
   import { bridgeTx } from '../stores/storage.svelte'
   import Button from './Button.svelte'
+  import BridgeConfirmationModal from './BridgeConfirmationModal.svelte'
 
+  interface Props {
+    showConfirmationModal?: boolean
+  }
+
+  const { showConfirmationModal = false }: Props = $props()
   const { shouldDeliver } = input
+
+  // Modal state for bridge confirmation
+  let showBridgeConfirmationModal = $state(false)
 
   const tokenBalance = $derived(fromTokenBalance.value ?? 0n)
   const bridgeTokenIn = $derived(bridgeSettings.assetIn.value)
@@ -161,6 +170,21 @@
   const switchToChain = $derived(() =>
     switchNetwork(appkitNetworkById.get(Number(input.bridgeKey.fromChain))),
   )
+
+  // Modal handlers
+  function showBridgeConfirmation() {
+    showBridgeConfirmationModal = true
+  }
+
+  function closeBridgeConfirmation() {
+    showBridgeConfirmationModal = false
+  }
+
+  function confirmBridgeAction() {
+    showBridgeConfirmationModal = false
+    sendInitiateBridge()
+  }
+
   const onclick = $derived.by(() => {
     if (!accountState?.address) {
       return connect
@@ -170,6 +194,10 @@
     }
     if (!skipApproval) {
       return sendIncreaseApproval
+    }
+    // Show confirmation modal for bridge actions that may require delivery (only if prop is true)
+    if (showConfirmationModal) {
+      return showBridgeConfirmation
     }
     return sendInitiateBridge
   })
@@ -181,3 +209,13 @@
     {onclick}
     {disabled}>{text}</Button>
 </div>
+
+<!-- Bridge Confirmation Modal -->
+{#if showConfirmationModal}
+  <BridgeConfirmationModal
+    isOpen={showBridgeConfirmationModal}
+    fromNetworkName={fromNetwork?.name}
+    toNetworkName={toNetwork?.name}
+    onClose={closeBridgeConfirmation}
+    onConfirm={confirmBridgeAction} />
+{/if}

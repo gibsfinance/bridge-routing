@@ -50,7 +50,7 @@
     "@ethersproject/solidity": "^5.8.0",
     "@gibs/bridge-sdk": "^1.0.0",
     "@gibs/common": "^1.0.0",
-    "@iconify/svelte": "^4.2.0",
+    "@iconify/svelte": "^5.0.2",
     "@lifi/widget": "^3.18.4",
     "@mysten/dapp-kit": "^0.16.11",
     "@pulsex/chains": "^1.0.2",

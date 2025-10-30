@@ -93,13 +93,28 @@ export const options = (chainId: number, latestBlock: Block) => {
 }
 
 export const sendTransaction = async (opts: SendTransactionParameters) => {
-  return await sendTransactionCore(wagmiAdapter.wagmiConfig, opts).catch(async (err) => {
-    if (err.message.includes('Connector not connected')) {
+  try {
+    return await sendTransactionCore(wagmiAdapter.wagmiConfig, opts)
+  } catch (err: any) {
+    console.error('sendTransaction error:', err)
+
+    if (err.message?.includes('Connector not connected')) {
       await connect()
       return sendTransactionCore(wagmiAdapter.wagmiConfig, opts)
     }
+
+    // Handle connector method errors
+    if (
+      err.message?.includes('getChainId is not a function') ||
+      err.message?.includes('connector.getChainId is not a function')
+    ) {
+      console.warn('Connector getChainId method not available, reconnecting...')
+      await connect()
+      return sendTransactionCore(wagmiAdapter.wagmiConfig, opts)
+    }
+
     throw err
-  })
+  }
 }
 
 export const wait = async (tx: Hex, chainId: number) => {
