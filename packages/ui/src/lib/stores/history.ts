@@ -343,7 +343,6 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
     controller: AbortController
   ): Promise<BridgeData | null> => {
     const { address, hash, limit = 10, after, before, filterMode = 'all' } = params || {}
-    console.log('loading bridge transactions', params)
 
     // Create cache key from actual data parameters
     const cacheKey = JSON.stringify({ address, hash, limit, after, before, filterMode })
@@ -438,7 +437,6 @@ export const loadBridgeTransactions = loading.loadsAfterTick<BridgeData | null, 
 
         // Sort the array
         const sortedUserRequests = sortBy(data.userRequests.items, [(bridge) => -BigInt(bridge.orderId)])
-        console.log('sortedUserRequests', sortedUserRequests)
 
         // Load token metadata for all bridges
         const tokenMetadata = await loadTokenMetadata(sortedUserRequests)

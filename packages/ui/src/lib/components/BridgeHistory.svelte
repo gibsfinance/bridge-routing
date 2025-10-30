@@ -18,7 +18,6 @@
   import BridgeHistoryItem from './BridgeHistoryItem.svelte'
 
   const walletAccount = $derived(accountState.address)
-  $inspect(walletAccount)
 
   // Manual address input state
   let manualAddressInput = $state('')
@@ -33,34 +32,44 @@
   // Track previous wallet account to detect changes
   let previousWalletAccount = $state<string | null>(accountState.address)
 
+  // Control global data loading - don't load automatically on page load
+  let allowGlobalDataLoading = $state<boolean>(false)
+
   // Effect to detect wallet address changes and override manual address
   $effect(() => {
     if (walletAccount !== previousWalletAccount) {
-      // Wallet address changed - override manual address if wallet is connected
+      // Wallet address changed
       if (walletAccount) {
-        // manualAddress = walletAccount
+        // Wallet connected - disable global loading, prioritize user data
+        allowGlobalDataLoading = false
         manualAddressCleared = false // Reset cleared flag when wallet connects
         manualHashCleared = false // Also reset hash cleared flag
         currentPage = 1
         currentCursor = undefined // Reset cursor when flipping to page 1
         currentDirection = 'first'
         retryCounter++ // Increment to trigger fresh data fetch
+      } else if (previousWalletAccount) {
+        // Wallet disconnected (was connected before, now null) - auto-enable global loading
+        allowGlobalDataLoading = true
+        currentPage = 1
+        currentCursor = undefined
+        currentDirection = 'first'
+        retryCounter++ // Trigger global data fetch
       }
       previousWalletAccount = walletAccount
     }
   })
-  // $inspect('manualAddressCleared', manualAddressCleared)
 
   // Derived address - use manual address as primary, fallback to wallet if no manual address
-  // But if user explicitly cleared the address, show all bridges (null)
-  const activeAddress = $derived(
-    manualAddressCleared ? null : (manualAddress || walletAccount)
-  )
+  // When user clears address, activeAddress becomes null (for global data)
+  const activeAddress = $derived(manualAddressCleared ? null : manualAddress || walletAccount)
+
+  // Check if we should actually load data
+  // Only load if: we have a specific address OR global loading is explicitly allowed
+  const shouldLoadData = $derived(activeAddress !== null || allowGlobalDataLoading)
 
   // Derived hash - use manual hash if provided and not cleared
-  const activeHash = $derived(
-    manualHashCleared ? null : manualHash
-  )
+  const activeHash = $derived(manualHashCleared ? null : manualHash)
 
   // Helper function to validate if input is a bytes32 hash (0x + 64 hex chars)
   function isBytes32Hash(input: string): boolean {
@@ -70,7 +79,6 @@
   // State for bridge data and pagination
   let bridgeData: BridgeData | null = $state(null)
 
-  $inspect(bridgeData)
   let error: string | null = $state(null)
   let currentPage = $state(1)
   // let totalPages = $state(1)
@@ -118,8 +126,6 @@
   // Track request state for UI purposes
   // let requestInProgress = $state<boolean>(false)
   let isBackgroundRefresh = $state<boolean>(false) // Track if this is a background refresh
-  // $inspect(refreshDisabled, manualAddressCleared , manualAddress, walletAccount)
-
   // Pagination cursor state
   let currentCursor = $state<string | undefined>(undefined)
   let currentDirection = $state<'forward' | 'backward' | 'first'>('first')
@@ -135,17 +141,28 @@
 
   // Load bridge data when parameters change or retryCounter changes
   $effect(() => {
+    // Only load data if shouldLoadData is true
+    if (!shouldLoadData) {
+      bridgeData = null
+      error = null
+      return
+    }
+
     // Track retryCounter to trigger refreshes, but don't pass it to the data function
     const currentRetryCounter = retryCounter
 
     const result = loadBridgeTransactions({ ...loadBridgeParams })
-    result.promise.then((result) => {
-      bridgeData = result
-    }).catch((err) => {
-      error = err instanceof Error ? err.message : 'Failed to load bridge transactions'
-    }).finally(() => {
-      isBackgroundRefresh = false
-    })
+    result.promise
+      .then((result) => {
+        bridgeData = result
+        error = null
+      })
+      .catch((err) => {
+        error = err instanceof Error ? err.message : 'Failed to load bridge transactions'
+      })
+      .finally(() => {
+        isBackgroundRefresh = false
+      })
     return result.cleanup
   })
 
@@ -242,8 +259,21 @@
     retryCounter++
   }
 
+  // Function to enable global data loading when requested by user
+  function loadGlobalData() {
+    allowGlobalDataLoading = true
+    currentPage = 1
+    currentCursor = undefined
+    currentDirection = 'first'
+    retryCounter++
+  }
+
   const bridgeToKey = (bridge: UserRequest) => {
-    return [bridge.originationAMBBridge?.provider, toChain(bridge.originationChainId), toChain(bridge.destinationChainId)] as BridgeKey
+    return [
+      bridge.originationAMBBridge?.provider,
+      toChain(bridge.originationChainId),
+      toChain(bridge.destinationChainId),
+    ] as BridgeKey
   }
 
   // /**
@@ -366,333 +396,381 @@
   //     1
   //   )
   // }
-  const inputIsInvalid = $derived(manualAddressInput.trim() && !isAddress(manualAddressInput.trim()) && !isBytes32Hash(manualAddressInput.trim()))
-
+  const inputIsInvalid = $derived(
+    manualAddressInput.trim() &&
+      !isAddress(manualAddressInput.trim()) &&
+      !isBytes32Hash(manualAddressInput.trim()),
+  )
 </script>
-
 
 <!--
 go to the bridge history api endpoint and get the bridges for the provided address and bridge pair
 map out the progress of each bridge and display it to the user
 -->
 
-<div class="w-full flex flex-col dark:bg-surface-950 bg-gray-50 text-surface-950 dark:text-surface-50">
-<div class="max-w-5xl w-full mx-auto py-8">
-  <div class="bg-white dark:bg-slate-950 lg:rounded-3xl shadow-lg border-y md:border border-surface-200 dark:border-surface-800 p-0">
-    <div class="flex items-center justify-between px-2 md:px-4 pt-4 md:pb-2">
-      <div class="flex gap-4 w-full justify-start">
-        <div class="flex lg:static absolute gap-2 items-center">
-          <h2 class="text-4xl font-bold font-italiana">History</h2>
-          <InfoTooltip
-            text={activeAddress
-              ? 'Recent bridge transactions and their status for the specified address'
-              : 'View recent bridge transactions from all users'
-            }
-            iconSize={5}
-            iconColor="text-surface-500"
-            placement="top"
-          />
-          <!-- Filter Toggle Switch -->
-          <button
-            class="relative inline-flex h-8 w-14 items-center rounded-full bg-surface-200 dark:bg-surface-700 transition-colors focus:outline-none focus:ring focus:ring-surface-500 {filterMode === 'pending' ? 'bg-surface-500 dark:bg-surface-600' : ''}"
-            onclick={() => filterMode = filterMode === 'all' ? 'pending' : 'all'}
-            title={filterMode === 'all' ? 'Switch to pending transactions' : 'Switch to all transactions'}
-          >
-            <span class="sr-only">Toggle filter mode</span>
-            <span
-              class="h-6 w-6 transform rounded-full bg-white dark:bg-surface-100 shadow-lg transition-transform duration-200 ease-in-out flex items-center justify-center {filterMode === 'pending' ? 'translate-x-7' : 'translate-x-1'}"
-            >
-              <Icon icon={filterMode === 'all' ? 'lucide:list' : 'lucide:clock'} class="w-4 h-4 text-surface-600" />
-            </span>
-          </button>
-          <!-- Background refresh spinner -->
-          {#if isBackgroundRefresh}
-            <div class="flex items-center" title="Refreshing data...">
-              <Loader class="size-4 text-surface-500" />
-            </div>
-          {/if}
-        </div>
-        <!-- {#if !walletAccount} -->
-        <!-- Large screens: inline layout -->
-        <div class="flex flex-col lg:flex-row-reverse justify-end flex-grow items-center gap-2">
-          <div class="flex items-center gap-2 ml-auto lg:ml-0">
-            <button
-              class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 transition-colors focus:outline-none focus:ring-2 focus:ring-surface-500 focus:ring-offset-2 text-surface-600 dark:text-surface-400"
-              onclick={() => {
-                isBackgroundRefresh = false // Ensure manual refresh shows overlay
-                retryCounter++
-              }}
-              title="Reload page"
-            >
-              <Icon icon="lucide:refresh-cw" class="w-4 h-4 text-surface-600 dark:text-surface-400" />
-            </button>
-            <!-- <InfoTooltip
-              text="Connect your wallet to see your personal bridge history, or enter any address or hash (transaction hash, message ID, or message hash) to search for specific transactions"
-              placement="top"
+<div
+  class="w-full flex flex-col dark:bg-surface-950 bg-gray-50 text-surface-950 dark:text-surface-50">
+  <div class="max-w-5xl w-full mx-auto py-8">
+    <div
+      class="bg-white dark:bg-slate-950 lg:rounded-3xl shadow-lg border-y md:border border-surface-200 dark:border-surface-800 p-0">
+      <div class="flex items-center justify-between px-2 md:px-4 pt-4 md:pb-2">
+        <div class="flex gap-4 w-full justify-start">
+          <div class="flex lg:static absolute gap-2 items-center">
+            <h2 class="text-4xl font-bold font-italiana">History</h2>
+            <InfoTooltip
+              text={activeAddress
+                ? 'Recent bridge transactions and their status for the specified address'
+                : 'View recent bridge transactions from all users'}
               iconSize={5}
-              maxWidth="max-w-96"
               iconColor="text-surface-500"
-            /> -->
-            <ConnectButton />
+              placement="top" />
+            <!-- Filter Toggle Switch -->
+            <button
+              class="relative inline-flex h-8 w-14 items-center rounded-full bg-surface-200 dark:bg-surface-700 transition-colors focus:outline-none focus:ring focus:ring-surface-500 {filterMode ===
+              'pending'
+                ? 'bg-surface-500 dark:bg-surface-600'
+                : ''}"
+              onclick={() => (filterMode = filterMode === 'all' ? 'pending' : 'all')}
+              title={filterMode === 'all'
+                ? 'Switch to pending transactions'
+                : 'Switch to all transactions'}>
+              <span class="sr-only">Toggle filter mode</span>
+              <span
+                class="h-6 w-6 transform rounded-full bg-white dark:bg-surface-100 shadow-lg transition-transform duration-200 ease-in-out flex items-center justify-center {filterMode ===
+                'pending'
+                  ? 'translate-x-7'
+                  : 'translate-x-1'}">
+                <Icon
+                  icon={filterMode === 'all' ? 'lucide:list' : 'lucide:clock'}
+                  class="w-4 h-4 text-surface-600" />
+              </span>
+            </button>
+            <!-- Background refresh spinner -->
+            {#if isBackgroundRefresh}
+              <div class="flex items-center" title="Refreshing data...">
+                <Loader class="size-4 text-surface-500" />
+              </div>
+            {/if}
           </div>
-          <div class="gap-2 ml-auto flex flex-col md:flex-row-reverse items-end md:items-center">
-            <!-- Address input field -->
-            <div class="flex items-center gap-2">
-            <div class="relative flex flex-grow justify-end h-10">
-              <input
-                bind:this={addressInputRef}
-                bind:value={manualAddressInput}
-                onkeydown={handleAddressKeydown}
-                placeholder="Address or tx hash..."
-                class="pl-3 pr-10 py-1.5 text-sm border border-surface-200 dark:border-surface-600 rounded-full focus:ring-0 focus:border-surface-500 bg-white dark:bg-surface-900 dark:text-white placeholder-surface-400 dark:placeholder:text-surface-600 min-w-40 h-full"
-                type="text"
-              />
-            <!-- {#if inputIsInvalid} -->
-              <Tooltip placement="top" positionerClassName="z-50">
-                {#snippet trigger()}
-                  <button
-                    onclick={handleAddressInput}
-                    disabled={inputIsInvalid || !manualAddressInput.trim()}
-                    class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full text-surface-500 border-surface-500 disabled:border-surface-300 dark:disabled:border-surface-600 disabled:text-surface-500 dark:disabled:text-surface-500 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
-                    aria-label="Invalid input"
-                    class:border={!inputIsInvalid || !manualAddressInput.trim()}
-                  >
-                  {#if !manualAddressInput.trim() || !inputIsInvalid}
-                  <Icon icon="lucide:arrow-up" class="w-5 h-5" />
-                  {:else}
-                  <Icon icon="lucide:help-circle" class="w-5 h-5" />
-                  {/if}
-                  </button>
-                {/snippet}
-                {#snippet content()}
-                  Invalid address or hash
-                {/snippet}
-              </Tooltip>
-            <!-- {:else}
+          <!-- {#if !walletAccount} -->
+          <!-- Large screens: inline layout -->
+          <div class="flex flex-col lg:flex-row-reverse justify-end flex-grow items-center gap-2">
+            <div class="flex items-center gap-2 ml-auto lg:ml-0">
               <button
-                onclick={handleAddressInput}
-                disabled={!manualAddressInput.trim()}
-                class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border dark:border-surface-600 border-surface-500 hover:border-surface-600 dark:hover:border-surface-600 disabled:border-surface-300 dark:disabled:border-surface-600 text-white disabled:text-surface-500 dark:disabled:text-surface-300 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
-                aria-label="Submit input"
-              >
-                <Icon icon="lucide:arrow-up" class="w-5 h-5" />
+                class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 transition-colors focus:outline-none focus:ring-2 focus:ring-surface-500 focus:ring-offset-2 text-surface-600 dark:text-surface-400"
+                onclick={() => {
+                  isBackgroundRefresh = false // Ensure manual refresh shows overlay
+                  retryCounter++
+                }}
+                title="Reload page">
+                <Icon
+                  icon="lucide:refresh-cw"
+                  class="w-4 h-4 text-surface-600 dark:text-surface-400" />
               </button>
-            {/if} -->
+              <ConnectButton />
             </div>
-            </div>
-            <div class="flex items-center gap-2 justify-start">
-            <!-- Manual hash badge (shown when hash is set, appears before address badge) -->
-            {#if activeHash}
-              <div class="flex items-center bg-blue-100 dark:bg-blue-700 text-blue-900 dark:text-blue-300 rounded-full text-sm overflow-hidden h-8 border border-blue-200 dark:border-blue-800">
-                <span class="px-3 py-1">
-                  ...{activeHash.slice(-8)}
-                </span>
-                <button
-                  onclick={clearManualHash}
-                  class="px-2 py-0 h-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors border-l border-blue-200 dark:border-blue-900 text-blue-500 hover:text-blue-700 dark:hover:text-blue-200"
-                  aria-label="Clear hash"
-                >
-                  <Icon icon="lucide:x" class="w-4 h-4" />
-                </button>
+            <div class="gap-2 ml-auto flex flex-col md:flex-row-reverse items-end md:items-center">
+              <!-- Address input field -->
+              <div class="flex items-center gap-2">
+                <div class="relative flex flex-grow justify-end h-10">
+                  <input
+                    bind:this={addressInputRef}
+                    bind:value={manualAddressInput}
+                    onkeydown={handleAddressKeydown}
+                    placeholder="Address or tx hash..."
+                    class="pl-3 pr-10 py-1.5 text-sm border border-surface-200 dark:border-surface-600 rounded-full focus:ring-0 focus:border-surface-500 bg-white dark:bg-surface-900 dark:text-white placeholder-surface-400 dark:placeholder:text-surface-600 min-w-40 h-full"
+                    type="text" />
+                  <!-- {#if inputIsInvalid} -->
+                  <Tooltip placement="top" positionerClassName="z-50">
+                    {#snippet trigger()}
+                      <button
+                        onclick={handleAddressInput}
+                        disabled={inputIsInvalid || !manualAddressInput.trim()}
+                        class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full text-surface-500 border-surface-500 disabled:border-surface-300 dark:disabled:border-surface-600 disabled:text-surface-500 dark:disabled:text-surface-500 transition-colors flex items-center justify-center disabled:cursor-not-allowed"
+                        aria-label="Invalid input"
+                        class:border={!inputIsInvalid || !manualAddressInput.trim()}>
+                        {#if !manualAddressInput.trim() || !inputIsInvalid}
+                          <Icon icon="lucide:arrow-up" class="w-5 h-5" />
+                        {:else}
+                          <Icon icon="lucide:help-circle" class="w-5 h-5" />
+                        {/if}
+                      </button>
+                    {/snippet}
+                    {#snippet content()}
+                      Invalid address or hash
+                    {/snippet}
+                  </Tooltip>
+                </div>
               </div>
-            {/if}
+              <div class="flex items-center gap-2 justify-start">
+                <!-- Manual hash badge (shown when hash is set, appears before address badge) -->
+                {#if activeHash}
+                  <div
+                    class="flex items-center bg-blue-100 dark:bg-blue-700 text-blue-900 dark:text-blue-300 rounded-full text-sm overflow-hidden h-8 border border-blue-200 dark:border-blue-800">
+                    <span class="px-3 py-1">
+                      ...{activeHash.slice(-8)}
+                    </span>
+                    <button
+                      onclick={clearManualHash}
+                      class="px-2 py-0 h-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors border-l border-blue-200 dark:border-blue-900 text-blue-500 hover:text-blue-700 dark:hover:text-blue-200"
+                      aria-label="Clear hash">
+                      <Icon icon="lucide:x" class="w-4 h-4" />
+                    </button>
+                  </div>
+                {/if}
 
-            <!-- Manual address badge (shown when address is set) -->
-            {#if activeAddress}
-              <div class="flex items-center bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-surface-300 rounded-full text-sm overflow-hidden h-8 border border-surface-200 dark:border-surface-800">
-                <span class="px-3 py-1">
-                  {activeAddress.slice(0, 2+4)}...{activeAddress.slice(-4)}
-                </span>
-                <button
-                  onclick={clearManualAddress}
-                  class="px-2 py-0 h-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors border-l border-surface-200 dark:border-surface-900"
-                  aria-label="Clear address"
-                >
-                  <Icon icon="lucide:x" class="w-4 h-4" />
-                </button>
+                <!-- Manual address badge (shown when address is set) -->
+                {#if activeAddress}
+                  <div
+                    class="flex items-center bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-surface-300 rounded-full text-sm overflow-hidden h-8 border border-surface-200 dark:border-surface-800">
+                    <span class="px-3 py-1">
+                      {activeAddress.slice(0, 2 + 4)}...{activeAddress.slice(-4)}
+                    </span>
+                    <button
+                      onclick={clearManualAddress}
+                      class="px-2 py-0 h-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors border-l border-surface-200 dark:border-surface-900"
+                      aria-label="Clear address">
+                      <Icon icon="lucide:x" class="w-4 h-4" />
+                    </button>
+                  </div>
+                {/if}
               </div>
-            {/if}
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Global Content Container with Loading Overlay -->
-    <div class="relative">
-      {#if error}
-      <div class="text-center py-12">
-        <div class="text-red-400 mb-4">
-          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error Loading Bridge History</h3>
-        <p class="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
-        <button
-          class="inline-flex items-center px-4 py-2 bg-surface-600 text-white hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 rounded-full"
-          onclick={retryLoad}
-        >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Retry
-        </button>
-      </div>
-    {:else if bridgeData && bridgeData.userRequests.length > 0}
-      {#snippet mergedTransactions()}
-        <!-- Use userRequests directly, already sorted by orderId and filtered by backend -->
-        {@const allTransactions = bridgeData?.userRequests || []}
-
-        {#if allTransactions.length > 0}
-          <div class="flex flex-col gap-2 h-124 py-2 overflow-y-auto custom-scrollbar">
-            <!-- Transaction Cards -->
-            <div class="gap-2 md:px-4 px-0 flex flex-col">
-              {#each allTransactions as bridge (bridge.orderId)}
-              <BridgeHistoryItem
-                bridge={bridge}
-                tokenMetadata={bridgeData?.tokenMetadata ?? new Map<string, TokenMetadata>()}
-                feeData={bridgeData?.feeData ?? []} />
-              {/each}
-            </div>
-          </div>
-        {:else}
-          <!-- No filtered transactions state -->
-          <div class="text-center py-12 h-124">
-            <div class="text-gray-400 dark:text-gray-500 mb-4">
+      <!-- Global Content Container with Loading Overlay -->
+      <div class="relative">
+        {#if error}
+          <div class="text-center py-12">
+            <div class="text-red-400 mb-4">
               <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No {filterMode === 'pending' ? 'Pending' : ''} Bridge Transactions</h3>
-            <p class="text-gray-600 dark:text-gray-300">
-              {#if filterMode === 'pending'}
-                No pending bridge transactions found. All transactions appear to be completed.
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+              >Error Loading Bridge History</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
+            <button
+              class="inline-flex items-center px-4 py-2 bg-surface-600 text-white hover:bg-surface-700 transition-colors focus:ring focus:ring-surface-500 focus:ring-offset-2 rounded-full"
+              onclick={retryLoad}>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Retry
+            </button>
+          </div>
+        {:else if bridgeData && bridgeData.userRequests.length > 0}
+          {#snippet mergedTransactions()}
+            <!-- Use userRequests directly, already sorted by orderId and filtered by backend -->
+            {@const allTransactions = bridgeData?.userRequests || []}
+
+            {#if allTransactions.length > 0}
+              <div class="flex flex-col gap-2 h-124 py-2 overflow-y-auto custom-scrollbar">
+                <!-- Transaction Cards -->
+                <div class="gap-2 md:px-4 px-0 flex flex-col">
+                  {#each allTransactions as bridge (bridge.orderId)}
+                    <BridgeHistoryItem
+                      {bridge}
+                      tokenMetadata={bridgeData?.tokenMetadata ?? new Map<string, TokenMetadata>()}
+                      feeData={bridgeData?.feeData ?? []} />
+                  {/each}
+                </div>
+              </div>
+            {:else}
+              <!-- No filtered transactions state -->
+              <div class="text-center py-12 h-124">
+                <div class="text-gray-400 dark:text-gray-500 mb-4">
+                  <svg
+                    class="w-16 h-16 mx-auto"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+                  >No {filterMode === 'pending' ? 'Pending' : ''} Bridge Transactions</h3>
+                <p class="text-gray-600 dark:text-gray-300">
+                  {#if filterMode === 'pending'}
+                    No pending bridge transactions found. All transactions appear to be completed.
+                  {:else}
+                    No bridge transactions found.
+                  {/if}
+                </p>
+              </div>
+            {/if}
+          {/snippet}
+
+          {@render mergedTransactions()}
+        {:else}
+          <!-- No Data State - hidden during loading to avoid confusion -->
+          <div
+            class="text-center py-12 h-124 transition-opacity duration-200"
+            class:opacity-0={isLoading}>
+            <div class="text-gray-400 dark:text-gray-500 mb-4">
+              <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <!-- <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+              >No Bridge Transactions</h3> -->
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              {#if activeAddress}
+                <span
+                  >No bridge transactions found for {activeAddress.slice(
+                    0,
+                    2 + 6,
+                  )}...{activeAddress.slice(-6)}.
+                  <br />Try making a bridge transaction or check a different address.
+                </span>
+              {:else if shouldLoadData && isLoading}
+                Loading recent bridge activity...
+              {:else if allowGlobalDataLoading}
+                No recent bridge transactions found. Try refreshing or check back later.
               {:else}
-                No bridge transactions found.
+                Want to see recent bridge activity from all users?
               {/if}
             </p>
+
+            {#if activeAddress === null && !allowGlobalDataLoading}
+              <!-- Show button to load global data when no specific address and global loading not enabled -->
+              <button
+                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors focus:ring focus:ring-blue-500 focus:ring-offset-2 rounded-full"
+                onclick={loadGlobalData}>
+                <Icon icon="lucide:globe" class="w-4 h-4 mr-2" />
+                Load Recent Bridge Activity
+              </button>
+            {/if}
           </div>
         {/if}
-      {/snippet}
 
-        {@render mergedTransactions()}
-      {:else}
-        <!-- No Data State - hidden during loading to avoid confusion -->
-        <div class="text-center py-12 h-124 transition-opacity duration-200" class:opacity-0={isLoading}>
-          <div class="text-gray-400 dark:text-gray-500 mb-4">
-            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Bridge Transactions</h3>
-          <p class="text-gray-600 dark:text-gray-300">
-            {#if activeAddress}
-              <span>No bridge transactions found for {activeAddress.slice(0, (2+6))}...{activeAddress.slice(-6)}.
-                <br>Try making a bridge transaction or check a different address.
-              </span>
-            {:else}
-              No recent bridge transactions found. Try refreshing or check back later.
-            {/if}
-          </p>
-        </div>
-      {/if}
-
-      <!-- Global Loading Overlay - appears over ANY content when loading -->
-      {#if isLoading && !isBackgroundRefresh}
-        <div class="absolute inset-0 bg-white/20 dark:bg-surface-950/20 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-lg">
-          <div class="text-center">
-            <div class="flex justify-center mb-4 text-gray-700 dark:text-gray-300">
-              <Loader class="size-8" />
+        <!-- Global Loading Overlay - appears over ANY content when loading -->
+        {#if isLoading && !isBackgroundRefresh}
+          <div
+            class="absolute inset-0 bg-white/20 dark:bg-surface-950/20 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-lg">
+            <div class="text-center">
+              <div class="flex justify-center mb-4 text-gray-700 dark:text-gray-300">
+                <Loader class="size-8" />
+              </div>
+              <h3
+                class="text-lg font-semibold text-gray-900 text-shadow-sm text-shadow-white dark:text-white dark:text-shadow-sm dark:text-shadow-black mb-2"
+                >Loading Bridge Transactions</h3>
+              <p class="text-gray-600 dark:text-gray-300">
+                {activeAddress
+                  ? `Fetching bridge history for ${activeAddress.slice(0, 2 + 6)}...${activeAddress.slice(-6)}`
+                  : 'Fetching bridge transactions...'}
+              </p>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 text-shadow-sm text-shadow-white dark:text-white dark:text-shadow-sm dark:text-shadow-black mb-2">Loading Bridge Transactions</h3>
-            <p class="text-gray-600 dark:text-gray-300">
-              {activeAddress
-                ? `Fetching bridge history for ${activeAddress.slice(0, (2+6))}...${activeAddress.slice(-6)}`
-                : 'Fetching bridge transactions...'
-              }
-            </p>
           </div>
-        </div>
-      {/if}
-    </div>
+        {/if}
+      </div>
 
-    <!-- Pagination Controls and Page Size Selector (always visible) -->
-    <div class="border-t border-surface-200 dark:border-surface-800 py-4 px-4">
-      <div class="flex items-center justify-between flex-wrap gap-4">
-        <!-- Page Size Selector (left side) -->
-        <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-          <select
-            class="pl-2 pr-8 py-1 text-sm rounded-md ring ring-surface-200 dark:ring-surface-700 border-none bg-white hover:bg-surface-50 dark:bg-surface-900 hover:dark:bg-surface-800 dark:text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-            value={limit}
-            onchange={(e) => changePageSize(Number((e.target as HTMLSelectElement).value))}
-          >
-            {#each pageSizeOptions as option}
-              <option value={option}>{option}</option>
-            {/each}
-          </select>
-          <span>of</span>
-          {#if bridgeData?.totalCount}
-            <span class="font-medium">{formatTokenAmount(bridgeData.totalCount.toString(), { decimals: 0 })}</span>
-          {:else if isLoading}
-            <span class="font-medium animate-pulse">...</span>
-          {:else}
-            <span class="font-medium">0</span>
-          {/if}
-        </div>
-
-        <!-- Pagination Navigation (right side) -->
-        <div class="flex items-center space-x-1">
-          <!-- First Page (double chevron left) -->
-          <button
-            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
-            onclick={goToFirstPage}
-            disabled={!bridgeData?.pageInfo?.hasPreviousPage || isLoading}
-            aria-label="First page"
-            title="First page"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-            </svg>
-          </button>
-
-          <!-- Previous Page (single chevron left) -->
-          <button
-            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
-            onclick={goToPreviousPage}
-            disabled={!bridgeData?.pageInfo?.hasPreviousPage || isLoading}
-            aria-label="Previous page"
-            title="Previous page"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          <!-- Page Info -->
-          <div class="px-3 py-1 text-sm text-gray-700 dark:text-gray-300 font-medium">
-            {#if !isLoading && !bridgeData}
-              <span class="animate-pulse">... of ...</span>
+      <!-- Pagination Controls and Page Size Selector (always visible) -->
+      <div class="border-t border-surface-200 dark:border-surface-800 py-4 px-4">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+          <!-- Page Size Selector (left side) -->
+          <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+            <select
+              class="pl-2 pr-8 py-1 text-sm rounded-md ring ring-surface-200 dark:ring-surface-700 border-none bg-white hover:bg-surface-50 dark:bg-surface-900 hover:dark:bg-surface-800 dark:text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+              value={limit}
+              onchange={(e) => changePageSize(Number((e.target as HTMLSelectElement).value))}>
+              {#each pageSizeOptions as option}
+                <option value={option}>{option}</option>
+              {/each}
+            </select>
+            <span>of</span>
+            {#if bridgeData?.totalCount}
+              <span class="font-medium"
+                >{formatTokenAmount(bridgeData.totalCount.toString(), { decimals: 0 })}</span>
+            {:else if isLoading}
+              <span class="font-medium animate-pulse">...</span>
             {:else}
-              {formatTokenAmount(currentPage.toString(), { decimals: 0 })} of {formatTokenAmount(totalPages.toString(), { decimals: 0 })}
+              <span class="font-medium">0</span>
             {/if}
           </div>
 
-          <!-- Next Page (single chevron right) -->
-          <button
-            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
-            onclick={goToNextPage}
-            disabled={!bridgeData?.pageInfo?.hasNextPage || isLoading}
-            aria-label="Next page"
-            title="Next page"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+          <!-- Pagination Navigation (right side) -->
+          <div class="flex items-center space-x-1">
+            <!-- First Page (double chevron left) -->
+            <button
+              class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
+              onclick={goToFirstPage}
+              disabled={!bridgeData?.pageInfo?.hasPreviousPage || isLoading}
+              aria-label="First page"
+              title="First page">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+            </button>
 
-          <!-- Last Page (double chevron right) -->
-          <!-- <button
+            <!-- Previous Page (single chevron left) -->
+            <button
+              class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
+              onclick={goToPreviousPage}
+              disabled={!bridgeData?.pageInfo?.hasPreviousPage || isLoading}
+              aria-label="Previous page"
+              title="Previous page">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            <!-- Page Info -->
+            <div class="px-3 py-1 text-sm text-gray-700 dark:text-gray-300 font-medium">
+              {#if !isLoading && !bridgeData}
+                <span class="animate-pulse">... of ...</span>
+              {:else}
+                {formatTokenAmount(currentPage.toString(), { decimals: 0 })} of {formatTokenAmount(
+                  totalPages.toString(),
+                  { decimals: 0 },
+                )}
+              {/if}
+            </div>
+
+            <!-- Next Page (single chevron right) -->
+            <button
+              class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
+              onclick={goToNextPage}
+              disabled={!bridgeData?.pageInfo?.hasNextPage || isLoading}
+              aria-label="Next page"
+              title="Next page">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            <!-- Last Page (double chevron right) -->
+            <!-- <button
             class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
             onclick={goToLastPage}
             disabled={currentPage === totalPages || isLoading || totalPages <= 1}
@@ -703,9 +781,9 @@ map out the progress of each bridge and display it to the user
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
             </svg>
           </button> -->
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 </div>
