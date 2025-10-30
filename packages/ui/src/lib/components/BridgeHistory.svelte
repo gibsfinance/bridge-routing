@@ -102,6 +102,10 @@
 
   // Set up block tracking for chains we need for ETA calculations
   $effect(() => {
+    // Only track blocks if we're actually loading/showing bridge data
+    if (!shouldLoadData || !bridgeData) {
+      return
+    }
     // Track latest blocks for common chains used in bridges
     for (const chainId of Object.values(Chains)) {
       latestBlock(Number(chainId))

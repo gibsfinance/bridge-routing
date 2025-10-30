@@ -17,13 +17,13 @@
   "dependencies": {
     "@gibs/bridge-sdk": "^1.8.0",
     "hono": "^4.5.0",
-    "ponder": "^0.12.26",
+    "ponder": "^0.14.0",
     "viem": "^2.37.8"
   },
   "devDependencies": {
     "@types/node": "^22.12.0",
     "eslint": "^8.54.0",
-    "eslint-config-ponder": "^0.12.26",
+    "eslint-config-ponder": "^0.14.0",
     "typescript": "npm:~5.7.2"
   },
   "engines": {

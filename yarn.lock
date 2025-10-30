@@ -2561,12 +2561,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hono/node-server@npm:1.13.3":
-  version: 1.13.3
-  resolution: "@hono/node-server@npm:1.13.3"
+"@hono/node-server@npm:1.19.5":
+  version: 1.19.5
+  resolution: "@hono/node-server@npm:1.19.5"
   peerDependencies:
     hono: ^4
-  checksum: 10c0/0c8f4764eed78016d12c38e32577dfb674268faaa3d6c9940706f8e42ee05b57b35ed5c52dfa9a89a6881908a77340d22727383f2431dc48be81ad9dbaae8823
+  checksum: 10c0/ee935ba923bb8bc3e0453d08a59e356b595c1ddffef3c96f8b9a4199f6b587c311743fb576d8236aa57d638012d7251c1f1b1ebbbd488358a951ee1a6b6991e8
   languageName: node
   linkType: hard
 
@@ -4401,16 +4401,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ponder/utils@npm:0.2.12":
-  version: 0.2.12
-  resolution: "@ponder/utils@npm:0.2.12"
+"@ponder/utils@npm:0.2.15":
+  version: 0.2.15
+  resolution: "@ponder/utils@npm:0.2.15"
   peerDependencies:
     typescript: ">=5.0.4"
     viem: ">=2"
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/3677b15afb52d293b3f7892fbdc0f2a67f8c451cb279c30ee51f276ef291ce3d1b1ffecc423dc1594720e57d1c5f54d76b94bf2e146975dde4fb88006c41821a
+  checksum: 10c0/2018d43666bff1424e075286749b8e56f6ace6ac6da0187257cd654eba4af8590d613d9ad4dd6e43b015480a5790a9c145b6d7a1c05143e021495ed4a725e25b
   languageName: node
   linkType: hard
 
@@ -12820,14 +12820,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-config-ponder@npm:^0.12.26":
-  version: 0.12.26
-  resolution: "eslint-config-ponder@npm:0.12.26"
+"eslint-config-ponder@npm:^0.14.0":
+  version: 0.14.11
+  resolution: "eslint-config-ponder@npm:0.14.11"
   peerDependencies:
     "@typescript-eslint/eslint-plugin": ^6.3.0
     "@typescript-eslint/parser": ^6.3.0
     eslint: ">= 3"
-  checksum: 10c0/d672806cf898591d2f6174a2cd583e2f37b490a48a1f68be7449df836a34bf2fa774e616b6a8f68845a165c9c6d294bcd18fa3f9d5e4c41145e02a64f3b1be40
+  checksum: 10c0/f50600eec28d7d02df1c5f62ca5bc6abc1c1b68bab0586bfcf25c13134062399b8b7489c9d1d543fa06bc6c62d852603d1bc2f460c18c50961de24eb217a78a7
   languageName: node
   linkType: hard
 
@@ -14286,9 +14286,9 @@ __metadata:
     "@gibs/bridge-sdk": "npm:^1.8.0"
     "@types/node": "npm:^22.12.0"
     eslint: "npm:^8.54.0"
-    eslint-config-ponder: "npm:^0.12.26"
+    eslint-config-ponder: "npm:^0.14.0"
     hono: "npm:^4.5.0"
-    ponder: "npm:^0.12.26"
+    ponder: "npm:^0.14.0"
     typescript: "npm:~5.7.2"
     viem: "npm:^2.37.8"
   languageName: unknown
@@ -16807,9 +16807,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ponder@npm:^0.12.26":
-  version: 0.12.26
-  resolution: "ponder@npm:0.12.26"
+"ponder@npm:^0.14.0":
+  version: 0.14.11
+  resolution: "ponder@npm:0.14.11"
   dependencies:
     "@babel/code-frame": "npm:^7.23.4"
     "@commander-js/extra-typings": "npm:^12.0.1"
@@ -16817,8 +16817,8 @@ __metadata:
     "@escape.tech/graphql-armor-max-aliases": "npm:^2.3.0"
     "@escape.tech/graphql-armor-max-depth": "npm:^2.2.0"
     "@escape.tech/graphql-armor-max-tokens": "npm:^2.3.0"
-    "@hono/node-server": "npm:1.13.3"
-    "@ponder/utils": "npm:0.2.12"
+    "@hono/node-server": "npm:1.19.5"
+    "@ponder/utils": "npm:0.2.15"
     abitype: "npm:^0.10.2"
     ansi-escapes: "npm:^7.0.0"
     commander: "npm:^12.0.0"
@@ -16856,7 +16856,7 @@ __metadata:
       optional: true
   bin:
     ponder: dist/esm/bin/ponder.js
-  checksum: 10c0/e0504d157683eb3bf150ca4a1cfa059b3d472d2ca7f2619da2e29ae0b4768cb2cb80c1d829c7ed1f347db6bffa1d2fe84d69f1e0e6ec4943899f935b42beab78
+  checksum: 10c0/2ef8ff0fb8a430de22db45c92ef988f8cc49c3ab37f01af8abcad44e43f1f5c967f447dbdaf8fb33cba518df8e0ac3955a9d6d6ef5e7f891827fece1a8d1d966
   languageName: node
   linkType: hard
 
