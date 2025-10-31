@@ -122,7 +122,9 @@
   const toChainId = $derived(Number(bridgeKey.toChain))
   $effect(() => latestBlock(fromChainId))
   $effect(() => latestBlock(toChainId))
-  const originationTicker = $derived(blocks.get(Number(bridgeKey.fromChain))?.get('latest')?.block?.number)
+  const originationTicker = $derived(
+    blocks.get(Number(bridgeKey.fromChain))?.get('latest')?.block?.number,
+  )
   $effect(() => {
     const account = accountState.address
     const token = bridgeSettings.assetIn.value?.address
@@ -161,10 +163,7 @@
     if (!wrapped || getAddress(assetOutAddress) !== getAddress(wrapped)) {
       return assetOutAddress
     }
-    if (
-      unwrap.value &&
-      canChangeUnwrap(bridgeKey.value, bridgeSettings.assetIn.value)
-    ) {
+    if (unwrap.value && canChangeUnwrap(bridgeKey.value, bridgeSettings.assetIn.value)) {
       return zeroAddress
     }
     return assetOutAddress
@@ -198,17 +197,21 @@
     if (!costLimitLocked) {
       if (feeType === FeeType.GAS_TIP) {
         input.limit.value = bridgeSettings.reasonablePercentOnGasLimit
-      } else if (
-        feeType === FeeType.PERCENT &&
-        reasonablePercentFee &&
-        amountAfterBridgeFee
-      ) {
+      } else if (feeType === FeeType.PERCENT && reasonablePercentFee && amountAfterBridgeFee) {
         input.limit.value = (amountAfterBridgeFee * reasonablePercentFee) / input.oneEther
       } else if (feeType === FeeType.FIXED) {
         input.limit.value = reasonableFixedFee
       }
     }
   })
+
+  // Bridge confirmation modal logic
+  const shouldShowBridgeConfirmation = $derived(
+    // Show confirmation if no network cost estimate available AND requires delivery
+    (!bridgeSettings.estimatedNativeNetworkCost && bridgeKey.pathway?.requiresDelivery) ||
+      // OR if undercompensated (using centralized logic)
+      bridgeSettings.isUndercompensated,
+  )
 </script>
 
 <div class="flex flex-col max-w-lg">
@@ -242,7 +245,7 @@
           icon="ic:sharp-swap-calls" />
       {/snippet}
       {#snippet button()}
-        <ConnectAndBridge />
+        <ConnectAndBridge showConfirmationModal={shouldShowBridgeConfirmation} />
       {/snippet}
       {#snippet progress()}
         <BridgeProgress />

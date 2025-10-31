@@ -5,7 +5,9 @@
   import { clsx } from 'clsx'
 
   function modalClose() {
-    open = false
+    if (externalOpen === undefined) {
+      internalOpen = false
+    }
   }
   type Props = {
     contents?: Snippet<[{ close: () => void }]>
@@ -16,6 +18,7 @@
     contentWidthClass?: ClassValue
     contentHeightClass?: ClassValue
     contentBorderClass?: ClassValue
+    open?: boolean
   }
   const {
     contents,
@@ -26,8 +29,10 @@
     contentWidthClass = 'max-w-[548px] w-full',
     contentHeightClass = 'h-full max-h-[512px]',
     contentBorderClass = 'border border-surface-200 dark:border-surface-700',
+    open: externalOpen,
   }: Props = $props()
-  let open = $state(false)
+  let internalOpen = $state(false)
+  let open = $derived(externalOpen !== undefined ? externalOpen : internalOpen)
   const classes = $derived(clsx([wrapperClasses]))
   const triggerBase = $derived(clsx([triggerClasses]))
   const contentWidth = $derived(clsx([contentWidthClass]))
@@ -53,7 +58,9 @@
   zIndex="50"
   positionerClasses="h-full z-40"
   onOpenChange={(e) => {
-    open = e.open
+    if (externalOpen === undefined) {
+      internalOpen = e.open
+    }
   }}>
   {#snippet trigger()}{@render button?.()}{/snippet}
   {#snippet content()}{@render contents?.({ close: modalClose })}{/snippet}

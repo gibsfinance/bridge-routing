@@ -19,7 +19,15 @@
   import { connect } from '../stores/auth/AuthProvider.svelte'
   import { bridgeTx } from '../stores/storage.svelte'
   import Button from './Button.svelte'
+  import ModalWrapper from './ModalWrapper.svelte'
+  import BridgeConfirmationModal from './BridgeConfirmationModal.svelte'
+  import { toChain } from '@gibs/bridge-sdk'
 
+  interface Props {
+    showConfirmationModal?: boolean
+  }
+
+  const { showConfirmationModal = false }: Props = $props()
   const { shouldDeliver } = input
 
   const tokenBalance = $derived(fromTokenBalance.value ?? 0n)
@@ -161,8 +169,16 @@
   const switchToChain = $derived(() =>
     switchNetwork(appkitNetworkById.get(Number(input.bridgeKey.fromChain))),
   )
+
+  // Modal handlers for confirmation action
+  function confirmBridgeAction() {
+    sendInitiateBridge()
+  }
+
+  const isConnected = $derived(!!accountState?.address)
+
   const onclick = $derived.by(() => {
-    if (!accountState?.address) {
+    if (!isConnected) {
       return connect
     }
     if (!isRequiredChain) {
@@ -171,13 +187,40 @@
     if (!skipApproval) {
       return sendIncreaseApproval
     }
-    return sendInitiateBridge
+    // If no confirmation modal needed, bridge directly
+    if (!showConfirmationModal) {
+      return sendInitiateBridge
+    }
+    // If confirmation modal is enabled, it will be handled by the ModalWrapper button
+    return undefined
   })
 </script>
 
-<div class="flex flex-row w-full relative text-xl">
-  <Button
-    class="bg-tertiary-600 w-full text-surface-50 dark:text-surface-950 leading-10 rounded-2xl p-2"
-    {onclick}
-    {disabled}>{text}</Button>
+<div class="flex flex-row w-full relative text-xl [&>*]:w-full">
+  {#if showConfirmationModal && !disabled && isConnected && isRequiredChain && skipApproval}
+    <!-- Bridge Button with Confirmation Modal -->
+    <ModalWrapper
+      triggerClasses="bg-tertiary-600 w-full text-surface-50 dark:text-surface-950 leading-10 rounded-2xl p-2"
+      contentWidthClass="max-w-md w-full"
+      contentHeightClass="h-auto">
+      {#snippet button()}
+        {text}
+      {/snippet}
+      {#snippet contents({ close })}
+        <BridgeConfirmationModal
+          bridgeKey={input.bridgeKey.value}
+          onClose={close}
+          onConfirm={() => {
+            close()
+            confirmBridgeAction()
+          }} />
+      {/snippet}
+    </ModalWrapper>
+  {:else}
+    <!-- Direct Bridge Button or Disabled Button -->
+    <Button
+      class="bg-tertiary-600 w-full text-surface-50 dark:text-surface-950 leading-10 rounded-2xl p-2"
+      {onclick}
+      {disabled}>{text}</Button>
+  {/if}
 </div>

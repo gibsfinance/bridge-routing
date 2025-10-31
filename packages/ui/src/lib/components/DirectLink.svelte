@@ -17,8 +17,14 @@
   const chain = $derived(chainsMetadata[toChain(chainId)] ?? evmChainsById.get(chainId))
   const explorer = $derived(chain?.blockExplorers?.default?.url || '')
   const d = $derived(domains.get(explorer) || '')
+
+  // Track previous explorer to prevent infinite loops
+  let prevExplorer = ''
   $effect(() => {
-    if (explorer) addDomain(explorer)
+    if (explorer && explorer !== prevExplorer) {
+      prevExplorer = explorer
+      addDomain(explorer)
+    }
   })
   const classes = $derived(['flex items-center', className])
   const linkClassNames = $derived(['flex', className])

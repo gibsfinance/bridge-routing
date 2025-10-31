@@ -8,6 +8,7 @@ COPY ./.yarnrc.yml /app/.yarnrc.yml
 COPY ./packages/ /app/packages/
 
 ARG PUBLIC_PROJECT_ID
+ARG RAILWAY_GIT_COMMIT_SHA
 ENV YARN_VERSION=4.10.3
 RUN corepack enable && corepack prepare yarn@${YARN_VERSION}
 

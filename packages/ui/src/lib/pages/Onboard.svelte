@@ -24,12 +24,14 @@
           <Headline
             ><button
               type="button"
+              class="dark:text-shadow-xs dark:text-shadow-white"
               class:opacity-70={!onboardActive}
               onclick={() => {
                 page.setParam('stage', settings.stage.ONBOARD)
               }}>Onboard</button
             >/<button
               type="button"
+              class="dark:text-shadow-xs dark:text-shadow-white"
               class:opacity-70={!swapActive}
               onclick={() => {
                 page.setParam('stage', settings.stage.SWAP)

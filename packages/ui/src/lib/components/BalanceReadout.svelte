@@ -115,7 +115,7 @@
       class:bg-tertiary-600={!disableMax}
       class:hover:bg-tertiary-500={!disableMax}
       class:text-tertiary-950={disableMax}
-      class="{roundedClasses} rounded-full text-xs flex items-center justify-center text-surface-600 px-1.5"
+      class="{roundedClasses} rounded-full dark:text-surface-100 text-xs flex items-center justify-center text-surface-600 px-1.5"
       onclick={maxOutBalance}>
       Max
     </button>

@@ -615,6 +615,51 @@ export const availableCompensationMaximum = ({
 }
 
 /**
+ * Determines if the bridge is undercompensated based on network costs vs compensation limit using desired compensation rate
+ * @param estimatedTokenNetworkCost - the estimated token network cost
+ * @param feeType - the fee type
+ * @param limit - the maximum compensation limit
+ * @param amountAfterBridgeFee - the amount after bridge fee
+ * @param desiredExcessCompensationBasisPoints - the desired excess compensation basis points
+ * @returns whether the bridge is undercompensated
+ */
+export const isUndercompensated = ({
+  estimatedTokenNetworkCost,
+  feeType,
+  limit,
+  amountAfterBridgeFee,
+  desiredExcessCompensationBasisPoints,
+}: {
+  estimatedTokenNetworkCost: bigint | null
+  feeType: FeeType
+  limit: bigint
+  amountAfterBridgeFee: bigint | null
+  desiredExcessCompensationBasisPoints: bigint
+}) => {
+  // No undercompensation if no amount to bridge
+  if (!amountAfterBridgeFee || amountAfterBridgeFee <= 0n) {
+    return false
+  }
+
+  // GAS_TIP fee type doesn't have undercompensation issues
+  if (feeType === FeeType.GAS_TIP) {
+    return false
+  }
+
+  // No network cost estimate means we can't determine undercompensation
+  if (!estimatedTokenNetworkCost) {
+    return false
+  }
+
+  // Calculate desired compensation using the actual desired compensation ratio
+  const desiredCompensationRatio = oneEther + (desiredExcessCompensationBasisPoints * oneEther) / basisPoints
+  const desiredCompensationForNetworkCost = (estimatedTokenNetworkCost * desiredCompensationRatio) / oneEther
+
+  // Undercompensated if desired compensation exceeds the limit
+  return desiredCompensationForNetworkCost > limit
+}
+
+/**
  * Calculates the transaction inputs from the bridge pathway, asset in, recipient, account, asset link, destination data param, amount to bridge, fee director struct encoded, and should deliver
  * @param bridgePathway - the bridge pathway to use
  * @param assetIn - the asset in to bridge
