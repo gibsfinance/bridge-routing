@@ -7,8 +7,14 @@
     path?: string
   }
   const { domain = '', path = '/' }: Props = $props()
+
+  // Track previous domain to prevent infinite loops
+  let prevDomain = ''
   $effect(() => {
-    addDomain(domain)
+    if (domain && domain !== prevDomain) {
+      prevDomain = domain
+      addDomain(domain)
+    }
   })
   const d = $derived(domains.get(domain) || domain)
 </script>
