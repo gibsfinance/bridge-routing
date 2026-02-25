@@ -1,0 +1,26 @@
+{
+  "name": "@gibs/abis",
+  "version": "1.10.1",
+  "description": "Contract ABIs for the Gibs Finance bridge protocol",
+  "main": "index.js",
+  "access": "public",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "npx tsc",
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.12.0",
+    "typescript": "~5.7.2",
+    "vitest": "^3.1.1"
+  },
+  "peerDependencies": {
+    "viem": ">=2.37.0"
+  }
+}

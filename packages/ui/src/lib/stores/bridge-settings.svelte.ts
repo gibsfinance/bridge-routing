@@ -11,7 +11,7 @@ import {
 import { FeeType } from '@gibs/bridge-sdk/fee-type'
 import type { Token, BridgeKey } from '@gibs/bridge-sdk/types'
 import { nativeAssetOut, Chains, canChangeUnwrap, toChain, uniV2Routers } from '@gibs/bridge-sdk/config'
-import { univ2Router } from '@gibs/bridge-sdk/abis'
+import { univ2Router } from '@gibs/abis'
 import * as imageLinks from '@gibs/bridge-sdk/image-links'
 import { chainsMetadata } from '@gibs/bridge-sdk/chains'
 import { multicallErc20 } from '@gibs/common/erc20'

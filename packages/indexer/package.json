@@ -15,10 +15,11 @@
     "typecheck": "npx tsc"
   },
   "dependencies": {
+    "@gibs/abis": "^1.0.0",
     "@gibs/bridge-sdk": "^1.8.0",
     "hono": "^4.5.0",
     "ponder": "^0.14.0",
-    "viem": "^2.37.8"
+    "viem": "^2.46.3"
   },
   "devDependencies": {
     "@types/node": "^22.12.0",

@@ -6,7 +6,7 @@
     HOME_TO_FOREIGN_FEE,
     pathway,
   } from '@gibs/bridge-sdk/config'
-  import * as abis from '@gibs/bridge-sdk/abis'
+  import * as abis from '@gibs/abis'
   import { packSignatures, signatureToVRS } from '../stores/messages'
   import * as transactions from '../stores/transactions'
   import { chainsMetadata } from '@gibs/bridge-sdk/chains'

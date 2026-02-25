@@ -49,6 +49,12 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
+          name: 'abis-dist-${{github.sha}}'
+          overwrite: true
+          path: packages/abis/dist/
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
           name: 'bridge-sdk-dist-${{github.sha}}'
           overwrite: true
           path: packages/bridge-sdk/dist/
@@ -143,6 +149,11 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
+          name: 'abis-dist-${{github.sha}}'
+          path: packages/abis/dist/
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
           name: 'common-dist-${{github.sha}}'
           path: packages/common/dist/
       - name: Download build artifacts
@@ -150,6 +161,10 @@ jobs:
         with:
           name: 'bridge-sdk-dist-${{github.sha}}'
           path: packages/bridge-sdk/dist/
+      - uses: JS-DevTools/npm-publish@v3
+        with:
+          package: packages/abis
+          token: ${{ secrets.NPM_TOKEN }}
       - uses: JS-DevTools/npm-publish@v3
         with:
           package: packages/common

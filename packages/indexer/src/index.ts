@@ -17,7 +17,7 @@ import {
   RewardAddressUpdate,
 } from 'ponder:schema'
 import { decodeFunctionData, parseAbi, type Hex } from 'viem'
-import { feeManager as feeManagerAbi } from '@gibs/bridge-sdk/abis'
+import { feeManager as feeManagerAbi } from '@gibs/abis'
 import { parseAMBMessage } from './message'
 import { getInfoBy, createOrderId, createTransactionOrderId } from './utils'
 import { ChainId } from '@gibs/bridge-sdk'

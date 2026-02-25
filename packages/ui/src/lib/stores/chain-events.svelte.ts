@@ -1,6 +1,6 @@
 import * as input from './input.svelte'
 import { tokenBridgeInfo, type TokenBridgeInfo, minBridgeAmountIn as minBridgeAmountInSdk } from '@gibs/bridge-sdk/chain-info'
-import * as abis from '@gibs/bridge-sdk/abis'
+import * as abis from '@gibs/abis'
 import { Chains, nativeAssetOut } from '@gibs/bridge-sdk/config'
 import type { Token } from '@gibs/bridge-sdk/types'
 import type { BridgeKey } from '@gibs/bridge-sdk/types'
