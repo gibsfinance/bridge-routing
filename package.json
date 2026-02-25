@@ -38,7 +38,8 @@
   },
   "keywords": [],
   "resolutions": {
-    "esbuild": "0.25.0"
+    "esbuild": "0.25.0",
+    "ox": "0.9.6"
   },
   "author": "",
   "license": "ISC",
