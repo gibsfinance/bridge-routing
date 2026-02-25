@@ -9,9 +9,11 @@
     token: Token
     bridgeKey: BridgeKey
     onSwapClick?: () => void
+    /** formatted minimum output (e.g. "1,234.5678") shown on the swap button when quote is available */
+    swapAmountOutFormatted?: string | null
   }
 
-  const { token, bridgeKey, onSwapClick }: BridgedTokenWarningProps = $props()
+  const { token, bridgeKey, onSwapClick, swapAmountOutFormatted = null }: BridgedTokenWarningProps = $props()
 
   const recommendedToken = $derived(getRecommendedSwapToken(bridgeKey))
   const fromChainName = $derived.by(() => {
@@ -75,11 +77,12 @@
               class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2"
             >
               <Icon icon="mdi:swap-horizontal" class="text-xl" />
-              Swap to {recommendedToken.symbol} first
+              {#if swapAmountOutFormatted}
+                Swap → ≥{swapAmountOutFormatted} {recommendedToken.symbol}
+              {:else}
+                Swap to {recommendedToken.symbol} first
+              {/if}
             </Button>
-            <p class="text-xs text-surface-600 dark:text-surface-400 mt-2">
-              Opens {fromChainName === 'Ethereum' ? 'Uniswap' : fromChainName === 'BSC' ? 'PancakeSwap' : 'PulseX'} in a new tab
-            </p>
           </div>
         {/if}
 

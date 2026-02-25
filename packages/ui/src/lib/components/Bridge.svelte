@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FeeType } from '@gibs/bridge-sdk/fee-type'
-  import { canChangeUnwrap } from '@gibs/bridge-sdk/config'
+  import { canChangeUnwrap, uniV2Routers } from '@gibs/bridge-sdk/config'
   import { getAddress, isAddress, zeroAddress, type Hex } from 'viem'
   import { nativeAssetOut } from '@gibs/bridge-sdk/config'
   import { assetOutKey } from '@gibs/bridge-sdk/settings'
@@ -11,12 +11,14 @@
   import * as nav from '../stores/nav.svelte'
   import * as customTokens from '../stores/custom-tokens.svelte'
   import * as transactions from '../stores/transactions'
+  import { formatUnits } from 'viem'
   import { page } from '../stores/app-page.svelte'
   import {
     bridgeSettings,
     updateAssetIn,
     updateAssetOut,
     loadPriceCorrective,
+    loadSwapQuote,
   } from '../stores/bridge-settings.svelte'
   import { bridgeKey, loadFeeFor, unwrap } from '../stores/input.svelte'
   import { accountState } from '../stores/auth/AuthProvider.svelte'
@@ -32,6 +34,7 @@
     isAlreadyBridgedToken,
     getRecommendedSwapToken,
     bypassStore,
+    markSwapCompleted,
   } from '../stores/bridged-token-detection.svelte'
 
   import FromNetwork from './FromNetwork.svelte'
@@ -224,26 +227,98 @@
     isAlreadyBridgedToken(bridgeSettings.assetIn.value, bridgeKey.value) && !bypassStore.bypassed,
   )
 
-  const handleSwapClick = () => {
-    const [, fromChain] = bridgeKey.value
-    const fromChainId = Number(fromChain)
-    const token = bridgeSettings.assetIn.value
+  // Load swap quote (getAmountsOut) when a swap path is available
+  $effect(() => {
+    const swapPaths = bridgeSettings.swapPaths
+    const amountToBridge = bridgeSettings.amountToBridge
+    if (!swapPaths || !amountToBridge) return
+    const quoteLoader = loadSwapQuote({
+      fromChain: bridgeKey.fromChain,
+      swapPaths,
+      amountToBridge,
+    })
+    quoteLoader.promise.then((quote) => {
+      if (quoteLoader.controller.signal.aborted) return
+      bridgeSettings.swapQuote.value = quote ?? null
+    })
+    return quoteLoader.cleanup
+  })
 
-    // Open appropriate DEX based on chain
-    let dexUrl = ''
-    if (fromChainId === 1) {
-      // Ethereum → Uniswap
-      dexUrl = `https://app.uniswap.org/swap?inputCurrency=${token?.address}&outputCurrency=ETH`
-    } else if (fromChainId === 56) {
-      // BSC → PancakeSwap
-      dexUrl = `https://pancakeswap.finance/swap?inputCurrency=${token?.address}&outputCurrency=BNB`
-    } else if (fromChainId === 369 || fromChainId === 943) {
-      // PulseChain → PulseX
-      dexUrl = `https://pulsex.com/swap?inputCurrency=${token?.address}&outputCurrency=PLS`
+  // Load the router allowance so we know whether an approval tx is needed
+  $effect(() => {
+    const account = accountState.address
+    const assetIn = bridgeSettings.assetIn.value
+    const swapPaths = bridgeSettings.swapPaths
+    const fromChainId = Number(bridgeKey.fromChain)
+    const routerAddress = uniV2Routers[bridgeKey.fromChain]?.[0]
+    if (!account || !isAddress(account) || !assetIn || !swapPaths || !routerAddress || !originationTicker) return
+    const result = transactions.loadAllowance({
+      account: account as Hex,
+      token: assetIn.address as Hex,
+      spender: routerAddress as Hex,
+      chainId: fromChainId,
+    })
+    result.promise.then((approval) => {
+      if (result.controller.signal.aborted) return
+      bridgeSettings.swapRouterApproval.value = approval ?? 0n
+    })
+    return result.cleanup
+  })
+
+  // Formatted swap output for display in the warning banner
+  const swapAmountOutFormatted = $derived.by(() => {
+    const minOut = bridgeSettings.swapMinAmountOut
+    if (!minOut) return null
+    // Wrapped native tokens always use 18 decimals
+    const formatted = Number(formatUnits(minOut, 18)).toLocaleString(undefined, {
+      maximumFractionDigits: 4,
+    })
+    return formatted
+  })
+
+  const handleSwapClick = async () => {
+    const swapInputs = bridgeSettings.swapTransactionInputs
+    const account = accountState.address
+    const fromChainId = Number(bridgeKey.fromChain)
+    const latestBlock = blocks.get(fromChainId)?.get('latest')?.block
+    const assetIn = bridgeSettings.assetIn.value
+    const routerAddress = uniV2Routers[bridgeKey.fromChain]?.[0] as Hex | undefined
+
+    if (!swapInputs || !account || !latestBlock || !assetIn || !routerAddress) {
+      // Fallback: open external DEX when on-chain swap isn't ready
+      const tokenAddress = assetIn?.address
+      const dexUrls: Record<number, string> = {
+        1: `https://app.uniswap.org/swap?inputCurrency=${tokenAddress}&outputCurrency=ETH`,
+        56: `https://pancakeswap.finance/swap?inputCurrency=${tokenAddress}&outputCurrency=BNB`,
+        369: `https://pulsex.com/swap?inputCurrency=${tokenAddress}&outputCurrency=PLS`,
+        943: `https://pulsex.com/swap?inputCurrency=${tokenAddress}&outputCurrency=PLS`,
+      }
+      const url = dexUrls[fromChainId]
+      if (url) window.open(url, '_blank')
+      return
     }
 
-    if (dexUrl) {
-      window.open(dexUrl, '_blank')
+    try {
+      // Raise router allowance if needed
+      await transactions.checkAndRaiseApproval({
+        token: assetIn.address as Hex,
+        spender: routerAddress,
+        chainId: fromChainId,
+        minimum: bridgeSettings.amountToBridge,
+        latestBlock,
+      })
+      // Execute the swap
+      const hash = await transactions.sendTransaction({
+        ...swapInputs,
+        ...transactions.options(fromChainId, latestBlock),
+        account: account as Hex,
+      })
+      await transactions.wait(hash, fromChainId)
+      markSwapCompleted(assetIn.address)
+      // Clear the input so the user can enter a fresh amount for bridging
+      input.amountIn.value = null
+    } catch (err) {
+      console.error('pre-bridge swap failed', err)
     }
   }
 </script>
@@ -270,6 +345,7 @@
             token={bridgeSettings.assetIn.value}
             bridgeKey={bridgeKey.value}
             onSwapClick={handleSwapClick}
+            swapAmountOutFormatted={swapAmountOutFormatted}
           />
         {/if}
         {#if page.details === settings.details.SHOW}

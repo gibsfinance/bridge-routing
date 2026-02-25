@@ -70,6 +70,7 @@ export const nativeRouterExtraInput = parseAbi([
 /** the abi for the univ2 router */
 export const univ2Router = parseAbi([
   'function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns(uint256[] memory)',
+  'function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] calldata path, address to, uint256 deadline) external returns(uint256[] memory amounts)',
 ])
 /** the abi for the fee delivery struct */
 export const feeDeliveryStruct = parseAbiParameters('(address, uint256, uint256, uint256)')

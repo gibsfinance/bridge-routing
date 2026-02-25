@@ -6,10 +6,12 @@ import {
   type Block,
   getContract,
   erc20Abi,
+  encodeFunctionData,
 } from 'viem'
 import { FeeType } from '@gibs/bridge-sdk/fee-type'
 import type { Token, BridgeKey } from '@gibs/bridge-sdk/types'
-import { nativeAssetOut, Chains, canChangeUnwrap, toChain } from '@gibs/bridge-sdk/config'
+import { nativeAssetOut, Chains, canChangeUnwrap, toChain, uniV2Routers } from '@gibs/bridge-sdk/config'
+import { univ2Router } from '@gibs/bridge-sdk/abis'
 import * as imageLinks from '@gibs/bridge-sdk/image-links'
 import { chainsMetadata } from '@gibs/bridge-sdk/chains'
 import { multicallErc20 } from '@gibs/common/erc20'
@@ -193,6 +195,60 @@ export class BridgeSettings {
       assetInAddress: this.assetInAddress ?? null,
     })
   })
+
+  // ---- DEX swap (pre-bridge swap for already-bridged tokens) ----
+  /** user-adjustable slippage for the pre-bridge swap, in basis points (default 100 = 1%) */
+  swapSlippageBasisPoints = $state(100n)
+  /** async result of getAmountsOut for the pre-bridge swap path */
+  swapQuote = new NullableProxyStore<readonly bigint[]>()
+  /** allowance the user has granted to the DEX router for the input token */
+  swapRouterApproval = new NullableProxyStore<bigint>()
+
+  /** wrapped native token address on the source chain (e.g. WPLS on PulseChain) */
+  nativeTokenAddress = $derived.by((): Hex | null => {
+    const [, fromChain] = input.bridgeKey.value
+    return nativeAssetOut[fromChain] ?? null
+  })
+
+  /** [inputToken, wrappedNativeToken] swap path, null if swap is not applicable */
+  swapPaths = $derived.by((): [Hex, Hex] | null => {
+    const assetInAddress = this.assetIn.value?.address
+    const nativeAddr = this.nativeTokenAddress
+    if (!assetInAddress || assetInAddress === zeroAddress || !nativeAddr) return null
+    if (getAddress(assetInAddress) === getAddress(nativeAddr)) return null
+    return [assetInAddress as Hex, nativeAddr]
+  })
+
+  /** minimum output amount for the swap after applying slippage */
+  swapMinAmountOut = $derived.by((): bigint | null => {
+    const quote = this.swapQuote.value
+    if (!quote || quote.length < 2) return null
+    const amountOut = quote[quote.length - 1]!
+    return (amountOut * (10_000n - this.swapSlippageBasisPoints)) / 10_000n
+  })
+
+  /** encoded calldata for swapExactTokensForTokens on the DEX router, null if not ready */
+  get swapTransactionInputs() {
+    const paths = this.swapPaths
+    const amount = this.amountToBridge
+    const minOut = this.swapMinAmountOut
+    const account = accountState.address as Hex
+    const [, fromChain] = input.bridgeKey.value
+    const routerAddress = uniV2Routers[fromChain]?.[0] as Hex | undefined
+    if (!paths || !amount || amount === 0n || minOut === null || !account || !routerAddress) return null
+    // deadline: 20 minutes from now
+    const deadline = BigInt(Math.floor(Date.now() / 1000) + 1200)
+    return {
+      to: routerAddress,
+      value: 0n,
+      data: encodeFunctionData({
+        abi: univ2Router,
+        functionName: 'swapExactTokensForTokens',
+        args: [amount, minOut, paths, account, deadline],
+      }),
+    }
+  }
+
   requiresDestinationDataParam = $derived.by(() => {
     const bridgePathway = this.bridgePathway
     return bridgePathway?.requiresDelivery
@@ -596,6 +652,34 @@ export const loadPriceCorrective = ({
         results,
         oneToken,
       })
+    },
+  )()
+}
+
+/** fetches a getAmountsOut quote for swapping inputToken → wrappedNative via the first listed DEX router */
+export const loadSwapQuote = ({
+  fromChain,
+  swapPaths,
+  amountToBridge,
+}: {
+  fromChain: Chains
+  swapPaths: [Hex, Hex] | null
+  amountToBridge: bigint
+}) => {
+  const routerAddress = uniV2Routers[fromChain]?.[0] as Hex | undefined
+  if (!routerAddress || !swapPaths || !amountToBridge || amountToBridge === 0n) {
+    return resolved<readonly bigint[] | null>(null)
+  }
+  const client = input.clientFromChain(Number(fromChain))
+  const contract = getContract({
+    address: routerAddress,
+    abi: univ2Router,
+    client,
+  })
+  return loading.loadsAfterTick<readonly bigint[] | null>(
+    'swap-quote',
+    async () => {
+      return await contract.read.getAmountsOut([amountToBridge, swapPaths]).catch(() => null)
     },
   )()
 }
