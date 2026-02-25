@@ -28,3 +28,17 @@ vite.config.d.ts
 tsconfig.tsbuildinfo
 
 postgres-data
+
+# Yarn internal state (not needed with nodeLinker: node-modules)
+.yarn/install-state.gz
+
+# AI tools
+.claude/
+.serena/
+
+# SvelteKit generated
+.svelte-kit/
+
+# Test coverage
+coverage/
+**/coverage/

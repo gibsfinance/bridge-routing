@@ -536,8 +536,9 @@ type SingleUserRequest = {
       messageId: Hex
       messageHash: Hex
       signatures: Hex[] | null
+      // Ponder serializes bigint columns as decimal strings over GraphQL
       requiredSignatures: {
-        value: number
+        value: string
       } | null
     }[]
   }
@@ -679,7 +680,11 @@ export const liveBridgeStatus = loading.loadsAfterTick<
       return params
     }
     const count = !userRequest ? 0 : userRequest.signatures?.length ?? 0
-    const requiredSignatures = userRequest?.requiredSignatures?.value ?? null
+    // Coerce from Ponder's bigint-as-string to number; null means the indexer
+    // hasn't yet seen a RequiredSignaturesChanged event for this validator contract.
+    const requiredSignatures = userRequest?.requiredSignatures?.value != null
+      ? Number(userRequest.requiredSignatures.value)
+      : null
     return {
       ...params,
       messageId: userRequest.messageId,
@@ -724,9 +729,11 @@ export const liveBridgeStatus = loading.loadsAfterTick<
         deliveredHash: deliverys.items[0].transactionHash,
       }
     } else {
-      // Check if all required signatures are collected
+      // Check if all required signatures are collected per the indexer's value.
+      // Guard on null: if the indexer hasn't seen a RequiredSignaturesChanged
+      // event yet, stay at VALIDATING rather than blocking permanently.
       const requiredSignatures = params.requiredSignatures ?? null
-      if (requiredSignatures !== null && params.count === requiredSignatures) {
+      if (requiredSignatures !== null && (params.count ?? 0) >= requiredSignatures) {
         return {
           ...params,
           status: bridgeStatuses.AFFIRMED,

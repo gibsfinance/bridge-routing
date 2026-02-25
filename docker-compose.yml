@@ -27,7 +27,7 @@ services:
       context: .
     networks:
       - gibsfinance
-    command: yarn workspace indexer run dev
+    command: yarn workspace indexer run start
     ports:
       - 42068:42069
     depends_on:
@@ -49,6 +49,7 @@ services:
       - PONDER_RPC_URL_56=${PONDER_RPC_URL_56:-}
       - PONDER_RPC_URL_11155111=${PONDER_RPC_URL_11155111:-}
       - DATABASE_SCHEMA=public
+      - DEPLOYMENT_ID=${DEPLOYMENT_ID:-public}
       - PONDER_LOG_LEVEL=${PONDER_LOG_LEVEL:-debug}
 
   tx-analyzer:
