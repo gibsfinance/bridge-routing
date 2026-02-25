@@ -41,7 +41,6 @@
   "keywords": [],
   "resolutions": {
     "esbuild": "0.25.0",
-    "ox": "0.9.6",
     "@reown/appkit": "1.8.1"
   },
   "author": "",
