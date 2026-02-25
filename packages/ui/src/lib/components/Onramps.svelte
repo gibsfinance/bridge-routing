@@ -10,7 +10,6 @@
   import { accountState, modal } from '../stores/auth/AuthProvider.svelte'
 
   import Button from './Button.svelte'
-  import LifiWidget from './bridges/LifiWidget.svelte'
   import Image from './Image.svelte'
   import { page } from '../stores/app-page.svelte'
   import { settings, onramps } from '../stores/settings.svelte'
@@ -163,5 +162,7 @@
 </Popover>
 
 {#if onboardShowOnramp === 'lifi'}
-  <LifiWidget close={() => updateOnrampProviderStates(false, null)} />
+  {#await import('./bridges/LifiWidget.svelte') then { default: LifiWidget }}
+    <LifiWidget close={() => updateOnrampProviderStates(false, null)} />
+  {/await}
 {/if}
