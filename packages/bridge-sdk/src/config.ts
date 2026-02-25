@@ -409,6 +409,15 @@ export const chains = {
 
 export const chainIds = Object.values(chains)
 
+/** Start blocks aligned with when bridge validators began operating — canonical reference for all ponder indexers in this monorepo. */
+export const startBlocks: Record<keyof typeof chains, number> = {
+  ethereum: 17_264_119,
+  bsc: 28_987_313,
+  pulsechain: 17_268_302,
+  pulsechainV4: 16_564_237,
+  sepolia: 3_331_901,
+}
+
 export type ChainId = (typeof chainIds)[number]
 
 export type Side = 'home' | 'foreign'

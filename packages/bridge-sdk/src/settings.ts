@@ -701,7 +701,7 @@ export const transactionInputs = ({
   if (
     !recipient ||
     !isAddress(recipient) ||
-    account === zeroAddress
+    recipient === zeroAddress
   ) {
     console.log('no recipient')
     return null

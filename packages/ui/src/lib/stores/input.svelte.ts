@@ -21,6 +21,7 @@ import { page } from './app-page.svelte'
 import { settingKey, settings, type PathwayExtendableConfig } from './fee-manager.svelte'
 import {
   blacklist,
+  chainIdAddressBlacklist,
   isProd,
 } from '../stores/config.svelte'
 import {
@@ -228,7 +229,11 @@ export const loadLists = loading.loadsAfterTick<Token[] | null>(
       ..._(lists)
         .map('tokens')
         .flatten()
-        .filter((t) => !blacklist.has(getAddress(t.address as Hex)))
+        .filter((t) => {
+          const checksummedAddress = getAddress(t.address as Hex)
+          const chainIdAddressKey = `${t.chainId}/${checksummedAddress.toLowerCase()}`
+          return !blacklist.has(checksummedAddress) && !chainIdAddressBlacklist.has(chainIdAddressKey)
+        })
         .compact()
         .reduce((agg, t) => {
           const key = `${t.chainId}/${t.address}`.toLowerCase()

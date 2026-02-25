@@ -4,19 +4,11 @@ import ForeignAMBAbi from './abis/ForeignAMB'
 import BaseBridgeValidatorsAbi from './abis/BaseBridgeValidators'
 import { toTransport, accessContracts } from './src/utils'
 import BasicOmnibridge from './abis/BasicOmnibridge'
-import { chains, Providers } from '@gibs/bridge-sdk/config'
+import { chains, startBlocks, Providers } from '@gibs/bridge-sdk/config'
 import { FeeManagerAbi } from './abis/FeeManager'
 import BasicOmnibridgeExtra from './abis/BasicOmnibridgeExtra'
 
 Error.stackTraceLimit = Infinity
-
-const startBlocks = {
-  pulsechain: 17_268_302,
-  pulsechainV4: 16_564_237,
-  ethereum: 17_264_119,
-  sepolia: 3_331_901,
-  bsc: 28_987_313,
-}
 
 const chain = (chain: keyof typeof chains) => {
   return {
@@ -25,6 +17,38 @@ const chain = (chain: keyof typeof chains) => {
     pollingInterval: 5_000,
     maxRequestsPerSecond: 1_000,
   }
+}
+
+// ---------------------------------------------------------------------------
+// Cache FeeManager contract addresses — shared between the event-based
+// `FeeManager` contract entry and the transaction-based `FeeManagerTracker`
+// accounts entry so we never issue the same RPC lookup twice.
+// ---------------------------------------------------------------------------
+
+const feeManagerAddresses = {
+  pulsechain: [
+    ...await accessContracts({
+      provider: Providers.PULSECHAIN,
+      from: chains.pulsechain,
+      to: chains.ethereum,
+      side: 'home',
+      type: 'feeManager',
+    }),
+    ...await accessContracts({
+      provider: Providers.TOKENSEX,
+      from: chains.pulsechain,
+      to: chains.bsc,
+      side: 'home',
+      type: 'feeManager',
+    }),
+  ],
+  pulsechainV4: await accessContracts({
+    provider: Providers.PULSECHAIN,
+    from: chains.pulsechainV4,
+    to: chains.sepolia,
+    side: 'home',
+    type: 'feeManager',
+  }),
 }
 
 export default createConfig({
@@ -336,32 +360,32 @@ export default createConfig({
       chain: {
         pulsechain: {
           startBlock: startBlocks.pulsechain,
-          address: [
-            ...await accessContracts({
-              provider: Providers.PULSECHAIN,
-              from: chains.pulsechain,
-              to: chains.ethereum,
-              side: 'home',
-              type: 'feeManager',
-            }),
-            ...await accessContracts({
-              provider: Providers.TOKENSEX,
-              from: chains.pulsechain,
-              to: chains.bsc,
-              side: 'home',
-              type: 'feeManager',
-            }),
-          ],
+          address: feeManagerAddresses.pulsechain,
         },
         pulsechainV4: {
           startBlock: startBlocks.pulsechainV4,
-          address: await accessContracts({
-            provider: Providers.PULSECHAIN,
-            from: chains.pulsechainV4,
-            to: chains.sepolia,
-            side: 'home',
-            type: 'feeManager',
-          }),
+          address: feeManagerAddresses.pulsechainV4,
+        },
+      },
+    },
+  },
+
+  accounts: {
+    /**
+     * Tracks all transactions sent to FeeManager contracts so we can detect
+     * addRewardAddress / removeRewardAddress calls. No events are emitted by
+     * these functions, so transaction-level indexing is the only option.
+     */
+    FeeManagerTracker: {
+      includeTransactionReceipts: true,
+      chain: {
+        pulsechain: {
+          address: feeManagerAddresses.pulsechain,
+          startBlock: startBlocks.pulsechain,
+        },
+        pulsechainV4: {
+          address: feeManagerAddresses.pulsechainV4,
+          startBlock: startBlocks.pulsechainV4,
         },
       },
     },

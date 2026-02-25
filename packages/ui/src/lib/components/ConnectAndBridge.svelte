@@ -25,9 +25,10 @@
 
   interface Props {
     showConfirmationModal?: boolean
+    blockDueToBridgedToken?: boolean
   }
 
-  const { showConfirmationModal = false }: Props = $props()
+  const { showConfirmationModal = false, blockDueToBridgedToken = false }: Props = $props()
   const { shouldDeliver } = input
 
   const tokenBalance = $derived(fromTokenBalance.value ?? 0n)
@@ -113,6 +114,10 @@
   const disabled = $derived.by(() => {
     if (!accountState?.address) {
       return false
+    }
+    // Block if bridged token warning is shown and not bypassed
+    if (blockDueToBridgedToken && skipApproval) {
+      return true
     }
     if (input.recipientInput.value !== input.recipient.value) {
       // console.log('recipient input', input.recipientInput.value, input.recipient.value)

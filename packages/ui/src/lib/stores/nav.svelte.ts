@@ -49,5 +49,5 @@ const queryStringFromObject = (params?: Record<string, string> | URLSearchParams
 }
 
 const filterEntries = (entries: [string, string][], whitelist?: string[]) => {
-  return entries.filter(([key]) => !whitelist || !whitelist.includes(key))
+  return entries.filter(([key]) => !whitelist || whitelist.includes(key))
 }

@@ -497,6 +497,8 @@ export const bridgeStatuses = {
   DELIVERED: 'DELIVERED',
 } as const
 
+// Number of validator signatures required for bridge affirmation
+
 export type BridgeStatus = keyof typeof bridgeStatuses
 export type LiveBridgeStatusParams = {
   hash: Hex
@@ -517,6 +519,7 @@ export type ContinuedLiveBridgeStatusParams = LiveBridgeStatusParams & {
   messageId?: Hex
   deliveredHash?: Hex
   count?: number
+  requiredSignatures?: number | null
 }
 const statusList = Object.values(bridgeStatuses)
 export const statusToIndex = (status: BridgeStatus) => {
@@ -533,6 +536,9 @@ type SingleUserRequest = {
       messageId: Hex
       messageHash: Hex
       signatures: Hex[] | null
+      requiredSignatures: {
+        value: number
+      } | null
     }[]
   }
 }
@@ -543,6 +549,9 @@ const singleUserRequest = gql`
       items {
         messageId
         signatures
+        requiredSignatures {
+          value
+        }
       }
     }
   }
@@ -670,11 +679,13 @@ export const liveBridgeStatus = loading.loadsAfterTick<
       return params
     }
     const count = !userRequest ? 0 : userRequest.signatures?.length ?? 0
+    const requiredSignatures = userRequest?.requiredSignatures?.value ?? null
     return {
       ...params,
       messageId: userRequest.messageId,
       status: bridgeStatuses.FINALIZED,
       count,
+      requiredSignatures,
     }
   },
   async (params: ContinuedLiveBridgeStatusParams) => {
@@ -713,7 +724,9 @@ export const liveBridgeStatus = loading.loadsAfterTick<
         deliveredHash: deliverys.items[0].transactionHash,
       }
     } else {
-      if (params.count === 5) {
+      // Check if all required signatures are collected
+      const requiredSignatures = params.requiredSignatures ?? null
+      if (requiredSignatures !== null && params.count === requiredSignatures) {
         return {
           ...params,
           status: bridgeStatuses.AFFIRMED,

@@ -12,5 +12,6 @@
     "moduleDetection": "force",
     "moduleResolution": "nodenext"
   },
-  "include": ["src/**/*.ts", "src/**/*.js"]
+  "include": ["src/**/*.ts", "src/**/*.js"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
 }

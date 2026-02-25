@@ -35,9 +35,27 @@ export const outputRouter = parseAbi([
 export const outputBridge = parseAbi(['function bridgeContract() external view returns(address)'])
 /** the abi for the fee manager */
 export const feeManager = parseAbi([
-  'function HOME_TO_FOREIGN_FEE() public view returns(bytes32)',
-  'function FOREIGN_TO_HOME_FEE() public view returns(bytes32)',
-  'function getFee(bytes32, address) public view returns(uint256)',
+  // ---- Events ----
+  'event FeeUpdated(bytes32 feeType, address indexed token, uint256 fee)',
+  // ---- Fee type identifiers ----
+  'function FOREIGN_TO_HOME_FEE() view returns (bytes32)',
+  'function HOME_TO_FOREIGN_FEE() view returns (bytes32)',
+  // ---- Fee calculation & distribution ----
+  'function calculateFee(bytes32 feeType, address token, uint256 value) view returns (uint256)',
+  'function distributeFee(address token)',
+  'function getFee(bytes32 feeType, address token) view returns (uint256)',
+  'function setFee(bytes32 feeType, address token, uint256 fee)',
+  // ---- Reward address management (no events — call rewardAddressList() to snapshot) ----
+  'function addRewardAddress(address addr)',
+  'function isRewardAddress(address addr) view returns (bool)',
+  'function removeRewardAddress(address addr)',
+  'function rewardAddressCount() view returns (uint256)',
+  'function rewardAddressList() view returns (address[])',
+  // ---- Admin & introspection ----
+  'function getModuleInterfacesVersion() pure returns (uint64 major, uint64 minor, uint64 patch)',
+  'function mediator() view returns (address)',
+  'function owner() view returns (address)',
+  'function transferOwnership(address newOwner)',
 ])
 /** the abi for the native router */
 export const nativeRouter = parseAbi([

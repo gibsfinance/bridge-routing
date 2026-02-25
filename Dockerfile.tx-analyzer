@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1
+FROM node:22.11.0
+
+WORKDIR /app
+
+COPY ./package.json /app/package.json
+COPY ./yarn.lock /app/yarn.lock
+COPY ./.yarnrc.yml /app/.yarnrc.yml
+COPY ./packages/ /app/packages/
+
+ENV YARN_VERSION=4.10.3
+RUN corepack enable && corepack prepare yarn@${YARN_VERSION}
+
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# Cache yarn packages across rebuilds
+RUN --mount=type=cache,target=/root/.yarn/berry/cache \
+    yarn install --immutable
+
+# Only build the two packages tx-analyzer depends on at runtime
+RUN yarn run common:build && yarn run bridge-sdk:build
+
+CMD ["yarn", "workspace", "@gibs/tx-analyzer", "run", "dev"]

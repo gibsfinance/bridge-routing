@@ -2,8 +2,10 @@
   import type { Token } from '@gibs/bridge-sdk/types'
   import _ from 'lodash'
   import type { Snippet } from 'svelte'
+  import Icon from '@iconify/svelte'
 
   import type { InputValue } from '../types.svelte'
+  import Tooltip from './Tooltip.svelte'
   import { accountState } from '../stores/auth/AuthProvider.svelte'
   import { largeInputFontScaler } from '../stores/font-scaler'
   import { humanReadableNumber } from '../stores/utils'
@@ -19,6 +21,7 @@
   type Props = {
     id?: string
     label?: string
+    labelTooltip?: string
     token?: Token | null
     showRadio?: boolean
     disabled?: boolean
@@ -44,6 +47,7 @@
     id = _.uniqueId('section-input-'),
     token = null,
     label,
+    labelTooltip,
     oninput,
     invalidValue = false,
     readonlyInput = false,
@@ -85,8 +89,19 @@
 <Section {id} {focused} disabled={sectionDisabled} {compressed} {onclick}>
   {#if !compressed}
     <div class="flex flex-row justify-between w-full h-5">
-      <span class="text-sm text-gray-500 dark:text-gray-400"
-        >{#if !compressed}{label}{/if}</span>
+      <span class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+        {#if !compressed}{label}{/if}
+        {#if labelTooltip}
+          <Tooltip placement="top">
+            {#snippet trigger()}
+              <Icon icon="mdi:information-outline" class="text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 cursor-help" />
+            {/snippet}
+            {#snippet content()}
+              {labelTooltip}
+            {/snippet}
+          </Tooltip>
+        {/if}
+      </span>
       {@render radio?.()}
     </div>
   {/if}

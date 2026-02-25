@@ -46,9 +46,43 @@ services:
       - PONDER_RPC_URL_943=https://rpc.v4.testnet.pulsechain.com
       - PONDER_RPC_URL_369=https://rpc-pulsechain.g4mm4.io
       - PONDER_RPC_URL_1=https://rpc-ethereum.g4mm4.io
-      - PONDER_RPC_URL_56=${PONDER_RPC_URL_56}
-      - PONDER_RPC_URL_11155111=${PONDER_RPC_URL_11155111}
+      - PONDER_RPC_URL_56=${PONDER_RPC_URL_56:-}
+      - PONDER_RPC_URL_11155111=${PONDER_RPC_URL_11155111:-}
       - DATABASE_SCHEMA=public
+      - PONDER_LOG_LEVEL=${PONDER_LOG_LEVEL:-debug}
+
+  tx-analyzer:
+    container_name: gibsfinance-tx-analyzer
+    build:
+      dockerfile: Dockerfile.tx-analyzer
+      context: .
+    networks:
+      - gibsfinance
+    ports:
+      - 42070:42069
+    depends_on:
+      - postgres
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+    volumes:
+      - ./packages:/app/packages
+      - ./package.json:/app/package.json
+      - ./yarn.lock:/app/yarn.lock
+    environment:
+      - NODE_OPTIONS="--max-old-space-size=4096"
+      - DATABASE_URL=postgresql://indexer:password@postgres:5432/indexer
+      - DATABASE_SCHEMA=tx_analyzer
+      - PONDER_RPC_URL=${PONDER_RPC_URL:-}
+      - PONDER_RPC_URL_1=${PONDER_RPC_URL_1:-https://rpc-ethereum.g4mm4.io}
+      - PONDER_RPC_URL_56=${PONDER_RPC_URL_56:-}
+      - PONDER_RPC_URL_369=${PONDER_RPC_URL_369:-https://rpc-pulsechain.g4mm4.io}
+      - PONDER_RPC_URL_943=${PONDER_RPC_URL_943:-https://rpc.v4.testnet.pulsechain.com}
+      - PONDER_RPC_URL_11155111=${PONDER_RPC_URL_11155111:-}
+      - INDEXER_URL=https://staging.indexer.gibs.finance/graphql
+      - TRACKED_ADDRESSES=${TRACKED_ADDRESSES:-}
+      - TRACKED_CHAIN_ID=${TRACKED_CHAIN_ID:-}
       - PONDER_LOG_LEVEL=${PONDER_LOG_LEVEL:-debug}
 
   ui:

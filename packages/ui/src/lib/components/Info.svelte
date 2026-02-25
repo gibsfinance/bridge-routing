@@ -61,13 +61,13 @@
     </Button>
   </a>
   <a
-    href="https://t.me/gibsfinance"
+    href="https://smp14.simplex.im/a#XIbVycWv4OtQ7jR21u2rU0MVXoWj4I7YEk-w4YSEWf8"
     target="_blank"
     class="mr-2"
-    aria-label="a link to the telegram channel">
+    aria-label="a link to the simplex chat">
     <Button
       class="border-2 border-slate-800 dark:border-slate-200 rounded-full size-8 flex justify-center items-center hover:text-slate-500">
-      <Icon icon="line-md:telegram" height="1.25em" width="1.25em" />
+      <Icon icon="simple-icons:simplex" height="1.25em" width="1.25em" />
     </Button>
   </a>
   <a href={`#${page.value}?mode=simple`} target="_blank" class="mr-2" aria-label="embed page">

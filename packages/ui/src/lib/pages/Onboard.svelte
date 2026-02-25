@@ -28,7 +28,7 @@
               class:opacity-70={!onboardActive}
               onclick={() => {
                 page.setParam('stage', settings.stage.ONBOARD)
-              }}>Onboard</button
+              }}>Bridge</button
             >/<button
               type="button"
               class="dark:text-shadow-xs dark:text-shadow-white"

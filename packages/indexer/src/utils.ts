@@ -266,6 +266,24 @@ export const createOrderId = (context: Context, event: Event): bigint => {
   return (timestamp << 32n) | (txIndex << 16n) | (logIndex << 8n) | chainId
 }
 
+/**
+ * Creates a sortable bigint order ID for transaction-level events (no log).
+ * Uses the same bit-packing strategy as createOrderId but omits logIndex since
+ * transaction handlers have no event.log.
+ *
+ * Layout: timestamp (high bits) | transactionIndex | chainId (low bits)
+ */
+export const createTransactionOrderId = (
+  context: Context,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  event: any,
+): bigint => {
+  const timestamp = BigInt(event.block.timestamp)
+  const txIndex = BigInt(event.transaction.transactionIndex)
+  const chainId = BigInt(context.chain.id)
+  return (timestamp << 32n) | (txIndex << 16n) | chainId
+}
+
 export type InfoSelectionOption = 'omni' | 'amb' | 'validator' | 'feeManager'
 
 export type ContractsAccessInputs = {

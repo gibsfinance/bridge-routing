@@ -208,9 +208,26 @@
         ...assetOut,
         logoURI: bridgeSettings.assetIn.value?.logoURI ?? null,
       })
-      page.setParams({
-        pulsexTokenIn: assetOut.address as Hex,
-      })
+
+      // Check if pulsexTokenIn needs to be set/updated
+      // Always calculate what it should be based on bridgeTokenIn
+      const calculatedPulsexTokenIn = getAddress(assetOut.address as Hex)
+      const currentPulsexTokenIn = page.queryParams.get('pulsexTokenIn')
+
+      // Normalize current value for comparison (handles checksumming)
+      const normalizedCurrent = currentPulsexTokenIn
+        ? getAddress(currentPulsexTokenIn as Hex)
+        : null
+
+      // Only update if different (prevents loops and duplicate history entries)
+      if (normalizedCurrent !== calculatedPulsexTokenIn) {
+        // Check signal again before modifying URL (prevents setting after cleanup)
+        if (link.controller.signal.aborted) return
+
+        // Always use replaceParam - pulsexTokenIn is derived from bridgeTokenIn,
+        // not a separate user action, so it shouldn't create a new history entry
+        page.replaceParam('pulsexTokenIn', calculatedPulsexTokenIn)
+      }
     })
     return link.cleanup
   })
@@ -534,8 +551,9 @@
 </script>
 
 <Onramps />
+
 <SectionInput
-  label="Bridge to Pulsechain"
+  label="Bridge to PulseChain"
   focused={bridgingToPulsechain}
   token={bridgeTokenIn}
   value={amountIn.value}
@@ -600,7 +618,7 @@
     }} />
 {/if}
 <SectionInput
-  label="Swap on PulseX"
+  label="Swap on PulseX (Input)"
   focused={true}
   token={bridgingToPulsechain ? bridgeTokenOut : pulsexTokenIn}
   value={bridgingToPulsechain ? amountOutputFromBridge : amountInputToPulsex}
@@ -655,7 +673,8 @@
   {/snippet}
 </SectionInput>
 <SectionInput
-  label="Output"
+  label="Final Output"
+  labelTooltip="Once your bridge completes, you'll automatically move to Step 2 to swap your tokens on PulseX"
   token={finalTokenOutput}
   value={amountOutputFromPulsex ?? 0n}
   focused={swappingOnPulsex}

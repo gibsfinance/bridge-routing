@@ -10,6 +10,7 @@ import {
 } from 'viem'
 import _ from 'lodash'
 import type { Call } from './types.js'
+import { ensureResult } from './assert.js'
 
 /** The multicall for the given chain, client, abi, calls, and target */
 export const multicallRead = async <T>({
@@ -44,8 +45,7 @@ export const multicallRead = async <T>({
   let reads: null | Awaited<ReturnType<typeof multicall.read.aggregate3>> = null
   try {
     reads = await multicall.read.aggregate3([arg])
-    if (!reads) throw reads
-    const r = reads
+    const r = ensureResult(reads, 'Multicall aggregate3')
     return calls.map((call, i) =>
       call.allowFailure
         ? r[i].success

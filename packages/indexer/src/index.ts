@@ -13,10 +13,13 @@ import {
   LatestValidatorStatusUpdate,
   FeeUpdate,
   LatestFeeUpdate,
+  RewardAddress,
+  RewardAddressUpdate,
 } from 'ponder:schema'
 import { decodeFunctionData, parseAbi, type Hex } from 'viem'
+import { feeManager as feeManagerAbi } from '@gibs/bridge-sdk/abis'
 import { parseAMBMessage } from './message'
-import { getInfoBy, createOrderId } from './utils'
+import { getInfoBy, createOrderId, createTransactionOrderId } from './utils'
 import { ChainId } from '@gibs/bridge-sdk'
 import {
   getLatestRequiredSignatures,
@@ -28,6 +31,7 @@ import {
   upsertValidator,
   upsertFeeManagerContract,
   toValidatorId,
+  toRewardAddressId,
   getLatestFeeUpdate,
 } from './cache'
 
@@ -690,6 +694,83 @@ ponder.on('BasicOmnibridge:FeeDistributed', async ({ event, context }) => {
       feeUpdateOrderId: feeUpdate.orderId,
       feeManagerContractChainId: feeUpdate.chainId ? BigInt(feeUpdate.chainId) : null,
       feeManagerContractAddress: feeUpdate.feeManagerContractAddress,
+    }),
+  ])
+})
+
+// ---------------------------------------------------------------------------
+// Reward address tracking
+//
+// addRewardAddress / removeRewardAddress emit no logs, so we index the
+// transactions themselves. The FeeManagerTracker accounts entry fires
+// transaction:to for every call received by the FeeManager contracts.
+// ---------------------------------------------------------------------------
+
+ponder.on('FeeManagerTracker:transaction:to', async ({ event, context }) => {
+  // Ignore failed transactions — state changes only happen on success.
+  if (event.transactionReceipt?.status !== 'success') return
+
+  // Decode calldata; skip unrelated calls gracefully.
+  let decoded: {
+    functionName: 'addRewardAddress' | 'removeRewardAddress'
+    args: readonly [Hex]
+  }
+  try {
+    const result = decodeFunctionData({
+      abi: feeManagerAbi,
+      data: event.transaction.input,
+    })
+    if (
+      result.functionName !== 'addRewardAddress' &&
+      result.functionName !== 'removeRewardAddress'
+    ) {
+      return
+    }
+    decoded = result as typeof decoded
+  } catch {
+    // Calldata doesn't match any FeeManager function — skip.
+    return
+  }
+
+  const feeManagerContractAddress = event.transaction.to!.toLowerCase() as Hex
+  const address = decoded.args[0].toLowerCase() as Hex
+  const added = decoded.functionName === 'addRewardAddress'
+  const chainId = BigInt(context.chain.id)
+  const orderId = createTransactionOrderId(context, event)
+  const rewardAddressId = toRewardAddressId({
+    address,
+    chainId: context.chain.id,
+    feeManagerContractAddress,
+  })
+
+  await Promise.all([
+    upsertBlock(context, event.block),
+    upsertTransaction(context, event.block, event.transaction),
+    // Upsert current state — a re-add after removal flips active back to true.
+    context.db
+      .insert(RewardAddress)
+      .values({
+        rewardAddressId,
+        address,
+        chainId,
+        feeManagerContractAddress,
+        active: added,
+        latestUpdateOrderId: orderId,
+      })
+      .onConflictDoUpdate(() => ({
+        active: added,
+        latestUpdateOrderId: orderId,
+      })),
+    // Append immutable history row.
+    context.db.insert(RewardAddressUpdate).values({
+      orderId,
+      chainId,
+      feeManagerContractAddress,
+      address,
+      added,
+      transactionHash: event.transaction.hash,
+      blockHash: event.block.hash,
+      caller: event.transaction.from.toLowerCase() as Hex,
     }),
   ])
 })

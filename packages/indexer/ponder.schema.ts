@@ -43,6 +43,7 @@ export const FeeManagerContractRelations = relations(FeeManagerContract, (t) => 
     fields: [FeeManagerContract.chainId, FeeManagerContract.omnibridgeAddress],
     references: [Omnibridge.chainId, Omnibridge.address],
   }),
+  rewardAddresses: t.many(RewardAddress),
 }))
 
 export const ValidatorContract = onchainTable('validator_contract', (t) => ({
@@ -614,5 +615,68 @@ export const FeeUpdateRelations = relations(FeeUpdate, (t) => ({
   token: t.one(Token, {
     fields: [FeeUpdate.chainId, FeeUpdate.tokenAddress],
     references: [Token.chainId, Token.address],
+  }),
+}))
+
+// ---------------------------------------------------------------------------
+// Reward address tracking
+//
+// The FeeManager contract exposes addRewardAddress / removeRewardAddress but
+// emits no events for these calls. We track them via transaction-level
+// indexing (FeeManagerTracker accounts entry in ponder.config.ts) and decode
+// the calldata to reconstruct the history.
+// ---------------------------------------------------------------------------
+
+/** Current active/inactive state of each reward address per FeeManager. */
+export const RewardAddress = onchainTable('reward_address', (t) => ({
+  /** keccak256(address ++ chainId ++ feeManagerContractAddress) */
+  rewardAddressId: t.hex().notNull().primaryKey(),
+  address: t.hex().notNull(),
+  chainId: t.bigint().notNull(),
+  feeManagerContractAddress: t.hex().notNull(),
+  /** true = currently active, false = removed */
+  active: t.boolean().notNull(),
+  /** Points at the most recent RewardAddressUpdate row for this address. */
+  latestUpdateOrderId: t.bigint().notNull(),
+}))
+
+export const RewardAddressRelations = relations(RewardAddress, (t) => ({
+  feeManagerContract: t.one(FeeManagerContract, {
+    fields: [RewardAddress.chainId, RewardAddress.feeManagerContractAddress],
+    references: [FeeManagerContract.chainId, FeeManagerContract.address],
+  }),
+  latestUpdate: t.one(RewardAddressUpdate, {
+    fields: [RewardAddress.latestUpdateOrderId],
+    references: [RewardAddressUpdate.orderId],
+  }),
+  updates: t.many(RewardAddressUpdate),
+}))
+
+/** Immutable history log — one row per addRewardAddress / removeRewardAddress call. */
+export const RewardAddressUpdate = onchainTable('reward_address_update', (t) => ({
+  orderId: t.bigint().primaryKey().notNull(),
+  chainId: t.bigint().notNull(),
+  feeManagerContractAddress: t.hex().notNull(),
+  address: t.hex().notNull(),
+  /** true = addRewardAddress, false = removeRewardAddress */
+  added: t.boolean().notNull(),
+  transactionHash: t.hex().notNull(),
+  blockHash: t.hex().notNull(),
+  /** tx.from — the account that called add/removeRewardAddress */
+  caller: t.hex().notNull(),
+}))
+
+export const RewardAddressUpdateRelations = relations(RewardAddressUpdate, (t) => ({
+  feeManagerContract: t.one(FeeManagerContract, {
+    fields: [RewardAddressUpdate.chainId, RewardAddressUpdate.feeManagerContractAddress],
+    references: [FeeManagerContract.chainId, FeeManagerContract.address],
+  }),
+  transaction: t.one(Transaction, {
+    fields: [RewardAddressUpdate.chainId, RewardAddressUpdate.transactionHash],
+    references: [Transaction.chainId, Transaction.hash],
+  }),
+  block: t.one(Block, {
+    fields: [RewardAddressUpdate.chainId, RewardAddressUpdate.blockHash],
+    references: [Block.chainId, Block.hash],
   }),
 }))

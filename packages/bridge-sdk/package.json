@@ -16,15 +16,21 @@
     "./settings": "./src/settings.ts"
   },
   "scripts": {
-    "build": "npx tsc"
+    "build": "npx tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/lodash": "^4.17.16",
     "@types/node": "^22.12.0",
-    "typescript": "~5.7.2"
+    "@vitest/coverage-v8": "^3.1.1",
+    "typescript": "~5.7.2",
+    "vitest": "^3.1.1"
   },
   "dependencies": {
     "@gibs/common": "^1.0.0",

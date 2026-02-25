@@ -34,6 +34,16 @@ export class Page {
     }
     this.pushState(this.val.path, params)
   }
+
+  replaceParam(key: string, value: string | null) {
+    const params = new URLSearchParams(this.val.params ?? '')
+    if (value === null) {
+      params.delete(key)
+    } else {
+      params.set(key, value)
+    }
+    this.replaceState(this.val.path, params)
+  }
   setParams(params: Record<string, string | null>) {
     const newParams = new URLSearchParams(this.val.params ?? '')
     for (const [key, value] of Object.entries(params)) {
@@ -59,6 +69,25 @@ export class Page {
         params: qs,
       }
       history.pushState(null, '', `#${r}`)
+      this.finishChange()
+    }
+  }
+
+  replaceState(noQuery: string, query?: URLSearchParams | null) {
+    const qs = query ?? new URLSearchParams()
+    const r = `${noQuery}${qs.size ? `?${qs.toString()}` : ''}`
+    if (r.split('?').length > 2) {
+      console.error('invalid url', r)
+      throw new Error(`invalid url: ${r}`)
+    }
+    if (r !== this.value) {
+      this.val.changing = true
+      this.val = {
+        path: noQuery,
+        changing: true,
+        params: qs,
+      }
+      history.replaceState(null, '', `#${r}`)
       this.finishChange()
     }
   }
@@ -109,7 +138,13 @@ export class Page {
     const current = location.hash.slice(1) || '/'
     if (current !== this.value) {
       const [noQuery, query] = current.split('?')
-      this.pushState(noQuery, new URLSearchParams(query))
+      // Don't call pushState - that creates a NEW history entry!
+      // Just update internal state to match what the browser already has
+      this.val = {
+        path: noQuery,
+        changing: false,
+        params: new URLSearchParams(query),
+      }
     }
   }
 }

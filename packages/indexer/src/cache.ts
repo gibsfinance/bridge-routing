@@ -88,6 +88,28 @@ export const toValidatorId = async ({ validator, amb, contract, chainId }: {
   ]))
 )
 
+/**
+ * Stable identity for a reward address within a specific FeeManager on a
+ * given chain. Mirrors the toValidatorId pattern but omits ambAddress since
+ * reward addresses live directly on the FeeManager, not through an AMB.
+ */
+export const toRewardAddressId = ({
+  address,
+  chainId,
+  feeManagerContractAddress,
+}: {
+  address: Hex
+  chainId: number
+  feeManagerContractAddress: Hex
+}) =>
+  keccak256(
+    concatHex([
+      address.toLowerCase() as Hex,
+      numberToHex(BigInt(chainId), { size: 32 }),
+      feeManagerContractAddress.toLowerCase() as Hex,
+    ]),
+  )
+
 export const upsertValidator = async (context: Context, validator: Hex, info: MinimalInfo) => {
   const amb = await info.target.amb
   const contract = await info.target.validator

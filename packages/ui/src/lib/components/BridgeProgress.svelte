@@ -39,6 +39,7 @@
     }
   })
   let bridgeStatus = $state<ContinuedLiveBridgeStatusParams | null>(null)
+  let isLoadingStatus = $state(false)
   const percentProgress = $derived.by(() => {
     if (bridgeStatus === null) return 0
     switch (bridgeStatus.status) {
@@ -48,11 +49,14 @@
         return 55
       case bridgeStatuses.FINALIZED:
         return 75
-      // add this in to show partial signing
       case bridgeStatuses.VALIDATING:
         return 90
       case bridgeStatuses.AFFIRMED:
+      case bridgeStatuses.DELIVERED:
         return 100
+      default:
+        // Unknown status - show partial progress
+        return 30
     }
   })
   const bridgeTxHash = $derived(bridgeTx.value?.hash ?? null)
@@ -65,35 +69,83 @@
       })
       txInputValue = null
     }
-    bridgeStatus = null
+    untrack(() => {
+      bridgeStatus = null
+      isLoadingStatus = false
+    })
   }
-  $effect(() => latestBlock(Number(Chains.PLS)))
+
+  // Watch for PulseChain blocks (for gas price indicator)
+  $effect(() => {
+    const cleanup = latestBlock(Number(Chains.PLS))
+    return cleanup
+  })
+
   const latestPulsechainBlockObject = $derived(blocks.get(Number(Chains.PLS)))
   const gasIsHigh = $derived(
     !!latestPulsechainBlockObject?.get('latest')?.block &&
       latestPulsechainBlockObject.get('latest')!.block!.baseFeePerGas! > 20_000_000n * 10n ** 9n,
   )
+
+  // Store cleanup outside effect to ensure it's always called
+  let statusCleanup: (() => void) | null = null
+
   $effect(() => {
+    // Always cleanup previous before starting new
+    statusCleanup?.()
+    statusCleanup = null
+
     const hash = bridgeTxHash
-    const bridgeKey = bridgeTx.value?.bridgeKey as BridgeKey
+    const bridgeKeyValue = bridgeTx.value?.bridgeKey as BridgeKey
     const ticker = originationChain?.get('latest')?.block
-    if (!hash || !originationChain || !bridgeKey || !ticker) {
+
+    if (!hash || !originationChain || !bridgeKeyValue || !ticker) {
+      // Clear status when dependencies go away
+      untrack(() => {
+        bridgeStatus = null
+        isLoadingStatus = false
+      })
       return
     }
+
+    // Set loading state
+    untrack(() => {
+      isLoadingStatus = true
+    })
+
     const result = liveBridgeStatus({
-      bridgeKey,
+      bridgeKey: bridgeKeyValue,
       hash,
       ticker,
     })
+
+    statusCleanup = result.cleanup
+
     result.promise.then((liveResult) => {
       if (result.controller.signal.aborted) return
-      if (liveResult?.hash !== txInputValue) {
-        if (!hash) return
-        txInputValue = hash
-      }
-      bridgeStatus = liveResult ?? null
+
+      // Use untrack to prevent re-triggering this effect
+      untrack(() => {
+        // Only update txInputValue if it's currently showing the tracked hash
+        // Don't override if user manually entered a different hash
+        if (txInputValue === hash || !txInputValue) {
+          txInputValue = hash
+        }
+        bridgeStatus = liveResult ?? null
+        isLoadingStatus = false
+      })
+    }).catch((error) => {
+      console.error('Bridge status fetch failed:', error)
+      untrack(() => {
+        isLoadingStatus = false
+      })
     })
-    return result.cleanup
+
+    // Return cleanup
+    return () => {
+      statusCleanup?.()
+      statusCleanup = null
+    }
   })
   const fromChainLatestBlocks = $derived(blocks.get(Number(bridgeKey.fromChain)))
   const bridgeStatusETATooltip = $derived.by(() => {
@@ -102,15 +154,33 @@
       fromChainBlocks: fromChainLatestBlocks,
     })
   })
+
+  // Auto-clear when affirmed (with cleanup to prevent memory leaks)
+  let autoClearTimeout: ReturnType<typeof setTimeout> | null = null
   $effect(() => {
+    // Clear previous timeout
+    if (autoClearTimeout !== null) {
+      clearTimeout(autoClearTimeout)
+      autoClearTimeout = null
+    }
+
     if (bridgeStatus?.status === bridgeStatuses.AFFIRMED) {
-      const lastTxHash = untrack(() => bridgeStatus?.hash)
-      setTimeout(() => {
+      const lastTxHash = bridgeStatus?.hash
+      autoClearTimeout = setTimeout(() => {
+        // Only clear if this is still the current transaction
         if (lastTxHash === bridgeTx.value?.hash) {
           clearTxTracking()
           oncomplete?.()
         }
       }, 10_000)
+    }
+
+    // Cleanup on effect re-run or unmount
+    return () => {
+      if (autoClearTimeout !== null) {
+        clearTimeout(autoClearTimeout)
+        autoClearTimeout = null
+      }
     }
   })
   const updateTxHash = (v: string, extension?: Partial<BridgeTx>) => {
@@ -153,16 +223,20 @@
   </div>
 {:else if bridgeTx.value?.hash}
   <div class="flex flex-row w-full relative grow">
-    {#if !bridgeStatus}
-      <Loader class="h-full text-gray-500 absolute right-0 left-0 m-auto" />
+    {#if isLoadingStatus || !bridgeStatus}
+      <div class="absolute right-0 left-0 top-0 bottom-0 flex items-center justify-center z-10">
+        <Loader class="h-full text-gray-500" />
+      </div>
     {/if}
     <Progress
       height="h-6"
       meterBg={gasIsHigh ? 'bg-warning-400' : 'bg-success-500'}
-      trackClasses="flex rounded-full overflow-hidden inset-shadow-sm border -mt-[1px] {gasIsHigh
+      trackClasses="flex rounded-full overflow-hidden inset-shadow-sm border -mt-[1px] {isLoadingStatus
+        ? 'opacity-50'
+        : ''} {gasIsHigh
         ? 'border-warning-400'
         : 'border-success-500'}"
-      value={percentProgress ?? 30}
+      value={percentProgress}
       trackBg="bg-surface-200"
       max={100} />
     <span

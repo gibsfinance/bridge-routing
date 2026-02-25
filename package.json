@@ -7,7 +7,8 @@
     "packages/common",
     "packages/bridge-sdk",
     "packages/indexer",
-    "packages/ui"
+    "packages/ui",
+    "packages/tx-analyzer"
   ],
   "scripts": {
     "docker:build": "docker compose build",
@@ -22,10 +23,16 @@
     "build": "yarn run common:build && yarn run bridge-sdk:build && yarn run indexer:build && yarn run ui:build",
     "indexer:build": "yarn workspace indexer run build",
     "indexer:dev": "yarn workspace indexer run dev",
+    "tx-analyzer:dev": "yarn workspace @gibs/tx-analyzer run dev",
+    "tx-analyzer:report": "yarn workspace @gibs/tx-analyzer run report",
     "dev": "yarn run ui:dev",
     "preview": "yarn run ui:preview",
     "pinata:publish": "cd packages/ui && pinata-cli -a $PINATA_API_KEY && pinata-cli -u dist",
     "check": "yarn run common:build && yarn run bridge-sdk:build && yarn run ui:check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
     "clean": "rm -rf node_modules && rm -rf packages/*/node_modules && rm -rf packages/*/dist",
     "packages:publish": "cd packages/common && npm publish && cd ../bridge-sdk && npm publish"
   },
@@ -37,8 +44,10 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.1.1",
     "pinata-upload-cli": "^1.1.0",
-    "typescript": "~5.7.2"
+    "typescript": "~5.7.2",
+    "vitest": "^3.1.1"
   },
   "packageManager": "yarn@4.10.3",
   "dependencies": {

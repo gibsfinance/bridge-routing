@@ -1,0 +1,15 @@
+# Ponder generated files
+.ponder/
+generated/
+
+# User-specific address config (copy from addresses.example.json)
+addresses.json
+
+# Environment
+.env
+.env.local
+
+# Build output
+dist/
+
+node_modules/

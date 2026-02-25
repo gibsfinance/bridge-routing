@@ -28,11 +28,17 @@
     blocks,
     fetchMinBridgeAmountIn,
   } from '../stores/chain-events.svelte'
+  import {
+    isAlreadyBridgedToken,
+    getRecommendedSwapToken,
+    bypassStore,
+  } from '../stores/bridged-token-detection.svelte'
 
   import FromNetwork from './FromNetwork.svelte'
   import ToNetwork from './ToNetwork.svelte'
   import ConnectAndBridge from './ConnectAndBridge.svelte'
   import BridgeDetails from './BridgeDetails.svelte'
+  import BridgedTokenWarning from './BridgedTokenWarning.svelte'
   import DestinationController from './DestinationController.svelte'
   import InputOutputForm from './InputOutputForm.svelte'
   import BridgeHeader from './BridgeHeader.svelte'
@@ -212,6 +218,34 @@
       // OR if undercompensated (using centralized logic)
       bridgeSettings.isUndercompensated,
   )
+
+  // Bridged token detection
+  const showBridgedTokenWarning = $derived(
+    isAlreadyBridgedToken(bridgeSettings.assetIn.value, bridgeKey.value) && !bypassStore.bypassed,
+  )
+
+  const handleSwapClick = () => {
+    const [, fromChain] = bridgeKey.value
+    const fromChainId = Number(fromChain)
+    const token = bridgeSettings.assetIn.value
+
+    // Open appropriate DEX based on chain
+    let dexUrl = ''
+    if (fromChainId === 1) {
+      // Ethereum → Uniswap
+      dexUrl = `https://app.uniswap.org/swap?inputCurrency=${token?.address}&outputCurrency=ETH`
+    } else if (fromChainId === 56) {
+      // BSC → PancakeSwap
+      dexUrl = `https://pancakeswap.finance/swap?inputCurrency=${token?.address}&outputCurrency=BNB`
+    } else if (fromChainId === 369 || fromChainId === 943) {
+      // PulseChain → PulseX
+      dexUrl = `https://pulsex.com/swap?inputCurrency=${token?.address}&outputCurrency=PLS`
+    }
+
+    if (dexUrl) {
+      window.open(dexUrl, '_blank')
+    }
+  }
 </script>
 
 <div class="flex flex-col max-w-lg">
@@ -231,6 +265,13 @@
       {/snippet}
       {#snippet info()}
         <DestinationController />
+        {#if showBridgedTokenWarning && bridgeSettings.assetIn.value}
+          <BridgedTokenWarning
+            token={bridgeSettings.assetIn.value}
+            bridgeKey={bridgeKey.value}
+            onSwapClick={handleSwapClick}
+          />
+        {/if}
         {#if page.details === settings.details.SHOW}
           <BridgeDetails asset={bridgeSettings.assetOut} />
         {/if}
@@ -245,7 +286,10 @@
           icon="ic:sharp-swap-calls" />
       {/snippet}
       {#snippet button()}
-        <ConnectAndBridge showConfirmationModal={shouldShowBridgeConfirmation} />
+        <ConnectAndBridge
+          showConfirmationModal={shouldShowBridgeConfirmation}
+          blockDueToBridgedToken={showBridgedTokenWarning}
+        />
       {/snippet}
       {#snippet progress()}
         <BridgeProgress />

@@ -37,8 +37,10 @@ export const list = (path: string) => {
  * @param chainId - the chain id
  * @returns the network image
  */
+const isTest = typeof process !== 'undefined' && (process.env.VITEST === 'true' || process.env.NODE_ENV === 'test')
+
 export const network = (chainId: number) => {
-  if (!chainId) {
+  if (!chainId && !isTest) {
     console.trace('network image')
   }
   return `${imageRoot}/image/${Number(chainId)}`
