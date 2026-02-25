@@ -14,7 +14,7 @@
   "dependencies": {
     "@gibs/bridge-sdk": "^1.0.0",
     "ponder": "^0.14.0",
-    "viem": "^2.37.8"
+    "viem": "^2.46.3"
   },
   "devDependencies": {
     "@types/node": "^22.12.0",
