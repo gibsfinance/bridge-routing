@@ -252,7 +252,12 @@ Object.entries(bridgeConfigs).forEach(([provider, entries]) => {
 
 export const minimalInfo = new Map<MinimalKey, MinimalInfo>(minimalEntries)
 
-export const createOrderId = (context: Context, event: Event): bigint => {
+export const createOrderId = (
+  context: Context,
+  // Event union includes transaction/block events that have no `.log`; this
+  // function is only called with contract log events, so narrow structurally.
+  event: { block: { timestamp: bigint }; transaction: { transactionIndex: number }; log: { logIndex: number } },
+): bigint => {
   // Create a bigint order ID for sorting based on:
   // timestamp (seconds) | transaction index | log index | chain id
   const timestamp = BigInt(event.block.timestamp)

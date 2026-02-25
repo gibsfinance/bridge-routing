@@ -4,7 +4,8 @@ import ForeignAMBAbi from './abis/ForeignAMB'
 import BaseBridgeValidatorsAbi from './abis/BaseBridgeValidators'
 import { toTransport, accessContracts } from './src/utils'
 import BasicOmnibridge from './abis/BasicOmnibridge'
-import { chains, startBlocks, Providers } from '@gibs/bridge-sdk/config'
+import { chains, startBlocks, Providers, bridgeConfigs } from '@gibs/bridge-sdk/config'
+import type { Provider, ProviderEntries, ChainId } from '@gibs/bridge-sdk/config'
 import { FeeManagerAbi } from './abis/FeeManager'
 import BasicOmnibridgeExtra from './abis/BasicOmnibridgeExtra'
 
@@ -20,36 +21,42 @@ const chain = (chain: keyof typeof chains) => {
 }
 
 // ---------------------------------------------------------------------------
-// Cache FeeManager contract addresses — shared between the event-based
-// `FeeManager` contract entry and the transaction-based `FeeManagerTracker`
-// accounts entry so we never issue the same RPC lookup twice.
+// Derive FeeManager addresses from bridgeConfigs, grouped by home chain name.
+// Shared between the event-based `FeeManager` contract entry and the
+// transaction-based `FeeManagerTracker` accounts entry.
+// Automatically stays in sync when new bridge pathways are added.
 // ---------------------------------------------------------------------------
 
-const feeManagerAddresses = {
-  pulsechain: [
-    ...await accessContracts({
-      provider: Providers.PULSECHAIN,
-      from: chains.pulsechain,
-      to: chains.ethereum,
-      side: 'home',
-      type: 'feeManager',
-    }),
-    ...await accessContracts({
-      provider: Providers.TOKENSEX,
-      from: chains.pulsechain,
-      to: chains.bsc,
-      side: 'home',
-      type: 'feeManager',
-    }),
-  ],
-  pulsechainV4: await accessContracts({
-    provider: Providers.PULSECHAIN,
-    from: chains.pulsechainV4,
-    to: chains.sepolia,
-    side: 'home',
-    type: 'feeManager',
-  }),
-}
+const chainIdToName = Object.fromEntries(
+  Object.entries(chains).map(([name, id]) => [id, name as keyof typeof chains]),
+) as Record<ChainId, keyof typeof chains>
+
+const feeManagerEntries = await Promise.all(
+  (Object.entries(bridgeConfigs) as [Provider, ProviderEntries][]).flatMap(
+    ([provider, homeEntries]) =>
+      Object.entries(homeEntries ?? {}).flatMap(([homeChainId, foreignEntries]) =>
+        Object.keys(foreignEntries ?? {}).map(async (foreignChainId) => ({
+          homeChainName: chainIdToName[Number(homeChainId) as ChainId],
+          addresses: await accessContracts({
+            provider,
+            from: Number(homeChainId) as ChainId,
+            to: Number(foreignChainId) as ChainId,
+            side: 'home',
+            type: 'feeManager',
+          }),
+        })),
+      ),
+  ),
+)
+
+const feeManagerAddresses = feeManagerEntries.reduce<Partial<Record<keyof typeof chains, `0x${string}`[]>>>(
+  (acc, { homeChainName, addresses }) => {
+    if (!homeChainName) return acc
+    acc[homeChainName] = [...(acc[homeChainName] ?? []), ...addresses]
+    return acc
+  },
+  {},
+)
 
 export default createConfig({
   database: {
@@ -360,11 +367,11 @@ export default createConfig({
       chain: {
         pulsechain: {
           startBlock: startBlocks.pulsechain,
-          address: feeManagerAddresses.pulsechain,
+          address: feeManagerAddresses.pulsechain ?? [],
         },
         pulsechainV4: {
           startBlock: startBlocks.pulsechainV4,
-          address: feeManagerAddresses.pulsechainV4,
+          address: feeManagerAddresses.pulsechainV4 ?? [],
         },
       },
     },
@@ -378,13 +385,17 @@ export default createConfig({
      */
     FeeManagerTracker: {
       includeTransactionReceipts: true,
+      // Top-level address is required by AccountConfig<T> (Required<AddressConfig>).
+      // Per-chain entries override it, so this combined array is only a type
+      // placeholder — Ponder uses the chain-specific addresses at runtime.
+      address: Object.values(feeManagerAddresses).flat(),
       chain: {
         pulsechain: {
-          address: feeManagerAddresses.pulsechain,
+          address: feeManagerAddresses.pulsechain ?? [],
           startBlock: startBlocks.pulsechain,
         },
         pulsechainV4: {
-          address: feeManagerAddresses.pulsechainV4,
+          address: feeManagerAddresses.pulsechainV4 ?? [],
           startBlock: startBlocks.pulsechainV4,
         },
       },

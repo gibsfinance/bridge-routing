@@ -735,11 +735,14 @@ ponder.on('FeeManagerTracker:transaction:to', async ({ event, context }) => {
   const feeManagerContractAddress = event.transaction.to!.toLowerCase() as Hex
   const address = decoded.args[0].toLowerCase() as Hex
   const added = decoded.functionName === 'addRewardAddress'
-  const chainId = BigInt(context.chain.id)
+  // Ponder's Context type omits accounts from its sourceChain derivation so
+  // context.chain is typed as `never` for account handlers — cast to access it.
+  const chainIdNum = (context as unknown as { chain: { id: number } }).chain.id
+  const chainId = BigInt(chainIdNum)
   const orderId = createTransactionOrderId(context, event)
   const rewardAddressId = toRewardAddressId({
     address,
-    chainId: context.chain.id,
+    chainId: chainIdNum,
     feeManagerContractAddress,
   })
 
