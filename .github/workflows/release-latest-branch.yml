@@ -111,7 +111,6 @@ jobs:
           node-version: '22.12.x'
         env:
           YARN_VERSION: 4.10.3
-          NPM_TOKEN: '${{ secrets.NPM_TOKEN }}'
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -126,26 +125,21 @@ jobs:
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-          git tag -a v$VERSION -m "Release v$VERSION"
-          git push origin v$VERSION
+          git tag -a v$VERSION -m "Release v$VERSION" || echo "Tag v$VERSION already exists, skipping"
+          git push origin v$VERSION || echo "Tag v$VERSION already pushed, skipping"
   publish-npm:
     needs: build
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Set Yarn version
-        run: corepack prepare yarn@4.10.3 --activate
       - uses: actions/setup-node@v5
         with:
-          cache: yarn
           node-version: '22.12.x'
-        env:
-          YARN_VERSION: 4.10.3
+          registry-url: 'https://registry.npmjs.org'
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -161,15 +155,12 @@ jobs:
         with:
           name: 'bridge-sdk-dist-${{github.sha}}'
           path: packages/bridge-sdk/dist/
-      - uses: JS-DevTools/npm-publish@v3
-        with:
-          package: packages/abis
-          token: ${{ secrets.NPM_TOKEN }}
-      - uses: JS-DevTools/npm-publish@v3
-        with:
-          package: packages/common
-          token: ${{ secrets.NPM_TOKEN }}
-      - uses: JS-DevTools/npm-publish@v3
-        with:
-          package: packages/bridge-sdk
-          token: ${{ secrets.NPM_TOKEN }}
+      - name: Publish @gibs/abis
+        run: npm publish --provenance --access public
+        working-directory: packages/abis
+      - name: Publish @gibs/common
+        run: npm publish --provenance --access public
+        working-directory: packages/common
+      - name: Publish @gibs/bridge-sdk
+        run: npm publish --provenance --access public
+        working-directory: packages/bridge-sdk
